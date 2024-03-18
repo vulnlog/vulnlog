@@ -17,7 +17,9 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:1.9.22")
     implementation("org.jetbrains.kotlin:kotlin-main-kts:1.9.22")
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
+    testImplementation("io.mockk:mockk:1.13.10")
+    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.8.1")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.1")
 }
 
 tasks.test {
