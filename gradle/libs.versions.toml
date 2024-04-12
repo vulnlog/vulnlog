@@ -1,0 +1,21 @@
+[versions]
+kotest = "5.8.1"
+kotlin = "1.9.22"
+kotlinCoroutines = "1.7.0-RC"
+mockk = "1.13.10"
+
+[libraries]
+kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
+kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotest" }
+kotlinCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
+kotlinMainKts = { module = "org.jetbrains.kotlin:kotlin-main-kts", version.ref = "kotlin" }
+kotlinScriptingCommon = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlin" }
+kotlinScriptingDependencies = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies", version.ref = "kotlin" }
+kotlinScriptingJvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", version.ref = "kotlin" }
+kotlinScriptingJvmHost = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlin" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+[bundles]
+kotlinScript = ["kotlinMainKts", "kotlinScriptingCommon", "kotlinScriptingDependencies", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
+
+[plugins]

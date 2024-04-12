@@ -1,32 +1,12 @@
 plugins {
-    kotlin("jvm") version "1.9.22"
+    id("vulnlog.lib-convention")
     `maven-publish`
-}
-
-group = "ch.addere"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
     implementation(project(":dsl"))
-    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm:1.9.22")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-common:1.9.22")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-jvm-host:1.9.22")
-    implementation("org.jetbrains.kotlin:kotlin-scripting-dependencies:1.9.22")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0-RC")
-
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(17)
+    implementation(libs.bundles.kotlinScript)
+    implementation(libs.kotlinCoroutinesCore)
 }
 
 // TODO used to publish DSL jar but makes problem with execution of scripting-host executable
