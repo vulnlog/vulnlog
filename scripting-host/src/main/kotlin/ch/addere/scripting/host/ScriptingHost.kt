@@ -7,7 +7,7 @@ import kotlin.script.experimental.api.valueOrNull
 import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
-class Host {
+class ScriptingHost {
     private val host = BasicJvmScriptingHost()
 
     fun evalScript(script: String): VulnLog {
@@ -16,7 +16,7 @@ class Host {
         }
         val result: EvaluationResult =
             host.evalWithTemplate<VulnLogScript>(script.toScriptSource()).valueOrNull()
-                ?: throw IllegalStateException("Could not evaluate script")
+                ?: error("Could not evaluate script")
         return result.returnValue.scriptInstance as VulnLog
     }
 }

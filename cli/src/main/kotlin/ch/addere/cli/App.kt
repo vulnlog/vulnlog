@@ -3,15 +3,15 @@ package ch.addere.cli
 import ch.addere.cli.suppressions.OwaspDependencyCheckerSuppressor
 import ch.addere.cli.suppressions.SnykSuppressor
 import ch.addere.dsl.VulnLog
-import ch.addere.scripting.host.Host
+import ch.addere.scripting.host.ScriptingHost
 import java.io.File
 
 fun main(args: Array<String>) {
-    if (args.isEmpty()) throw IllegalArgumentException("Require FILE argument")
+    require(args.isNotEmpty()) { "Require FILE argument" }
     val script = File(args[0]).readText()
 
     try {
-        val result: VulnLog = Host().evalScript(script)
+        val result: VulnLog = ScriptingHost().evalScript(script)
 
         if (args[1].isNotBlank()) {
             val template = File(args[1])

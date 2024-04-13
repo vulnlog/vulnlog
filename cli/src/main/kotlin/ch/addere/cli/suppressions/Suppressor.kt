@@ -10,8 +10,8 @@ abstract class Suppressor(
     protected abstract val suppressionBlockTemplate: String
 
     init {
-        if (!suppressionFileTemplate.isFile) throw IllegalArgumentException("suppressionFileTemplate must be a file")
-        if (suppressionBlockMarker.isBlank()) throw IllegalArgumentException("suppressionBlockMarker cannot be blank")
+        require(suppressionFileTemplate.isFile) { "suppressionFileTemplate must be a file" }
+        require(suppressionBlockMarker.isNotBlank()) { "suppressionBlockMarker cannot be blank" }
     }
 
     fun createSuppressions(vulnerabilities: Set<Vulnerability>): SuppressionComposition {

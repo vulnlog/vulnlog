@@ -13,7 +13,7 @@ import io.kotest.matchers.shouldBe
 
 class HostTest : FunSpec({
 
-    val host = Host()
+    val host = ScriptingHost()
 
     test("test empty script should not throw") {
         val script = readLinesFrom("empty.vulnlog.kts")
@@ -50,7 +50,8 @@ class HostTest : FunSpec({
                         null,
                         Suppression(
                             reason =
-                                "Version 1.0.0 is not immediately affected. Nevertheless, dependency shall be fixed in upcoming release.",
+                                "Version 1.0.0 is not immediately affected. " +
+                                    "Nevertheless, dependency shall be fixed in upcoming release.",
                             inVersion = setOf(v100),
                             untilVersion = setOf(v101),
                         ),

@@ -67,15 +67,11 @@ object VulnLogCompilationConfiguration : ScriptCompilationConfiguration({
     ide {
         acceptedLocations(ScriptAcceptedLocation.Everywhere)
     }
-}) {
-    private fun readResolve(): Any = VulnLogCompilationConfiguration
-}
+})
 
 object VulnLogEvaluationConfiguration : ScriptEvaluationConfiguration({
 
     jvm {
         implicitReceivers(VulnLogsBuilder())
     }
-}) {
-    private fun readResolve(): Any = VulnLogEvaluationConfiguration
-}
+})
