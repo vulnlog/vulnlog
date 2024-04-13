@@ -1,5 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.jvm")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 group = "ch.addere"
@@ -38,4 +39,8 @@ tasks.register("resolveAndLockAll") {
             it.isCanBeResolved
         }.forEach { it.resolve() }
     }
+}
+
+tasks.named("check").configure {
+    dependsOn(tasks.named("ktlintCheck"))
 }
