@@ -1,4 +1,5 @@
 [versions]
+detektVersion = "1.23.3"
 kotestVersion = "5.8.1"
 kotlinCoroutinesVersion = "1.7.0-RC"
 kotlinVersion = "1.9.22"
@@ -6,6 +7,7 @@ ktlintVersion = "12.1.0"
 mockkVersion = "1.13.10"
 
 [libraries]
+detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion"}
 kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotestVersion" }
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutinesVersion" }

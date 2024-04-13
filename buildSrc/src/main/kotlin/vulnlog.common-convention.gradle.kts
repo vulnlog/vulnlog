@@ -1,4 +1,5 @@
 plugins {
+    id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlin.jvm")
     id("org.jlleitschuh.gradle.ktlint")
 }
@@ -43,4 +44,8 @@ tasks.register("resolveAndLockAll") {
 
 tasks.named("check").configure {
     dependsOn(tasks.named("ktlintCheck"))
+}
+
+tasks.named("check").configure {
+    dependsOn(tasks.named("detekt"))
 }
