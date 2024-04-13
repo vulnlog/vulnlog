@@ -11,10 +11,14 @@ fun SuppressionBlock.pretty(indentation: String): String {
 data class SuppressionComposition(
     val head: SuppressionHead,
     val tail: SuppressionTail,
-    val suppressions: Set<SuppressionBlock>
+    val suppressions: Set<SuppressionBlock>,
 ) {
-
-    fun pretty(before: String = "\n", between: String = "\n", after: String = "\n", indentation: String = ""): List<String> {
+    fun pretty(
+        before: String = "\n",
+        between: String = "\n",
+        after: String = "\n",
+        indentation: String = "",
+    ): List<String> {
         return head + before + suppressions.joinToString(separator = between) { it.pretty(indentation) } + after + tail
     }
 }

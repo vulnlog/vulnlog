@@ -6,10 +6,11 @@ abstract class ScannerBuilder {
     lateinit var name: String
     lateinit var affected: Set<Version>
 
-    fun affected(block: VersionBuilder.() -> Unit) = with(VersionBuilder()) {
-        block()
-        affected = this.build()
-    }
+    fun affected(block: VersionBuilder.() -> Unit) =
+        with(VersionBuilder()) {
+            block()
+            affected = this.build()
+        }
 
     abstract fun build(): Scanner
 }

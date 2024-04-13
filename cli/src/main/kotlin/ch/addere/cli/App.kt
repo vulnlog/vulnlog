@@ -15,19 +15,20 @@ fun main(args: Array<String>) {
 
         if (args[1].isNotBlank()) {
             val template = File(args[1])
-            val suppressions = if (template.name.endsWith(".xml")) {
-                val marker = "<vulnlog-marker/>"
-                val suppressor = OwaspDependencyCheckerSuppressor(template, marker)
-                suppressor.createSuppressions(result.vulnerabilities)
-            } else {
-                val marker = "vulnlog-marker"
-                val suppressor = SnykSuppressor(template, marker)
-                suppressor.createSuppressions(result.vulnerabilities)
-            }
+            val suppressions =
+                if (template.name.endsWith(".xml")) {
+                    val marker = "<vulnlog-marker/>"
+                    val suppressor = OwaspDependencyCheckerSuppressor(template, marker)
+                    suppressor.createSuppressions(result.vulnerabilities)
+                } else {
+                    val marker = "vulnlog-marker"
+                    val suppressor = SnykSuppressor(template, marker)
+                    suppressor.createSuppressions(result.vulnerabilities)
+                }
 
             println(
                 suppressions.pretty(before = "\n\n", after = "\n\n", between = "\n\n", indentation = "\t")
-                    .joinToString("")
+                    .joinToString(""),
             )
         } else {
             println("release branches")

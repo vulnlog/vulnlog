@@ -6,13 +6,14 @@ import java.io.File
 
 class SnykSuppressor(
     suppressionFileTemplate: File,
-    suppressionBlockMarker: String
+    suppressionBlockMarker: String,
 ) : Suppressor(suppressionFileTemplate, suppressionBlockMarker) {
-
     override val suppressionBlockTemplate: String
-        get() = """|vulnlog-snyk-id:
+        get() =
+            """|vulnlog-snyk-id:
                    |  - '*':
-                   |    reason: vulnlog-reason""".trimMargin()
+                   |    reason: vulnlog-reason
+            """.trimMargin()
 
     override fun filterRelevant(vulnerabilities: Set<Vulnerability>): Set<Vulnerability> {
         return vulnerabilities
@@ -23,7 +24,8 @@ class SnykSuppressor(
 
     override fun transform(filtered: Set<Vulnerability>): Set<SuppressionBlock> {
         return filtered.map { vulnerability ->
-            val snykId: String? = vulnerability.reporter?.scanner?.filterIsInstance<Snyk>()?.map { snyk -> snyk.id }?.first()
+            val snykId: String? =
+                vulnerability.reporter?.scanner?.filterIsInstance<Snyk>()?.map { snyk -> snyk.id }?.first()
             val reason = vulnerability.resolution?.suppress?.reason ?: ""
             suppressionBlockTemplate
                 .replace("vulnlog-reason", reason)

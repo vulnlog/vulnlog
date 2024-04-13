@@ -26,92 +26,102 @@ class SnykSuppressorTest : FunSpec({
     }
 })
 
-private val vulnerabilities: Set<Vulnerability> = setOf(
-    Vulnerability(
-        "cve-id-0", Reporter(
-            listOf(
-                OwaspDependencyChecker(setOf(Version(1, 0, 0))),
-                Snyk("snyk-id-0", setOf(Version(1, 0, 0)))
-            )
+private val vulnerabilities: Set<Vulnerability> =
+    setOf(
+        Vulnerability(
+            "cve-id-0",
+            Reporter(
+                listOf(
+                    OwaspDependencyChecker(setOf(Version(1, 0, 0))),
+                    Snyk("snyk-id-0", setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
+                null,
+            ),
         ),
-        Resolution(
-            null,
-            Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-1", Reporter(
-            listOf(
-                Snyk("snyk-id-1", setOf(Version(1, 0, 0)))
-            )
+        Vulnerability(
+            "cve-id-1",
+            Reporter(
+                listOf(
+                    Snyk("snyk-id-1", setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
+                null,
+            ),
         ),
-        Resolution(
-            null,
-            Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-2", Reporter(
-            listOf(
-                OwaspDependencyChecker(setOf(Version(1, 0, 0))),
-            )
+        Vulnerability(
+            "cve-id-2",
+            Reporter(
+                listOf(
+                    OwaspDependencyChecker(setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 1)), setOf(Version(1, 0, 2))),
+                null,
+            ),
         ),
-        Resolution(
-            null,
-            Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 1)), setOf(Version(1, 0, 2))),
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-3", Reporter(
-            listOf(
-                Snyk("snyk-id-3", setOf(Version(1, 0, 0))),
-            )
+        Vulnerability(
+            "cve-id-3",
+            Reporter(
+                listOf(
+                    Snyk("snyk-id-3", setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                Ignore("This is a false positive"),
+                null,
+                null,
+            ),
         ),
-        Resolution(
-            Ignore("This is a false positive"),
-            null,
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-4", Reporter(
-            listOf(
-                Snyk("snyk-id-4", setOf(Version(1, 0, 0))),
-            )
+        Vulnerability(
+            "cve-id-4",
+            Reporter(
+                listOf(
+                    Snyk("snyk-id-4", setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                null,
+                Mitigation(setOf(Version(1, 2, 0))),
+            ),
         ),
-        Resolution(
-            null,
-            null,
-            Mitigation(setOf(Version(1, 2, 0)))
-        )
     )
-)
 
-private val head = listOf(
-    "ignore:"
-)
+private val head =
+    listOf(
+        "ignore:",
+    )
 
 private val tail = emptyList<String>()
 
-private val expected = SuppressionComposition(
-    head, tail,
-    setOf(
-        listOf(
-            "snyk-id-0:",
-            "  - '*':",
-            "    reason: fix in upcoming bug fix release"
+private val expected =
+    SuppressionComposition(
+        head,
+        tail,
+        setOf(
+            listOf(
+                "snyk-id-0:",
+                "  - '*':",
+                "    reason: fix in upcoming bug fix release",
+            ),
+            listOf(
+                "snyk-id-1:",
+                "  - '*':",
+                "    reason: fix in upcoming bug fix release",
+            ),
         ),
-        listOf(
-            "snyk-id-1:",
-            "  - '*':",
-            "    reason: fix in upcoming bug fix release"
-        )
     )
-)
 
-private fun readTemplate(): File = File(
-    object {}.javaClass.getResource("/templates/.snyk-template")!!.toURI()
-)
+private fun readTemplate(): File =
+    File(
+        object {}.javaClass.getResource("/templates/.snyk-template")!!.toURI(),
+    )

@@ -14,8 +14,9 @@ class Host {
         if (script.isEmpty()) {
             return VulnLogScript()
         }
-        val result: EvaluationResult = host.evalWithTemplate<VulnLogScript>(script.toScriptSource()).valueOrNull()
-            ?: throw IllegalStateException("Could not evaluate script")
+        val result: EvaluationResult =
+            host.evalWithTemplate<VulnLogScript>(script.toScriptSource()).valueOrNull()
+                ?: throw IllegalStateException("Could not evaluate script")
         return result.returnValue.scriptInstance as VulnLog
     }
 }

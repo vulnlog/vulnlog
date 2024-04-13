@@ -2,7 +2,7 @@ package ch.addere.dsl
 
 data class VulnLogs(
     val branches: SupportedBranches?,
-    val vulnerabilities: Set<Vulnerability>
+    val vulnerabilities: Set<Vulnerability>,
 )
 
 class VulnLogsBuilder : V() {

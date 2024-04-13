@@ -7,10 +7,11 @@ class ReleaseBranchBuilder {
     var upComing: Version? = null
     private val published = mutableSetOf<Version>()
 
-    fun published(block: VersionBuilder.() -> Unit) = with(VersionBuilder()) {
-        block()
-        published.addAll(this.build())
-    }
+    fun published(block: VersionBuilder.() -> Unit) =
+        with(VersionBuilder()) {
+            block()
+            published.addAll(this.build())
+        }
 
     fun build(): ReleaseBranch = ReleaseBranch(name, upComing, published)
 }

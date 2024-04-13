@@ -41,17 +41,22 @@ class HostTest : FunSpec({
         val v101 = Version(1, 0, 1)
         val releaseBranch = ReleaseBranch(name = "r1", upComing = v101, published = setOf(v100))
         val supportedBranches = SupportedBranches(supported = setOf(releaseBranch), unsupported = emptySet())
-        val vulnerability = Vulnerability(
-            id = "cve1",
-            reporter = Reporter(listOf(OwaspDependencyChecker(affected = setOf(v100)))),
-            resolution = Resolution(
-                null, Suppression(
-                    reason = "Version 1.0.0 is not immediately affected. Nevertheless, dependency shall be fixed in upcoming release.",
-                    inVersion = setOf(v100),
-                    untilVersion = setOf(v101)
-                ), null
+        val vulnerability =
+            Vulnerability(
+                id = "cve1",
+                reporter = Reporter(listOf(OwaspDependencyChecker(affected = setOf(v100)))),
+                resolution =
+                    Resolution(
+                        null,
+                        Suppression(
+                            reason =
+                                "Version 1.0.0 is not immediately affected. Nevertheless, dependency shall be fixed in upcoming release.",
+                            inVersion = setOf(v100),
+                            untilVersion = setOf(v101),
+                        ),
+                        null,
+                    ),
             )
-        )
 
         val result = host.evalScript(script)
 

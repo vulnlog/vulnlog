@@ -5,9 +5,8 @@ import java.io.File
 
 abstract class Suppressor(
     private val suppressionFileTemplate: File,
-    private val suppressionBlockMarker: String
+    private val suppressionBlockMarker: String,
 ) {
-
     protected abstract val suppressionBlockTemplate: String
 
     init {

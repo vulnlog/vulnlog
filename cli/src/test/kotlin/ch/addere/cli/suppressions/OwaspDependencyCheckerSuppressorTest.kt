@@ -19,17 +19,19 @@ import java.io.File
 class OwaspDependencyCheckerSuppressorTest : FunSpec({
 
     test("test throws on non file template") {
-        val exception = shouldThrow<IllegalArgumentException> {
-            OwaspDependencyCheckerSuppressor(tempdir(), "marker")
-        }
+        val exception =
+            shouldThrow<IllegalArgumentException> {
+                OwaspDependencyCheckerSuppressor(tempdir(), "marker")
+            }
 
         exception.message shouldBe "suppressionFileTemplate must be a file"
     }
 
     test("test throws on blank marker") {
-        val exception = shouldThrow<IllegalArgumentException> {
-            OwaspDependencyCheckerSuppressor(tempfile(), "  \t ")
-        }
+        val exception =
+            shouldThrow<IllegalArgumentException> {
+                OwaspDependencyCheckerSuppressor(tempfile(), "  \t ")
+            }
 
         exception.message shouldBe "suppressionBlockMarker cannot be blank"
     }
@@ -45,99 +47,109 @@ class OwaspDependencyCheckerSuppressorTest : FunSpec({
     }
 })
 
-private val vulnerabilities: Set<Vulnerability> = setOf(
-    Vulnerability(
-        "cve-id-0", Reporter(
-            listOf(
-                OwaspDependencyChecker(setOf(Version(1, 0, 0))),
-                Snyk("snyk-id-0", setOf(Version(1, 0, 0)))
-            )
+private val vulnerabilities: Set<Vulnerability> =
+    setOf(
+        Vulnerability(
+            "cve-id-0",
+            Reporter(
+                listOf(
+                    OwaspDependencyChecker(setOf(Version(1, 0, 0))),
+                    Snyk("snyk-id-0", setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
+                null,
+            ),
         ),
-        Resolution(
-            null,
-            Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-1", Reporter(
-            listOf(
-                Snyk("snyk-id-1", setOf(Version(1, 0, 0)))
-            )
+        Vulnerability(
+            "cve-id-1",
+            Reporter(
+                listOf(
+                    Snyk("snyk-id-1", setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
+                null,
+            ),
         ),
-        Resolution(
-            null,
-            Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 0)), setOf(Version(1, 0, 1))),
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-2", Reporter(
-            listOf(
-                OwaspDependencyChecker(setOf(Version(1, 0, 0))),
-            )
+        Vulnerability(
+            "cve-id-2",
+            Reporter(
+                listOf(
+                    OwaspDependencyChecker(setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 1)), setOf(Version(1, 0, 2))),
+                null,
+            ),
         ),
-        Resolution(
-            null,
-            Suppression("fix in upcoming bug fix release", setOf(Version(1, 0, 1)), setOf(Version(1, 0, 2))),
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-3", Reporter(
-            listOf(
-                OwaspDependencyChecker(setOf(Version(1, 0, 0))),
-            )
+        Vulnerability(
+            "cve-id-3",
+            Reporter(
+                listOf(
+                    OwaspDependencyChecker(setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                Ignore("This is a false positive"),
+                null,
+                null,
+            ),
         ),
-        Resolution(
-            Ignore("This is a false positive"),
-            null,
-            null
-        )
-    ),
-    Vulnerability(
-        "cve-id-4", Reporter(
-            listOf(
-                OwaspDependencyChecker(setOf(Version(1, 0, 0))),
-            )
+        Vulnerability(
+            "cve-id-4",
+            Reporter(
+                listOf(
+                    OwaspDependencyChecker(setOf(Version(1, 0, 0))),
+                ),
+            ),
+            Resolution(
+                null,
+                null,
+                Mitigation(setOf(Version(1, 2, 0))),
+            ),
         ),
-        Resolution(
-            null,
-            null,
-            Mitigation(setOf(Version(1, 2, 0)))
-        )
     )
-)
 
-private val head = listOf(
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-    "<suppressions xmlns=\"https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd\">"
-)
+private val head =
+    listOf(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+        "<suppressions xmlns=\"https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd\">",
+    )
 
 private val tail = listOf("</suppressions>")
 
-private val expected = SuppressionComposition(
-    head, tail,
-    setOf(
-        listOf(
-            "<suppress>",
-            "    <notes><![CDATA[",
-            "        fix in upcoming bug fix release",
-            "    ]]></notes>",
-            "    <vulnerabilityName>cve-id-0</vulnerabilityName>",
-            "</suppress>",
+private val expected =
+    SuppressionComposition(
+        head,
+        tail,
+        setOf(
+            listOf(
+                "<suppress>",
+                "    <notes><![CDATA[",
+                "        fix in upcoming bug fix release",
+                "    ]]></notes>",
+                "    <vulnerabilityName>cve-id-0</vulnerabilityName>",
+                "</suppress>",
+            ),
+            listOf(
+                "<suppress>",
+                "    <notes><![CDATA[",
+                "        fix in upcoming bug fix release",
+                "    ]]></notes>",
+                "    <vulnerabilityName>cve-id-2</vulnerabilityName>",
+                "</suppress>",
+            ),
         ),
-        listOf(
-            "<suppress>",
-            "    <notes><![CDATA[",
-            "        fix in upcoming bug fix release",
-            "    ]]></notes>",
-            "    <vulnerabilityName>cve-id-2</vulnerabilityName>",
-            "</suppress>",
-        )
     )
-)
 
-private fun readTemplate(): File = File(
-    object {}.javaClass.getResource("/templates/owasp-dependency-checker-suppressions-template.xml")!!.toURI()
-)
+private fun readTemplate(): File =
+    File(
+        object {}.javaClass.getResource("/templates/owasp-dependency-checker-suppressions-template.xml")!!.toURI(),
+    )

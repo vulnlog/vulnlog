@@ -6,16 +6,17 @@ import java.io.File
 
 class OwaspDependencyCheckerSuppressor(
     suppressionFileTemplate: File,
-    suppressionBlockMarker: String
+    suppressionBlockMarker: String,
 ) : Suppressor(suppressionFileTemplate, suppressionBlockMarker) {
-
     override val suppressionBlockTemplate: String
-        get() = """|<suppress>
+        get() =
+            """|<suppress>
                    |    <notes><![CDATA[
                    |        vulnlog-reason
                    |    ]]></notes>
                    |    <vulnerabilityName>vulnlog-cve</vulnerabilityName>
-                   |</suppress>""".trimMargin()
+                   |</suppress>
+            """.trimMargin()
 
     override fun filterRelevant(vulnerabilities: Set<Vulnerability>): Set<Vulnerability> {
         return vulnerabilities

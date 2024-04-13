@@ -25,30 +25,32 @@ import kotlin.script.experimental.jvm.jvm
     displayName = "Vulnerability Log",
     fileExtension = "vulnlog.kts",
     compilationConfiguration = VulnLogCompilationConfiguration::class,
-    evaluationConfiguration = VulnLogEvaluationConfiguration::class
+    evaluationConfiguration = VulnLogEvaluationConfiguration::class,
 )
 open class VulnLogScript : VulnLog {
-
     override val releaseBranch = mutableSetOf<ReleaseBranch>()
     override var branches: SupportedBranches? = null
     override val vulnerabilities = mutableSetOf<Vulnerability>()
 
-    fun release(block: ReleaseBranchBuilder.() -> Unit) = with(ReleaseBranchBuilder()) {
-        block()
-        val rb = this.build()
-        releaseBranch += rb
-        rb
-    }
+    fun release(block: ReleaseBranchBuilder.() -> Unit) =
+        with(ReleaseBranchBuilder()) {
+            block()
+            val rb = this.build()
+            releaseBranch += rb
+            rb
+        }
 
-    fun branches(block: SupportedBranchesBuilder.() -> Unit) = with(SupportedBranchesBuilder()) {
-        block()
-        branches = this.build()
-    }
+    fun branches(block: SupportedBranchesBuilder.() -> Unit) =
+        with(SupportedBranchesBuilder()) {
+            block()
+            branches = this.build()
+        }
 
-    fun vulnerability(block: VulnerabilityBuilder.() -> Unit) = with(VulnerabilityBuilder()) {
-        block()
-        vulnerabilities.add(this.build())
-    }
+    fun vulnerability(block: VulnerabilityBuilder.() -> Unit) =
+        with(VulnerabilityBuilder()) {
+            block()
+            vulnerabilities.add(this.build())
+        }
 }
 
 object VulnLogCompilationConfiguration : ScriptCompilationConfiguration({
