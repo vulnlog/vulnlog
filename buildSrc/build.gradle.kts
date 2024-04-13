@@ -7,6 +7,7 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.dependencyCheckGradle)
     implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
     implementation(libs.ktlintGradle)

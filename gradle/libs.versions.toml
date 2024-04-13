@@ -5,22 +5,23 @@ kotlinCoroutinesVersion = "1.7.0-RC"
 kotlinVersion = "1.9.22"
 ktlintVersion = "12.1.0"
 mockkVersion = "1.13.10"
+owaspDependencyCheckerVersion = "9.1.0"
 
 [libraries]
-detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion"}
+dependencyCheckGradle = { module = "org.owasp:dependency-check-gradle", version.ref = "owaspDependencyCheckerVersion" }
+detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion" }
 kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotestVersion" }
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutinesVersion" }
-kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion"}
-kotlinMainKts = { module = "org.jetbrains.kotlin:kotlin-main-kts", version.ref = "kotlinVersion" }
+kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
 kotlinScriptingCommon = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlinVersion" }
 kotlinScriptingDependencies = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies", version.ref = "kotlinVersion" }
 kotlinScriptingJvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", version.ref = "kotlinVersion" }
 kotlinScriptingJvmHost = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlinVersion" }
-ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion"}
+ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
 
 [bundles]
-kotlinScript = ["kotlinMainKts", "kotlinScriptingCommon", "kotlinScriptingDependencies", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
+kotlinScript = ["kotlinScriptingCommon", "kotlinScriptingDependencies", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
 
 [plugins]
