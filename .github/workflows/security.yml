@@ -19,6 +19,10 @@ jobs:
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
       - name: Build project
         run: ./gradlew clean build
+      - name: Install project
+        run: ./gradlew install
+      - name: Create OWASP suppression file
+        run:  mkdir -p build/suppressions && ./cli/build/install/cli/bin/cli vl.vulnlog.kts cli/src/test/resources/templates/owasp-dependency-checker-suppressions-template.xml > build/suppressions/owaspDependencyChecker.xml
       - name: OWASP Dependency Checker analyze
         env:
           OWASP_DEPENDENCY_CHECK: ${{ secrets.OWASP_DEPENDENCY_CHECK }}
