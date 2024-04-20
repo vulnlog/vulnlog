@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
     try {
         val result: VulnLog = ScriptingHost().evalScript(script)
 
-        if (args[1].isNotBlank()) {
+        if (args.size >= 2 && args[1].isNotBlank()) {
             val template = File(args[1])
             val suppressions =
                 if (template.name.endsWith(".xml")) {
