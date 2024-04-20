@@ -4,7 +4,9 @@ plugins {
 
 dependencies {
     implementation(project(":scripting-host"))
+
     implementation(libs.bundles.kotlinScript)
+    implementation(libs.clikt)
 }
 
 application {

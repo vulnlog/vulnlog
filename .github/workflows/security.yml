@@ -22,7 +22,7 @@ jobs:
       - name: Install project
         run: ./gradlew install
       - name: Create OWASP suppression file
-        run:  mkdir -p build/suppressions && ./cli/build/install/cli/bin/cli vl.vulnlog.kts cli/src/test/resources/templates/owasp-dependency-checker-suppressions-template.xml > build/suppressions/owaspDependencyChecker.xml
+        run:  mkdir -p build/suppressions && ./cli/build/install/cli/bin/cli supp -f vl.vulnlog.kts --templates cli/src/test/resources/templates/owasp-dependency-checker-suppressions-template.xml > build/suppressions/owaspDependencyChecker.xml
       - name: OWASP Dependency Checker analyze
         env:
           OWASP_DEPENDENCY_CHECK: ${{ secrets.OWASP_DEPENDENCY_CHECK }}

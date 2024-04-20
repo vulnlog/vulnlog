@@ -1,4 +1,5 @@
 [versions]
+cliktVersion = "4.2.2"
 detektVersion = "1.23.3"
 kotestVersion = "5.8.1"
 kotlinCoroutinesVersion = "1.7.0-RC"
@@ -8,6 +9,7 @@ mockkVersion = "1.13.10"
 owaspDependencyCheckerVersion = "9.1.0"
 
 [libraries]
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion"}
 dependencyCheckGradle = { module = "org.owasp:dependency-check-gradle", version.ref = "owaspDependencyCheckerVersion" }
 detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion" }
 kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotestVersion" }
