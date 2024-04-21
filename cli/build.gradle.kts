@@ -7,6 +7,12 @@ dependencies {
 
     implementation(libs.bundles.kotlinScript)
     implementation(libs.clikt)
+    implementation(libs.koinCore)
+
+    testImplementation(libs.koinTest)
+    testImplementation(libs.koinTestJoint5)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotestExtensionsKoin)
 }
 
 application {

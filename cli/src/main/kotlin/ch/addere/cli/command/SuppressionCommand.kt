@@ -1,16 +1,15 @@
 package ch.addere.cli.command
 
-import ch.addere.cli.suppressions.OwaspDependencyCheckerSuppressor
-import ch.addere.cli.suppressions.SnykSuppressor
-import ch.addere.dsl.VulnLog
-import ch.addere.scripting.host.ScriptingHost
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.io.File
 
-class SuppressionCommand : CliktCommand(
+class SuppressionCommand : KoinComponent, CliktCommand(
     name = "supp",
     help =
         """
@@ -27,19 +26,12 @@ class SuppressionCommand : CliktCommand(
 
     private val commonOptions by CommonOptions()
 
-    override fun run() {
-        val result: VulnLog = ScriptingHost().evalScript(commonOptions.vulnFilePath)
-        val suppressions =
-            if (templates.name.endsWith(".xml")) {
-                val marker = "<vulnlog-marker/>"
-                val suppressor = OwaspDependencyCheckerSuppressor(templates, marker)
-                suppressor.createSuppressions(result.vulnerabilities)
-            } else {
-                val marker = "vulnlog-marker"
-                val suppressor = SnykSuppressor(templates, marker)
-                suppressor.createSuppressions(result.vulnerabilities)
-            }
+    private val service by inject<Service>()
 
+    override fun run() {
+        val script: File = commonOptions.vulnFilePath
+        val template: File = templates
+        val suppressions = service.action(script, template)
         echo(
             suppressions.pretty(before = "\n\n", after = "\n\n", between = "\n\n", indentation = "\t")
                 .joinToString(""),
