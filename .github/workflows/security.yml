@@ -6,6 +6,7 @@ on:
 jobs:
   vulnTracking:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
