@@ -11,4 +11,5 @@ dependencies {
 
 application {
     mainClass.set("ch.addere.cli.AppKt")
+    applicationName = "vl"
 }
