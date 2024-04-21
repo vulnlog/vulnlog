@@ -1,6 +1,8 @@
 package ch.addere.cli.command
 
+import ch.addere.cli.module.mainModule
 import com.github.ajalt.clikt.core.CliktCommand
+import org.koin.core.context.GlobalContext.startKoin
 
 class MainCommand : CliktCommand(
     help =
@@ -9,6 +11,8 @@ class MainCommand : CliktCommand(
         """.trimIndent(),
 ) {
     override fun run() {
-        // currently only subcommands are support
+        startKoin {
+            modules(mainModule)
+        }
     }
 }
