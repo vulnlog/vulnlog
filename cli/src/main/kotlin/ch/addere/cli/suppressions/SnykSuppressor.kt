@@ -1,7 +1,7 @@
 package ch.addere.cli.suppressions
 
-import ch.addere.dsl.Snyk
-import ch.addere.dsl.Vulnerability
+import ch.addere.vulnlog.core.model.reporter.VlSnykReporter
+import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
 import java.io.File
 
 class SnykSuppressor(
@@ -15,20 +15,22 @@ class SnykSuppressor(
                    |    reason: vulnlog-reason
             """.trimMargin()
 
-    override fun filterRelevant(vulnerabilities: Set<Vulnerability>): Set<Vulnerability> {
+    override fun filterRelevant(vulnerabilities: Set<VlVulnerability>): Set<VlVulnerability> {
         return vulnerabilities
-            .filter { it.reporter?.scanner?.any { scanner -> scanner is Snyk } ?: false }
-            .filter { it.resolution?.suppress != null }
+            .filter { it.reporter?.reporters?.any { scanner -> scanner is VlSnykReporter } ?: false }
+            .filter { it.suppressResolution != null }
             .toSet()
     }
 
-    override fun transform(filtered: Set<Vulnerability>): Set<SuppressionBlock> {
+    override fun transform(filtered: Set<VlVulnerability>): Set<SuppressionBlock> {
         return filtered.map { vulnerability ->
             val snykId: String? =
-                vulnerability.reporter?.scanner?.filterIsInstance<Snyk>()?.map { snyk -> snyk.id }?.first()
-            val reason = vulnerability.resolution?.suppress?.reason ?: ""
+                vulnerability.reporter?.reporters?.filterIsInstance<VlSnykReporter>()?.map { snyk ->
+                    snyk.snykId
+                }?.first()
+            val rationale = vulnerability.suppressResolution?.rationale ?: ""
             suppressionBlockTemplate
-                .replace("vulnlog-reason", reason)
+                .replace("vulnlog-reason", rationale)
                 .replace("vulnlog-snyk-id", snykId ?: "")
                 .lines()
         }.toSet()

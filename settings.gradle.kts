@@ -3,4 +3,10 @@ plugins {
 }
 rootProject.name = "vulnlog"
 
-include("dsl", "scripting-definition", "scripting-host", "cli")
+include(
+    "cli",
+    "core",
+    "dsl",
+    "scripting-definition",
+    "scripting-host",
+)

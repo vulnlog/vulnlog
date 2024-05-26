@@ -1,23 +1,19 @@
-val v100 = Version(1, 0, 0)
-val v101 = Version(1, 0, 1)
+val v100 = version("1.0.0")
+val v010 = version("0.1.0")
 
-val r1 = release { name = "r1"; upComing = v101; published { +v100 } }
+val r1 = branch("release 1", v100, v010)
 
-branches { +r1 }
+cve("CVE-2019-10782") {
+    owasp(v010)
+    ignore(v010, rationale = "This is a test suppress for demonstration purpose")
+}
 
-vulnerability {
-    cve = "cve1"
-    reporter {
-        owaspDependencyChecker {
-            affected { +v100 }
-        }
-    }
-    resolution {
-        suppress {
-            reason =
-                "Version 1.0.0 is not immediately affected. Nevertheless, dependency shall be fixed in upcoming release."
-            inVersion { +v100 }
-            untilVersion { +v101 }
-        }
-    }
+cve("CVE-2019-9658") {
+    owasp(v010)
+    ignore(v010, rationale = "This is a test suppress for demonstration purpose")
+}
+
+cve("CVE-2023-6378") {
+    owasp(v010)
+    ignore(v010, rationale = "This is a test suppress for demonstration purpose")
 }

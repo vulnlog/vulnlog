@@ -1,6 +1,6 @@
 package ch.addere.cli.suppressions
 
-import ch.addere.dsl.Vulnerability
+import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
 import java.io.File
 
 abstract class Suppressor(
@@ -14,15 +14,15 @@ abstract class Suppressor(
         require(suppressionBlockMarker.isNotBlank()) { "suppressionBlockMarker cannot be blank" }
     }
 
-    fun createSuppressions(vulnerabilities: Set<Vulnerability>): SuppressionComposition {
-        val filtered: Set<Vulnerability> = filterRelevant(vulnerabilities)
+    fun createSuppressions(vulnerabilities: Set<VlVulnerability>): SuppressionComposition {
+        val filtered: Set<VlVulnerability> = filterRelevant(vulnerabilities)
         val suppressionBlocks: Set<SuppressionBlock> = transform(filtered)
         return generateSuppressionComposition(suppressionBlocks)
     }
 
-    protected abstract fun filterRelevant(vulnerabilities: Set<Vulnerability>): Set<Vulnerability>
+    protected abstract fun filterRelevant(vulnerabilities: Set<VlVulnerability>): Set<VlVulnerability>
 
-    protected abstract fun transform(filtered: Set<Vulnerability>): Set<SuppressionBlock>
+    protected abstract fun transform(filtered: Set<VlVulnerability>): Set<SuppressionBlock>
 
     private fun generateSuppressionComposition(suppressionBlocks: Set<SuppressionBlock>): SuppressionComposition {
         suppressionFileTemplate.useLines { lineSequence ->
