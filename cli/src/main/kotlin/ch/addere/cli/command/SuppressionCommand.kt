@@ -16,7 +16,7 @@ class SuppressionCommand : KoinComponent, CliktCommand(
         Create suppression files based on vulnerability log entries.
         """.trimIndent(),
 ) {
-    val templates by option(
+    private val templates by option(
         "--templates",
         help =
             """

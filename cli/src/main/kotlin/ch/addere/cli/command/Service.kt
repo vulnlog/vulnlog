@@ -3,8 +3,8 @@ package ch.addere.cli.command
 import ch.addere.cli.suppressions.OwaspDependencyCheckerSuppressor
 import ch.addere.cli.suppressions.SnykSuppressor
 import ch.addere.cli.suppressions.SuppressionComposition
-import ch.addere.dsl.VulnLog
-import ch.addere.scripting.host.ScriptingHost
+import ch.addere.vulnlog.scriptdefinition.VulnLogScript
+import ch.addere.vulnlog.scriptinghost.ScriptingHost
 import java.io.File
 
 interface Service {
@@ -19,15 +19,15 @@ class ServiceImpl : Service {
         script: File,
         template: File,
     ): SuppressionComposition {
-        val result: VulnLog = ScriptingHost().evalScript(script)
+        val result: VulnLogScript = ScriptingHost().evalScript(script)
         return if (template.name.endsWith(".xml")) {
             val marker = "<vulnlog-marker/>"
             val suppressor = OwaspDependencyCheckerSuppressor(template, marker)
-            suppressor.createSuppressions(result.vulnerabilities)
+            suppressor.createSuppressions(result.allVulnerabilities)
         } else {
             val marker = "vulnlog-marker"
             val suppressor = SnykSuppressor(template, marker)
-            suppressor.createSuppressions(result.vulnerabilities)
+            suppressor.createSuppressions(result.allVulnerabilities)
         }
     }
 }

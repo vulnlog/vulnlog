@@ -4,6 +4,6 @@ plugins {
 
 dependencies {
     api(project(":dsl"))
-    implementation(project(":scripting-definition"))
+    api(project(":scripting-definition"))
     implementation(libs.bundles.kotlinScript)
 }
