@@ -1,6 +1,9 @@
 package ch.addere.vulnlog.cli.suppressions
 
 import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
+import ch.addere.vulnlog.core.snyk
+import ch.addere.vulnlog.core.suppress
+import ch.addere.vulnlog.core.vulnerability
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.io.File

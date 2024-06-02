@@ -1,6 +1,9 @@
 package ch.addere.vulnlog.cli.suppressions
 
 import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
+import ch.addere.vulnlog.core.owasp
+import ch.addere.vulnlog.core.suppress
+import ch.addere.vulnlog.core.vulnerability
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.engine.spec.tempdir
