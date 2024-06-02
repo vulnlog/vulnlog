@@ -4,8 +4,8 @@ import ch.addere.vulnlog.core.model.reporter.VlReporterSet
 import ch.addere.vulnlog.core.model.version.VlReleaseGroup
 import ch.addere.vulnlog.core.model.version.VlVersion
 import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
-import ch.addere.vulnlog.dsl2.VlVulnerabilityBlock
-import ch.addere.vulnlog.dsl2.VlVulnerabilitySetBlock
+import ch.addere.vulnlog.dsl.VlVulnerabilityBlock
+import ch.addere.vulnlog.dsl.VlVulnerabilitySetBlock
 import kotlin.script.experimental.annotations.KotlinScript
 import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
