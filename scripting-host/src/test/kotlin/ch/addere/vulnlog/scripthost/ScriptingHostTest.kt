@@ -1,5 +1,10 @@
 package ch.addere.vulnlog.scripthost
 
+import ch.addere.vulnlog.core.group
+import ch.addere.vulnlog.core.ignore
+import ch.addere.vulnlog.core.owasp
+import ch.addere.vulnlog.core.versions
+import ch.addere.vulnlog.core.vulnerability
 import ch.addere.vulnlog.scriptinghost.ScriptingHost
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly

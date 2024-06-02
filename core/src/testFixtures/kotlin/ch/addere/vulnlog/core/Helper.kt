@@ -1,4 +1,4 @@
-package ch.addere.vulnlog.cli.suppressions
+package ch.addere.vulnlog.core
 
 import ch.addere.vulnlog.core.model.reporter.VlOwaspReporter
 import ch.addere.vulnlog.core.model.reporter.VlReporter

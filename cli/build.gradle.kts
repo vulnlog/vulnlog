@@ -9,6 +9,8 @@ dependencies {
     implementation(libs.clikt)
     implementation(libs.koinCore)
 
+    testImplementation(testFixtures(project(":core")))
+
     testImplementation(libs.koinTest)
     testImplementation(libs.koinTestJoint5)
     testImplementation(libs.mockk)

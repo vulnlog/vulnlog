@@ -2,6 +2,7 @@ plugins {
     id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlin.jvm")
     id("org.jlleitschuh.gradle.ktlint")
+    `java-test-fixtures`
 }
 
 group = "ch.addere"
