@@ -16,6 +16,6 @@ dependencies {
 }
 
 application {
-    mainClass.set("ch.addere.cli.AppKt")
+    mainClass.set("ch.addere.vulnlog.cli.AppKt")
     applicationName = "vl"
 }
