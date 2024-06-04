@@ -1,4 +1,4 @@
-name: Vulnerability Checks
+name: Scan project for vulnerabilities
 
 on:
   workflow_dispatch:
@@ -8,31 +8,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout Code
+
+      - name: Check out project
         uses: actions/checkout@v3
-      - name: Set up JDK 17 for x64
+
+      - name: Set up Java (JDK 17 on x64)
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           architecture: x64
-      - name: Setup Gradle
+
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
+
       - name: Build project
-        run: ./gradlew clean build
+        run: ./gradlew build
+
       - name: Install project
         run: ./gradlew install
+
       - name: Create OWASP suppression file
         run:  mkdir -p build/suppressions && ./cli/build/install/vl/bin/vl supp -f vl.vulnlog.kts --templates cli/src/test/resources/templates/owasp-dependency-checker-suppressions-template.xml > build/suppressions/owaspDependencyChecker.xml
-      - name: OWASP Dependency Checker analyze
+
+      - name: Analyze project with OWASP Dependency Checker
         env:
           OWASP_DEPENDENCY_CHECK: ${{ secrets.OWASP_DEPENDENCY_CHECK }}
         run: ./gradlew dependencyCheckAnalyze
-      - name: OWASP Dependency Checker aggregate
+
+      - name: Aggregate OWASP Dependency Checker
         env:
           OWASP_DEPENDENCY_CHECK: ${{ secrets.OWASP_DEPENDENCY_CHECK }}
         run: ./gradlew :dependencyCheckAggregate
-      - name: Upload security reports
+
+      - name: Upload reports
         uses: actions/upload-artifact@v4
         with:
           name: reports

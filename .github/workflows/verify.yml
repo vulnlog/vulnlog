@@ -1,10 +1,7 @@
-name: Build project
+name: Verify project
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -28,6 +25,3 @@ jobs:
 
       - name: Check project
         run: ./gradlew check
-
-      - name: Build project
-        run: ./gradlew build
