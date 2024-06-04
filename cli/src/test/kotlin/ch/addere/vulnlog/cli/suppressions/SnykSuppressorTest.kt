@@ -26,12 +26,12 @@ private val vulnerabilities: Set<VlVulnerability> =
         vulnerability(
             "cve-id-1",
             snyk("snyk-id-1", "does not matter"),
-            suppress = suppress("fix in upcoming bug fix release"),
+            suppress = suppress(rationale = "fix in upcoming bug fix release"),
         ),
         vulnerability(
             "cve-id-2",
             snyk("snyk-id-2", "does not matter"),
-            suppress = suppress("fix in upcoming bug fix release"),
+            suppress = suppress(rationale = "fix in upcoming bug fix release"),
         ),
     )
 

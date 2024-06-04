@@ -44,8 +44,16 @@ class OwaspDependencyCheckerSuppressorTest : FunSpec({
 
 private val vulnerabilities: Set<VlVulnerability> =
     setOf(
-        vulnerability("cve-id-1", owasp("does not matter"), suppress = suppress("fix in upcoming bug fix release")),
-        vulnerability("cve-id-2", owasp("does not matter"), suppress = suppress("fix in upcoming bug fix release")),
+        vulnerability(
+            "cve-id-1",
+            owasp("does not matter"),
+            suppress = suppress(rationale = "fix in upcoming bug fix release"),
+        ),
+        vulnerability(
+            "cve-id-2",
+            owasp("does not matter"),
+            suppress = suppress(rationale = "fix in upcoming bug fix release"),
+        ),
     )
 
 private val head =

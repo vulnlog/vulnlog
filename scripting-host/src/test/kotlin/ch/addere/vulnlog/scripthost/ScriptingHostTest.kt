@@ -1,8 +1,8 @@
 package ch.addere.vulnlog.scripthost
 
 import ch.addere.vulnlog.core.group
-import ch.addere.vulnlog.core.ignore
 import ch.addere.vulnlog.core.owasp
+import ch.addere.vulnlog.core.suppress
 import ch.addere.vulnlog.core.versions
 import ch.addere.vulnlog.core.vulnerability
 import ch.addere.vulnlog.scriptinghost.ScriptingHost
@@ -46,17 +46,17 @@ class ScriptingHostTest : FunSpec({
                 vulnerability(
                     "CVE-2019-10782",
                     owasp("0.1.0"),
-                    ignore = ignore("0.1.0", rationale = "This is a test suppress for demonstration purpose"),
+                    suppress = suppress("0.1.0", rationale = "This is a test suppress for demonstration purpose"),
                 ),
                 vulnerability(
                     "CVE-2019-9658",
                     owasp("0.1.0"),
-                    ignore = ignore("0.1.0", rationale = "This is a test suppress for demonstration purpose"),
+                    suppress = suppress("0.1.0", rationale = "This is a test suppress for demonstration purpose"),
                 ),
                 vulnerability(
                     "CVE-2023-6378",
                     owasp("0.1.0"),
-                    ignore = ignore("0.1.0", rationale = "This is a test suppress for demonstration purpose"),
+                    suppress = suppress("0.1.0", rationale = "This is a test suppress for demonstration purpose"),
                 ),
             )
     }

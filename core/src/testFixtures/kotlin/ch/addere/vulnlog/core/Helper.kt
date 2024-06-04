@@ -5,7 +5,7 @@ import ch.addere.vulnlog.core.model.reporter.VlReporter
 import ch.addere.vulnlog.core.model.reporter.VlReporterSet
 import ch.addere.vulnlog.core.model.reporter.VlSnykReporter
 import ch.addere.vulnlog.core.model.resolution.VlFixInResolution
-import ch.addere.vulnlog.core.model.resolution.VlIgnoreResolution
+import ch.addere.vulnlog.core.model.resolution.VlMitigateResolution
 import ch.addere.vulnlog.core.model.resolution.VlResolutionVersionSet
 import ch.addere.vulnlog.core.model.resolution.VlSuppressResolution
 import ch.addere.vulnlog.core.model.version.VlAffectedVersionSet
@@ -26,11 +26,11 @@ fun group(
 fun vulnerability(
     id: String,
     vararg reporters: VlReporter,
-    ignore: VlIgnoreResolution? = null,
-    suppress: VlSuppressResolution? = null,
     fixIn: VlFixInResolution? = null,
+    mitigate: VlMitigateResolution? = null,
+    suppress: VlSuppressResolution? = null,
 ): VlVulnerability {
-    return VlVulnerability(id, VlReporterSet(reporters.toSet()), ignore, suppress, fixIn)
+    return VlVulnerability(id, VlReporterSet(reporters.toSet()), fixIn, mitigate, suppress)
 }
 
 fun owasp(vararg versions: String) = VlOwaspReporter(VlAffectedVersionSet((versions.map { VlVersion(it) }.toSet())))
@@ -40,13 +40,16 @@ fun snyk(
     vararg versions: String,
 ) = VlSnykReporter(snykId, VlAffectedVersionSet((versions.map { VlVersion(it) }.toSet())))
 
-fun ignore(
+fun mitigate(
     vararg versions: String,
     rationale: String,
-): VlIgnoreResolution {
-    return VlIgnoreResolution(VlResolutionVersionSet(versions.map { VlVersion(it) }.toSet()), rationale)
+): VlMitigateResolution {
+    return VlMitigateResolution(VlResolutionVersionSet(versions.map { VlVersion(it) }.toSet()), rationale)
 }
 
-fun suppress(rationale: String): VlSuppressResolution {
-    return VlSuppressResolution(VlResolutionVersionSet(emptySet()), rationale)
+fun suppress(
+    vararg versions: String = arrayOf(),
+    rationale: String,
+): VlSuppressResolution {
+    return VlSuppressResolution(VlResolutionVersionSet(versions.map { VlVersion(it) }.toSet()), rationale)
 }

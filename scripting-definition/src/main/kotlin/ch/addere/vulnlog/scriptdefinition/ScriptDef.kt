@@ -52,9 +52,9 @@ open class VulnLogScript {
             VlVulnerability(
                 id,
                 VlReporterSet(reporters),
-                ignoreVersions,
-                suppressVersions,
                 fixedInVersions,
+                mitigateVersions,
+                suppressVersions,
             )
     }
 }
