@@ -19,12 +19,15 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.1")
 }
 
-tasks.test {
-    useJUnitPlatform()
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
 }
 
-kotlin {
-    jvmToolchain(17)
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }
 
 dependencyLocking {

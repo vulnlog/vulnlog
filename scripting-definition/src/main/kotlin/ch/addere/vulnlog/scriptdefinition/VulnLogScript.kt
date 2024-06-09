@@ -5,16 +5,7 @@ import ch.addere.vulnlog.core.model.version.VlReleaseGroup
 import ch.addere.vulnlog.core.model.version.VlVersion
 import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
 import ch.addere.vulnlog.dsl.VlVulnerabilityBlock
-import ch.addere.vulnlog.dsl.VlVulnerabilitySetBlock
 import kotlin.script.experimental.annotations.KotlinScript
-import kotlin.script.experimental.api.ScriptAcceptedLocation
-import kotlin.script.experimental.api.ScriptCompilationConfiguration
-import kotlin.script.experimental.api.ScriptEvaluationConfiguration
-import kotlin.script.experimental.api.acceptedLocations
-import kotlin.script.experimental.api.ide
-import kotlin.script.experimental.api.implicitReceivers
-import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
-import kotlin.script.experimental.jvm.jvm
 
 @KotlinScript(
     displayName = "Vulnerability Log",
@@ -58,22 +49,3 @@ open class VulnLogScript {
             )
     }
 }
-
-object VulnLogCompilationConfiguration : ScriptCompilationConfiguration({
-
-    jvm {
-        implicitReceivers(VlVulnerabilitySetBlock::class)
-        dependenciesFromCurrentContext(wholeClasspath = true)
-    }
-
-    ide {
-        acceptedLocations(ScriptAcceptedLocation.Everywhere)
-    }
-})
-
-object VulnLogEvaluationConfiguration : ScriptEvaluationConfiguration({
-
-    jvm {
-        implicitReceivers(VlVulnerabilitySetBlock())
-    }
-})
