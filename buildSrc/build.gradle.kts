@@ -13,4 +13,5 @@ dependencies {
     implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
     implementation(libs.ktlintGradle)
+    implementation(libs.snykGradlePlugin)
 }

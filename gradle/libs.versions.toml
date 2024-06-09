@@ -9,6 +9,7 @@ kotlinVersion = "1.9.22"
 ktlintVersion = "12.1.0"
 mockkVersion = "1.13.10"
 owaspDependencyCheckerVersion = "9.2.0"
+snykVersion = "0.6.1"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
@@ -28,6 +29,7 @@ kotlinScriptingJvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", ver
 kotlinScriptingJvmHost = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlinVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
+snykGradlePlugin = { module = "gradle.plugin.io.snyk.gradle.plugin:snyk", version.ref = "snykVersion"}
 
 [bundles]
 kotlinScript = ["kotlinScriptingCommon", "kotlinScriptingDependencies", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
