@@ -48,4 +48,8 @@ open class VulnLogScript {
                 suppressVersions,
             )
     }
+
+    override fun toString(): String {
+        return "VulnLogScript(allVersions=$allVersions, allGroups=$allGroups, allVulnerabilities=$allVulnerabilities)"
+    }
 }

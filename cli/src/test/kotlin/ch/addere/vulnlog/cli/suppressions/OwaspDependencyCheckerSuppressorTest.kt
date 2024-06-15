@@ -7,7 +7,6 @@ import ch.addere.vulnlog.core.vulnerability
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.engine.spec.tempdir
-import io.kotest.engine.spec.tempfile
 import io.kotest.matchers.shouldBe
 import java.io.File
 
@@ -16,23 +15,14 @@ class OwaspDependencyCheckerSuppressorTest : FunSpec({
     test("test throws on non file template") {
         val exception =
             shouldThrow<IllegalArgumentException> {
-                OwaspDependencyCheckerSuppressor(tempdir(), "marker")
+                OwaspDependencyCheckerSuppressor(tempdir())
             }
 
         exception.message shouldBe "suppressionFileTemplate must be a file"
     }
 
-    test("test throws on blank marker") {
-        val exception =
-            shouldThrow<IllegalArgumentException> {
-                OwaspDependencyCheckerSuppressor(tempfile(), "  \t ")
-            }
-
-        exception.message shouldBe "suppressionBlockMarker cannot be blank"
-    }
-
     test("test correct suppression generation") {
-        val suppressor = OwaspDependencyCheckerSuppressor(readTemplate(), "<vulnlog-marker/>")
+        val suppressor = OwaspDependencyCheckerSuppressor(readTemplate())
 
         val result = suppressor.createSuppressions(vulnerabilities)
 
@@ -66,6 +56,8 @@ private val tail = listOf("</suppressions>")
 
 private val expected =
     SuppressionComposition(
+        "",
+        "",
         head,
         tail,
         setOf(

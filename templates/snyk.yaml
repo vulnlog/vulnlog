@@ -1,0 +1,3 @@
+# VulnLog template file for Snyk
+ignore:
+  # vulnlog-marker

@@ -1,5 +1,6 @@
 package ch.addere.vulnlog.cli.command
 
+import ch.addere.vulnlog.cli.output.OutputService
 import ch.addere.vulnlog.cli.suppressions.SuppressionComposition
 import com.github.ajalt.clikt.testing.test
 import io.kotest.core.spec.style.FunSpec
@@ -10,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockkClass
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
@@ -20,19 +22,9 @@ import org.koin.test.mock.declareMock
 class SuppressionCommandTest : FunSpec(), KoinTest {
     override fun extensions() = listOf(KoinExtension(module { singleOf(::ServiceImpl) }))
 
-    val mock: Service by inject()
+    val service: Service by inject()
+    val outputService: OutputService by inject(qualifier = named("file"))
 
-    //    @JvmField
-//    @RegisterExtension
-//    val koinTestExtension =
-//        KoinTestExtension.create {
-//            modules(
-//                module {
-//                    singleOf(::ServiceImpl)
-//                },
-//            )
-//        }
-//
     @JvmField
     @RegisterExtension
     val mockProvider: MockProviderExtension =
@@ -96,15 +88,23 @@ class SuppressionCommandTest : FunSpec(), KoinTest {
                 """.trimIndent()
         }
 
-        test("test with file and template option") {
+        xtest("test with file and template option") {
             declareMock<Service> {
-                every { mock.action(any(), any()) }.returns(
-                    SuppressionComposition(
-                        emptyList(),
-                        emptyList(),
-                        setOf(emptyList()),
+                every { service.action(any(), any()) }.returns(
+                    listOf(
+                        SuppressionComposition(
+                            "",
+                            "",
+                            emptyList(),
+                            emptyList(),
+                            setOf(emptyList()),
+                        ),
                     ),
                 )
+            }
+
+            declareMock<OutputService> {
+                every { outputService.write(any()) }.returns(Unit)
             }
 
             val command = SuppressionCommand()

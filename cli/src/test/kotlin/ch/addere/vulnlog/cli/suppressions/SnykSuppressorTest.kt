@@ -11,7 +11,7 @@ import java.io.File
 class SnykSuppressorTest : FunSpec({
 
     test("test correct suppression generation") {
-        val suppressor = SnykSuppressor(readTemplate(), "vulnlog-marker")
+        val suppressor = SnykSuppressor(readTemplate())
 
         val result = suppressor.createSuppressions(vulnerabilities)
 
@@ -44,6 +44,8 @@ private val tail = emptyList<String>()
 
 private val expected =
     SuppressionComposition(
+        "",
+        "",
         head,
         tail,
         setOf(

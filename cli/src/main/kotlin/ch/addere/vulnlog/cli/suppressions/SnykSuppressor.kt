@@ -4,16 +4,22 @@ import ch.addere.vulnlog.core.model.reporter.VlSnykReporter
 import ch.addere.vulnlog.core.model.vulnerability.VlVulnerability
 import java.io.File
 
-class SnykSuppressor(
-    suppressionFileTemplate: File,
-    suppressionBlockMarker: String,
-) : Suppressor(suppressionFileTemplate, suppressionBlockMarker) {
+class SnykSuppressor(suppressionFileTemplate: File) : Suppressor(suppressionFileTemplate) {
+    override val vulnLogMarker: Regex
+        get() = Regex("\\s+# vulnlog-marker")
+
+    override val vulnLogTemplateMarker: Regex
+        get() = Regex("# VulnLog template file for Snyk")
+
     override val suppressionBlockTemplate: String
         get() =
             """|vulnlog-snyk-id:
-                   |  - '*':
-                   |    reason: vulnlog-reason
+               |  - '*':
+               |    reason: vulnlog-reason
             """.trimMargin()
+
+    override val outputfileName: String
+        get() = ".snyk"
 
     override fun filterRelevant(vulnerabilities: Set<VlVulnerability>): Set<VlVulnerability> {
         return vulnerabilities

@@ -3,19 +3,23 @@ plugins {
     id("org.owasp.dependencycheck")
 }
 
+val reportsDir: File = layout.buildDirectory.dir("reports").get().asFile
+val suppressionsDir: File = layout.buildDirectory.dir("suppressions").get().asFile
+
 snyk {
-    val suppressionFile = "build/suppressions/.snyk"
-    val reportFile = "build/reports/snykReport"
-    println("wololo: $suppressionFile")
-    setArguments("--policy-path=$suppressionFile --json-file-output=$reportFile --all-sub-projects")
-    setApi(System.getenv("SNYK_API_KEY"))
+    setArguments(
+        "--policy-path=$suppressionsDir/.snyk " +
+            "--json-file-output=$reportsDir/snyk/report.json " +
+            "--sarif-file-output=$reportsDir/snyk/report.sarif " +
+            "--all-sub-projects ",
+    )
     setAutoDownload(true)
     setAutoUpdate(true)
 }
 
 dependencyCheck {
     format = "ALL"
-    outputDirectory = "build/reports/owaspDependencyChecker"
-    suppressionFile = "build/suppressions/owaspDependencyChecker.xml"
+    outputDirectory = "$reportsDir/owaspDependencyChecker"
+    suppressionFile = "$suppressionsDir/owasp-suppression.xml"
     nvd.apiKey = System.getenv("OWASP_DEPENDENCY_CHECK")
 }

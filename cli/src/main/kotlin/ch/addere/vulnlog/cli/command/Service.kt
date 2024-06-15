@@ -6,28 +6,32 @@ import ch.addere.vulnlog.cli.suppressions.SuppressionComposition
 import ch.addere.vulnlog.scriptdefinition.VulnLogScript
 import ch.addere.vulnlog.scriptinghost.ScriptingHost
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.listDirectoryEntries
 
 interface Service {
     fun action(
         script: File,
-        template: File,
-    ): SuppressionComposition
+        template: Path,
+    ): List<SuppressionComposition>
 }
 
 class ServiceImpl : Service {
     override fun action(
         script: File,
-        template: File,
-    ): SuppressionComposition {
+        template: Path,
+    ): List<SuppressionComposition> {
         val result: VulnLogScript = ScriptingHost().evalScript(script)
-        return if (template.name.endsWith(".xml")) {
-            val marker = "<vulnlog-marker/>"
-            val suppressor = OwaspDependencyCheckerSuppressor(template, marker)
-            suppressor.createSuppressions(result.allVulnerabilities)
-        } else {
-            val marker = "vulnlog-marker"
-            val suppressor = SnykSuppressor(template, marker)
-            suppressor.createSuppressions(result.allVulnerabilities)
-        }
+        val owasp: SuppressionComposition =
+            template.listDirectoryEntries("*owasp*").map {
+                val suppressor = OwaspDependencyCheckerSuppressor(it.toFile())
+                suppressor.createSuppressions(result.allVulnerabilities)
+            }.first()
+        val snyk =
+            template.listDirectoryEntries("*snyk*").map {
+                val suppressor = SnykSuppressor(it.toFile())
+                suppressor.createSuppressions(result.allVulnerabilities)
+            }.first()
+        return listOf(owasp, snyk)
     }
 }

@@ -9,16 +9,14 @@ fun SuppressionBlock.pretty(indentation: String): String {
 }
 
 data class SuppressionComposition(
+    val outputFileName: String,
+    val baseIndentation: String,
     val head: SuppressionHead,
     val tail: SuppressionTail,
     val suppressions: Set<SuppressionBlock>,
 ) {
-    fun pretty(
-        before: String = "\n",
-        between: String = "\n",
-        after: String = "\n",
-        indentation: String = "",
-    ): List<String> {
-        return head + before + suppressions.joinToString(separator = between) { it.pretty(indentation) } + after + tail
-    }
+    fun prettyString(): String =
+        head.joinToString(separator = "\n", postfix = "\n") +
+            suppressions.joinToString(separator = "\n") { it.pretty(baseIndentation) } +
+            if (tail.isEmpty()) "\n" else tail.joinToString(separator = "\n", prefix = "\n", postfix = "\n")
 }
