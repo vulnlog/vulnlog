@@ -42,14 +42,13 @@ open class VulnLogScript {
         allVulnerabilities +=
             VlVulnerability(
                 id,
-                VlReporterSet(reporters),
+                VlReporterSet(reporters()),
                 fixedInVersions,
                 mitigateVersions,
                 suppressVersions,
             )
     }
 
-    override fun toString(): String {
-        return "VulnLogScript(allVersions=$allVersions, allGroups=$allGroups, allVulnerabilities=$allVulnerabilities)"
-    }
+    override fun toString(): String =
+        "VulnLogScript(allVersions=$allVersions, allGroups=$allGroups, allVulnerabilities=$allVulnerabilities)"
 }
