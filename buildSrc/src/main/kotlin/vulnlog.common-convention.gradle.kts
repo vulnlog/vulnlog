@@ -5,8 +5,8 @@ plugins {
     `java-test-fixtures`
 }
 
-group = "ch.addere"
-version = "0.1.0"
+group = "ch.addere.vulnlog"
+version = "0.1.0-SNAPSHOT"
 
 repositories {
     mavenLocal()
@@ -40,9 +40,7 @@ tasks.register("resolveAndLockAll") {
         require(gradle.startParameter.isWriteDependencyLocks) { "$path must be run from the command line with the `--write-locks` flag" }
     }
     doLast {
-        configurations.filter {
-            it.isCanBeResolved
-        }.forEach { it.resolve() }
+        configurations.filter { it.isCanBeResolved }.forEach { it.resolve() }
     }
 }
 

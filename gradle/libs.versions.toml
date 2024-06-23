@@ -32,6 +32,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
 snykGradlePlugin = { module = "gradle.plugin.io.snyk.gradle.plugin:snyk", version.ref = "snykVersion"}
 
 [bundles]
+kotlinScriptDefinition = ["kotlinScriptingJvm"]
 kotlinScript = ["kotlinScriptingCommon", "kotlinScriptingDependencies", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
 
 [plugins]
