@@ -13,7 +13,7 @@ publishing {
     publications {
         create<MavenPublication>("VulnLogScriptLanguage") {
             from(components["kotlin"])
-            groupId = "ch.addere.vulnlog"
+            groupId = "io.vulnlog"
             artifactId = "language"
         }
     }
