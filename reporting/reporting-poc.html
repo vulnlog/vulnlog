@@ -18,6 +18,108 @@
             border-collapse: collapse;
         }
     </style>
+    <script>
+        let openData = [
+            {
+                "id": ["CVE-B", "OTHER-B"],
+                "reportedFor": "1.0.0",
+                "affects": "DoS",
+                "reasoning": "Lorem ipsum",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "id": ["CVE-C"],
+                "reportedFor": "1.0.1",
+                "affects": "Foo",
+                "reasoning": "Lorem ipsum",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "id": ["CVE-D"],
+                "reportedFor": "1.0.1",
+                "affects": "Bar",
+                "reasoning": "Lorem ipsum",
+                "rating": "H",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "id": ["CVE-E"],
+                "reportedFor": "1.0.2",
+                "affects": "Baz",
+                "reasoning": "Lorem ipsum",
+                "rating": "M",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            }
+        ];
+
+        let showDetailsPerId = new Set()
+
+        function restTable() {
+            let tableContent = document.getElementById("openVulnerabilities");
+            tableContent.innerHTML = ''
+        }
+
+        function buildTable(data) {
+            let tableContent = document.getElementById("openVulnerabilities");
+
+            for (let i = 0; i < data.length; i++) {
+                let rowData = data[i]
+
+                if (showDetailsPerId.has(rowData.id[0])) {
+
+                    let row =
+                        `<tr>
+                         <td>${rowData.id[0]}</td>
+                         <td>${rowData.reportedFor}</td>
+                         <td>${rowData.affects}</td>
+                         <td>${rowData.reasoning}</td>
+                         <td>${rowData.rating}</td>
+                         <td>${rowData.actionNeeded}</td>
+                         <td>${rowData.fixIn}</td>
+                         <td><a href="#" onclick="removeDetails('${rowData.id[0]}')">hide</a></td>
+                     </tr>`;
+                    tableContent.innerHTML += row
+                    let details = `<tr><td colspan="8">
+                <div id="ids">ID: ${rowData.id.join(", ")}</div>
+                <div>Reported for version: ${rowData.reportedFor}</div>
+                </td></tr>`
+
+                    tableContent.innerHTML += details
+                } else {
+                    let row =
+                        `<tr>
+                         <td>${rowData.id[0]}</td>
+                         <td>${rowData.reportedFor}</td>
+                         <td>${rowData.affects}</td>
+                         <td>${rowData.reasoning}</td>
+                         <td>${rowData.rating}</td>
+                         <td>${rowData.actionNeeded}</td>
+                         <td>${rowData.fixIn}</td>
+                         <td><a href="#" onclick="showDetails('${rowData.id[0]}')">show</a></td>
+                     </tr>`;
+                    tableContent.innerHTML += row
+                }
+            }
+        }
+
+        let showDetails = (id) => {
+            showDetailsPerId.add(id)
+            restTable()
+            buildTable(openData)
+        }
+
+        let removeDetails = (id) => {
+            showDetailsPerId.delete(id)
+            restTable()
+            buildTable(openData)
+        }
+    </script>
 </head>
 <body>
 <h1>VL Reporting</h1>
@@ -36,132 +138,7 @@
     <tbody id="openVulnerabilities"></tbody>
 </table>
 <script>
-    let openData = [
-        {
-            "id": ["CVE-B", "OTHER-B"],
-            "reportedFor": "1.0.0",
-            "affects": "DoS",
-            "reasoning": "Lorem ipsum",
-            "rating": "C",
-            "actionNeeded": "Update X to >= Y",
-            "fixIn": "1.0.3"
-        },
-        {
-            "id": ["CVE-C"],
-            "reportedFor": "1.0.1",
-            "affects": "Foo",
-            "reasoning": "Lorem ipsum",
-            "rating": "C",
-            "actionNeeded": "Update X to >= Y",
-            "fixIn": "1.0.3"
-        },
-        {
-            "id": ["CVE-D"],
-            "reportedFor": "1.0.1",
-            "affects": "Bar",
-            "reasoning": "Lorem ipsum",
-            "rating": "H",
-            "actionNeeded": "Update X to >= Y",
-            "fixIn": "1.0.3"
-        },
-        {
-            "id": ["CVE-E"],
-            "reportedFor": "1.0.2",
-            "affects": "Baz",
-            "reasoning": "Lorem ipsum",
-            "rating": "M",
-            "actionNeeded": "Update X to >= Y",
-            "fixIn": "1.0.3"
-        }
-    ];
-
     buildTable(openData)
-
-    function restTable() {
-        let tableContent = document.getElementById("openVulnerabilities");
-        tableContent.innerHTML = ''
-    }
-
-    function buildTable(data) {
-        let tableContent = document.getElementById("openVulnerabilities");
-
-        for (let i = 0; i < data.length; i++) {
-            let rowData = data[i]
-            let row =
-                `<tr onclick="showDetails('${rowData.id[0]}')">
-                         <td>${rowData.id[0]}</td>
-                         <td>${rowData.reportedFor}</td>
-                         <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning}</td>
-                         <td>${rowData.rating}</td>
-                         <td>${rowData.actionNeeded}</td>
-                         <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="showDetails('${rowData.id[0]}')">show</a></td>
-                     </tr>`;
-            tableContent.innerHTML += row
-        }
-    }
-
-    function buildTableWithDetails(data, vulnerability) {
-        let tableContent = document.getElementById("openVulnerabilities");
-
-        for (let i = 0; i < data.length; i++) {
-            let rowData = data[i]
-            let row
-            if (rowData.id === vulnerability.id) {
-                row = `<tr>
-                         <td>${rowData.id[0]}</td>
-                         <td>${rowData.reportedFor}</td>
-                         <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning}</td>
-                         <td>${rowData.rating}</td>
-                         <td>${rowData.actionNeeded}</td>
-                         <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="removeDetails()">hide</a></td>
-                     </tr>`;
-            } else {
-                row = `<tr>
-                         <td>${rowData.id[0]}</td>
-                         <td>${rowData.reportedFor}</td>
-                         <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning}</td>
-                         <td>${rowData.rating}</td>
-                         <td>${rowData.actionNeeded}</td>
-                         <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="showDetails('${rowData.id[0]}')">show</a></td>
-                     </tr>`;
-            }
-            tableContent.innerHTML += row
-
-            if (rowData.id === vulnerability.id) {
-                let details = `<tr><td colspan="8">
-                <div id="ids">ID: ${vulnerability.id.join(", ")}</div>
-                <div>Reported vor version: ${vulnerability.reportedFor}</div>
-                </td></tr>`
-
-                tableContent.innerHTML += details
-            }
-        }
-    }
-
-    function showDetails(id) {
-        let vulnerability = findVulnerabilityById(id)
-        restTable()
-        buildTableWithDetails(openData, vulnerability)
-    }
-
-    function removeDetails() {
-        restTable()
-        buildTable(openData)
-    }
-
-    function findVulnerabilityById(id) {
-        for (let i = 0; i < openData.length; i++) {
-            if (openData[i].id[0] === id) {
-                return openData[i];
-            }
-        }
-    }
 </script>
 </body>
 </html>
