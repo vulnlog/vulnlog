@@ -110,6 +110,20 @@
             tableContent.innerHTML = ''
         }
 
+        function buildOpenTable(tableBodyElementId, data) {
+            let tableContent = document.getElementById(tableBodyElementId);
+            for (let i = 0; i < data.length; i++) {
+                let rowData = data[i]
+                let row =
+                    `<tr>
+                         <td>${rowData.id[0]}</td>
+                         <td>${rowData.reportedFor}</td>
+                         <td>${rowData.affects}</td>
+                     </tr>`;
+                tableContent.innerHTML += row
+            }
+        }
+
         function buildTable(tableBodyElementId, data) {
             let tableContent = document.getElementById(tableBodyElementId);
             for (let i = 0; i < data.length; i++) {
@@ -171,6 +185,16 @@
             }
         }
 
+        function initSummary() {
+            document.getElementById("summaryOpenReports").innerText = openVulnerabilities.length + " open vulnerability reports"
+            document.getElementById("summaryKnownOpenReports").innerText = knownOpenVulnerabilities.length + " know open vulnerability reports"
+            document.getElementById("summaryResolvedReports").innerText = resolvedVulnerabilities.length + " resolved vulnerability reports"
+        }
+
+        function initOpenTable() {
+            buildOpenTable("openVulnerabilities", openVulnerabilities)
+        }
+
         function initKnownOpenTable() {
             buildTable("knownOpenVulnerabilities", knownOpenVulnerabilities)
         }
@@ -178,11 +202,24 @@
         function initResolvedTable() {
             buildTable("resolvedVulnerabilities", resolvedVulnerabilities)
         }
+
+        function init() {
+            initSummary()
+            initOpenTable()
+            initKnownOpenTable()
+            initResolvedTable()
+        }
     </script>
 </head>
 <body>
 <h1>VL Reporting</h1>
+<p>Report generated on 2024-10-06</p>
+<h2>Summary</h2>
+<p id="summaryOpenReports"></p>
+<p id="summaryKnownOpenReports"></p>
+<p id="summaryResolvedReports"></p>
 <h2>Open</h2>
+<p>These reports need further analysis.</p>
 <table>
     <tr>
         <th>ID</th>
@@ -192,6 +229,7 @@
     <tbody id="openVulnerabilities"></tbody>
 </table>
 <h2>Known Open</h2>
+<p>These vulnerabilities need further actions.</p>
 <table>
     <tr>
         <th>ID</th>
@@ -206,6 +244,7 @@
     <tbody id="knownOpenVulnerabilities"></tbody>
 </table>
 <h2>Resolved</h2>
+<p>These vulnerabilities have been analysed and further actions has been applied.</p>
 <table>
     <tr>
         <th>ID</th>
@@ -220,8 +259,7 @@
     <tbody id="resolvedVulnerabilities"></tbody>
 </table>
 <script>
-    initKnownOpenTable()
-    initResolvedTable()
+    init()
 </script>
 </body>
 </html>
