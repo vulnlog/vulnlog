@@ -19,7 +19,14 @@
         }
     </style>
     <script>
-        let openData = [
+        let openVulnerabilities = [
+            {
+                "id": ["CVE-A", "OTHER-A"],
+                "reportedFor": "1.0.0",
+                "affects": "DoS",
+            },
+        ];
+        let knownOpenVulnerabilities = [
             {
                 "id": ["CVE-B", "OTHER-B"],
                 "reportedFor": "1.0.0",
@@ -57,20 +64,56 @@
                 "fixIn": "1.0.3"
             }
         ];
+        let resolvedVulnerabilities = [
+            {
+                "id": ["CVE-F", "OTHER-B"],
+                "reportedFor": "1.0.0",
+                "affects": "DoS",
+                "reasoning": "Lorem ipsum",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            },
+            {
+                "id": ["CVE-G"],
+                "reportedFor": "1.0.0",
+                "affects": "Foo",
+                "reasoning": "Lorem ipsum",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            },
+            {
+                "id": ["CVE-H"],
+                "reportedFor": "1.0.0",
+                "affects": "Bar",
+                "reasoning": "Lorem ipsum",
+                "rating": "H",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            },
+            {
+                "id": ["CVE-I"],
+                "reportedFor": "1.0.1",
+                "affects": "Baz",
+                "reasoning": "Lorem ipsum",
+                "rating": "M",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            }
+        ];
 
         let showDetailsPerId = new Set()
 
-        function restTable() {
-            let tableContent = document.getElementById("openVulnerabilities");
+        function restTable(tableBodyElementId) {
+            let tableContent = document.getElementById(tableBodyElementId);
             tableContent.innerHTML = ''
         }
 
-        function buildTable(data) {
-            let tableContent = document.getElementById("openVulnerabilities");
-
+        function buildTable(tableBodyElementId, data) {
+            let tableContent = document.getElementById(tableBodyElementId);
             for (let i = 0; i < data.length; i++) {
                 let rowData = data[i]
-
                 if (showDetailsPerId.has(rowData.id[0])) {
 
                     let row =
@@ -82,7 +125,7 @@
                          <td>${rowData.rating}</td>
                          <td>${rowData.actionNeeded}</td>
                          <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="removeDetails('${rowData.id[0]}')">hide</a></td>
+                         <td><a href="#" onclick="removeDetails('${rowData.id[0]}', '${tableBodyElementId}')">hide</a></td>
                      </tr>`;
                     tableContent.innerHTML += row
                     let details = `<tr><td colspan="8">
@@ -101,23 +144,39 @@
                          <td>${rowData.rating}</td>
                          <td>${rowData.actionNeeded}</td>
                          <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="showDetails('${rowData.id[0]}')">show</a></td>
+                         <td><a href="#" onclick="showDetails('${rowData.id[0]}', '${tableBodyElementId}')">show</a></td>
                      </tr>`;
                     tableContent.innerHTML += row
                 }
             }
         }
 
-        let showDetails = (id) => {
+        let showDetails = (id, tableBodyElementId) => {
             showDetailsPerId.add(id)
-            restTable()
-            buildTable(openData)
+            restTable(tableBodyElementId)
+            if (tableBodyElementId === "knownOpenVulnerabilities") {
+                buildTable(tableBodyElementId, knownOpenVulnerabilities)
+            } else {
+                buildTable(tableBodyElementId, resolvedVulnerabilities)
+            }
         }
 
-        let removeDetails = (id) => {
+        let removeDetails = (id, tableBodyElementId) => {
             showDetailsPerId.delete(id)
-            restTable()
-            buildTable(openData)
+            restTable(tableBodyElementId)
+            if (tableBodyElementId === "knownOpenVulnerabilities") {
+                buildTable(tableBodyElementId, knownOpenVulnerabilities)
+            } else {
+                buildTable(tableBodyElementId, resolvedVulnerabilities)
+            }
+        }
+
+        function initKnownOpenTable() {
+            buildTable("knownOpenVulnerabilities", knownOpenVulnerabilities)
+        }
+
+        function initResolvedTable() {
+            buildTable("resolvedVulnerabilities", resolvedVulnerabilities)
         }
     </script>
 </head>
@@ -129,16 +188,40 @@
         <th>ID</th>
         <th>Reported For</th>
         <th>Affects</th>
+    </tr>
+    <tbody id="openVulnerabilities"></tbody>
+</table>
+<h2>Known Open</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Reported For</th>
+        <th>Affects</th>
         <th>Reasoning</th>
         <th>Rating</th>
         <th>Action needed</th>
         <th>Fix in</th>
         <th>Details</th>
     </tr>
-    <tbody id="openVulnerabilities"></tbody>
+    <tbody id="knownOpenVulnerabilities"></tbody>
+</table>
+<h2>Resolved</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Reported For</th>
+        <th>Affects</th>
+        <th>Reasoning</th>
+        <th>Rating</th>
+        <th>Action applied</th>
+        <th>Fixed in</th>
+        <th>Details</th>
+    </tr>
+    <tbody id="resolvedVulnerabilities"></tbody>
 </table>
 <script>
-    buildTable(openData)
+    initKnownOpenTable()
+    initResolvedTable()
 </script>
 </body>
 </html>
