@@ -4,10 +4,21 @@
     <title>VL Reporting</title>
     <meta charset='utf-8'>
     <style>
+        :where(html) {
+            --background-color: #fff;
+            --text-color: #222;
+        }
+
         html {
             max-width: 800px;
             margin: auto;
             font-family: sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        a {
+            color: var(--text-color);
         }
 
         table {
@@ -15,14 +26,15 @@
         }
 
         table, th, td {
-            border: 1px solid black;
+            border: 1px solid;
+            border-color: var(--text-color);
             border-collapse: collapse;
         }
 
         .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
             text-align: center;
             text-transform: uppercase;
-            color: white;
+            color: var(--text-color);
             font-weight: bolder;
         }
 
@@ -46,6 +58,12 @@
             background-color: white;
         }
 
+        @media (prefers-color-scheme: dark) {
+            :where(html) {
+                --background-color: hsl(228, 5%, 15%);
+                --text-color: hsl(228, 5%, 80%);
+            }
+        }
     </style>
     <script>
         let openVulnerabilities = [
