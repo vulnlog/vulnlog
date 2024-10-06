@@ -272,7 +272,32 @@
         function initSummary() {
             document.getElementById("summaryOpenReports").innerText = openVulnerabilities.length + " open vulnerability reports"
             document.getElementById("summaryKnownOpenReports").innerText = knownOpenVulnerabilities.length + " know open vulnerability reports"
+            document.getElementById("summaryKnownOpenReportsEmoji").innerText = sortedKnownOpenVulnerabilities()
             document.getElementById("summaryResolvedReports").innerText = resolvedVulnerabilities.length + " resolved vulnerability reports"
+            document.getElementById("summaryResolvedReportsEmoji").innerText = themeAwareVulnerabilities()
+        }
+
+        function sortedKnownOpenVulnerabilities() {
+            let ratingToCount = knownOpenVulnerabilities.map(entry => entry.rating).reduce((rating, count) => {
+                rating[count] = (rating[count] ?? 0) + 1
+                return rating
+            }, {})
+            let c = '🟥'
+            let h = '🟧'
+            let m = '🟨'
+            let l = '🟦'
+            return `${c.repeat(ratingToCount['C'])}${h.repeat(ratingToCount['H'])}${m.repeat(ratingToCount['M'])}${l.repeat(ratingToCount['L'])}`
+        }
+
+        function themeAwareVulnerabilities() {
+            let nofHandledVulnerabilities = resolvedVulnerabilities.map(entry => entry.rating).filter((rating) => rating === 'C' || 'H' || 'M' || 'L').length
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                let whiteSquare = '⬜'
+                return `${whiteSquare.repeat(nofHandledVulnerabilities)}`
+            } else {
+                let darkSquare = '⬛'
+                return `${darkSquare.repeat(nofHandledVulnerabilities)}`
+            }
         }
 
         function initOpenTable() {
@@ -301,7 +326,9 @@
 <h2>Summary</h2>
 <p id="summaryOpenReports"></p>
 <p id="summaryKnownOpenReports"></p>
+<p id="summaryKnownOpenReportsEmoji"></p>
 <p id="summaryResolvedReports"></p>
+<p id="summaryResolvedReportsEmoji"></p>
 <h2>Open</h2>
 <p>These reports need further analysis.</p>
 <table>
