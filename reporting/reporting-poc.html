@@ -19,6 +19,7 @@
 
         a {
             color: var(--text-color);
+            text-decoration: underline;
         }
 
         table {
@@ -221,7 +222,7 @@
                          <td class="${ratingClass}" title="${ratingDescription}">${rowData.rating}</td>
                          <td>${rowData.actionNeeded}</td>
                          <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="removeDetails('${rowData.id[0]}', '${tableBodyElementId}')">hide</a></td>
+                         <td><a onclick="removeDetails('${rowData.id[0]}', '${tableBodyElementId}')">hide</a></td>
                      </tr>`;
                     tableContent.innerHTML += row
                     let details = `<tr><td colspan="8">
@@ -241,7 +242,7 @@
                          <td class="${ratingClass}" title="${ratingDescription}">${rowData.rating}</td>
                          <td>${rowData.actionNeeded}</td>
                          <td>${rowData.fixIn}</td>
-                         <td><a href="#" onclick="showDetails('${rowData.id[0]}', '${tableBodyElementId}')">show</a></td>
+                         <td><a onclick="showDetails('${rowData.id[0]}', '${tableBodyElementId}')">show</a></td>
                      </tr>`;
                     tableContent.innerHTML += row
                 }
