@@ -269,6 +269,18 @@
             }
         }
 
+        function readIdUrlParameter() {
+            let queryString = window.location.search;
+            let urlParams = new URLSearchParams(queryString);
+            let ids = urlParams.get('ids')
+            if (ids === null || ids === '') {
+                return
+            }
+            ids.split(',').map((id) => {
+                showDetailsPerId.add(id)
+            })
+        }
+
         function initSummary() {
             document.getElementById("summaryOpenReports").innerText = openVulnerabilities.length + " open vulnerability reports"
             document.getElementById("summaryKnownOpenReports").innerText = knownOpenVulnerabilities.length + " know open vulnerability reports"
@@ -313,6 +325,7 @@
         }
 
         function init() {
+            readIdUrlParameter()
             initSummary()
             initOpenTable()
             initKnownOpenTable()
