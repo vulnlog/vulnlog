@@ -60,7 +60,6 @@
         }
 
         .ratingNone {
-            background-color: white;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -215,10 +214,10 @@
                          <td>${rowData.id[0]}</td>
                          <td>${rowData.reportedFor}</td>
                          <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning}</td>
-                         <td class="${ratingClass}" title="${ratingDescription}">${rowData.rating}</td>
-                         <td>${rowData.actionNeeded}</td>
-                         <td>${rowData.fixIn}</td>
+                         <td>${rowData.reasoning ?? ""}</td>
+                         <td class="${ratingClass ?? "ratingNone"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
+                         <td>${rowData.actionNeeded ?? ""}</td>
+                         <td>${rowData.fixIn ?? ""}</td>
                          <td><a onclick="removeDetails('${rowData.id[0]}', '${tableBodyElementId}')">hide</a></td>
                      </tr>`;
                     tableContent.innerHTML += row
@@ -236,10 +235,10 @@
                          <td>${rowData.id[0]}</td>
                          <td>${rowData.reportedFor}</td>
                          <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning}</td>
-                         <td class="${ratingClass}" title="${ratingDescription}">${rowData.rating}</td>
-                         <td>${rowData.actionNeeded}</td>
-                         <td>${rowData.fixIn}</td>
+                         <td>${rowData.reasoning ?? ""}</td>
+                         <td class="${ratingClass ?? "noRatingYet"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
+                         <td>${rowData.actionNeeded ?? ""}</td>
+                         <td>${rowData.fixIn ?? ""}</td>
                          <td><a onclick="showDetails('${rowData.id[0]}', '${tableBodyElementId}')">show</a></td>
                      </tr>`;
                     tableContent.innerHTML += row
