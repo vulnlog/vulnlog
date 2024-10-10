@@ -179,45 +179,44 @@
 
         let showDetailsPerId = new Set()
 
-        function restTable(tableBodyElementId) {
-            let tableContent = document.getElementById(tableBodyElementId);
+        let tableContent = null;
+
+        function restTable() {
             tableContent.innerHTML = ''
         }
 
-        function buildUnifiedTable(tableBodyElementId, data) {
-            let tableContent = document.getElementById(tableBodyElementId);
-            for (let i = 0; i < data.length; i++) {
-                let rowData = data[i]
+        function buildUnifiedTableRow(rowData) {
+            let ratingClass
+            let ratingDescription
+            switch (rowData.rating) {
+                case 'C':
+                    ratingClass = 'ratingCritical'
+                    ratingDescription = 'Critical'
+                    break
+                case 'H':
+                    ratingClass = 'ratingHigh'
+                    ratingDescription = 'High'
+                    break
+                case 'M':
+                    ratingClass = 'ratingMedium'
+                    ratingDescription = 'Medium'
+                    break
+                case 'L':
+                    ratingClass = 'ratingLow'
+                    ratingDescription = 'Low'
+                    break
+                default:
+                    ratingClass = 'ratingNone'
+                    ratingDescription = 'None'
+                    break
+            }
 
-                let ratingClass
-                let ratingDescription
-                switch (rowData.rating) {
-                    case 'C':
-                        ratingClass = 'ratingCritical'
-                        ratingDescription = 'Critical'
-                        break
-                    case 'H':
-                        ratingClass = 'ratingHigh'
-                        ratingDescription = 'High'
-                        break
-                    case 'M':
-                        ratingClass = 'ratingMedium'
-                        ratingDescription = 'Medium'
-                        break
-                    case 'L':
-                        ratingClass = 'ratingLow'
-                        ratingDescription = 'Low'
-                        break
-                    default:
-                        ratingClass = 'ratingNone'
-                        ratingDescription = 'None'
-                        break
-                }
+            console.log(rowData)
 
-                if (showDetailsPerId.has(rowData.id[0])) {
+            if (showDetailsPerId.has(rowData.id[0])) {
 
-                    let row =
-                        `<tr>
+                let row =
+                    `<tr>
                          <td>${rowData.status}</td>
                          <td>${rowData.id[0]}</td>
                          <td>${rowData.reportedFor}</td>
@@ -226,19 +225,19 @@
                          <td class="${ratingClass ?? "ratingNone"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
                          <td>${rowData.actionNeeded ?? ""}</td>
                          <td>${rowData.fixIn ?? ""}</td>
-                         <td><a onclick="removeDetails('${rowData.id[0]}', '${tableBodyElementId}')">hide</a></td>
+                         <td><a onclick="removeDetails('${rowData.id[0]}')">hide</a></td>
                      </tr>`;
-                    tableContent.innerHTML += row
-                    let details = `<tr><td colspan="9">
+                tableContent.innerHTML += row
+                let details = `<tr><td colspan="9">
                 <div id="ids">ID: ${rowData.id.join(", ")}</div>
                 <div>Reported for version: ${rowData.reportedFor}</div>
                 <div>Rating: ${ratingDescription}</div>
                 </td></tr>`
 
-                    tableContent.innerHTML += details
-                } else {
-                    let row =
-                        `<tr>
+                tableContent.innerHTML += details
+            } else {
+                let row =
+                    `<tr>
                          <td>${rowData.status}</td>
                          <td>${rowData.id[0]}</td>
                          <td>${rowData.reportedFor}</td>
@@ -247,23 +246,30 @@
                          <td class="${ratingClass ?? "noRatingYet"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
                          <td>${rowData.actionNeeded ?? ""}</td>
                          <td>${rowData.fixIn ?? ""}</td>
-                         <td><a onclick="showDetails('${rowData.id[0]}', '${tableBodyElementId}')">show</a></td>
+                         <td><a onclick="showDetails('${rowData.id[0]}')">show</a></td>
                      </tr>`;
-                    tableContent.innerHTML += row
-                }
+                tableContent.innerHTML += row
             }
         }
 
-        let showDetails = (id, tableBodyElementId) => {
-            showDetailsPerId.add(id)
-            restTable(tableBodyElementId)
-            buildUnifiedTable(tableBodyElementId, unifiedVulnerabilityData)
+        function buildUnifiedTable(data) {
+            for (let i = 0; i < data.length; i++) {
+                let rowData = data[i]
+                console.log(rowData)
+                buildUnifiedTableRow(rowData);
+            }
         }
 
-        let removeDetails = (id, tableBodyElementId) => {
+        let showDetails = (id) => {
+            showDetailsPerId.add(id)
+            restTable()
+            buildUnifiedTable(unifiedVulnerabilityData)
+        }
+
+        let removeDetails = (id) => {
             showDetailsPerId.delete(id)
-            restTable(tableBodyElementId)
-            buildUnifiedTable(tableBodyElementId, unifiedVulnerabilityData)
+            restTable()
+            buildUnifiedTable(unifiedVulnerabilityData)
         }
 
         function readIdUrlParameter() {
@@ -310,10 +316,11 @@
         }
 
         function initUnifiedTable() {
-            buildUnifiedTable("unifiedVulnerabilities", unifiedVulnerabilityData)
+            buildUnifiedTable(unifiedVulnerabilityData)
         }
 
-        function init() {
+        function init(tableContentId) {
+            tableContent = tableContentId
             readIdUrlParameter()
             initSummary()
             initUnifiedTable()
@@ -345,7 +352,8 @@
     <tbody id="unifiedVulnerabilities"></tbody>
 </table>
 <script>
-    init()
+    let tableContentId = document.getElementById("unifiedVulnerabilities");
+    init(tableContentId)
 </script>
 </body>
 </html>
