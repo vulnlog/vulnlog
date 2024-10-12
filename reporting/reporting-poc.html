@@ -18,8 +18,6 @@
         }
 
         html {
-            max-width: 800px;
-            margin: auto;
             font-family: sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
@@ -30,14 +28,40 @@
             text-decoration: underline;
         }
 
+        /*.wrapper {*/
+        body {
+            width: min(900px, 100% - 3rem);
+            margin-inline: auto;
+        }
+
         table {
+            border-collapse: collapse;
             width: 100%;
         }
 
-        table, th, td {
-            border: 1px solid;
+        #titleRow {
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+
+        tr:hover {
+            background-color: rgba(0, 0, 0, 0.025);
+        }
+
+        caption,
+        th,
+        td {
             border-color: var(--text-color);
-            border-collapse: collapse;
+        }
+
+        caption,
+        th {
+            text-align: left;
+        }
+
+        caption {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: capitalize;
         }
 
         .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
@@ -74,6 +98,30 @@
             :where(html) {
                 --background-color: hsl(228, 5%, 15%);
                 --text-color: hsl(228, 5%, 80%);
+            }
+        }
+
+        @media (max-width: 650px) {
+            th {
+                display: none;
+            }
+
+            td {
+                display: block;
+            }
+
+            td::before {
+                content: attr(data-cell) ": ";
+                font-weight: 700;
+                text-transform: capitalize;
+            }
+
+            td:last-child {
+                margin-bottom: 1.5rem;
+            }
+
+            .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
+                text-align: left;
             }
         }
     </style>
@@ -217,18 +265,18 @@
 
                 let row =
                     `<tr>
-                         <td>${rowData.status}</td>
-                         <td>${rowData.id[0]}</td>
-                         <td>${rowData.reportedFor}</td>
-                         <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning ?? ""}</td>
-                         <td class="${ratingClass ?? "ratingNone"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
-                         <td>${rowData.actionNeeded ?? ""}</td>
-                         <td>${rowData.fixIn ?? ""}</td>
-                         <td><a onclick="removeDetails('${rowData.id[0]}')">hide</a></td>
+                         <td data-cell="status">${rowData.status}</td>
+                         <td data-cell="id">${rowData.id[0]}</td>
+                         <td data-cell="reported for">${rowData.reportedFor}</td>
+                         <td data-cell="affects">${rowData.affects}</td>
+                         <td data-cell="reasoning">${rowData.reasoning ?? ""}</td>
+                         <td data-cell="rating" class="${ratingClass ?? "ratingNone"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
+                         <td data-cell="action needed">${rowData.actionNeeded ?? ""}</td>
+                         <td data-cell="fix in">${rowData.fixIn ?? ""}</td>
+                         <td data-cell="details"><a onclick="removeDetails('${rowData.id[0]}')">hide</a></td>
                      </tr>`;
                 tableContent.innerHTML += row
-                let details = `<tr><td colspan="9">
+                let details = `<tr><td data-cell="details" colspan="9">
                 <div id="ids">ID: ${rowData.id.join(", ")}</div>
                 <div>Reported for version: ${rowData.reportedFor}</div>
                 <div>Rating: ${ratingDescription}</div>
@@ -238,15 +286,15 @@
             } else {
                 let row =
                     `<tr>
-                         <td>${rowData.status}</td>
-                         <td>${rowData.id[0]}</td>
-                         <td>${rowData.reportedFor}</td>
-                         <td>${rowData.affects}</td>
-                         <td>${rowData.reasoning ?? ""}</td>
-                         <td class="${ratingClass ?? "noRatingYet"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
-                         <td>${rowData.actionNeeded ?? ""}</td>
-                         <td>${rowData.fixIn ?? ""}</td>
-                         <td><a onclick="showDetails('${rowData.id[0]}')">show</a></td>
+                         <td data-cell="status">${rowData.status}</td>
+                         <td data-cell="id">${rowData.id[0]}</td>
+                         <td data-cell="reported for">${rowData.reportedFor}</td>
+                         <td data-cell="affects">${rowData.affects}</td>
+                         <td data-cell="reasoning">${rowData.reasoning ?? ""}</td>
+                         <td data-cell="rating" class="${ratingClass ?? "noRatingYet"}" title="${ratingDescription ?? "no rating yet"}">${rowData.rating ?? ""}</td>
+                         <td data-cell="action needed">${rowData.actionNeeded ?? ""}</td>
+                         <td data-cell="fix in">${rowData.fixIn ?? ""}</td>
+                         <td data-cell="details"><a onclick="showDetails('${rowData.id[0]}')">show</a></td>
                      </tr>`;
                 tableContent.innerHTML += row
             }
@@ -336,9 +384,9 @@
 <p id="summaryKnownOpenReportsEmoji"></p>
 <p id="summaryResolvedReports"></p>
 <p id="summaryResolvedReportsEmoji"></p>
-<h2>Vulnerability Reports</h2>
 <table>
-    <tr>
+    <caption>Vulnerabilities</caption>
+    <tr id="titleRow">
         <th>Status</th>
         <th>ID</th>
         <th>Reported For</th>
