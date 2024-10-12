@@ -13,4 +13,8 @@ class JsonPrinter(private val printer: (String) -> Unit) {
     fun print(vulnlog: Vulnlog) {
         printer(format.encodeToString(vulnlog))
     }
+
+    fun translate(vulnlog: Vulnlog): String {
+        return format.encodeToString(vulnlog)
+    }
 }
