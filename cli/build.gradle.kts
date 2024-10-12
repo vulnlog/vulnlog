@@ -11,6 +11,7 @@ version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     implementation(project(":dsl-interpreter"))
+    implementation(project(":report"))
 
     implementation(libs.clikt)
     implementation(libs.kotlinxSerializationJson)

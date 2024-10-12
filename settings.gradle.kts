@@ -8,4 +8,5 @@ include(
     "dsl",
     "dsl-interpreter",
     "gradle-plugin",
+    "report",
 )

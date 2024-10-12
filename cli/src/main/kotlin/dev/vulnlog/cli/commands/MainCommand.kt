@@ -1,7 +1,9 @@
 package dev.vulnlog.cli.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.PrintMessage
+import com.github.ajalt.clikt.core.findOrSetObject
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.check
 import com.github.ajalt.clikt.parameters.arguments.help
@@ -9,15 +11,18 @@ import com.github.ajalt.clikt.parameters.options.eagerOption
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.file
+import dev.vulnlog.cli.serialisable.ReleaseBranche
+import dev.vulnlog.cli.serialisable.Vulnlog
 import dev.vulnlog.dslinterpreter.ScriptingHost
 import java.io.File
 
-class MainCommand : CliktCommand(
-    help =
-        """
-        CLI application to parse Vulnlog files.
-        """.trimIndent(),
-) {
+data class ConfigAndDataForSubcommand(var releaseBranchs: List<String>, var vulnlogs: List<String>)
+
+class MainCommand : CliktCommand() {
+    override fun help(context: Context): String = "CLI application to parse Vulnlog files."
+
+    override val invokeWithoutSubcommand = true
+
     private val vulnlogFile: File by argument()
         .file(mustExist = true, canBeDir = false)
         .help("The Vulnlog definition files to read.")
@@ -28,11 +33,14 @@ class MainCommand : CliktCommand(
         help = "Filter to specific vulnerabilities",
     )
         .varargValues()
+
     private val filterBranches: List<String>? by option(
         "--branch",
         help = "Filter to specific branches",
     )
         .varargValues()
+
+    private val config by findOrSetObject { ConfigAndDataForSubcommand(emptyList(), emptyList()) }
 
     init {
         eagerOption("-v", "--version", help = "Show version number and exit.") {
@@ -62,9 +70,24 @@ class MainCommand : CliktCommand(
         val filteredResult = filterDsl.filter(result.getOrThrow())
 
         val translator = SerialisationTranslator()
-        val serialisableData = translator.translate(filteredResult)
+        val serialisableData: Vulnlog = translator.translate(filteredResult)
 
         val printer = JsonPrinter(::echo)
-        printer.print(serialisableData)
+
+        val subcommand = currentContext.invokedSubcommand
+        if (subcommand == null) {
+            printer.print(serialisableData)
+        } else {
+            val relevantReleaseBranches = serialisableData.releaseBranches
+            config.releaseBranchs = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
+            config.vulnlogs =
+                relevantReleaseBranches.map { branch ->
+                    Vulnlog(
+                        listOf(branch),
+                        serialisableData.releaseBrancheVulnerabilities
+                            .filter { it.releaseBranch == branch.releaseBranch },
+                    )
+                }.map { printer.translate(it) }
+        }
     }
 }
