@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title>VL Reporting</title>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Vulnlog vulnerability report for release branch x.y.">
+    <style>
+        *,
+        ::before,
+        ::after {
+            box-sizing: border-box;
+        }
+
+        :where(html) {
+            --background-color: #fff;
+            --text-color: #222;
+        }
+
+        html {
+            font-family: sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        a {
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+
+        body {
+            width: min(900px, 100% - 3rem);
+            margin-inline: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #titleRow {
+            background-color: rgba(0, 0, 0, 0.15);
+        }
+
+        tr:hover {
+            background-color: rgba(0, 0, 0, 0.025);
+        }
+
+        caption,
+        th,
+        td {
+            border-color: var(--text-color);
+        }
+
+        caption,
+        th {
+            text-align: left;
+        }
+
+        caption {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
+            text-align: center;
+            text-transform: uppercase;
+            color: var(--text-color);
+            font-weight: bolder;
+        }
+
+        .ratingCritical {
+            background-color: #dd2e44;
+            color: #f0f0f0;
+        }
+
+        .ratingHigh {
+            background-color: #f4900c;
+            color: #f5f5f5;
+        }
+
+        .ratingMedium {
+            background-color: #fdcb58;
+            color: #333333;
+        }
+
+        .ratingLow {
+            background-color: #55acee;
+            color: #f0f0f0;
+        }
+
+        .ratingNone {
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :where(html) {
+                --background-color: hsl(228, 5%, 15%);
+                --text-color: hsl(228, 5%, 80%);
+            }
+        }
+
+        @media (max-width: 650px) {
+            th {
+                display: none;
+            }
+
+            td {
+                display: block;
+            }
+
+            td::before {
+                content: attr(data-cell) ": ";
+                font-weight: 700;
+                text-transform: capitalize;
+            }
+
+            td:last-child {
+                margin-bottom: 1.5rem;
+            }
+
+            .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
+                text-align: left;
+            }
+        }
+    </style>
+    <script>
+        let unifiedVulnerabilityData = [
+            {
+                "status": "open",
+                "id": ["CVE-2024-42", "OTHER-1212-121212124"],
+                "reportedFor": "1.0.0",
+                "affects": "DoS",
+            },
+            {
+                "status": "known open",
+                "id": ["CVE-2024-4", "OTHER-1234-121311313"],
+                "reportedFor": "1.0.0",
+                "affects": "DoS",
+                "reasoning": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "status": "known open",
+                "id": ["CVE-2024-1234"],
+                "reportedFor": "1.0.1",
+                "affects": "Foo",
+                "reasoning": "Duis tempor felis eu dolor porttitor tincidunt.",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "status": "known open",
+                "id": ["CVE-2024-4242"],
+                "reportedFor": "1.0.1",
+                "affects": "Bar",
+                "reasoning": "Pellentesque imperdiet nulla metus.",
+                "rating": "H",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "status": "known open",
+                "id": ["CVE-2024-2323"],
+                "reportedFor": "1.0.2",
+                "affects": "Baz",
+                "reasoning": "Mauris pharetra risus et neque feugiat, quis pellentesque sem malesuada.",
+                "rating": "M",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "status": "known open",
+                "id": ["CVE-2024-23"],
+                "reportedFor": "1.0.2",
+                "affects": "Baz",
+                "reasoning": "Mauris pharetra risus et neque feugiat, quis pellentesque sem malesuada.",
+                "rating": "L",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.3"
+            },
+            {
+                "status": "resolved",
+                "id": ["CVE-2022-23", "OTHER-1234-123454"],
+                "reportedFor": "1.0.0",
+                "affects": "DoS",
+                "reasoning": "Donec sit amet commodo nisi.",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            },
+            {
+                "status": "resolved",
+                "id": ["CVE-2023-1330"],
+                "reportedFor": "1.0.0",
+                "affects": "Foo",
+                "reasoning": "Vestibulum quis orci nibh.",
+                "rating": "C",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            },
+            {
+                "status": "resolved",
+                "id": ["CVE-2023-1335"],
+                "reportedFor": "1.0.0",
+                "affects": "Bar",
+                "reasoning": "Donec vehicula lorem ut ante aliquet consequat.",
+                "rating": "H",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            },
+            {
+                "status": "resolved",
+                "id": ["CVE-2023-1337"],
+                "reportedFor": "1.0.1",
+                "affects": "Baz",
+                "reasoning": "Suspendisse quis finibus est.",
+                "rating": "M",
+                "actionNeeded": "Update X to >= Y",
+                "fixIn": "1.0.2"
+            }
+        ];
+
+        function initUnifiedTable(tableBody) {
+            for (let i = 0; i < unifiedVulnerabilityData.length; i++) {
+                let vulnData = unifiedVulnerabilityData[i]
+
+                let simpleRow = document.createElement("tr")
+                let status = document.createElement("td")
+                simpleRow.appendChild(status)
+                let id = document.createElement("td")
+                simpleRow.appendChild(id)
+                let reportedFor = document.createElement("td")
+                simpleRow.appendChild(reportedFor)
+                let affects = document.createElement("td")
+                simpleRow.appendChild(affects)
+                let reasoning = document.createElement("td")
+                simpleRow.appendChild(reasoning)
+                let rating = document.createElement("td")
+                simpleRow.appendChild(rating)
+                let action = document.createElement("td")
+                simpleRow.appendChild(action)
+                let fix = document.createElement("td")
+                simpleRow.appendChild(fix)
+                let details = document.createElement("td")
+                simpleRow.appendChild(details)
+
+                status.innerText = vulnData.status
+                id.innerText = vulnData.id[0]
+                reportedFor.innerText = vulnData.reportedFor
+                affects.innerText = vulnData.affects
+                reasoning.innerText = vulnData.reasoning
+                rating.innerText = vulnData.rating
+                action.innerText = vulnData.action
+                fix.innerText = vulnData.fixIn
+
+                tableBody.appendChild(simpleRow)
+
+                let detailsRow = document.createElement("tr")
+                detailsRow.style.display = "none"
+
+                let detailsCell = createDetails(vulnData)
+                detailsRow.appendChild(detailsCell)
+
+                let detailsToggleButton = document.createElement("button")
+                detailsToggleButton.addEventListener("click", detailsToggle)
+                detailsToggleButton.innerText = "show"
+
+                function detailsToggle() {
+                    if (detailsRow.style.display === "none") {
+                        detailsToggleButton.innerText = "hide"
+                        detailsRow.style.display = "table-row";
+                    } else {
+                        detailsToggleButton.innerText = "show"
+                        detailsRow.style.display = "none";
+                    }
+                }
+
+                details.appendChild(detailsToggleButton)
+                tableBody.appendChild(detailsRow)
+            }
+
+        }
+
+        function createDetails(vulnData) {
+            let detailsCell = document.createElement("td")
+            detailsCell.colSpan = 9
+            detailsCell.className = "foo"
+
+            let allIds = document.createElement("p")
+            allIds.innerText = vulnData.id.join(", ")
+
+            detailsCell.appendChild(allIds)
+
+            return detailsCell
+        }
+
+        function init(tableBody) {
+            initUnifiedTable(tableBody)
+        }
+    </script>
+</head>
+<body>
+<h1>VL Reporting</h1>
+<p>Report generated on 2024-10-12</p>
+<table>
+    <caption>Vulnerabilities</caption>
+    <tr id="titleRow">
+        <th>Status</th>
+        <th>ID</th>
+        <th>Reported For</th>
+        <th>Affects</th>
+        <th>Reasoning</th>
+        <th>Rating</th>
+        <th>Action</th>
+        <th>Fix</th>
+        <th>Details</th>
+    </tr>
+    <tbody id="unifiedVulnerabilities"></tbody>
+</table>
+<script>
+    let tableBody = document.getElementById("unifiedVulnerabilities");
+    init(tableBody)
+</script>
+</body>
+</html>
