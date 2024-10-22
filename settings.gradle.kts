@@ -7,6 +7,8 @@ include(
     "cli",
     "core",
     "dsl",
+    "rdsl",
+    "rdsl-host",
     "scripting-definition",
     "scripting-host",
 )
