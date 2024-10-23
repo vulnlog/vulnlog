@@ -24,6 +24,7 @@
             <option value="$PROJECT_DIR$/cli" />
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/dsl" />
+            <option value="$PROJECT_DIR$/dsl2" />
             <option value="$PROJECT_DIR$/rdsl" />
             <option value="$PROJECT_DIR$/rdsl-host" />
             <option value="$PROJECT_DIR$/scripting-definition" />

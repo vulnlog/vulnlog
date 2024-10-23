@@ -7,6 +7,7 @@ include(
     "cli",
     "core",
     "dsl",
+    "dsl2",
     "rdsl",
     "rdsl-host",
     "scripting-definition",
