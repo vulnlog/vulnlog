@@ -11,7 +11,7 @@ interface VlOverwrite<out T> {
      * @return overwrite builder for a specific variant and version.
      */
     fun overwrite(
-        variant: VlVariant,
-        vararg versions: VlVersion,
+        variant: VlVariantValue,
+        vararg versions: VlVersionValue,
     ): T
 }

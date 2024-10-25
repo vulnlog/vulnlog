@@ -7,5 +7,5 @@ interface VlBranchBuilder {
      * @param version that replaces all previous versions.
      * @param a branch builder.
      */
-    infix fun supersededBy(version: VlVersion): VlBranchBuilder
+    infix fun supersededBy(version: VlVersionValue): VlBranchBuilder
 }

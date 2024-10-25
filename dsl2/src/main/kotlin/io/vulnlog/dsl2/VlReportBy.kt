@@ -7,5 +7,5 @@ interface VlReportBy<out T> {
      * @param reporters which found the vulnerability.
      * @return reporters found the vulnerability.
      */
-    fun reportBy(vararg reporters: VlReporter): T
+    fun reportBy(vararg reporters: VlReporterValue): T
 }

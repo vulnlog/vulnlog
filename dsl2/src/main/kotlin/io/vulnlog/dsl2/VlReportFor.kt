@@ -9,7 +9,7 @@ interface VlReportFor<out T> {
      * @return variant and version the vulnerability report addresses.
      */
     fun reportFor(
-        variant: VlVariant,
-        vararg versions: VlVersion,
+        variant: VlVariantValue,
+        vararg versions: VlVersionValue,
     ): T
 }

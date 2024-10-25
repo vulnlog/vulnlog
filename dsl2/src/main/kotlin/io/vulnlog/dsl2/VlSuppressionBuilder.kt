@@ -4,7 +4,7 @@ interface VlSuppressionBuilder {
     /**
      * Specify the reporter which reported the vulnerability.
      */
-    fun forReporter(reporter: VlReporter): VlSuppressionBuilder
+    fun forReporter(reporter: VlReporterValue): VlSuppressionBuilder
 
     /**
      * Specify the vulnerability IDs this action is targeted for by using all vulnerability IDs.
