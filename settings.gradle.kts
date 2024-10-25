@@ -8,6 +8,7 @@ include(
     "core",
     "dsl",
     "dsl2",
+    "gradle-plugin",
     "rdsl",
     "rdsl-host",
     "scripting-definition",
