@@ -1,3 +1,11 @@
 package io.vulnlog.dsl2
 
-interface VlReportBy
+interface VlReportBy<out T> {
+    /**
+     * Define the reporters found the vulnerability.
+     *
+     * @param reporters which found the vulnerability.
+     * @return reporters found the vulnerability.
+     */
+    fun reportBy(vararg reporters: VlReporter): T
+}

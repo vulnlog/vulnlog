@@ -1,11 +1,11 @@
 package io.vulnlog.dsl2
 
 import io.vulnlog.dsl2.definition.VlDsl
+import io.vulnlog.dsl2.definition.VlDslMarker
 
-/**
- * The vulnerability log root context.
- */
-interface VlVulnLogContext : VlDsl {
+interface VlVulnLogContext :
+    VlDsl,
+    VlDslMarker {
     /**
      * Name of the vendor of the products this vulnerability log is for.
      */
