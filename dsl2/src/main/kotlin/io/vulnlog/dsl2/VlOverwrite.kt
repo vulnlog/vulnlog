@@ -12,6 +12,6 @@ interface VlOverwrite<out T> {
      */
     fun overwrite(
         variant: VlVariantValue,
-        vararg versions: VlVersionValue,
+        vararg versions: VlReleaseValue,
     ): T
 }

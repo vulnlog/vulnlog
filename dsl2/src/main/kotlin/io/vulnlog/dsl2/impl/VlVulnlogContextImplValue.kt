@@ -4,9 +4,10 @@ import io.vulnlog.dsl2.VlBranchBuilder
 import io.vulnlog.dsl2.VlLifeCycleFromBuilder
 import io.vulnlog.dsl2.VlLifeCycleToBuilder
 import io.vulnlog.dsl2.VlLifeCycleValue
+import io.vulnlog.dsl2.VlReleasePublishedValue
+import io.vulnlog.dsl2.VlReleaseValue
 import io.vulnlog.dsl2.VlReporterValue
 import io.vulnlog.dsl2.VlVariantValue
-import io.vulnlog.dsl2.VlVersionValue
 import io.vulnlog.dsl2.VlVuLnLogContextValue
 import io.vulnlog.dsl2.VlVulnerabilityContext
 import io.vulnlog.dsl2.VlVulnerabilityValue
@@ -19,14 +20,14 @@ internal class VlVulnlogContextImplValue : VlVuLnLogContextValue {
         get() = TODO("Not yet implemented")
         set(value) {}
 
-    override fun version(version: String): VlVersionValue {
+    override fun release(version: String): VlReleaseValue {
         TODO("Not yet implemented")
     }
 
-    override fun version(
+    override fun release(
         version: String,
-        releaseDate: String,
-    ): VlVersionValue {
+        publicationDate: String,
+    ): VlReleasePublishedValue {
         TODO("Not yet implemented")
     }
 
@@ -40,7 +41,7 @@ internal class VlVulnlogContextImplValue : VlVuLnLogContextValue {
 
     override fun branch(
         name: String,
-        initialVersion: VlVersionValue,
+        initialVersion: VlReleaseValue,
         lifeCycle: VlLifeCycleValue,
     ): VlBranchBuilder {
         TODO("Not yet implemented")

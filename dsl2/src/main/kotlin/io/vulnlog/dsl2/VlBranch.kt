@@ -12,7 +12,7 @@ interface VlBranch {
      */
     fun branch(
         name: String,
-        initialVersion: VlVersionValue,
+        initialVersion: VlReleaseValue,
         lifeCycle: VlLifeCycleValue,
     ): VlBranchBuilder
 }

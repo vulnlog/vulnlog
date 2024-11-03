@@ -6,7 +6,7 @@ import io.vulnlog.dsl2.definition.VlDslMarker
 interface VlVuLnLogContextValue :
     VlDsl,
     VlDslMarker,
-    VlVersion,
+    VlRelease,
     VlLifeCycle,
     VlBranch,
     VlVariant,

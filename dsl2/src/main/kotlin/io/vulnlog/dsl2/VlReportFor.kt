@@ -10,6 +10,6 @@ interface VlReportFor<out T> {
      */
     fun reportFor(
         variant: VlVariantValue,
-        vararg versions: VlVersionValue,
+        vararg versions: VlReleaseValue,
     ): T
 }
