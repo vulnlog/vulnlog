@@ -2,25 +2,25 @@ package io.vulnlog.dsl2
 
 import io.vulnlog.dsl2.definition.VlDslMarker
 
-interface VlActionContext : VlDslMarker {
+interface VlActionContextOverwrite : VlDslMarker {
     /**
      * Do not apply any action.
      */
-    fun noAction(): VlNoActionValue
+    fun noAction(): VlOverwriteBuilder
 
     /**
      * 	Suppress the reported vulnerability until the fixed fixIn versions release date for the matching branch has
      * 	arrived. Requires fixIn version for the matching branch.
      */
-    fun suppressUntilNextReleaseInBranch(): VlSuppressionBuilder
+    fun suppressUntilNextReleaseInBranch(): VlOverwriteBuilder
 
     /**
      * Suppress the reported vulnerability.
      */
-    fun suppressPermanent(): VlSuppressionBuilder
+    fun suppressPermanent(): VlOverwriteBuilder
 
     /**
      * Suppress the reported vulnerability temporarily until and including the specified date (YYYY-MM-dd).
      */
-    fun suppressTemporarily(untilDate: String): VlSuppressionBuilder
+    fun suppressTemporarily(untilDate: String): VlOverwriteBuilder
 }

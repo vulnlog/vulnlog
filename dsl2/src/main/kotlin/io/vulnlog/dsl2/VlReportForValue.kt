@@ -1,3 +1,6 @@
 package io.vulnlog.dsl2
 
-interface VlReportForValue
+interface VlReportForValue {
+    val variant: VlVariantValue
+    val versions: VlReleaseValue
+}

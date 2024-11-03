@@ -1,3 +1,5 @@
 package io.vulnlog.dsl2
 
-interface VlReporterValue
+interface VlReporterValue {
+    val name: String
+}

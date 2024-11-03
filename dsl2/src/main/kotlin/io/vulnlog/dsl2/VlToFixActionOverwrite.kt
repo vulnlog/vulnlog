@@ -1,6 +1,6 @@
 package io.vulnlog.dsl2
 
-interface VlToFixAction {
+interface VlToFixActionOverwrite {
     /**
      * Update the specified dependency.
      */
@@ -9,10 +9,10 @@ interface VlToFixAction {
     /**
      * Remove the specified dependency.
      */
-    fun remove(dependency: String): VlFixActionValue
+    fun remove(dependency: String): VlOverwriteBuilder
 
     /**
      * Replace the specified dependency.
      */
-    fun replace(dependency: String): VlFixActionTargetDependencyBuilder
+    fun replace(dependency: String): VlOverwriteBuilder
 }

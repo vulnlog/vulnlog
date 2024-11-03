@@ -1,3 +1,5 @@
 package io.vulnlog.dsl2
 
-interface VlFixActionValue
+interface VlFixActionValue {
+    val action: String
+}

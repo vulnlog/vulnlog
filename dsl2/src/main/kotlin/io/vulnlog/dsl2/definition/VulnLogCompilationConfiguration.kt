@@ -11,8 +11,9 @@ import kotlin.script.experimental.jvm.jvm
 
 object VulnLogCompilationConfiguration : ScriptCompilationConfiguration({
 
+    implicitReceivers(VlVuLnLogContextValue::class)
+
     jvm {
-        implicitReceivers(VlVuLnLogContextValue::class)
         dependenciesFromCurrentContext(wholeClasspath = true)
     }
 

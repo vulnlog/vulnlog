@@ -1,3 +1,8 @@
 package io.vulnlog.dsl2
 
-interface VlRatingValue
+import java.time.LocalDate
+
+interface VlRatingValue {
+    val dateOfAnalysing: LocalDate
+    val reasoning: String
+}

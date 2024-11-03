@@ -6,6 +6,5 @@ import kotlin.script.experimental.annotations.KotlinScript
     displayName = "Vulnerability Logfile",
     fileExtension = "vl.kts",
     compilationConfiguration = VulnLogCompilationConfiguration::class,
-    evaluationConfiguration = VulnLogEvaluationConfiguration::class,
 )
 interface VlDsl

@@ -11,5 +11,5 @@ interface VlReportFor<out T> {
     fun reportFor(
         variant: VlVariantValue,
         vararg versions: VlReleaseValue,
-    ): T
+    ): Set<T>
 }

@@ -11,14 +11,4 @@ interface VlVuLnLogContextValue :
     VlBranch,
     VlVariant,
     VlReporter,
-    VlVulnerability {
-    /**
-     * Name of the vendor of the products this vulnerability log is for.
-     */
-    var vendorName: String?
-
-    /**
-     * Name of the product this vulnerability log is for.
-     */
-    var productName: String?
-}
+    VlVulnerability

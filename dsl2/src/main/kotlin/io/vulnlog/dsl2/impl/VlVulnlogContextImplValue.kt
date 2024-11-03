@@ -9,34 +9,44 @@ import io.vulnlog.dsl2.VlReleaseValue
 import io.vulnlog.dsl2.VlReporterValue
 import io.vulnlog.dsl2.VlVariantValue
 import io.vulnlog.dsl2.VlVuLnLogContextValue
-import io.vulnlog.dsl2.VlVulnerabilityContext
-import io.vulnlog.dsl2.VlVulnerabilityValue
+import io.vulnlog.dsl2.data.VlData
+import io.vulnlog.dsl2.data.VlVulnerabilityData
 
-internal class VlVulnlogContextImplValue : VlVuLnLogContextValue {
-    override var vendorName: String?
-        get() = TODO("Not yet implemented")
-        set(value) {}
-    override var productName: String?
-        get() = TODO("Not yet implemented")
-        set(value) {}
+class VlVulnlogContextImplValue : VlVuLnLogContextValue {
+    private val releases = mutableSetOf<VlReleaseValue>()
+    private val publishedReleases = mutableSetOf<VlReleasePublishedValue>()
+    private val lifeCyclePhases = mutableSetOf<VlLifeCycleFromBuilderImpl>()
+    private val lifeCycles = mutableSetOf<VlLifeCycleValue>()
+    private val branchBuilders = mutableSetOf<VlBranchBuilderImpl>()
+    private val productVariants = mutableSetOf<VlVariantValue>()
+    private val reporters = mutableSetOf<VlReporterValue>()
+    private val vulnerabilities = mutableListOf<VlVulnerabilityData>()
 
     override fun release(version: String): VlReleaseValue {
-        TODO("Not yet implemented")
+        val release = VlReleaseValueImpl(version)
+        releases += release
+        return release
     }
 
     override fun release(
         version: String,
         publicationDate: String,
     ): VlReleasePublishedValue {
-        TODO("Not yet implemented")
+        val release = VlReleasePublishedValueImpl(version, publicationDate)
+        publishedReleases += release
+        return release
     }
 
     override fun lifeCyclePhase(name: String): VlLifeCycleFromBuilder {
-        TODO("Not yet implemented")
+        val lifeCycle = VlLifeCycleFromBuilderImpl()
+        lifeCyclePhases += lifeCycle
+        return lifeCycle
     }
 
     override fun lifeCycle(vararg lifeCyclePhases: VlLifeCycleToBuilder): VlLifeCycleValue {
-        TODO("Not yet implemented")
+        val lifeCyle = VlLifeCycleValueImpl()
+        lifeCycles += lifeCyle
+        return lifeCyle
     }
 
     override fun branch(
@@ -44,21 +54,49 @@ internal class VlVulnlogContextImplValue : VlVuLnLogContextValue {
         initialVersion: VlReleaseValue,
         lifeCycle: VlLifeCycleValue,
     ): VlBranchBuilder {
-        TODO("Not yet implemented")
+        val branchBuilder = VlBranchBuilderImpl()
+        branchBuilders += branchBuilder
+        return branchBuilder
     }
 
     override fun variants(vararg productVariant: String): Array<VlVariantValue> {
-        TODO("Not yet implemented")
+        val variants: Array<VlVariantValue> =
+            productVariant
+                .map { VlVariantValueImpl(it, setOf(VlReleasePublishedValueImpl("foo"))) }
+                .toTypedArray()
+        productVariants += variants.toSet()
+        return variants
     }
 
     override fun reporter(vararg reporterName: String): Array<VlReporterValue> {
-        TODO("Not yet implemented")
+        val reporter: Array<VlReporterValue> =
+            reporterName
+                .map { VlReporterValueImpl(it) }
+                .toTypedArray()
+        reporters += reporter
+        return reporter
     }
 
     override fun vuln(
         vararg vulnerabilityId: String,
-        context: VlVulnerabilityContext.() -> Unit,
-    ): VlVulnerabilityValue {
-        TODO("Not yet implemented")
+        init: VlVulnerabilityContextBuilderImpl.() -> Unit,
+    ) = with(VlVulnerabilityContextBuilderImpl()) {
+        init()
+        this@VlVulnlogContextImplValue.vulnerabilities += VlVulnerabilityData(vulnerabilityId.toSet(), reportFor)
+    }
+
+    fun build(): VlData {
+        val lifeCyclePhaseData = lifeCyclePhases.map { it.build() }.toSet()
+        val branches = branchBuilders.map { it.build() }.toSet()
+        return VlData(
+            releases,
+            publishedReleases,
+            lifeCyclePhaseData,
+            lifeCycles,
+            branches,
+            productVariants,
+            reporters,
+            vulnerabilities,
+        )
     }
 }

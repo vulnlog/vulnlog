@@ -1,3 +1,5 @@
 package io.vulnlog.dsl2
 
-interface VlReportByValue
+interface VlReportByValue {
+    val reporterName: String
+}

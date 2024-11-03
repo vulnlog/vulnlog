@@ -1,6 +1,6 @@
 package io.vulnlog.dsl2
 
-interface VlRating {
+interface VlRatingOverwrite {
     /**
      * Vulnerability has a critical impact on the product.
      *
@@ -10,7 +10,7 @@ interface VlRating {
     fun critical(
         dateOfAnalysing: String,
         reasoning: String,
-    ): VlRatingValue
+    ): VlOverwriteBuilder
 
     /**
      * Vulnerability has a high impact on the product.
@@ -21,7 +21,7 @@ interface VlRating {
     fun high(
         dateOfAnalysing: String,
         reasoning: String,
-    ): VlRatingValue
+    ): VlOverwriteBuilder
 
     /**
      * Vulnerability has a moderate impact on the product.
@@ -32,7 +32,7 @@ interface VlRating {
     fun moderate(
         dateOfAnalysing: String,
         reasoning: String,
-    ): VlRatingValue
+    ): VlOverwriteBuilder
 
     /**
      * Vulnerability has a low impact on the product.
@@ -43,7 +43,7 @@ interface VlRating {
     fun low(
         dateOfAnalysing: String,
         reasoning: String,
-    ): VlRatingValue
+    ): VlOverwriteBuilder
 
     /**
      * Vulnerability has no impact on the product.
@@ -54,5 +54,5 @@ interface VlRating {
     fun notAffected(
         dateOfAnalysing: String,
         reasoning: String,
-    ): VlRatingValue
+    ): VlOverwriteBuilder
 }
