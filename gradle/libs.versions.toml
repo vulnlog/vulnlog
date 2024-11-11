@@ -29,7 +29,7 @@ kotlinScriptingJvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", ver
 kotlinScriptingJvmHost = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlinVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
-snykGradlePlugin = { module = "gradle.plugin.io.snyk.gradle.plugin:snyk", version.ref = "snykVersion"}
+snykGradlePlugin = { module = "gradle.plugin.io.snyk.gradle.plugin:snyk", version.ref = "snykVersion" }
 
 [bundles]
 kotlinScriptDefinition = ["kotlinScriptingJvm"]
