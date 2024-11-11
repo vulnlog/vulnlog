@@ -19,9 +19,11 @@ dependencies {
     testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.1")
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+kotlin {
+    jvmToolchain {
+        // the version also defined source- and targetCompatibility and therefore specifies the
+        // minimum JRE version a client/consumer of this tool needs.
+        languageVersion.set(JavaLanguageVersion.of(21))
         vendor = JvmVendorSpec.ADOPTIUM
     }
 }
