@@ -35,7 +35,7 @@ class VlOverwriteBuilderImpl : VlOverwriteBuilder {
     ): VlOverwriteBuilder = this
 
     override fun update(dependency: String): VlFixActionTargetVersionBuilder =
-        VlFixActionTargetVersionBuilderImpl("update")
+        VlFixActionTargetVersionBuilderImpl("update", dependency)
 
     override fun remove(dependency: String): VlOverwriteBuilder = this
 

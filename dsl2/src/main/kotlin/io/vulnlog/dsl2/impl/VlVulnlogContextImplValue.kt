@@ -82,7 +82,7 @@ class VlVulnlogContextImplValue : VlVuLnLogContextValue {
         init: VlVulnerabilityContextBuilderImpl.() -> Unit,
     ) = with(VlVulnerabilityContextBuilderImpl()) {
         init()
-        this@VlVulnlogContextImplValue.vulnerabilities += VlVulnerabilityData(vulnerabilityId.toSet(), reportFor)
+        this@VlVulnlogContextImplValue.vulnerabilities += VlVulnerabilityData(vulnerabilityId.toSet(), build())
     }
 
     fun build(): VlData {

@@ -4,5 +4,5 @@ interface VlFixActionTargetDependencyBuilder {
     /**
      * Specify the new dependency that should replace the previous vulnerable dependency.
      */
-    fun with(dependencyName: String): VlFixActionValue
+    fun with(dependencyName: String)
 }

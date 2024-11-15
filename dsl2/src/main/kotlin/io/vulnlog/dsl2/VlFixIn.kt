@@ -4,5 +4,5 @@ interface VlFixIn {
     /**
      * Specify exactly one version per product branch that fixes the reported vulnerability.
      */
-    fun fixIn(vararg versions: VlReleaseValue): Set<VlReleaseValue>
+    fun fixIn(vararg versions: VlReleaseValue)
 }

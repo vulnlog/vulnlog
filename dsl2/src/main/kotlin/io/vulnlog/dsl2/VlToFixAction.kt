@@ -9,7 +9,7 @@ interface VlToFixAction {
     /**
      * Remove the specified dependency.
      */
-    fun remove(dependency: String): VlFixActionValue
+    fun remove(dependency: String)
 
     /**
      * Replace the specified dependency.

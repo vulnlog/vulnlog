@@ -5,6 +5,14 @@ import io.vulnlog.dsl2.VlFixActionValue
 
 class VlFixActionTargetDependencyBuilderImpl(
     private val action: String,
-) : VlFixActionTargetDependencyBuilder {
-    override fun with(dependencyName: String): VlFixActionValue = VlFixActionValueImpl("$action with $dependencyName")
+    private val target: String,
+) : VlFixActionTargetDependencyBuilder,
+    VlToFixActionBuilder {
+    private var dependencyName: String? = null
+
+    override fun with(dependencyName: String) {
+        this.dependencyName = dependencyName
+    }
+
+    override fun build(): VlFixActionValue = VlFixActionValueImpl("$action $target with $dependencyName")
 }
