@@ -1,8 +1,8 @@
 package io.vulnlog.dsl2interpreter
 
-import io.vulnlog.dsl2.data.VlData
+import io.vulnlog.dsl2.VlVulnLogContextValueImpl
 import io.vulnlog.dsl2.definition.VulnLogCompilationConfiguration
-import io.vulnlog.dsl2.impl.VlVulnlogContextImplValue
+import io.vulnlog.dsl2.impl.VulnlogFileData
 import java.io.File
 import kotlin.script.experimental.api.EvaluationResult
 import kotlin.script.experimental.api.ResultWithDiagnostics
@@ -13,8 +13,8 @@ import kotlin.script.experimental.host.toScriptSource
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 
 class ScriptingHost {
-    fun eval(script: File): VlData {
-        val recipe = VlVulnlogContextImplValue()
+    fun eval(script: File): VulnlogFileData {
+        val recipe = VlVulnLogContextValueImpl()
 
         fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
             val compilationConfiguration = VulnLogCompilationConfiguration

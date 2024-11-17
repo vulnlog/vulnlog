@@ -1,6 +1,6 @@
 package io.vulnlog.dsl2.definition
 
-import io.vulnlog.dsl2.VlVuLnLogContextValue
+import io.vulnlog.dsl2.VlVulnLogContextValue
 import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.acceptedLocations
@@ -11,7 +11,7 @@ import kotlin.script.experimental.jvm.jvm
 
 object VulnLogCompilationConfiguration : ScriptCompilationConfiguration({
 
-    implicitReceivers(VlVuLnLogContextValue::class)
+    implicitReceivers(VlVulnLogContextValue::class)
 
     jvm {
         dependenciesFromCurrentContext(wholeClasspath = true)

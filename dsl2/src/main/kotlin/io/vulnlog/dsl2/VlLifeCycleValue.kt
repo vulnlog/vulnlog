@@ -1,3 +1,5 @@
 package io.vulnlog.dsl2
 
-interface VlLifeCycleValue
+interface VlLifeCycleValue {
+    val lifeCycles: List<VlLifeCycleToBuilder>
+}

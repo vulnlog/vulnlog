@@ -4,12 +4,12 @@ import io.vulnlog.dsl2.VlActionContext
 import io.vulnlog.dsl2.VlNoActionValue
 import io.vulnlog.dsl2.VlSuppressionBuilder
 
-class VlActionContextImpl : VlActionContext {
+internal class VlActionContextImpl : VlActionContext {
     override fun noAction(): VlNoActionValue = VlNoActionValueImpl()
 
-    override fun suppressUntilNextReleaseInBranch(): VlSuppressionBuilder = VlSuppressionBuilderImpl()
+    override fun suppressUntilNextReleaseInBranch(): VlSuppressionBuilder = VlSuppressionBuilder()
 
-    override fun suppressPermanent(): VlSuppressionBuilder = VlSuppressionBuilderImpl()
+    override fun suppressPermanent(): VlSuppressionBuilder = VlSuppressionBuilder()
 
-    override fun suppressTemporarily(untilDate: String): VlSuppressionBuilder = VlSuppressionBuilderImpl()
+    override fun suppressTemporarily(untilDate: String): VlSuppressionBuilder = VlSuppressionBuilder()
 }

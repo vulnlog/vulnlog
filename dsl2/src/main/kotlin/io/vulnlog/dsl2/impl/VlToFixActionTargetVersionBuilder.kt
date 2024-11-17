@@ -3,7 +3,7 @@ package io.vulnlog.dsl2.impl
 import io.vulnlog.dsl2.VlFixActionTargetVersionBuilder
 import io.vulnlog.dsl2.VlFixActionValue
 
-class VlFixActionTargetVersionBuilderImpl(
+internal class VlToFixActionTargetVersionBuilder(
     private val action: String,
     private val target: String,
 ) : VlFixActionTargetVersionBuilder,

@@ -4,8 +4,7 @@ interface VlBranchBuilder {
     /**
      * Defines a newer version superseding the previous ones.
      *
-     * @param version that replaces all previous versions.
-     * @param a branch builder.
+     * @param release that replaces all previous versions.
      */
-    infix fun supersededBy(version: VlReleaseValue): VlBranchBuilder
+    infix fun supersededBy(release: VlReleaseValue): VlBranchBuilder
 }

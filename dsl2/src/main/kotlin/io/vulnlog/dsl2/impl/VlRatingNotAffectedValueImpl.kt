@@ -3,7 +3,9 @@ package io.vulnlog.dsl2.impl
 import io.vulnlog.dsl2.VlRatingValue
 import java.time.LocalDate
 
-data class VlCriticalRatingValueImpl(
+internal data class VlRatingNotAffectedValueImpl(
     override val dateOfAnalysing: LocalDate,
     override val reasoning: String,
-) : VlRatingValue
+) : VlRatingValue {
+    override val rating = "not affected"
+}

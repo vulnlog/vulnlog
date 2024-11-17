@@ -3,7 +3,7 @@ package io.vulnlog.dsl2.impl
 import io.vulnlog.dsl2.VlFixActionTargetDependencyBuilder
 import io.vulnlog.dsl2.VlFixActionValue
 
-class VlFixActionTargetDependencyBuilderImpl(
+internal class VlToFixActionTargetDependencyBuilder(
     private val action: String,
     private val target: String,
 ) : VlFixActionTargetDependencyBuilder,
