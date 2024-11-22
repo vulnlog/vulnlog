@@ -4,8 +4,8 @@ plugins {
     id("com.gradle.plugin-publish") version "1.2.1"
 }
 
-group = "io.vulnlog.gradleplugin"
-version = "0.1.0"
+group = "dev.vulnlog.gradleplugin"
+version = "0.2.0"
 
 repositories {
     mavenLocal()
@@ -17,12 +17,12 @@ gradlePlugin {
     vcsUrl = "https://github.com/vulnlog/vulnlog.git"
     plugins {
         create("vulnlogPlugin") {
-            id = "io.vulnlog.plugin"
+            id = "dev.vulnlog.kickstarter"
             description =
                 """
-                Asdf
+                A simple and easy to use DSL to describe vulnerabilities in software projects.
                 """.trimIndent()
-            implementationClass = "io.vulnlog.gradleplugin.VulnLogPlugin"
+            implementationClass = "dev.vulnlog.gradleplugin.VulnLogPlugin"
         }
     }
 }

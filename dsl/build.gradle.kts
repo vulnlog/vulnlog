@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.dokka") version "1.9.20"
 }
 
-group = "io.vulnlog.dsl"
-version = "0.1.0"
+group = "dev.vulnlog.dsl"
+version = "0.2.0"
 
 dependencies {
     implementation(libs.bundles.kotlinScriptDefinition)
