@@ -18,10 +18,12 @@ gradlePlugin {
     plugins {
         create("vulnlogPlugin") {
             id = "dev.vulnlog.kickstarter"
+            displayName = "Vulnlog DSL"
             description =
                 """
                 A simple and easy to use DSL to describe vulnerabilities in software projects.
                 """.trimIndent()
+            tags = listOf("vulnerability", "logging", "security", "tracking", "DSL")
             implementationClass = "dev.vulnlog.gradleplugin.VulnLogPlugin"
         }
     }
