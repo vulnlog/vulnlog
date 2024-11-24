@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "dev.vulnlog.dsl-interpreter"
-version = "0.3.0-SNAPSHOT"
+version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     implementation(project(":dsl"))
