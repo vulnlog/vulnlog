@@ -6,6 +6,8 @@ plugins {
     id("com.vanniktech.maven.publish") version "0.30.0"
 }
 
+description = "DLS definition for Vulnlog files."
+
 group = "dev.vulnlog.dsl"
 version = providers.gradleProperty("vlVersion").get()
 
