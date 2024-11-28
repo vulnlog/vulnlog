@@ -1,8 +1,8 @@
 package dev.vulnlog.dslinterpreter
 
-import dev.vulnlog.dsl.VlVulnLogContextValueImpl
 import dev.vulnlog.dsl.definition.VulnLogCompilationConfiguration
-import dev.vulnlog.dsl.impl.VulnlogFileData
+import dev.vulnlog.dslinterpreter.dsl.VlVulnLogContextValueImpl
+import dev.vulnlog.dslinterpreter.dsl.impl.VulnlogFileData
 import java.io.File
 import kotlin.script.experimental.api.EvaluationResult
 import kotlin.script.experimental.api.ResultWithDiagnostics

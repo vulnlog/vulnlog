@@ -1,7 +1,5 @@
 package dev.vulnlog.dsl
 
-import dev.vulnlog.dsl.impl.VlLifeCycleTime
-
 interface VlLifeCycleToBuilder {
     /**
      * Defines the end date of a life cycle in months.
