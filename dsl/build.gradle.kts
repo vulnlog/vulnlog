@@ -1,4 +1,6 @@
 import com.vanniktech.maven.publish.SonatypeHost
+import org.jetbrains.dokka.versioning.VersioningConfiguration
+import org.jetbrains.dokka.versioning.VersioningPlugin
 
 plugins {
     id("vulnlog.lib-convention")
@@ -13,6 +15,48 @@ version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     implementation(libs.bundles.kotlinScriptDefinition)
+
+    dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.9.20")
+}
+
+buildscript {
+    dependencies {
+        classpath("org.jetbrains.dokka:versioning-plugin:1.9.20")
+    }
+}
+
+tasks.dokkaHtml {
+    val isSnapshotRelease = project.version.toString().endsWith("-SNAPSHOT")
+    val outputPath = "apiDoc/" + if (isSnapshotRelease) "SNAPSHOT" else "latest"
+
+    outputDirectory = layout.buildDirectory.dir(outputPath)
+    moduleName = "Vulnlog DSL"
+
+    pluginConfiguration<VersioningPlugin, VersioningConfiguration> {
+        version = project.version.toString()
+        if (!isSnapshotRelease) {
+            olderVersionsDir = file(layout.projectDirectory.dir("doc/oldVersions/"))
+        }
+        renderVersionsNavigationOnAllPages = true
+    }
+
+    dokkaSourceSets {
+        configureEach {
+            perPackageOption {
+                matchingRegex = "dev.vulnlog.dsl.definition.*"
+                suppress = true
+            }
+        }
+    }
+
+    if (!isSnapshotRelease) {
+        doFirst {
+            sync {
+                from(layout.buildDirectory.dir(outputPath))
+                into(layout.projectDirectory.dir("doc/oldVersions/$version"))
+            }
+        }
+    }
 }
 
 val sourcesJar by tasks.registering(Jar::class) {

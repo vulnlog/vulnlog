@@ -3,31 +3,47 @@ name: Build project
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-
       - name: Check out project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
 
-      - name: Check project
-        run: ./gradlew check
-
       - name: Build project
         run: ./gradlew build
+
+      - name: Create API documentation
+        run: ./gradlew :dsl:dokkaHtml
+
+      - name: Sync release files to web
+        if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dsl/build/apiDoc/latest/
+          server-dir: dslapi/latest/
+
+      - name: Sync snapshot release files to web
+        if: ${{ hashFiles('dsl/build/apiDoc/SNAPSHOT') != '' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dsl/build/apiDoc/SNAPSHOT/
+          server-dir: dslapi/SNAPSHOT/
