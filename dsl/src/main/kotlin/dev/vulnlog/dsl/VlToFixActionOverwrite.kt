@@ -14,5 +14,5 @@ interface VlToFixActionOverwrite {
     /**
      * Replace the specified dependency.
      */
-    fun replace(dependency: String): VlOverwriteBuilder
+    fun replace(dependency: String): VlFixActionTargetDependencyBuilder
 }

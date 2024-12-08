@@ -7,9 +7,9 @@ import dev.vulnlog.dsl.VlSuppressionBuilder
 internal class VlActionContextImpl : VlActionContext {
     override fun noAction(): VlNoActionValue = VlNoActionValueImpl()
 
-    override fun suppressUntilNextReleaseInBranch(): VlSuppressionBuilder = VlSuppressionBuilder()
+    override fun suppressUntilNextReleaseInBranch(): VlSuppressionBuilder = VlSuppressionBuilderImpl()
 
-    override fun suppressPermanent(): VlSuppressionBuilder = VlSuppressionBuilder()
+    override fun suppressPermanent(): VlSuppressionBuilder = VlSuppressionBuilderImpl()
 
-    override fun suppressTemporarily(untilDate: String): VlSuppressionBuilder = VlSuppressionBuilder()
+    override fun suppressTemporarily(untilDate: String): VlSuppressionBuilder = VlSuppressionBuilderImpl()
 }

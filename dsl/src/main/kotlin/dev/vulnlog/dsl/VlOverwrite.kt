@@ -2,9 +2,16 @@ package dev.vulnlog.dsl
 
 interface VlOverwrite<out T> {
     /**
-     * Overwrite the default definitions.
+     * Overwrite or add release-specific definitions.
      *
-     * Overwrite allows to create vulnerability analysis for specific versions and variants of the product.
+     * Allows to define vulnerability analysis more specifically for a particular release.
+     * For example, use overrides if
+     *   - several releases are vulnerable, but the current development branch has been patched immediately and is
+     *   therefore not vulnerable.
+     *   - multiple releases need to update dependency version Y to version Z, but one release needs to update
+     *   dependency version X to Z.
+     *
+     * If the specified variant version tuple exists in the vulnerability definition, it is overwritten.
      *
      * @param variant of the product
      * @param versions of the product

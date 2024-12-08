@@ -12,15 +12,15 @@ interface VlActionContextOverwrite : VlDslMarker {
      * 	Suppress the reported vulnerability until the fixed fixIn versions release date for the matching branch has
      * 	arrived. Requires fixIn version for the matching branch.
      */
-    fun suppressUntilNextReleaseInBranch(): VlOverwriteBuilder
+    fun suppressUntilNextReleaseInBranch(): VlSuppressionBuilder
 
     /**
      * Suppress the reported vulnerability.
      */
-    fun suppressPermanent(): VlOverwriteBuilder
+    fun suppressPermanent(): VlSuppressionBuilder
 
     /**
      * Suppress the reported vulnerability temporarily until and including the specified date (YYYY-MM-dd).
      */
-    fun suppressTemporarily(untilDate: String): VlOverwriteBuilder
+    fun suppressTemporarily(untilDate: String): VlSuppressionBuilder
 }

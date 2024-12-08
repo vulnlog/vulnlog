@@ -1,16 +1,12 @@
 package dev.vulnlog.dslinterpreter.splitter
 
 import dev.vulnlog.dsl.VlBranchValue
+import dev.vulnlog.dsl.VlOverwriteValue
 import dev.vulnlog.dsl.VlReleaseValue
 import dev.vulnlog.dsl.VlReportForValue
 import dev.vulnlog.dsl.VlVulnerabilityValue
 import dev.vulnlog.dslinterpreter.dsl.VlVulnerabilityData
-import dev.vulnlog.dslinterpreter.dsl.impl.VlReportForValueImpl
 import dev.vulnlog.dslinterpreter.dsl.impl.VlVulnerabilityValueImpl
-
-private data class GenericFilter(val reportedFor: Set<VlReportForValue>, val fixIn: Set<VlReleaseValue>) {
-    fun isVulnerabilityRelevantForThisReleaseBranch(): Boolean = reportedFor.isNotEmpty()
-}
 
 /**
  * Utility to group [vulnerabilities] per branch for each branch specified in [branches].
@@ -23,78 +19,132 @@ fun vulnerabilityPerBranch(
     return if (vulnerabilities.isEmpty()) {
         emptyList()
     } else if (branches.isEmpty()) {
-        listOf(VulnlogPerBranch(null, vulnerabilities))
+        listOf(VulnlogPerBranch(vulnerabilities = vulnerabilities))
     } else {
-        val vulnlogPerBranches: List<VulnlogPerBranch> =
-            branches.map { branch ->
-                VulnlogPerBranch(
-                    branch,
-                    collectVulnerabilitiesForBranch(branch, vulnerabilities),
-                )
-            }
-
-        val vulnerabilitiesWithoutBranch = vulnerabilities.filter { it.vulnerability.reportFor.isEmpty() }.toList()
-        val result =
-            if (vulnerabilitiesWithoutBranch.isNotEmpty()) {
-                vulnlogPerBranches + VulnlogPerBranch(null, vulnerabilitiesWithoutBranch)
-            } else {
-                vulnlogPerBranches
-            }
-
-        result
+        splitAndGroupByBranch(vulnerabilities, branches)
     }
 }
 
-private fun collectVulnerabilitiesForBranch(
-    branch: VlBranchValue,
+/**
+ * Split vulnerabilities and group them by branch.
+ */
+private fun splitAndGroupByBranch(
     vulnerabilities: List<VlVulnerabilityData>,
-): List<VlVulnerabilityData> {
+    branches: List<VlBranchValue>,
+): List<VulnlogPerBranch> {
+    val splitVulnerabilities = splitIntoMultipleVulnerabilities(vulnerabilities, branches)
+    return groupVulnerabilitiesByBranches(splitVulnerabilities)
+}
+
+private fun splitIntoMultipleVulnerabilities(
+    vulnerabilities: List<VlVulnerabilityData>,
+    branches: List<VlBranchValue>,
+): List<VulnlogPerBranch> {
     return vulnerabilities
-        .map { it to genericFilter(it.vulnerability, branch.releases) }
-        .filter { (_, filter) -> filter.isVulnerabilityRelevantForThisReleaseBranch() }
-        .map { (data, filter) -> data to genericCopier(data.vulnerability, filter) }
-        .map { (data, vulnerability) -> data.copy(vulnerability = vulnerability) }
-        .toList()
+        .flatMap { data ->
+            // TODO handle two releases within the same branch as one (the latest should be considered) do not
+            //  generate two vulnerabilities.
+            val splitVulnerabilities: List<VlVulnerabilityData> =
+                if (data.vulnerability.reportFor.isNotEmpty()) {
+                    createCopyOfVulnerabilityData(data)
+                } else {
+                    listOf(data)
+                }
+
+            // handle overwrites
+            val overwrittenSplitVulnerabilities =
+                splitVulnerabilities.map { vulnData ->
+                    val overwrites = vulnData.vulnerability.overwrites
+
+                    // filter branch relevant overwrites
+                    val relevantReleases: Set<VlOverwriteValue> =
+                        overwrites.filter { overwrite ->
+                            overwrite.reportedFor.map(VlReportForValue::release)
+                                .toSet()
+                                .intersect(vulnData.vulnerability.reportFor.map(VlReportForValue::release).toSet())
+                                .isNotEmpty()
+                        }.toSet()
+
+                    val effectiveOverwrites: Set<VlOverwriteValue> =
+                        relevantReleases.filter { overwrite ->
+                            overwrite.reportedFor.intersect(vulnData.vulnerability.reportFor).isNotEmpty()
+                        }.toSet()
+
+                    createOverwrittenCopy(vulnData, effectiveOverwrites, data)
+                }
+
+            val vulnerabilitiesPerBranch: List<VulnlogPerBranch> =
+                mapToVulnlogPerBranch(overwrittenSplitVulnerabilities, branches)
+            filterFixInVersions(vulnerabilitiesPerBranch)
+        }.toList()
 }
 
-private fun genericFilter(
-    vulnerability: VlVulnerabilityValue,
-    releases: List<VlReleaseValue>,
-): GenericFilter {
-    val filteredReportedFor = filterReportedFor(vulnerability.reportFor, releases)
-    val filteredFixIn = filterFixIn(vulnerability.fixIn, releases)
-
-    return GenericFilter(filteredReportedFor, filteredFixIn)
+private fun createOverwrittenCopy(
+    vulnData: VlVulnerabilityData,
+    effectiveOverwrites: Set<VlOverwriteValue>,
+    data: VlVulnerabilityData,
+): VlVulnerabilityData {
+    val reportBy =
+        (effectiveOverwrites.firstOrNull { it.reportBy.isNotEmpty() }?.reportBy ?: vulnData.vulnerability.reportBy)
+    val rating = effectiveOverwrites.firstOrNull { it.rating != null }?.rating ?: vulnData.vulnerability.rating
+    val fixAction = effectiveOverwrites.firstOrNull { it.toFix != null }?.toFix ?: vulnData.vulnerability.fixAction
+    val fixIn = effectiveOverwrites.firstOrNull { it.fixIn.isNotEmpty() }?.fixIn ?: vulnData.vulnerability.fixIn
+    val overwritten: VlVulnerabilityValue =
+        (vulnData.vulnerability as VlVulnerabilityValueImpl).copy(
+            reportBy = reportBy,
+            rating = rating,
+            fixAction = fixAction,
+            fixIn = fixIn,
+            overwrites = emptySet(),
+        )
+    return data.copy(vulnerability = overwritten)
 }
 
-private fun filterReportedFor(
-    reportedFor: Set<VlReportForValue>,
-    releasesInReleaseBranch: List<VlReleaseValue>,
-): Set<VlReportForValue> {
-    val releases = reportedFor.map(VlReportForValue::release).toSet()
-    return reportedFor
-        .map { it.variant to releasesInReleaseBranch.intersect(releases) }
-        .flatMap { (variant, releases) -> releases.map { VlReportForValueImpl(variant, it) }.toSet() }
-        .toSet()
+private fun createCopyOfVulnerabilityData(data: VlVulnerabilityData) =
+    data.vulnerability.reportFor
+        .map { reportedFor -> (data.vulnerability as VlVulnerabilityValueImpl).copy(reportFor = setOf(reportedFor)) }
+        .map { vulnerability -> data.copy(vulnerability = vulnerability) }
+
+private fun mapToVulnlogPerBranch(
+    vulnerabilities: List<VlVulnerabilityData>,
+    branches: List<VlBranchValue>,
+): List<VulnlogPerBranch> {
+    return vulnerabilities.groupBy { data ->
+        val reportedForReleases: Set<VlReleaseValue> = data.vulnerability.reportFor.map { it.release }.toSet()
+        branches.firstOrNull { branch -> branch.releases.toSet().intersect(reportedForReleases).isNotEmpty() }
+    }.map { VulnlogPerBranch(it.key ?: DefaultBranch, it.value) }
 }
 
-private fun filterFixIn(
-    fixIn: Set<VlReleaseValue>,
-    releasesInReleaseBranch: List<VlReleaseValue>,
-): Set<VlReleaseValue> {
-    return fixIn.intersect(releasesInReleaseBranch.toSet()).toSet()
+/**
+ * Remove fixIn versions not related to the branch
+ */
+private fun filterFixInVersions(vulnPerBranches: List<VulnlogPerBranch>): List<VulnlogPerBranch> {
+    return vulnPerBranches
+        .map { vulnPerBranch ->
+            val branchReleases: List<VlReleaseValue> = vulnPerBranch.branch.releases
+            val filteredVulnerabilityData =
+                vulnPerBranch.vulnerabilities.map { vulnerability ->
+                    createCopyOfFixInFilteredVulnerabilityData(branchReleases, vulnerability)
+                }
+            VulnlogPerBranch(vulnPerBranch.branch, filteredVulnerabilityData)
+        }.toList()
 }
 
-private fun genericCopier(
-    vulnerability: VlVulnerabilityValue,
-    filter: GenericFilter,
-): VlVulnerabilityValue {
-    var newVulnerability: VlVulnerabilityValue? = null
-    if (filter.reportedFor.isNotEmpty()) {
-        newVulnerability = (vulnerability as VlVulnerabilityValueImpl).copy(reportFor = filter.reportedFor)
-    }
-    if (filter.fixIn.isNotEmpty()) {
-        newVulnerability = (newVulnerability as VlVulnerabilityValueImpl).copy(fixIn = filter.fixIn)
-    }
-    return newVulnerability ?: vulnerability
+private fun createCopyOfFixInFilteredVulnerabilityData(
+    branchReleases: List<VlReleaseValue>,
+    data: VlVulnerabilityData,
+): VlVulnerabilityData {
+    val fixIn: Set<VlReleaseValue> =
+        if (branchReleases.isNotEmpty()) {
+            branchReleases.intersect(data.vulnerability.fixIn)
+        } else {
+            data.vulnerability.fixIn
+        }
+    val vulnerability = (data.vulnerability as VlVulnerabilityValueImpl).copy(fixIn = fixIn)
+    return data.copy(vulnerability = vulnerability)
 }
+
+private fun groupVulnerabilitiesByBranches(vulnerabilitiesPerBranch: List<VulnlogPerBranch>) =
+    vulnerabilitiesPerBranch.groupBy { it.branch }
+        .map { it.key to it.value.flatMap { vuln -> vuln.vulnerabilities }.toList() }
+        .map { VulnlogPerBranch(it.first, it.second) }
