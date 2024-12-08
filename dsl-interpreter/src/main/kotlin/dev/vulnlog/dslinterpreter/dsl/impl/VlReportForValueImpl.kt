@@ -6,5 +6,5 @@ import dev.vulnlog.dsl.VlVariantValue
 
 internal data class VlReportForValueImpl(
     override val variant: VlVariantValue,
-    override val versions: VlReleaseValue,
+    override val release: VlReleaseValue,
 ) : VlReportForValue

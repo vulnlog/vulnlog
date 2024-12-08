@@ -1,46 +1,78 @@
 package dev.vulnlog.dslinterpreter.splitter
 
-import dev.vulnlog.dsl.VlBranchValue
 import dev.vulnlog.dslinterpreter.dsl.VlVulnerabilityData
+import dev.vulnlog.dslinterpreter.dsl.impl.VlBranchValueImpl
 import dev.vulnlog.dslinterpreter.dsl.impl.VlReleaseValueImpl
 import dev.vulnlog.dslinterpreter.dsl.impl.VlReportForValueImpl
 import dev.vulnlog.dslinterpreter.dsl.impl.VlVariantValueImpl
+import dev.vulnlog.dslinterpreter.dsl.impl.VlVulnerabilityIdImpl
 import dev.vulnlog.dslinterpreter.dsl.impl.VlVulnerabilityValueImpl
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.shouldBe
-import io.mockk.every
-import io.mockk.mockk
 
 class SplitterKtTest : FunSpec({
 
+    val v000 = VlReleaseValueImpl("0.0.0")
     val v100 = VlReleaseValueImpl("1.0.0")
     val v110 = VlReleaseValueImpl("1.1.0")
     val v200 = VlReleaseValueImpl("2.0.0")
     val v210 = VlReleaseValueImpl("2.1.0")
+    val v211 = VlReleaseValueImpl("2.1.1")
+    val branch00 = VlBranchValueImpl("branch 00", v000, emptyList(), emptyList())
+    val branch10 = VlBranchValueImpl("branch 10", v100, listOf(v110), emptyList())
+    val branch20 = VlBranchValueImpl("branch 20", v200, listOf(v210, v211), emptyList())
     val variant = VlVariantValueImpl("abc")
-    val reportFor110 = VlReportForValueImpl(variant, v110)
-    val reportFor200 = VlReportForValueImpl(variant, v200)
+    val reportFor100 = VlReportForValueImpl(variant, v100)
     val reportFor210 = VlReportForValueImpl(variant, v210)
-
-    val branch10 = mockk<VlBranchValue>()
-    val branch20 = mockk<VlBranchValue>()
-    val vulnerabilityData1 = mockk<VlVulnerabilityData>()
-    val vulnerabilityData1Modified = mockk<VlVulnerabilityData>()
-    val vulnerabilityData2 = mockk<VlVulnerabilityData>()
-    val vulnerabilityData2Modified = mockk<VlVulnerabilityData>()
-    val vulnerability1 = mockk<VlVulnerabilityValueImpl>()
-    val vulnerability1Modified = mockk<VlVulnerabilityValueImpl>()
-    val vulnerability2 = mockk<VlVulnerabilityValueImpl>()
-    val vulnerability2Modified = mockk<VlVulnerabilityValueImpl>()
-
-    beforeEach {
-        every { branch10.releases } returns listOf(v100, v110)
-        every { branch20.releases } returns listOf(v200, v210)
-        every { vulnerabilityData1.vulnerability } returns vulnerability1
-        every { vulnerabilityData2.vulnerability } returns vulnerability2
-        every { vulnerabilityData1.copy(vulnerability = vulnerability1Modified) } returns vulnerabilityData1Modified
-        every { vulnerabilityData2.copy(vulnerability = vulnerability2Modified) } returns vulnerabilityData2Modified
-    }
+    val vulnerabilityData =
+        VlVulnerabilityData(
+            setOf(VlVulnerabilityIdImpl("CVE-1")),
+            VlVulnerabilityValueImpl(
+                reportFor = setOf(reportFor100, reportFor210),
+                reportBy = emptySet(),
+                rating = null,
+                fixAction = null,
+                fixIn = setOf(v110, v211),
+                overwrites = emptySet(),
+            ),
+        )
+    val vulnerabilityData2 =
+        VlVulnerabilityData(
+            setOf(VlVulnerabilityIdImpl("CVE-2")),
+            VlVulnerabilityValueImpl(
+                reportFor = emptySet(),
+                reportBy = emptySet(),
+                rating = null,
+                fixAction = null,
+                fixIn = emptySet(),
+                overwrites = emptySet(),
+            ),
+        )
+    val vulnerabilityDataBranch10 =
+        VlVulnerabilityData(
+            setOf(VlVulnerabilityIdImpl("CVE-1")),
+            VlVulnerabilityValueImpl(
+                reportFor = setOf(VlReportForValueImpl(VlVariantValueImpl("abc"), v100)),
+                reportBy = emptySet(),
+                rating = null,
+                fixAction = null,
+                fixIn = setOf(v110),
+                overwrites = emptySet(),
+            ),
+        )
+    val vulnerabilityDataBranchDefault =
+        VlVulnerabilityData(
+            setOf(VlVulnerabilityIdImpl("CVE-2")),
+            VlVulnerabilityValueImpl(
+                reportFor = emptySet(),
+                reportBy = emptySet(),
+                rating = null,
+                fixAction = null,
+                fixIn = emptySet(),
+                overwrites = emptySet(),
+            ),
+        )
 
     test("should be empty when empty branches and empty vulnerabilities") {
         val result = vulnerabilityPerBranch(emptyList(), emptyList())
@@ -48,73 +80,44 @@ class SplitterKtTest : FunSpec({
         result shouldBe emptyList()
     }
 
-    test("should have default branch when empty when empty branches") {
-        every { vulnerability1.reportFor } returns emptySet()
-        every { vulnerability1.copy(reportFor = emptySet()) } returns vulnerability1Modified
+    test("should have default branch when empty branches") {
 
-        val result = vulnerabilityPerBranch(emptyList(), listOf(vulnerabilityData1))
+        val result = vulnerabilityPerBranch(emptyList(), listOf(vulnerabilityData))
 
         result.size shouldBe 1
-        result[0] shouldBe VulnlogPerBranch(null, listOf(vulnerabilityData1))
-    }
-
-    test("should have empty vulnerabilities when branch has no releases") {
-        every { branch10.releases } returns emptyList()
-
-        val result = vulnerabilityPerBranch(listOf(branch10), emptyList())
-
-        result shouldBe listOf(VulnlogPerBranch(branch10, emptyList()))
+        result[0] shouldBe VulnlogPerBranch(null, listOf(vulnerabilityData))
     }
 
     test("should have one vulnerability in one branch") {
-        every { vulnerability1.reportFor } returns setOf(reportFor110)
-        every { vulnerability1.copy(reportFor = setOf(reportFor110)) } returns vulnerability1Modified
-        every { vulnerability2.reportFor } returns setOf(reportFor210)
-
-        val result = vulnerabilityPerBranch(listOf(branch10), listOf(vulnerabilityData1))
+        val result = vulnerabilityPerBranch(listOf(branch10), listOf(vulnerabilityData))
 
         result.size shouldBe 1
-        result[0] shouldBe VulnlogPerBranch(branch10, listOf(vulnerabilityData1Modified))
+        result[0] shouldBe VulnlogPerBranch(branch10, listOf(vulnerabilityDataBranch10))
     }
 
-    test("should have one vulnerability in each branch") {
-        every { vulnerability1.reportFor } returns setOf(reportFor110)
-        every { vulnerability1.copy(reportFor = setOf(reportFor110)) } returns vulnerability1Modified
-        every { vulnerability2.reportFor } returns setOf(reportFor210)
-        every { vulnerability2.copy(reportFor = setOf(reportFor210)) } returns vulnerability2Modified
+    test("should split one vulnerability into two branch") {
 
-        val result = vulnerabilityPerBranch(listOf(branch10, branch20), listOf(vulnerabilityData1, vulnerabilityData2))
+        val result = vulnerabilityPerBranch(listOf(branch10, branch20), listOf(vulnerabilityData))
 
         result.size shouldBe 2
-        result[0] shouldBe VulnlogPerBranch(branch10, listOf(vulnerabilityData1Modified))
-        result[1] shouldBe VulnlogPerBranch(branch20, listOf(vulnerabilityData2Modified))
-    }
-
-    test("should have one vulnerability in the first branch and two in the second branch") {
-        every { vulnerability1.reportFor } returns setOf(reportFor110, reportFor200)
-        every { vulnerability1.copy(reportFor = setOf(reportFor110)) } returns vulnerability1Modified
-        every { vulnerability1.copy(reportFor = setOf(reportFor200)) } returns vulnerability1Modified
-        every { vulnerability2.reportFor } returns setOf(reportFor210)
-        every { vulnerability2.copy(reportFor = setOf(reportFor210)) } returns vulnerability2Modified
-
-        val result = vulnerabilityPerBranch(listOf(branch10, branch20), listOf(vulnerabilityData1, vulnerabilityData2))
-
-        result.size shouldBe 2
-        result[0] shouldBe VulnlogPerBranch(branch10, listOf(vulnerabilityData1Modified))
-        result[1] shouldBe VulnlogPerBranch(branch20, listOf(vulnerabilityData1Modified, vulnerabilityData2Modified))
+        val branch10reportedFor = result[0].vulnerabilities[0].vulnerability.reportFor
+        val expectedBranch10reportedFor = setOf(VlReportForValueImpl(VlVariantValueImpl("abc"), v100))
+        branch10reportedFor shouldContainOnly expectedBranch10reportedFor
+        val branch20reportFor = result[1].vulnerabilities[0].vulnerability.reportFor
+        val expectedBranch20reportedFor = setOf(VlReportForValueImpl(VlVariantValueImpl("abc"), v210))
+        branch20reportFor shouldContainOnly expectedBranch20reportedFor
     }
 
     test("should have default branch with one vulnerability and an empty branch") {
-        every { vulnerability1.reportFor } returns emptySet()
-        every { vulnerability1.copy(reportFor = emptySet()) } returns vulnerability1Modified
-        every { vulnerability2.reportFor } returns setOf(reportFor210)
-        every { vulnerability2.copy(reportFor = setOf(reportFor210)) } returns vulnerability2Modified
 
-        val result = vulnerabilityPerBranch(listOf(branch10, branch20), listOf(vulnerabilityData1, vulnerabilityData2))
+        val result = vulnerabilityPerBranch(listOf(branch00, branch10), listOf(vulnerabilityData, vulnerabilityData2))
 
         result.size shouldBe 3
-        result[0] shouldBe VulnlogPerBranch(branch10, emptyList())
-        result[1] shouldBe VulnlogPerBranch(branch20, listOf(vulnerabilityData2Modified))
-        result[2] shouldBe VulnlogPerBranch(null, listOf(vulnerabilityData1))
+        result[0].vulnerabilities.size shouldBe 0
+
+        val branch10reportedFor = result[1].vulnerabilities[0].vulnerability.reportFor
+        val expectedBranch10reportedFor = setOf(VlReportForValueImpl(VlVariantValueImpl("abc"), v100))
+        branch10reportedFor shouldBe expectedBranch10reportedFor
+        result[2] shouldBe VulnlogPerBranch(null, listOf(vulnerabilityDataBranchDefault))
     }
 })

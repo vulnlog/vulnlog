@@ -7,6 +7,9 @@ import dev.vulnlog.dsl.VlReleaseValue
 internal data class VlBranchValueImpl(
     override val name: String,
     override val initialVersion: VlReleaseValue,
-    override val releases: List<VlReleaseValue>,
+    private val subsequentReleases: List<VlReleaseValue>,
     override val phases: List<VlPhaseValue>,
-) : VlBranchValue
+) : VlBranchValue {
+    override val releases: List<VlReleaseValue>
+        get() = listOf(initialVersion) + subsequentReleases
+}
