@@ -4,6 +4,7 @@ plugins {
 rootProject.name = "vulnlog"
 
 include(
+    "cli",
     "dsl",
     "dsl-interpreter",
     "gradle-plugin",
