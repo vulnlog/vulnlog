@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 plugins {
     id("vulnlog.app-convention")
 }
@@ -15,4 +17,13 @@ dependencies {
 
 application {
     mainClass.set("dev.vulnlog.cli.AppKt")
+}
+
+tasks.named<Copy>("processResources") {
+    val vlVersion = providers.gradleProperty("vlVersion")
+    doFirst {
+        filesMatching("version.txt") {
+            filter(ReplaceTokens::class, "tokens" to mapOf("vlVersion" to vlVersion.get()))
+        }
+    }
 }

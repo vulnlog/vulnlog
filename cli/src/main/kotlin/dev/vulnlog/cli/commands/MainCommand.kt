@@ -1,8 +1,10 @@
 package dev.vulnlog.cli.commands
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.PrintMessage
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.help
+import com.github.ajalt.clikt.parameters.options.eagerOption
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.file
@@ -12,29 +14,36 @@ import java.io.File
 class MainCommand : CliktCommand(
     help =
         """
-        CLI application to parse and interpret Vulnlog files.
+        CLI application to parse Vulnlog files.
         """.trimIndent(),
 ) {
     private val vulnlogFile: File by argument()
         .file(mustExist = true, canBeDir = false)
-        .help("The Vulnlog files to read.")
+        .help("The Vulnlog files to read")
 
     private val filterVulnerabilities: List<String>? by option(
         "--vuln",
-        help = "Filter to specific vulnerabilities.",
+        help = "Filter to specific vulnerabilities",
     )
         .varargValues()
     private val filterBranches: List<String>? by option(
         "--branch",
-        help = "Filter to specific branches.",
+        help = "Filter to specific branches",
     )
         .varargValues()
 
     private val filterVersions: List<String>? by option(
         "--release",
-        help = "Filter to specific releases.",
+        help = "Filter to specific releases",
     )
         .varargValues()
+
+    init {
+        eagerOption("-v", "--version", help = "Show version number and exit.") {
+            val version = object {}.javaClass.getResource("/version.txt")?.readText()?.lines()?.first() ?: ""
+            throw PrintMessage("Vulnlog $version")
+        }
+    }
 
     override fun run() {
         echo("File to read: ${vulnlogFile.name}")
