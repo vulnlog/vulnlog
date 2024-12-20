@@ -1,9 +1,9 @@
+# Runs on every published release
 name: Release CLI app
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  release:
+    types: [ published ]
 
 permissions:
   contents: write
@@ -12,6 +12,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+
       - name: Check out project
         uses: actions/checkout@v4
 
@@ -28,12 +29,6 @@ jobs:
       - name: Create CLI distribution ZIP
         run: ./gradlew :cli:distZip
 
-      - name: Prepare CLI release draft on GitHub
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          files: cli/build/distributions/*
-
       - name: Publish DSL JAR to Maven Central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USER }}
@@ -41,4 +36,27 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
-        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        run: ./gradlew clean publishAndReleaseToMavenCentral --no-configuration-cache
+
+      - name: Create API documentation
+        run: ./gradlew :dsl:dokkaHtml
+
+      - name: Upload API Documentation to webserver to '${{ github.ref_name }}'
+        if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dsl/build/apiDoc/latest/
+          server-dir: dslapi/${{ github.ref_name }}
+
+      - name: Upload API Documentation to webserver to 'latest'
+        if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: dsl/build/apiDoc/latest/
+          server-dir: dslapi/latest

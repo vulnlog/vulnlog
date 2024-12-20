@@ -1,0 +1,42 @@
+# Runs on every push to main with a version tag e.g. v1.2.3
+name: Prepare CLI app release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  prepareRelease:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
+
+      - name: Create a clean project build
+        run: ./gradlew clean assemble
+
+      - name: Create CLI distribution ZIP
+        run: ./gradlew :cli:distZip
+
+      - name: Prepare CLI release draft on GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: cli/build/distributions/*

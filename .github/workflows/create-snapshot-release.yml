@@ -1,14 +1,21 @@
-name: Build project
+# Runs on every push to main when there is no version tag e.g. v1.2.3
+name: Create snapshot release
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches:
+      - main
+    tags-ignore:
+      - "v*.*.*"
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  createSnapshotRelease:
     runs-on: ubuntu-latest
     steps:
+
       - name: Check out project
         uses: actions/checkout@v4
 
@@ -22,21 +29,8 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
 
-      - name: Build project
-        run: ./gradlew build
-
       - name: Create API documentation
         run: ./gradlew :dsl:dokkaHtml
-
-      - name: Sync release files to web
-        if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dsl/build/apiDoc/latest/
-          server-dir: dslapi/latest/
 
       - name: Sync snapshot release files to web
         if: ${{ hashFiles('dsl/build/apiDoc/SNAPSHOT') != '' }}
