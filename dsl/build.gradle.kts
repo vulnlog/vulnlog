@@ -1,6 +1,5 @@
+
 import com.vanniktech.maven.publish.SonatypeHost
-import org.jetbrains.dokka.versioning.VersioningConfiguration
-import org.jetbrains.dokka.versioning.VersioningPlugin
 
 plugins {
     id("vulnlog.lib-convention")
@@ -31,14 +30,6 @@ tasks.dokkaHtml {
 
     outputDirectory = layout.buildDirectory.dir(outputPath)
     moduleName = "Vulnlog DSL"
-
-    pluginConfiguration<VersioningPlugin, VersioningConfiguration> {
-        version = project.version.toString()
-        if (!isSnapshotRelease) {
-            olderVersionsDir = file(layout.projectDirectory.dir("doc/oldVersions/"))
-        }
-        renderVersionsNavigationOnAllPages = true
-    }
 
     dokkaSourceSets {
         configureEach {
