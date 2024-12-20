@@ -1,27 +1,30 @@
-name: Verify project
+# Fast, on every push and all branches only unit tests
+name: Verify
 
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  verify:
+  assembleTest:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
 
       - name: Check out project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
 
-      - name: Check project
-        run: ./gradlew check
+      - name: Assemble project
+        run: ./gradlew assemble
+
+      - name: Run unit tests
+        run: ./gradlew test
