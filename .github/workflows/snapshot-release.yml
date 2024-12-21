@@ -1,17 +1,14 @@
-# Runs on every push to main when there is no version tag e.g. v1.2.3
-name: Create snapshot release
+# Create a snapshot release manually
+name: Create CLI Snapshot Release
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   createSnapshotRelease:
-    if: ${{ github.ref_name == '' }}
     runs-on: ubuntu-latest
     steps:
 
@@ -28,11 +25,25 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
 
-      - name: Create API documentation
+      - name: Create a clean project build
+        run: ./gradlew clean assemble
+
+      - name: Create CLI distribution ZIP
+        run: ./gradlew :cli:distZip
+
+      - name: Upload CLI snapshot artifact to webserver
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: cli/build/distributions/
+          server-dir: snapshot/
+
+      - name: Create API documentation for snapshot release
         run: ./gradlew :dsl:dokkaHtml
 
       - name: Sync snapshot release files to web
-        if: ${{ hashFiles('dsl/build/apiDoc/SNAPSHOT') != '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
