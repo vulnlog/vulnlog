@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: dsl/build/apiDoc/latest/
-          server-dir: dslapi/${{ github.ref_name }}
+          server-dir: dslapi/${{ github.ref_name }}/
 
       - name: Upload API Documentation to webserver to 'latest'
         if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
@@ -59,4 +59,4 @@ jobs:
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: dsl/build/apiDoc/latest/
-          server-dir: dslapi/latest
+          server-dir: dslapi/latest/
