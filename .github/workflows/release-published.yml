@@ -29,6 +29,15 @@ jobs:
       - name: Create CLI distribution ZIP
         run: ./gradlew :cli:distZip
 
+      - name: Upload CLI artifact to webserver to '${{ github.ref_name }}'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: cli/build/distributions/
+          server-dir: releases/${{ github.ref_name }}/
+
       - name: Publish DSL JAR to Maven Central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USER }}
