@@ -17,6 +17,7 @@ dependencies {
 
 application {
     mainClass.set("dev.vulnlog.cli.AppKt")
+    applicationName = "vl"
 }
 
 tasks.named<Copy>("processResources") {
