@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CLI: Improve Vulnlog file parsing by using the file compilation cache. The first time a new or changed Vulnlog file is
+  processed by the `vl` command, it is compiled and cached. Subsequent processing will use the cached file. If the
+  Vulnlog file is changed, `vl` will detect this and recompile and cache the file.
+
 ## [0.3.3] - 2024-12-21
 
 ### Added
