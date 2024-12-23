@@ -24,7 +24,6 @@ kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version
 kotlinCoroutinesCore = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutinesVersion" }
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
 kotlinScriptingCommon = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlinVersion" }
-kotlinScriptingDependencies = { module = "org.jetbrains.kotlin:kotlin-scripting-dependencies", version.ref = "kotlinVersion" }
 kotlinScriptingJvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", version.ref = "kotlinVersion" }
 kotlinScriptingJvmHost = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlinVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
@@ -33,6 +32,6 @@ snykGradlePlugin = { module = "gradle.plugin.io.snyk.gradle.plugin:snyk", versio
 
 [bundles]
 kotlinScriptDefinition = ["kotlinScriptingJvm"]
-kotlinScript = ["kotlinScriptingCommon", "kotlinScriptingDependencies", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
+kotlinScript = ["kotlinScriptingCommon", "kotlinScriptingJvm", "kotlinScriptingJvmHost"]
 
 [plugins]

@@ -9,15 +9,17 @@ import kotlin.script.experimental.api.implicitReceivers
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 
-object VulnLogCompilationConfiguration : ScriptCompilationConfiguration({
+object VulnLogCompilationConfiguration : ScriptCompilationConfiguration(
+    {
 
-    implicitReceivers(VlVulnLogContextValue::class)
+        implicitReceivers(VlVulnLogContextValue::class)
 
-    jvm {
-        dependenciesFromCurrentContext(wholeClasspath = true)
-    }
+        jvm {
+            dependenciesFromCurrentContext(wholeClasspath = true)
+        }
 
-    ide {
-        acceptedLocations(ScriptAcceptedLocation.Everywhere)
-    }
-})
+        ide {
+            acceptedLocations(ScriptAcceptedLocation.Everywhere)
+        }
+    },
+)
