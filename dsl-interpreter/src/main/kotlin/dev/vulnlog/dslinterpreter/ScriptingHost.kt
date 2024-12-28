@@ -1,6 +1,16 @@
 package dev.vulnlog.dslinterpreter
 
+import dev.vulnlog.dsl.definition.AnnotationRefinements
+import dev.vulnlog.dsl.definition.Import
 import dev.vulnlog.dsl.definition.VulnLogCompilationConfiguration
+import dev.vulnlog.dsl.definition.Vulnlog2CompilationConfiguration
+import dev.vulnlog.dsl.definition.Vulnlog3CompilationConfiguration
+import dev.vulnlog.dsl2.impl.VlVulnlogContextImpl
+import dev.vulnlog.dsl2.impl.Vulnlog2FileData
+import dev.vulnlog.dsl3.MyVuln
+import dev.vulnlog.dsl3.MyVulnImpl
+import dev.vulnlog.dsl3.VlDslReleasesImpl
+import dev.vulnlog.dsl3.VlDslVulnImpl
 import dev.vulnlog.dslinterpreter.dsl.VlVulnLogContextValueImpl
 import dev.vulnlog.dslinterpreter.dsl.impl.VulnlogFileData
 import java.io.File
@@ -14,11 +24,13 @@ import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.ScriptDiagnostic
 import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.api.SourceCode
+import kotlin.script.experimental.api.defaultImports
 import kotlin.script.experimental.api.enableScriptsInstancesSharing
 import kotlin.script.experimental.api.hostConfiguration
 import kotlin.script.experimental.api.implicitReceivers
 import kotlin.script.experimental.api.isError
 import kotlin.script.experimental.api.onFailure
+import kotlin.script.experimental.api.refineConfiguration
 import kotlin.script.experimental.api.with
 import kotlin.script.experimental.host.BasicScriptingHost
 import kotlin.script.experimental.host.ScriptingHostConfiguration
@@ -77,6 +89,101 @@ class ScriptingHost {
             }
 
         return Result.success(vulnlogContext.build())
+    }
+
+    fun eval2(script: File): Result<Vulnlog2FileData> {
+        val vulnlogContext2 = VlVulnlogContextImpl()
+
+        fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
+            val compilationConfiguration =
+                Vulnlog2CompilationConfiguration.with {
+                    hostConfiguration(
+                        ScriptingHostConfiguration {
+                            defaultImports(Import::class)
+                            jvm {
+                                val potPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("vulnlog-cache")
+                                val cacheBaseDir =
+                                    if (!potPath.exists()) potPath.createDirectory().toFile() else potPath.toFile()
+                                compilationCache(
+                                    CompiledScriptJarsCache { script, scriptCompilationConfiguration ->
+                                        val filename =
+                                            compiledScriptUniqueName(script, scriptCompilationConfiguration) + ".jar"
+                                        File(cacheBaseDir, filename)
+                                    },
+                                )
+                            }
+                            refineConfiguration {
+                                onAnnotations(Import::class, handler = AnnotationRefinements())
+                            }
+                        },
+                    )
+                }
+            val evaluationConfiguration =
+                ScriptEvaluationConfiguration {
+                    implicitReceivers(vulnlogContext2)
+                    enableScriptsInstancesSharing()
+                }
+            return host.eval(scriptFile, compilationConfiguration, evaluationConfiguration)
+        }
+
+        evalFile(script.toScriptSource())
+            .onFailure { result ->
+                return Result.failure(
+                    ScriptEvaluationException(
+                        result.reports.filter(ScriptDiagnostic::isError).map(ScriptDiagnostic::message).first(),
+                    ),
+                )
+            }
+
+        return Result.success(vulnlogContext2.build())
+    }
+
+    //    fun eval3(scripts: List<File>): Result<Triple<VlDslReleasesImpl, VlDslVulnImpl, List<VulnlogData>>> {
+    fun eval3(scripts: List<File>): Result<Triple<VlDslReleasesImpl, VlDslVulnImpl, MyVuln>> {
+        val releaseReceiver = VlDslReleasesImpl()
+        val vulnReceiver = VlDslVulnImpl()
+        val myVulnData = MyVulnImpl()
+
+        fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
+            val compilationConfiguration =
+                Vulnlog3CompilationConfiguration.with {
+                    hostConfiguration(
+                        ScriptingHostConfiguration {
+                            jvm {
+                                val potPath = Path.of(System.getProperty("java.io.tmpdir")).resolve("vulnlog-cache")
+                                val cacheBaseDir =
+                                    if (!potPath.exists()) potPath.createDirectory().toFile() else potPath.toFile()
+                                compilationCache(
+                                    CompiledScriptJarsCache { script, scriptCompilationConfiguration ->
+                                        val filename =
+                                            compiledScriptUniqueName(script, scriptCompilationConfiguration) + ".jar"
+                                        File(cacheBaseDir, filename)
+                                    },
+                                )
+                            }
+                        },
+                    )
+                }
+            val evaluationConfiguration =
+                ScriptEvaluationConfiguration {
+                    implicitReceivers(releaseReceiver, vulnReceiver, myVulnData)
+                    enableScriptsInstancesSharing()
+                }
+            return host.eval(scriptFile, compilationConfiguration, evaluationConfiguration)
+        }
+
+        scripts.forEach { script ->
+            evalFile(script.toScriptSource())
+                .onFailure { result ->
+                    return Result.failure(
+                        ScriptEvaluationException(
+                            result.reports.filter(ScriptDiagnostic::isError).map(ScriptDiagnostic::message).first(),
+                        ),
+                    )
+                }
+        }
+//        return Result.success(Triple(releaseReceiver, vulnReceiver, myVulnData.data))
+        return Result.success(Triple(releaseReceiver, vulnReceiver, myVulnData))
     }
 }
 

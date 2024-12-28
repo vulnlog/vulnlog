@@ -48,8 +48,28 @@ class MainCommand : CliktCommand(
     override fun run() {
         echo("File to read: ${vulnlogFile.name}")
         val host = ScriptingHost()
-        val result = host.eval(vulnlogFile)
-        val printer = SimplePrinter(::echo, filterVulnerabilities, filterBranches, filterVersions)
-        printer.printNicely(result)
+
+        if (vulnlogFile.name.contains("vl3")) {
+            val files =
+                vulnlogFile.parentFile
+                    .listFiles { file -> file.name.endsWith("vl3.kts") && file.name != vulnlogFile.name }
+                    ?.toList() ?: emptyList()
+            if (files.isNotEmpty()) {
+                echo("Also read: ${files.joinToString(", ") { it.name }}")
+            }
+            val defFirst: List<File> = listOf(vulnlogFile).plus(files)
+
+            val result = host.eval3(defFirst)
+            val printer = SimplePrinter3(::echo, filterVulnerabilities, filterBranches)
+            printer.printNicely(result)
+        } else if (vulnlogFile.name.contains("vl2")) {
+            val result = host.eval2(vulnlogFile)
+            val printer = SimplePrinter2(::echo, filterVulnerabilities, filterBranches, filterVersions)
+            printer.printNicely(result)
+        } else {
+            val result = host.eval(vulnlogFile)
+            val printer = SimplePrinter(::echo, filterVulnerabilities, filterBranches, filterVersions)
+            printer.printNicely(result)
+        }
     }
 }
