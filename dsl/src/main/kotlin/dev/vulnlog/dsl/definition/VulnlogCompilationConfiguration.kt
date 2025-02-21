@@ -13,7 +13,6 @@ import kotlin.script.experimental.jvm.jvm
 object VulnlogCompilationConfiguration : ScriptCompilationConfiguration(
     {
         implicitReceivers(VlDslRoot::class)
-//        implicitReceivers(VlReleasesDslRoot::class, VlVulnerabilityDslRoot::class)
 
         jvm {
             dependenciesFromCurrentContext(wholeClasspath = true)

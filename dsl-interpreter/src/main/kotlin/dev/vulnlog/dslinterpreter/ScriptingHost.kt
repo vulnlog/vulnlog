@@ -32,8 +32,6 @@ class ScriptingHost {
     private val host: BasicScriptingHost = BasicJvmScriptingHost()
 
     fun eval(scripts: List<File>): Result<VlDslRoot> {
-//        val releaseReceiver = VlReleasesDslRootImpl()
-//        val myVulnData = VlVulnerabilityDslRootImpl()
         val dslRoot = VlDslRootImpl()
 
         fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
@@ -59,7 +57,6 @@ class ScriptingHost {
             val evaluationConfiguration =
                 ScriptEvaluationConfiguration {
                     implicitReceivers(dslRoot)
-//                    implicitReceivers(releaseReceiver, myVulnData)
                     enableScriptsInstancesSharing()
                 }
             return host.eval(scriptFile, compilationConfiguration, evaluationConfiguration)
