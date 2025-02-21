@@ -1,7 +1,6 @@
 package dev.vulnlog.dsl.definition
 
-import dev.vulnlog.dsl.MyVuln
-import dev.vulnlog.dsl.VlDslReleases
+import dev.vulnlog.dsl.VlDslRoot
 import kotlin.script.experimental.api.ScriptAcceptedLocation
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
 import kotlin.script.experimental.api.acceptedLocations
@@ -13,11 +12,12 @@ import kotlin.script.experimental.jvm.jvm
 
 object VulnlogCompilationConfiguration : ScriptCompilationConfiguration(
     {
-        implicitReceivers(VlDslReleases::class, MyVuln::class)
+        implicitReceivers(VlDslRoot::class)
+//        implicitReceivers(VlReleasesDslRoot::class, VlVulnerabilityDslRoot::class)
 
         jvm {
             dependenciesFromCurrentContext(wholeClasspath = true)
-            defaultImports("dev.vulnlog.dsl.*", "dev.vulnlog.dsl3.*")
+            defaultImports("dev.vulnlog.dsl.*")
         }
 
         ide {
