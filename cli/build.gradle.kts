@@ -6,7 +6,7 @@ plugins {
 
 description = "CLI application parsing Vulnlog files."
 
-group = "dev.vulnlog.cli"
+group = "dev.vulnlog"
 version = providers.gradleProperty("vlVersion").get()
 
 dependencies {

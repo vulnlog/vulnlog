@@ -6,7 +6,7 @@ plugins {
     id("com.gradle.plugin-publish") version "1.2.1"
 }
 
-group = "dev.vulnlog.gradleplugin"
+group = "dev.vulnlog"
 version = providers.gradleProperty("vlVersion").get()
 
 repositories {
