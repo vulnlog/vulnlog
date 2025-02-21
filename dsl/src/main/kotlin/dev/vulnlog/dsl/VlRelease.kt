@@ -1,24 +1,18 @@
 package dev.vulnlog.dsl
 
-interface VlRelease {
-    /**
-     * Create a product version without a release date.
-     *
-     * @param version describes the version string in semantic versioning format.
-     * @return a not yet released product version.
-     */
-    fun release(version: String): VlReleaseValue
+import java.time.LocalDate
 
-    /**
-     * Create a product version with a release date.
-     *
-     * @param version describes the version string in semantic versioning format.
-     * @param publicationDate use the format YYYY-MM-dd to specify.
-     * @return a released product version.
-     *
-     */
-    fun release(
-        version: String,
-        publicationDate: String,
-    ): VlReleasePublishedValue
+data class VlRelease(val version: String, val releaseDate: LocalDate?) {
+    companion object {
+        fun createRelease(
+            version: String,
+            publicationDate: String?,
+        ): VlRelease {
+            return if (publicationDate == null) {
+                VlRelease(version, null)
+            } else {
+                VlRelease(version, LocalDate.parse(publicationDate))
+            }
+        }
+    }
 }

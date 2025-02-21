@@ -1,18 +1,26 @@
 package dev.vulnlog.dsl
 
-interface VlBranch {
-    /**
-     * Create a product branch containing several release versions.
-     *
-     * A product branch is a group of sequential releases with a product life cycle.
-     *
-     * @param name of the release branch.
-     * @param initialVersion specifies the starting point of this release branch.
-     * @param lifeCycle specifies the sequential phases this product branch passes through.
-     */
-    fun branch(
-        name: String,
-        initialVersion: VlReleaseValue,
-        lifeCycle: VlLifeCycleValue,
-    ): VlBranchBuilder
+import kotlin.reflect.KProperty
+
+class VlBranch private constructor(val name: String) {
+    companion object Factory {
+        val data = mutableMapOf<String, VlBranch>()
+
+        fun createBranch(name: String): VlBranch {
+            val release = VlBranch(name)
+            data[name] = release
+            return release
+        }
+
+        operator fun getValue(
+            thisRef: Any?,
+            property: KProperty<*>,
+        ): VlBranch {
+            return checkNotNull(data[property.name]) { "Branch not defined ${property.name}" }
+        }
+    }
+
+    override fun toString(): String {
+        return "Branch(name='$name')"
+    }
 }

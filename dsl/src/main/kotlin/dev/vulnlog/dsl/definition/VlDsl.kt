@@ -3,8 +3,8 @@ package dev.vulnlog.dsl.definition
 import kotlin.script.experimental.annotations.KotlinScript
 
 @KotlinScript(
-    displayName = "Vulnerability Logfile",
+    displayName = "Vulnlog Script Definition",
     fileExtension = "vl.kts",
-    compilationConfiguration = VulnLogCompilationConfiguration::class,
+    compilationConfiguration = VulnlogCompilationConfiguration::class,
 )
 interface VlDsl

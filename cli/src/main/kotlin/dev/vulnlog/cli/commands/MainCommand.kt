@@ -3,6 +3,7 @@ package dev.vulnlog.cli.commands
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.PrintMessage
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.check
 import com.github.ajalt.clikt.parameters.arguments.help
 import com.github.ajalt.clikt.parameters.options.eagerOption
 import com.github.ajalt.clikt.parameters.options.option
@@ -19,7 +20,8 @@ class MainCommand : CliktCommand(
 ) {
     private val vulnlogFile: File by argument()
         .file(mustExist = true, canBeDir = false)
-        .help("The Vulnlog files to read")
+        .help("The Vulnlog definition files to read.")
+        .check("File must be a Vulnlog definition file (definitions.vl.kts)") { it.name == "definitions.vl.kts" }
 
     private val filterVulnerabilities: List<String>? by option(
         "--vuln",
@@ -32,12 +34,6 @@ class MainCommand : CliktCommand(
     )
         .varargValues()
 
-    private val filterVersions: List<String>? by option(
-        "--release",
-        help = "Filter to specific releases",
-    )
-        .varargValues()
-
     init {
         eagerOption("-v", "--version", help = "Show version number and exit.") {
             val version = object {}.javaClass.getResource("/version.txt")?.readText()?.lines()?.first() ?: ""
@@ -47,28 +43,21 @@ class MainCommand : CliktCommand(
 
     override fun run() {
         echo("File to read: ${vulnlogFile.name}")
+
         val host = ScriptingHost()
 
-        if (vulnlogFile.name.contains("vl3")) {
+        if (vulnlogFile.name.endsWith("vl.kts")) {
             val files =
                 vulnlogFile.parentFile
-                    .listFiles { file -> file.name.endsWith("vl3.kts") && file.name != vulnlogFile.name }
+                    .listFiles { file -> file.name.endsWith("vl.kts") && file.name != vulnlogFile.name }
                     ?.toList() ?: emptyList()
             if (files.isNotEmpty()) {
                 echo("Also read: ${files.joinToString(", ") { it.name }}")
             }
             val defFirst: List<File> = listOf(vulnlogFile).plus(files)
 
-            val result = host.eval3(defFirst)
-            val printer = SimplePrinter3(::echo, filterVulnerabilities, filterBranches)
-            printer.printNicely(result)
-        } else if (vulnlogFile.name.contains("vl2")) {
-            val result = host.eval2(vulnlogFile)
-            val printer = SimplePrinter2(::echo, filterVulnerabilities, filterBranches, filterVersions)
-            printer.printNicely(result)
-        } else {
-            val result = host.eval(vulnlogFile)
-            val printer = SimplePrinter(::echo, filterVulnerabilities, filterBranches, filterVersions)
+            val result = host.eval(defFirst)
+            val printer = SimplePrinter(::echo, filterVulnerabilities, filterBranches)
             printer.printNicely(result)
         }
     }
