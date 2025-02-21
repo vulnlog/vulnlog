@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-01-21
+
 ### Added
 
 - CLI: Improve Vulnlog file parsing by using the file compilation cache. The first time a new or changed Vulnlog file is
@@ -14,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Vulnlog file is changed, `vl` will detect this and recompile and cache the file.
 - DSL: Completely revised and simplified DSL for describing releases and vulnerabilities. The new DSL also supports
   multiple files to separate release definitions from vulnerability analysis, reducing noise in the Vulnlog file.
+
+### Removed
+
+- Previous DSL versions.
 
 ## [0.3.3] - 2024-12-21
 
