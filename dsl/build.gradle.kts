@@ -8,7 +8,7 @@ plugins {
 
 description = "DLS definition for Vulnlog files."
 
-group = "dev.vulnlog.dsl"
+group = "dev.vulnlog"
 version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
