@@ -1,8 +1,7 @@
 package dev.vulnlog.dslinterpreter
 
-import dev.vulnlog.dsl.MyVuln
-import dev.vulnlog.dsl.MyVulnImpl
-import dev.vulnlog.dsl.VlDslReleasesImpl
+import dev.vulnlog.dsl.VlDslRoot
+import dev.vulnlog.dsl.VlDslRootImpl
 import dev.vulnlog.dsl.definition.VulnlogCompilationConfiguration
 import java.io.File
 import java.nio.file.Path
@@ -32,9 +31,10 @@ import kotlin.script.experimental.jvmhost.CompiledScriptJarsCache
 class ScriptingHost {
     private val host: BasicScriptingHost = BasicJvmScriptingHost()
 
-    fun eval(scripts: List<File>): Result<Pair<VlDslReleasesImpl, MyVuln>> {
-        val releaseReceiver = VlDslReleasesImpl()
-        val myVulnData = MyVulnImpl()
+    fun eval(scripts: List<File>): Result<VlDslRoot> {
+//        val releaseReceiver = VlReleasesDslRootImpl()
+//        val myVulnData = VlVulnerabilityDslRootImpl()
+        val dslRoot = VlDslRootImpl()
 
         fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
             val compilationConfiguration =
@@ -58,7 +58,8 @@ class ScriptingHost {
                 }
             val evaluationConfiguration =
                 ScriptEvaluationConfiguration {
-                    implicitReceivers(releaseReceiver, myVulnData)
+                    implicitReceivers(dslRoot)
+//                    implicitReceivers(releaseReceiver, myVulnData)
                     enableScriptsInstancesSharing()
                 }
             return host.eval(scriptFile, compilationConfiguration, evaluationConfiguration)
@@ -74,7 +75,7 @@ class ScriptingHost {
                     )
                 }
         }
-        return Result.success(Pair(releaseReceiver, myVulnData))
+        return Result.success(dslRoot)
     }
 }
 

@@ -1,9 +1,8 @@
 package dev.vulnlog.cli.commands
 
-import dev.vulnlog.dsl.MyVuln
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dsl.VlDslReleasesImpl
+import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VulnlogData
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch3
 
@@ -12,13 +11,13 @@ class SimplePrinter(
     private val filterVulnerabilities: List<String>?,
     private val filterBranches: List<String>?,
 ) {
-    fun printNicely(evalResult: Result<Pair<VlDslReleasesImpl, MyVuln>>) {
+    fun printNicely(evalResult: Result<VlDslRoot>) {
         evalResult.onFailure {
             error(it)
         }.onSuccess { entry ->
             val releaseBranchToReleaseVersions: Map<ReleaseBranchData, List<ReleaseVersionData>> =
-                entry.first.branchToReleases
-            val vulnerabilities: List<VulnlogData> = entry.second.data
+                entry.branchToReleases
+            val vulnerabilities: List<VulnlogData> = entry.data
             val splitVulnToBranches = vulnerabilityPerBranch3(releaseBranchToReleaseVersions.keys, vulnerabilities)
             val filtered = filter(splitVulnToBranches)
             printer("---")
