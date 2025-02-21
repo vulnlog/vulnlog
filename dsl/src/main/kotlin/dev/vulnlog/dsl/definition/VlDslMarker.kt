@@ -1,7 +1,5 @@
 package dev.vulnlog.dsl.definition
 
 @DslMarker
-annotation class VlDslMarkerAnnotation
-
-@VlDslMarkerAnnotation
-interface VlDslMarker
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
+annotation class VlDslMarker
