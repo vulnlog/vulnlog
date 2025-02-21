@@ -19,13 +19,13 @@ gradlePlugin {
     vcsUrl = "https://github.com/vulnlog/vulnlog.git"
     plugins {
         create("vulnlogPlugin") {
-            id = "dev.vulnlog.kickstarter"
-            displayName = "Vulnlog DSL"
+            id = "dev.vulnlog.dslplugin"
+            displayName = "Vulnlog DSL Plugin"
             description =
                 """
-                A simple and easy to use DSL to describe vulnerabilities in software projects.
+                The Vulnlog DSL definition for describing and tracking SCA vulnerability reports for your software project.
                 """.trimIndent()
-            tags = listOf("vulnerability", "logging", "security", "tracking", "DSL")
+            tags = listOf("vulnlog", "vl", "sca", "vulnerability", "logging", "security", "tracking", "dsl")
             implementationClass = "dev.vulnlog.gradleplugin.VulnLogPlugin"
         }
     }
