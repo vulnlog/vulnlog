@@ -6,11 +6,32 @@ import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VulnlogData
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch3
 
+data class Filtered(
+    val releaseBranches: Map<ReleaseBranchData, List<ReleaseVersionData>>,
+    val vulnerabilitiesPerBranch: Map<ReleaseBranchData, List<VulnlogData>>,
+)
+
 class DslResultFilter(
     private val filterVulnerabilities: List<String>?,
     private val filterBranches: List<String>?,
 ) {
-    fun filter(evalResult: VlDslRoot): Map<ReleaseBranchData, List<VulnlogData>> {
+    fun filter(evalResult: VlDslRoot): Filtered {
+        val filteredReleaseBranches = filterReleaseBranches(evalResult.branchToReleases)
+        val filteredVulnerabilities = filterVulnerabilities(evalResult)
+        return Filtered(filteredReleaseBranches, filteredVulnerabilities)
+    }
+
+    private fun filterReleaseBranches(
+        releaseBranchesToReleaseVersions: Map<ReleaseBranchData, List<ReleaseVersionData>>,
+    ): Map<ReleaseBranchData, List<ReleaseVersionData>> {
+        return if (filterBranches != null) {
+            releaseBranchesToReleaseVersions.filter { filterBranches.contains(it.key.name) }
+        } else {
+            releaseBranchesToReleaseVersions
+        }
+    }
+
+    private fun filterVulnerabilities(evalResult: VlDslRoot): Map<ReleaseBranchData, List<VulnlogData>> {
         val releaseBranchToReleaseVersions: Map<ReleaseBranchData, List<ReleaseVersionData>> =
             evalResult.branchToReleases
         val vulnerabilities: List<VulnlogData> = evalResult.data
