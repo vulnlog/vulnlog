@@ -6,6 +6,7 @@ kotestExtensionKoinVersion = "1.3.0"
 kotestVersion = "5.8.1"
 kotlinCoroutinesVersion = "1.8.1"
 kotlinVersion = "2.0.21"
+kotlinxSerializationJsonVersion = "1.8.0"
 ktlintVersion = "12.1.1"
 mockkVersion = "1.13.10"
 owaspDependencyCheckerVersion = "9.2.0"
@@ -26,6 +27,8 @@ kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", ver
 kotlinScriptingCommon = { module = "org.jetbrains.kotlin:kotlin-scripting-common", version.ref = "kotlinVersion" }
 kotlinScriptingJvm = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm", version.ref = "kotlinVersion" }
 kotlinScriptingJvmHost = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlinVersion" }
+kotlinxSerializationGradlePlugin = { module = "org.jetbrains.kotlin.plugin.serialization:org.jetbrains.kotlin.plugin.serialization.gradle.plugin", version.ref = "kotlinVersion" }
+kotlinxSerializationJson = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJsonVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockkVersion" }
 snykGradlePlugin = { module = "gradle.plugin.io.snyk.gradle.plugin:snyk", version.ref = "snykVersion" }

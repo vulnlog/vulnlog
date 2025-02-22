@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.dependencyCheckGradle)
     implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
+    implementation(libs.kotlinxSerializationGradlePlugin)
     implementation(libs.ktlintGradle)
     implementation(libs.snykGradlePlugin)
 }

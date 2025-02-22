@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":dsl-interpreter"))
 
     implementation(libs.clikt)
+    implementation(libs.kotlinxSerializationJson)
 }
 
 application {

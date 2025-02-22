@@ -61,7 +61,10 @@ class MainCommand : CliktCommand(
         val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
         val filteredResult = filterDsl.filter(result.getOrThrow())
 
-        val printer = SimplePrinter(::echo)
-        printer.printNicely(filteredResult)
+        val translator = SerialisationTranslator()
+        val serialisableData = translator.translate(filteredResult)
+
+        val printer = JsonPrinter(::echo)
+        printer.print(serialisableData)
     }
 }
