@@ -46,19 +46,22 @@ class MainCommand : CliktCommand(
 
         val host = ScriptingHost()
 
-        if (vulnlogFile.name.endsWith("vl.kts")) {
-            val files =
-                vulnlogFile.parentFile
-                    .listFiles { file -> file.name.endsWith("vl.kts") && file.name != vulnlogFile.name }
-                    ?.toList() ?: emptyList()
-            if (files.isNotEmpty()) {
-                echo("Also read: ${files.joinToString(", ") { it.name }}")
-            }
-            val defFirst: List<File> = listOf(vulnlogFile).plus(files)
-
-            val result = host.eval(defFirst)
-            val printer = SimplePrinter(::echo, filterVulnerabilities, filterBranches)
-            printer.printNicely(result)
+        val files =
+            vulnlogFile.parentFile
+                .listFiles { file -> file.name.endsWith("vl.kts") && file.name != vulnlogFile.name }
+                ?.toList() ?: emptyList()
+        if (files.isNotEmpty()) {
+            echo("Also read: ${files.joinToString(", ") { it.name }}")
         }
+        val defFirst: List<File> = listOf(vulnlogFile).plus(files)
+
+        val result = host.eval(defFirst)
+        result.onFailure { error(it) }
+
+        val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
+        val filteredResult = filterDsl.filter(result.getOrThrow())
+
+        val printer = SimplePrinter(::echo)
+        printer.printNicely(filteredResult)
     }
 }
