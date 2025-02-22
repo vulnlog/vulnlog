@@ -26,7 +26,7 @@ gradlePlugin {
                 The Vulnlog DSL definition for describing and tracking SCA vulnerability reports for your software project.
                 """.trimIndent()
             tags = listOf("vulnlog", "vl", "sca", "vulnerability", "logging", "security", "tracking", "dsl")
-            implementationClass = "dev.vulnlog.gradleplugin.VulnLogPlugin"
+            implementationClass = "dev.vulnlog.gradleplugin.VulnlogPlugin"
         }
     }
 }
