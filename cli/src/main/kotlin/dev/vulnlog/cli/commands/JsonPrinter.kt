@@ -1,6 +1,6 @@
 package dev.vulnlog.cli.commands
 
-import dev.vulnlog.cli.serialisable.ReleaseBranches
+import dev.vulnlog.cli.serialisable.Vulnlog
 import kotlinx.serialization.json.Json
 
 class JsonPrinter(private val printer: (String) -> Unit) {
@@ -10,7 +10,7 @@ class JsonPrinter(private val printer: (String) -> Unit) {
             prettyPrint = true
         }
 
-    fun print(releaseBranches: ReleaseBranches) {
-        printer(format.encodeToString(releaseBranches))
+    fun print(vulnlog: Vulnlog) {
+        printer(format.encodeToString(vulnlog.releaseBranches))
     }
 }
