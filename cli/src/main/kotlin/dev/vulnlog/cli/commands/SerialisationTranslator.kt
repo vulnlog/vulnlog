@@ -5,13 +5,18 @@ import dev.vulnlog.cli.serialisable.ReleaseBranchVulnerabilities
 import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.ReleaseVersion
 import dev.vulnlog.cli.serialisable.Report
+import dev.vulnlog.cli.serialisable.Task
 import dev.vulnlog.cli.serialisable.Vulnerability
 import dev.vulnlog.cli.serialisable.Vulnlog
+import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
+import dev.vulnlog.dsl.UpdateAction
 import dev.vulnlog.dsl.VulnlogAnalysisData
 import dev.vulnlog.dsl.VulnlogData
 import dev.vulnlog.dsl.VulnlogReportData
+import dev.vulnlog.dsl.VulnlogTaskData
+import dev.vulnlog.dsl.WaitAction
 
 class SerialisationTranslator {
     fun translate(filteredResult: Filtered): Vulnlog {
@@ -43,6 +48,7 @@ class SerialisationTranslator {
                 vulnlogData.ids,
                 vulnlogData.reportData.toReport(),
                 vulnlogData.analysisData.toAnalysis(),
+                vulnlogData.taskData.toTask(),
             )
         }
     }
@@ -53,5 +59,14 @@ class SerialisationTranslator {
 
     private fun VulnlogAnalysisData.toAnalysis(): Analysis {
         return Analysis(analysedAt, verdict, reasoning)
+    }
+
+    private fun VulnlogTaskData.toTask(): Task {
+        val task = taskOnReleaseBranch.keys.first()
+        return when (task) {
+            is NoActionAction -> Task("no action required")
+            is UpdateAction -> Task("update", listOf(task.dependency, "to", task.version))
+            is WaitAction -> Task("wait", listOf("for", task.forAmountOfTime.inWholeDays.toString(), "days"))
+        }
     }
 }
