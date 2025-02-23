@@ -84,8 +84,8 @@ fun filterOnReleaseBranch(
     return when (executionData) {
         is VulnlogExecutionDataEmpty -> executionData
         is VulnlogExecutionDataImpl -> {
-            val filteredOnReleaseBranch = executionData.tasks.filter { it.releases.contains(releaseBranch) }
-            executionData.copy(tasks = filteredOnReleaseBranch)
+            val filteredOnReleaseBranch = executionData.executions.filter { it.releases.contains(releaseBranch) }
+            executionData.copy(executions = filteredOnReleaseBranch)
         }
     }
 }
