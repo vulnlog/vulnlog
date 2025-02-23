@@ -17,7 +17,7 @@ val nextPublication =
 val Int.days: Duration
     get() = this.toDuration(DurationUnit.DAYS)
 
-class ExecutionData(val taskData: TaskData)
+data class ExecutionData(val taskData: TaskData, val executions: List<Execution>)
 
 class ExecutionBuilder(val taskData: TaskData) {
     val executions: MutableList<Execution> = mutableListOf()
@@ -25,7 +25,7 @@ class ExecutionBuilder(val taskData: TaskData) {
     var relativePublication: Publication? = null
 
     fun build(): ExecutionData {
-        return ExecutionData(taskData)
+        return ExecutionData(taskData, executions)
     }
 }
 
@@ -123,14 +123,16 @@ class ExecutionOnRelative(private val executionInit2: ExecutionInit2, private va
 
 data class Execution(val action: String, val duration: String, val releases: List<ReleaseBranch>)
 
+data class ExecutionData2(val action: String, val duration: String, val releases: List<ReleaseBranchData>)
+
 sealed interface VulnlogExecutionData {
-    val tasks: List<TaskData2>
+    val executions: List<ExecutionData2>
 }
 
-data class VulnlogExecutionDataImpl(override val tasks: List<TaskData2>) : VulnlogExecutionData
+data class VulnlogExecutionDataImpl(override val executions: List<ExecutionData2>) : VulnlogExecutionData
 
 object VulnlogExecutionDataEmpty : VulnlogExecutionData {
-    override val tasks: List<TaskData2> = emptyList()
+    override val executions: List<ExecutionData2> = emptyList()
 
     override fun toString(): String {
         return "VulnlogExecutionDataEmpty()"
