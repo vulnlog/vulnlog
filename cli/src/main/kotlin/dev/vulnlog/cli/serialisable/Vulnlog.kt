@@ -5,4 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Vulnlog(
     val releaseBranches: List<ReleaseBranche>,
+    val releaseBrancheVulnerabilities: List<ReleaseBranchVulnerabilities>,
 )
