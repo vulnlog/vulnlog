@@ -4,7 +4,7 @@ import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VulnlogData
-import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch3
+import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 
 data class Filtered(
     val releaseBranches: Map<ReleaseBranchData, List<ReleaseVersionData>>,
@@ -35,7 +35,7 @@ class DslResultFilter(
         val releaseBranchToReleaseVersions: Map<ReleaseBranchData, List<ReleaseVersionData>> =
             evalResult.branchToReleases
         val vulnerabilities: List<VulnlogData> = evalResult.data
-        val splitVulnToBranches = vulnerabilityPerBranch3(releaseBranchToReleaseVersions.keys, vulnerabilities)
+        val splitVulnToBranches = vulnerabilityPerBranch(releaseBranchToReleaseVersions.keys, vulnerabilities)
         return filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
     }
 

@@ -15,7 +15,7 @@ import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.VulnlogTaskDataEmpty
 import dev.vulnlog.dsl.VulnlogTaskDataImpl
 
-fun vulnerabilityPerBranch3(
+fun vulnerabilityPerBranch(
     releases: Set<ReleaseBranchData>,
     vulnerabilities: List<VulnlogData>,
 ): Map<ReleaseBranchData, List<VulnlogData>> {
@@ -24,11 +24,11 @@ fun vulnerabilityPerBranch3(
     } else if (releases.isEmpty()) {
         mapOf(DefaultReleaseBranchDataImpl to vulnerabilities)
     } else {
-        splitAndGroupByBranch3(vulnerabilities)
+        splitAndGroupByBranch(vulnerabilities)
     }
 }
 
-private fun splitAndGroupByBranch3(vulnerabilities: List<VulnlogData>): Map<ReleaseBranchData, List<VulnlogData>> {
+private fun splitAndGroupByBranch(vulnerabilities: List<VulnlogData>): Map<ReleaseBranchData, List<VulnlogData>> {
     val splitVulnerabilities: Map<ReleaseBranchData, List<VulnlogData>> =
         vulnerabilities.map { vulnerability ->
             val affectedReleaseBranches = vulnerability.reportData.affected

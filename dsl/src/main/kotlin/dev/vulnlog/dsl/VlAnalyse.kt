@@ -35,9 +35,9 @@ class AnalysisInit(private val analysisBuilder: Lazy<AnalysisBuilder>) {
 }
 
 class AnalysisSecond(private val analysisBuilder: Lazy<AnalysisBuilder>) {
-    infix fun because(reasoning: String): TaskInit2 {
+    infix fun because(reasoning: String): TaskInit {
         analysisBuilder.value.reasoning = reasoning
-        return TaskInit2(lazy { analysisBuilder.value.build() })
+        return TaskInit(lazy { analysisBuilder.value.build() })
     }
 }
 
