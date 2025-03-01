@@ -5,68 +5,76 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
-interface Publication
-
-val nextPublication =
-    object : Publication {
-        override fun toString(): String {
-            return "next publication"
-        }
-    }
-
 val Int.days: Duration
-    get() = this.toDuration(DurationUnit.DAYS)
+    get() = toDuration(DurationUnit.DAYS)
 
 data class ExecutionData(val taskData: TaskData, val executions: List<Execution>)
 
 class ExecutionBuilder(val taskData: TaskData) {
     val executions: MutableList<Execution> = mutableListOf()
-    var absolutDuration: Duration? = null
-    var relativePublication: Publication? = null
+    var suppressionSpecifier: SuppressionSpecifier? = null
 
     fun build(): ExecutionData {
         return ExecutionData(taskData, executions)
     }
 }
 
-class ExecutionInit2(private val executionBuilder: Lazy<ExecutionBuilder>) {
-    infix fun suppressOn(releases: ClosedRange<ReleaseBranch>): ExecutionNext {
-        val releaseList = allReleases.filter { it in releases }
-        executionBuilder.value.executions += Execution("suppress", "permanent", releaseList)
-        return ExecutionNext(this, executionBuilder.value)
+sealed interface SuppressionSpecifier
+
+data object SuppressionSpecifierPermanent : SuppressionSpecifier
+
+val permanent = SuppressionSpecifierPermanent
+
+data class SuppressionSpecifierTemporarily(val duration: Duration) : SuppressionSpecifier {
+    companion object {
+        val temporarily = SuppressionSpecifierTemporarily(0.days)
     }
 }
 
-class ExecutionNext(private val executionInit2: ExecutionInit2, private val executionBuilder: ExecutionBuilder) {
-    infix fun andSuppressFor(duration: Duration): ExecutionOnAbsolute {
-        executionBuilder.absolutDuration = duration
-        return ExecutionOnAbsolute(executionInit2, executionBuilder)
-    }
+data object SuppressionSpecifierUntilNextPublication : SuppressionSpecifier
 
-    infix fun andSuppressUntil(publication: Publication): ExecutionOnRelative {
-        executionBuilder.relativePublication = publication
-        return ExecutionOnRelative(executionInit2, executionBuilder)
+val untilNextPublication = SuppressionSpecifierUntilNextPublication
+
+class SuppressionTemporarily(private val executionInit: ExecutionInit, private val executionBuilder: ExecutionBuilder) {
+    infix fun forTime(duration: Duration): ExecutionOn {
+        executionBuilder.suppressionSpecifier = SuppressionSpecifierTemporarily(duration)
+        return ExecutionOn(executionInit, executionBuilder)
     }
 }
 
-class ExecutionOnAbsolute(private val executionInit2: ExecutionInit2, private val executionBuilder: ExecutionBuilder) {
-    infix fun on(release: ReleaseBranch): ExecutionNext {
-        executionBuilder.executions +=
-            Execution(
-                "suppress",
-                executionBuilder.absolutDuration.toString(),
-                listOf(release),
-            )
-        return ExecutionNext(executionInit2, executionBuilder)
+class ExecutionInit(private val executionBuilder: Lazy<ExecutionBuilder>) {
+    infix fun suppress(specifier: SuppressionSpecifierPermanent): ExecutionOn {
+        executionBuilder.value.suppressionSpecifier = specifier
+        return ExecutionOn(this, executionBuilder.value)
     }
 
-    infix fun on(releases: ClosedRange<ReleaseBranch>): ExecutionInit2 {
+    infix fun suppress(specifier: SuppressionSpecifierTemporarily): SuppressionTemporarily {
+        executionBuilder.value.suppressionSpecifier = specifier
+        return SuppressionTemporarily(this, executionBuilder.value)
+    }
+
+    infix fun suppress(specifier: SuppressionSpecifierUntilNextPublication): ExecutionOn {
+        executionBuilder.value.suppressionSpecifier = specifier
+        return ExecutionOn(this, executionBuilder.value)
+    }
+}
+
+class ExecutionOn(private val executionInit: ExecutionInit, private val executionBuilder: ExecutionBuilder) {
+    infix fun on(release: ReleaseBranch): ExecutionInit {
+        val duration: String = getDuration(executionBuilder.suppressionSpecifier)
+        executionBuilder.executions += Execution("suppress", duration, listOf(release))
+        return executionInit
+    }
+
+    infix fun on(releases: ClosedRange<ReleaseBranch>): ExecutionInit {
         val releaseList = allReleases.filter { it in releases }
-        executionBuilder.executions += Execution("suppress", executionBuilder.absolutDuration.toString(), releaseList)
-        return executionInit2
+        val duration: String = getDuration(executionBuilder.suppressionSpecifier)
+        executionBuilder.executions += Execution("suppress", duration, releaseList)
+        return executionInit
     }
 
-    infix fun on(releaseGroup: ReleaseGroup): ExecutionData {
+    infix fun on(releaseGroup: ReleaseGroup): ExecutionInit {
+        val duration: String = getDuration(executionBuilder.suppressionSpecifier)
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
                 All -> allReleases
@@ -75,49 +83,17 @@ class ExecutionOnAbsolute(private val executionInit2: ExecutionInit2, private va
                         executionBuilder.executions.flatMap { it.releases }.contains(a)
                     }
             }
-        executionBuilder.executions += Execution("suppress", executionBuilder.absolutDuration.toString(), releaseList)
-        return executionBuilder.build()
-    }
-}
-
-class ExecutionOnRelative(private val executionInit2: ExecutionInit2, private val executionBuilder: ExecutionBuilder) {
-    infix fun on(release: ReleaseBranch): ExecutionNext {
-        executionBuilder.executions +=
-            Execution(
-                "suppress",
-                executionBuilder.relativePublication!!.toString(),
-                listOf(release),
-            )
-        return ExecutionNext(executionInit2, executionBuilder)
+        executionBuilder.executions += Execution("suppress", duration, releaseList)
+        return executionInit
     }
 
-    infix fun on(releases: ClosedRange<ReleaseBranch>): ExecutionNext {
-        val releaseList = allReleases.filter { it in releases }
-        executionBuilder.executions +=
-            Execution(
-                "suppress",
-                executionBuilder.relativePublication!!.toString(),
-                releaseList,
-            )
-        return ExecutionNext(executionInit2, executionBuilder)
-    }
-
-    infix fun on(releaseGroup: ReleaseGroup): ExecutionData {
-        val releaseList: List<ReleaseBranch> =
-            when (releaseGroup) {
-                All -> allReleases
-                AllOther ->
-                    allReleases.filterNot { a ->
-                        executionBuilder.executions.flatMap { b -> b.releases }.contains(a)
-                    }
-            }
-        executionBuilder.executions +=
-            Execution(
-                "suppress",
-                executionBuilder.relativePublication!!.toString(),
-                releaseList,
-            )
-        return executionBuilder.build()
+    private fun getDuration(relativePublication: SuppressionSpecifier?): String {
+        return when (relativePublication) {
+            is SuppressionSpecifierPermanent -> "permanent"
+            is SuppressionSpecifierTemporarily -> "temporarily for ${relativePublication.duration}"
+            is SuppressionSpecifierUntilNextPublication -> "until next release in release branch"
+            null -> error("booom")
+        }
     }
 }
 

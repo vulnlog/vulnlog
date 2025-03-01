@@ -24,18 +24,18 @@ class TaskBuilder(val analysisData: AnalysisData) {
     }
 }
 
-class TaskInit2(private val taskBuilder: Lazy<TaskBuilder>) {
+class TaskInit(private val taskBuilder: Lazy<TaskBuilder>) {
     infix fun update(dependency: String): TaskUpdateInit {
         taskBuilder.value.dependencyName = dependency
         return TaskUpdateInit(this, taskBuilder.value)
     }
 
-    infix fun waitOnAllFor(duration: Duration): ExecutionInit2 {
+    infix fun waitOnAllFor(duration: Duration): ExecutionInit {
         taskBuilder.value.tasks += Task(WaitAction(duration), allReleases)
-        return ExecutionInit2(lazy { taskBuilder.value.build() })
+        return ExecutionInit(lazy { taskBuilder.value.build() })
     }
 
-    infix fun noActionOn(releaseGroup: ReleaseGroup): ExecutionInit2 {
+    infix fun noActionOn(releaseGroup: ReleaseGroup): ExecutionInit {
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
                 All -> allReleases
@@ -45,50 +45,50 @@ class TaskInit2(private val taskBuilder: Lazy<TaskBuilder>) {
                     }
             }
         taskBuilder.value.tasks += Task(NoActionAction, releaseList)
-        return ExecutionInit2(lazy { taskBuilder.value.build() })
+        return ExecutionInit(lazy { taskBuilder.value.build() })
     }
 }
 
-class TaskUpdateInit(private val taskInit2: TaskInit2, private val taskBuilder: TaskBuilder) {
+class TaskUpdateInit(private val taskInit: TaskInit, private val taskBuilder: TaskBuilder) {
     infix fun atLeastTo(version: String): TaskOn {
         taskBuilder.action = UpdateAction(taskBuilder.dependencyName!!, version)
-        return TaskOn(taskInit2, taskBuilder)
+        return TaskOn(taskInit, taskBuilder)
     }
 }
 
-class TaskNext(private val taskInit2: TaskInit2, private val taskBuilder: TaskBuilder) {
+class TaskNext(private val taskInit: TaskInit, private val taskBuilder: TaskBuilder) {
     infix fun andUpdateAtLeastTo(version: String): TaskOn {
         taskBuilder.action = UpdateAction(taskBuilder.dependencyName!!, version)
-        return TaskOn(taskInit2, taskBuilder)
+        return TaskOn(taskInit, taskBuilder)
     }
 
-    infix fun andNoActionOn(releases: ClosedRange<ReleaseBranch>): ExecutionInit2 {
+    infix fun andNoActionOn(releases: ClosedRange<ReleaseBranch>): ExecutionInit {
         val releaseList = allReleases.filter { it in releases }
         taskBuilder.tasks += Task(NoActionAction, releaseList)
-        return ExecutionInit2(lazy { taskBuilder.build() })
+        return ExecutionInit(lazy { taskBuilder.build() })
     }
 
-    infix fun andNoActionOn(releaseGroup: ReleaseGroup): ExecutionInit2 {
+    infix fun andNoActionOn(releaseGroup: ReleaseGroup): ExecutionInit {
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
                 All -> allReleases
                 AllOther -> allReleases.filterNot { a -> taskBuilder.tasks.flatMap { b -> b.releases }.contains(a) }
             }
         taskBuilder.tasks += Task(NoActionAction, releaseList)
-        return ExecutionInit2(lazy { taskBuilder.build() })
+        return ExecutionInit(lazy { taskBuilder.build() })
     }
 }
 
-class TaskOn(private val taskInit2: TaskInit2, private val taskBuilder: TaskBuilder) {
+class TaskOn(private val taskInit: TaskInit, private val taskBuilder: TaskBuilder) {
     infix fun on(release: ReleaseBranch): TaskNext {
         taskBuilder.tasks += Task(taskBuilder.action!!, listOf(release))
-        return TaskNext(taskInit2, taskBuilder)
+        return TaskNext(taskInit, taskBuilder)
     }
 
     infix fun on(releases: ClosedRange<ReleaseBranch>): TaskNext {
         val releaseList = allReleases.filter { it in releases }
         taskBuilder.tasks += Task(taskBuilder.action!!, releaseList)
-        return TaskNext(taskInit2, taskBuilder)
+        return TaskNext(taskInit, taskBuilder)
     }
 
     infix fun on(releaseGroup: ReleaseGroup): TaskNext {
@@ -101,7 +101,7 @@ class TaskOn(private val taskInit2: TaskInit2, private val taskBuilder: TaskBuil
                     }
             }
         taskBuilder.tasks += Task(taskBuilder.action!!, releaseList)
-        return TaskNext(taskInit2, taskBuilder)
+        return TaskNext(taskInit, taskBuilder)
     }
 }
 
