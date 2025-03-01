@@ -14,6 +14,10 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    implementation("de.undercouch:gradle-download-task:5.6.0")
+}
+
 gradlePlugin {
     website = "https://github.com/vulnlog/vulnlog"
     vcsUrl = "https://github.com/vulnlog/vulnlog.git"
