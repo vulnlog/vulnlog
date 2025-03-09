@@ -24,10 +24,7 @@ buildscript {
 }
 
 tasks.dokkaHtml {
-    val isSnapshotRelease = project.version.toString().endsWith("-SNAPSHOT")
-    val outputPath = "apiDoc/" + if (isSnapshotRelease) "SNAPSHOT" else "latest"
-
-    outputDirectory = layout.buildDirectory.dir(outputPath)
+    outputDirectory = layout.buildDirectory.dir("apiDoc/")
     moduleName = "Vulnlog DSL"
 
     dokkaSourceSets {
@@ -35,15 +32,6 @@ tasks.dokkaHtml {
             perPackageOption {
                 matchingRegex = "dev.vulnlog.dsl.definition.*"
                 suppress = true
-            }
-        }
-    }
-
-    if (!isSnapshotRelease) {
-        doFirst {
-            sync {
-                from(layout.buildDirectory.dir(outputPath))
-                into(layout.projectDirectory.dir("doc/oldVersions/$version"))
             }
         }
     }
