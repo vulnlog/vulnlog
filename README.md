@@ -1,7 +1,7 @@
 # Vulnlog
 
 ![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)
-![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/verify-code.yml)
+![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)
 ![License](https://img.shields.io/github/license/vulnlog/vulnlog)
 
 Software Vulnerability Logging for Developers.
