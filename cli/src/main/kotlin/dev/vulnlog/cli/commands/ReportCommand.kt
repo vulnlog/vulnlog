@@ -13,7 +13,7 @@ class ReportCommand : CliktCommand() {
     override fun help(context: Context): String = "Generate a Vulnlog report files."
 
     private val reportOutputDir by option("--output")
-        .file(mustExist = true, canBeDir = true, canBeFile = false)
+        .file(mustExist = false, canBeDir = true, canBeFile = false)
         .required()
 
     private val config by requireObject<ConfigAndDataForSubcommand>()
@@ -21,6 +21,9 @@ class ReportCommand : CliktCommand() {
     override fun run() {
         config.releaseBranchs.withIndex().map { (index, branch) ->
             val htmlReport = generateReport(config.vulnlogs[index], branch, LocalDateTime.now())
+            if (!reportOutputDir.exists()) {
+                reportOutputDir.mkdirs()
+            }
             htmlReport.writeFile(reportOutputDir)
         }
     }
