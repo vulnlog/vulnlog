@@ -1,13 +1,15 @@
-# On every pull request to main
-name: Build and test project
+name: PR Validation
 
 on:
   pull_request:
-    types: [ opened, reopened ]
-  workflow_dispatch:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
-  assembleCheck:
+  check:
     runs-on: ubuntu-latest
     steps:
 
@@ -24,5 +26,5 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Run all tests
+      - name: Run Gradle check
         run: ./gradlew check
