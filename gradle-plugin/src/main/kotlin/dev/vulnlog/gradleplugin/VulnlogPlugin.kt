@@ -61,7 +61,8 @@ abstract class VulnlogPlugin : Plugin<Project> {
                 mainClass.set("dev.vulnlog.cli.AppKt")
                 val arguments = mutableListOf<String>(extension.definitionsFile.get().asFile.path)
                 if (extension.releaseBranch.isPresent) {
-                    arguments.add("--branch ${extension.releaseBranch.get()}")
+                    arguments.add("--branch")
+                    arguments.add(extension.releaseBranch.get())
                 }
                 arguments.add("report")
                 arguments.add("--output")
