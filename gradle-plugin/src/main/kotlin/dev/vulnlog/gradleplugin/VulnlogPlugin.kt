@@ -50,5 +50,23 @@ abstract class VulnlogPlugin : Plugin<Project> {
                 mainClass.set("dev.vulnlog.cli.AppKt")
                 args = listOf("--version")
             }
+
+            tasks.register("generateReport", JavaExec::class.java) {
+                description = "Generate a Vulnlog report."
+                group = "Vulnlog"
+
+                dependsOn(unzipTask)
+
+                classpath = version.map { layout.buildDirectory.dir("vulnlog/vl-$it/lib").get().asFileTree }.get()
+                mainClass.set("dev.vulnlog.cli.AppKt")
+                val arguments = mutableListOf<String>(extension.definitionsFile.get().asFile.path)
+                if (extension.releaseBranch.isPresent) {
+                    arguments.add("--branch ${extension.releaseBranch.get()}")
+                }
+                arguments.add("report")
+                arguments.add("--output")
+                arguments.add("${extension.reportOutput.get()}")
+                args = arguments
+            }
         }
 }
