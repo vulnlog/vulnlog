@@ -1,10 +1,15 @@
-# Vulnlog
+<div style="text-align: center;"><img src="https://vulnlog.dev/logo-draft.png" width="100"  alt="The Vulnlog draft project logo"/></div>
+
+# Vulnlog - Software Vulnerability Logging for Developers
+
+**Caution: The project is still in early development, the DSL, CLI commands and the report are subject to change.** Any
+feedback on the tool is very appreciated!
+
 
 ![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)
 ![License](https://img.shields.io/github/license/vulnlog/vulnlog)
 
-Software Vulnerability Logging for Developers.
 
 If you analyze and manage software vulnerabilities reported by a Software Component Analyzer (SCA), Vulnlog helps
 streamline the process.
