@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2025-03-10
+
 ### Added
 
-- Simple HTML report generation with subcommand _report_.
+- CLI: Simple HTML report generation with subcommand _report_.
+- Gradle Plugin: New task to print the CLI version (`showCliVersion`) and generate reports (`generateReport`)
+
+### Changed
+
+- CLI: Default output (without subcommand) is now the JSON structure.
+- DSL: Rework execution syntax
 
 ## [0.4.0] - 2025-02-21
 
