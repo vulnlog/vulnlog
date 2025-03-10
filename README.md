@@ -39,7 +39,7 @@ The easiest way is to use the Gradle Vulnlog plugin. Add the Vulnlog DSL plugin 
 ```kotlin
 plugins {
     id("java")
-    id("dev.vulnlog.dslplugin") version "0.5.0-SNAPSHOT"
+    id("dev.vulnlog.dslplugin") version "0.5.0"
 }
 ```
 
@@ -47,7 +47,7 @@ Check that the Gradle plugin is correctly applied by running the `showCliVersion
 
 ```
 ./gradlew showCliVersion
-Vulnlog 0.5.0-SNAPSHOT
+Vulnlog 0.5.0
 ```
 
 Create a Vulnlog definitions file that contains the release definitions for your project. An example file is
