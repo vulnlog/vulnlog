@@ -51,7 +51,6 @@ jobs:
         run: ./gradlew :dsl:dokkaHtml
 
       - name: Upload API Documentation to webserver to '${{ github.ref_name }}'
-        if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -61,7 +60,6 @@ jobs:
           server-dir: dslapi/${{ github.ref_name }}/
 
       - name: Upload API Documentation to webserver to 'latest'
-        if: ${{ hashFiles('dsl/build/apiDoc/latest') != '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
