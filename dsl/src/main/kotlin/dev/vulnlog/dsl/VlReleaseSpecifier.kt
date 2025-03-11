@@ -1,21 +1,21 @@
 package dev.vulnlog.dsl
 
-sealed interface ReleaseGroup
+public sealed interface ReleaseGroup
 
-data object All : ReleaseGroup
+public data object All : ReleaseGroup
 
-data object AllOther : ReleaseGroup
+public data object AllOther : ReleaseGroup
 
 /**
  * All releases that are defined in the report.
  *
  * @since v0.5.0
  */
-val all = All
+public val all: All = All
 
 /**
  * All other releases that are not already specified in a statement.*
  *
  * @since v0.5.0
  */
-val allOther = AllOther
+public val allOther: AllOther = AllOther

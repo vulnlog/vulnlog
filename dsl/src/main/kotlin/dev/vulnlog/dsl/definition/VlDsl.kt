@@ -7,4 +7,4 @@ import kotlin.script.experimental.annotations.KotlinScript
     fileExtension = "vl.kts",
     compilationConfiguration = VulnlogCompilationConfiguration::class,
 )
-interface VlDsl
+public interface VlDsl

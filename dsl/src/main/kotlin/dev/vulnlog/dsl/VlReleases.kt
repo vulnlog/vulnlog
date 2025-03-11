@@ -6,18 +6,21 @@ import kotlin.reflect.KProperty
 /**
  * A provider that can provide release branches.
  */
-class ReleaseBranch private constructor(private val id: Int, val name: String) : Comparable<ReleaseBranch> {
-    companion object Factory {
+public class ReleaseBranch private constructor(
+    private val id: Int,
+    public val name: String,
+) : Comparable<ReleaseBranch> {
+    public companion object Factory {
         private var counter = 0
-        val allReleases = mutableListOf<ReleaseBranch>()
+        public val allReleases: MutableList<ReleaseBranch> = mutableListOf()
 
-        fun create(name: String): ReleaseBranch {
+        public fun create(name: String): ReleaseBranch {
             val releaseBranch = ReleaseBranch(counter++, name)
             allReleases.add(releaseBranch)
             return releaseBranch
         }
 
-        operator fun getValue(
+        public operator fun getValue(
             thisRef: Any?,
             property: KProperty<*>,
         ): ReleaseBranch {
@@ -34,20 +37,20 @@ class ReleaseBranch private constructor(private val id: Int, val name: String) :
     }
 }
 
-sealed interface ReleaseBranchData {
-    val name: String
+public sealed interface ReleaseBranchData {
+    public val name: String
 }
 
-data class ReleaseBranchDataImpl(override val name: String) : ReleaseBranchData
+public data class ReleaseBranchDataImpl(override val name: String) : ReleaseBranchData
 
-data object DefaultReleaseBranchDataImpl : ReleaseBranchData {
+public data object DefaultReleaseBranchDataImpl : ReleaseBranchData {
     override val name: String = "Default Release Branch"
 }
 
-sealed interface ReleaseVersionData {
-    val version: String
-    val releaseDate: LocalDate?
+public sealed interface ReleaseVersionData {
+    public val version: String
+    public val releaseDate: LocalDate?
 }
 
-data class ReleaseVersionDataImpl(override val version: String, override val releaseDate: LocalDate?) :
+public data class ReleaseVersionDataImpl(override val version: String, override val releaseDate: LocalDate?) :
     ReleaseVersionData

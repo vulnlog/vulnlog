@@ -2,58 +2,58 @@ package dev.vulnlog.dsl
 
 import java.time.LocalDate
 
-data class ReportData(val scanner: String, val awareOfAt: LocalDate, val affectedReleases: List<ReleaseBranch>)
+public data class ReportData(val scanner: String, val awareOfAt: LocalDate, val affectedReleases: List<ReleaseBranch>)
 
-class ReportBuilder {
-    var scannerName: String? = null
-    var awareOfAt: LocalDate? = null
-    val affectedReleases: MutableList<ReleaseBranch> = mutableListOf()
+public class ReportBuilder {
+    public var scannerName: String? = null
+    public var awareOfAt: LocalDate? = null
+    public val affectedReleases: MutableList<ReleaseBranch> = mutableListOf()
 
-    fun build(): AnalysisBuilder {
+    public fun build(): AnalysisBuilder {
         return AnalysisBuilder(ReportData(scannerName!!, awareOfAt!!, affectedReleases))
     }
 }
 
-interface VlReportInitStep {
+public interface VlReportInitStep {
     /**
      * The reporter that found the vulnerability.
      *
      * @since v0.5.0
      */
-    infix fun from(scanner: String): VlReportReporterStep
+    public infix fun from(scanner: String): VlReportReporterStep
 }
 
-interface VlReportReporterStep {
+public interface VlReportReporterStep {
     /**
      * A date string in the format YYYY-MM-dd, e.g. `2025-03-07`
      *
      * @since v0.5.0
      */
-    infix fun at(date: String): VlReportOnStep
+    public infix fun at(date: String): VlReportOnStep
 }
 
-interface VlReportOnStep {
+public interface VlReportOnStep {
     /**
      * A range of release branches e.g. `v1..v2`
      *
      * @since v0.5.0
      */
-    infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep
+    public infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep
 }
 
-sealed interface VulnlogReportData {
-    val scanner: String
-    val awareAt: LocalDate
-    val affected: List<ReleaseBranchData>
+public sealed interface VulnlogReportData {
+    public val scanner: String
+    public val awareAt: LocalDate
+    public val affected: List<ReleaseBranchData>
 }
 
-data class VulnlogReportDataImpl(
+public data class VulnlogReportDataImpl(
     override val scanner: String,
     override val awareAt: LocalDate,
     override val affected: List<ReleaseBranchData>,
 ) : VulnlogReportData
 
-object VulnlogReportDataEmpty : VulnlogReportData {
+public object VulnlogReportDataEmpty : VulnlogReportData {
     override val scanner: String = ""
     override val awareAt: LocalDate = LocalDate.MIN
     override val affected: List<ReleaseBranchData> = emptyList()

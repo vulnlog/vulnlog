@@ -10,7 +10,7 @@ import kotlin.script.experimental.api.implicitReceivers
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
 
-object VulnlogCompilationConfiguration : ScriptCompilationConfiguration(
+public object VulnlogCompilationConfiguration : ScriptCompilationConfiguration(
     {
         implicitReceivers(VlDslRoot::class)
 

@@ -1,6 +1,6 @@
 package dev.vulnlog.dsl
 
-data class VulnlogData(
+public data class VulnlogData(
     val ids: List<String>,
     val reportData: VulnlogReportData = VulnlogReportDataEmpty,
     val analysisData: VulnlogAnalysisData = VulnlogAnalysisDataEmpty,

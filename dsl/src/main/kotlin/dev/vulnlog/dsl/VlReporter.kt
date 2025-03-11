@@ -1,3 +1,3 @@
 package dev.vulnlog.dsl
 
-const val SCA_SCANNER = "SCANNER"
+public const val SCA_SCANNER: String = "SCANNER"
