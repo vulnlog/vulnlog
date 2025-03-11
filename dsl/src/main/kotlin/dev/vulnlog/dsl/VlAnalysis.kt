@@ -14,31 +14,34 @@ class AnalysisBuilder(val reportData: ReportData) {
 
 data class AnalysisData(val analysedAt: LocalDate, var verdict: String, var reasoning: String)
 
-class AnalysisInit2(private val analysisBuilder: Lazy<AnalysisBuilder>) {
-    infix fun analysedAt(date: String): AnalysisInit {
-        analysisBuilder.value.analysedAt = LocalDate.parse(date)
-        return AnalysisInit(analysisBuilder)
-    }
-
-    infix fun verdict(verdict: String): AnalysisSecond {
-        analysisBuilder.value.analysedAt = analysisBuilder.value.reportData.awareOfAt
-        analysisBuilder.value.verdict = verdict
-        return AnalysisSecond(analysisBuilder)
-    }
+interface Verdict {
+    /**
+     * A verdict based on the analysis of the report on the software project.
+     *
+     * @since v0.5.0
+     */
+    infix fun verdict(verdict: String): VlAnalyseReasoningStep
 }
 
-class AnalysisInit(private val analysisBuilder: Lazy<AnalysisBuilder>) {
-    infix fun verdict(verdict: String): AnalysisSecond {
-        analysisBuilder.value.verdict = verdict
-        return AnalysisSecond(analysisBuilder)
-    }
+interface VlAnalyseInitStep : Verdict {
+    /**
+     * A date string in the format YYYY-MM-dd, e.g. `2025-03-07`. If not specified the date of the report is used.
+     *
+     * @since v0.5.0
+     */
+    infix fun analysedAt(date: String): VlAnalyseVerdictStep
 }
 
-class AnalysisSecond(private val analysisBuilder: Lazy<AnalysisBuilder>) {
-    infix fun because(reasoning: String): TaskInit {
-        analysisBuilder.value.reasoning = reasoning
-        return TaskInit(lazy { analysisBuilder.value.build() })
-    }
+interface VlAnalyseVerdictStep : Verdict
+
+interface VlAnalyseReasoningStep {
+    /**
+     * The reasoning why the verdict was chosen.
+     *
+     * @param reasoning description why the analysis lead to the specified verdict.
+     * @since v0.5.0
+     */
+    infix fun because(reasoning: String): VlTaskInitStep
 }
 
 sealed interface VulnlogAnalysisData {

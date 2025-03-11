@@ -1,16 +1,6 @@
 package dev.vulnlog.dsl
 
-import dev.vulnlog.dsl.ReleaseBranch.Factory.allReleases
 import kotlin.time.Duration
-
-sealed interface ReleaseGroup
-
-data object All : ReleaseGroup
-
-data object AllOther : ReleaseGroup
-
-val all = All
-val allOther = AllOther
 
 data class TaskData(val analysisData: AnalysisData, val tasks: List<Task>)
 
@@ -24,85 +14,74 @@ class TaskBuilder(val analysisData: AnalysisData) {
     }
 }
 
-class TaskInit(private val taskBuilder: Lazy<TaskBuilder>) {
-    infix fun update(dependency: String): TaskUpdateInit {
-        taskBuilder.value.dependencyName = dependency
-        return TaskUpdateInit(this, taskBuilder.value)
-    }
+interface VlTaskInitStep {
+    /**
+     * The dependency to update as string.
+     *
+     * @since v0.5.0
+     */
+    infix fun update(dependency: String): VlTaskUpdateStep
 
-    infix fun waitOnAllFor(duration: Duration): ExecutionInit {
-        taskBuilder.value.tasks += Task(WaitAction(duration), allReleases)
-        return ExecutionInit(lazy { taskBuilder.value.build() })
-    }
+    /**
+     * A Release specifier.
+     *
+     * @since v0.5.0
+     */
+    infix fun noActionOn(releaseGroup: ReleaseGroup): VlExecutionInitStep
 
-    infix fun noActionOn(releaseGroup: ReleaseGroup): ExecutionInit {
-        val releaseList: List<ReleaseBranch> =
-            when (releaseGroup) {
-                All -> allReleases
-                AllOther ->
-                    allReleases.filterNot { a ->
-                        taskBuilder.value.tasks.flatMap { b -> b.releases }.contains(a)
-                    }
-            }
-        taskBuilder.value.tasks += Task(NoActionAction, releaseList)
-        return ExecutionInit(lazy { taskBuilder.value.build() })
-    }
+    /**
+     * Duration to wait fore, e.g. `14.days`
+     *
+     * @since v0.5.0
+     */
+    infix fun waitOnAllFor(duration: Duration): VlExecutionInitStep
 }
 
-class TaskUpdateInit(private val taskInit: TaskInit, private val taskBuilder: TaskBuilder) {
-    infix fun atLeastTo(version: String): TaskOn {
-        taskBuilder.action = UpdateAction(taskBuilder.dependencyName!!, version)
-        return TaskOn(taskInit, taskBuilder)
-    }
+interface VlTaskUpdateStep {
+    /**
+     * TODO also missing in the README.md
+     */
+    infix fun atLeastTo(version: String): VlTaskOnStep
 }
 
-class TaskNext(private val taskInit: TaskInit, private val taskBuilder: TaskBuilder) {
-    infix fun andUpdateAtLeastTo(version: String): TaskOn {
-        taskBuilder.action = UpdateAction(taskBuilder.dependencyName!!, version)
-        return TaskOn(taskInit, taskBuilder)
-    }
+interface VlTaskFollowUpSpecificationStep {
+    /**
+     * TODO
+     *
+     * @since v0.5.0
+     */
+    infix fun andUpdateAtLeastTo(version: String): VlTaskOnStep
 
-    infix fun andNoActionOn(releases: ClosedRange<ReleaseBranch>): ExecutionInit {
-        val releaseList = allReleases.filter { it in releases }
-        taskBuilder.tasks += Task(NoActionAction, releaseList)
-        return ExecutionInit(lazy { taskBuilder.build() })
-    }
+    /**
+     * TODO
+     *
+     * @since v0.5.0
+     */
+    infix fun andNoActionOn(releases: ClosedRange<ReleaseBranch>): VlExecutionInitStep
 
-    infix fun andNoActionOn(releaseGroup: ReleaseGroup): ExecutionInit {
-        val releaseList: List<ReleaseBranch> =
-            when (releaseGroup) {
-                All -> allReleases
-                AllOther -> allReleases.filterNot { a -> taskBuilder.tasks.flatMap { b -> b.releases }.contains(a) }
-            }
-        taskBuilder.tasks += Task(NoActionAction, releaseList)
-        return ExecutionInit(lazy { taskBuilder.build() })
-    }
+    /**
+     * TODO
+     *
+     * @since v0.5.0
+     */
+    infix fun andNoActionOn(releaseGroup: ReleaseGroup): VlExecutionInitStep
 }
 
-class TaskOn(private val taskInit: TaskInit, private val taskBuilder: TaskBuilder) {
-    infix fun on(release: ReleaseBranch): TaskNext {
-        taskBuilder.tasks += Task(taskBuilder.action!!, listOf(release))
-        return TaskNext(taskInit, taskBuilder)
-    }
+interface VlTaskOnStep {
+    /**
+     * A Release specifier.
+     */
+    infix fun on(releaseGroup: ReleaseGroup): VlTaskFollowUpSpecificationStep
 
-    infix fun on(releases: ClosedRange<ReleaseBranch>): TaskNext {
-        val releaseList = allReleases.filter { it in releases }
-        taskBuilder.tasks += Task(taskBuilder.action!!, releaseList)
-        return TaskNext(taskInit, taskBuilder)
-    }
+    /**
+     * A range of release branches e.g. `v1..v2`
+     */
+    infix fun on(releases: ClosedRange<ReleaseBranch>): VlTaskFollowUpSpecificationStep
 
-    infix fun on(releaseGroup: ReleaseGroup): TaskNext {
-        val releaseList: List<ReleaseBranch> =
-            when (releaseGroup) {
-                All -> allReleases
-                AllOther ->
-                    allReleases.filterNot { a ->
-                        taskBuilder.tasks.flatMap { b -> b.releases }.contains(a)
-                    }
-            }
-        taskBuilder.tasks += Task(taskBuilder.action!!, releaseList)
-        return TaskNext(taskInit, taskBuilder)
-    }
+    /**
+     * A release branches e.g. `v1`
+     */
+    infix fun on(release: ReleaseBranch): VlTaskFollowUpSpecificationStep
 }
 
 sealed interface TaskAction
@@ -129,10 +108,3 @@ object VulnlogTaskDataEmpty : VulnlogTaskData {
         return "VulnlogAnalysisDataEmpty()"
     }
 }
-
-sealed interface TaskData2 {
-    val taskAction: TaskAction
-    val releases: List<ReleaseBranchData>
-}
-
-data class TaskDataImpl(override val taskAction: TaskAction, override val releases: List<ReleaseBranchData>) : TaskData2
