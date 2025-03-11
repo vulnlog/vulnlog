@@ -1,4 +1,4 @@
-package dev.vulnlog.dsl.impl
+package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData

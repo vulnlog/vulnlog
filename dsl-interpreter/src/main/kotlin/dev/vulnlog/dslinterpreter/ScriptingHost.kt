@@ -2,7 +2,7 @@ package dev.vulnlog.dslinterpreter
 
 import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.definition.VulnlogCompilationConfiguration
-import dev.vulnlog.dsl.impl.VlDslRootImpl
+import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
 import java.io.File
 import java.nio.file.Path
 import java.security.MessageDigest
