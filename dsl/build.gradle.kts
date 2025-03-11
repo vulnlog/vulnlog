@@ -17,6 +17,11 @@ dependencies {
     dokkaPlugin("org.jetbrains.dokka:versioning-plugin:1.9.20")
 }
 
+kotlin {
+    // use explicit API mode for the DSL package to prevent unintended API changes.
+    explicitApi()
+}
+
 buildscript {
     dependencies {
         classpath("org.jetbrains.dokka:versioning-plugin:1.9.20")
