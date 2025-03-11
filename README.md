@@ -99,6 +99,8 @@ Now generate one report per release branch: `vl definitions.vl.kts report --outp
 
 ## DSL
 
+### Container Blocks
+
 Top level DSL definitions.
 
 | Function   | Parameters                                                                              | Return | Description                                                                  |
@@ -106,11 +108,15 @@ Top level DSL definitions.
 | `releases` | [Release Block](#Release-Block)                                                         | -      | Top level defining a release block.                                          |
 | `vuln`     | The ID or IDs of one or multiple vulnerability identifier and [Vuln Block](#Vuln-Block) | -      | Define a vulnerability entry with a single vulnerability ID or multiple IDs. |
 
+### Providers
+
 Providers to provide values from the `definitions.vl.kts` file.
 
 | Provider        | Description                                                                                                                              |
 |-----------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | `ReleaseBranch` | Provide a release branch name. For example `val v1 by ReleaseBranch` provides the `v1` release branch  of the `definitions.vl.kts` file. |
+
+### Specifiers
 
 Release specifier.
 
@@ -118,6 +124,14 @@ Release specifier.
 |------------|-------------------------------------------------------------------|
 | `all`      | All releases that are defined in the report.                      |
 | `allOther` | All other releases that are not already specified in a statement. |
+
+Suppression specifier.
+
+| Specifier              | Description                                                                |
+|------------------------|----------------------------------------------------------------------------|
+| `permanent`            | Permanently suppress a vulnerability.                                      |
+| `temporarily`          | Temporarily suppress a vulnerability.                                      |
+| `untilNextPublication` | Suppress a vulnerability until the successor release version is published. |
 
 ### Release Block
 
@@ -192,27 +206,41 @@ Define on what release branches the reported vulnerability were found.
 
 #### Task
 
-| Function       | Parameters                            | Return                                                    | Description                                     |
-|----------------|---------------------------------------|-----------------------------------------------------------|-------------------------------------------------|
-| `update`       | The dependency to update as string.   | [Task At Least To](#Task-Specify-Release-Branch-Versions) | Update a specific dependency.                   |
-| `noActionOn`   | A Release specifier.                  | Starting point for [Execution](#Execution)                | No action is needed.                            |
-| `waitOnAllFor` | Duration to wait fore, e.g. `14.days` | Starting point for [Execution](#Execution)                | Wait for the specified time and then reanalyse. |
+| Function       | Parameters                            | Return                                       | Description                                     |
+|----------------|---------------------------------------|----------------------------------------------|-------------------------------------------------|
+| `update`       | The dependency to update as string.   | [Task At Least To](#task-update-at-least-to) | Update a specific dependency.                   |
+| `noActionOn`   | A Release specifier.                  | Starting point for [Execution](#execution)   | No action is needed.                            |
+| `waitOnAllFor` | Duration to wait fore, e.g. `14.days` | Starting point for [Execution](#execution)   | Wait for the specified time and then reanalyse. |
+
+##### Task Update At Least To
+
+| Function    | Parameters        | Return                                           | Description                               |
+|-------------|-------------------|--------------------------------------------------|-------------------------------------------|
+| `atLeastTo` | A version string. | [Task On](#task-specify-release-branch-versions) | Update at least to the specified version. |
 
 ##### Task Specify Release Branch Versions
 
-| Function | Parameters                                | Return                                     | 
-|----------|-------------------------------------------|--------------------------------------------|
-| `on`     | A Release specifier.                      | Starting point for [Execution](#Execution) | 
-| `on`     | A range of release branches e.g. `v1..v2` | Starting point for [Execution](#Execution) | 
-| `on`     | A release branches e.g. `v1`              | Starting point for [Execution](#Execution) | 
+| Function | Parameters                                | Return                                                                                                      | 
+|----------|-------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `on`     | A Release specifier.                      | Starting point for [Execution](#Execution) or [Task Follow UP Specification](#task-follow-up-specification) | 
+| `on`     | A range of release branches e.g. `v1..v2` | Starting point for [Execution](#Execution) or [Task Follow UP Specification](#task-follow-up-specification) | 
+| `on`     | A release branches e.g. `v1`              | Starting point for [Execution](#Execution) or [Task Follow UP Specification](#task-follow-up-specification) | 
+
+##### Task Follow UP Specification
+
+| Function             | Parameters                                | Return                                           | Description                                                   | 
+|----------------------|-------------------------------------------|--------------------------------------------------|---------------------------------------------------------------|
+| `andNoActionOn`      | A range of release branches e.g. `v1..v2` | Starting point for [Execution](#Execution)       | No further action required on specified release branch range. |
+| `andNoActionOn`      | A release branches e.g. `v1`              | Starting point for [Execution](#Execution)       | No further action required on specified release branch.       |
+| `andUpdateAtLeastTo` | A version string.                         | [Task On](#task-specify-release-branch-versions) | Update at least to the specified version.                     |
 
 #### Execution
 
-| Function   | Parameters             | Return                                                            | Description                                                   |
-|------------|------------------------|-------------------------------------------------------------------|---------------------------------------------------------------|
-| `suppress` | `permanent`            | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability permanently.                         |
-| `suppress` | `temporarily`          | [Execution Suppress Temporarily](#Execution-Suppress-Temporarily) | Suppress a vulnerability for a certain amount of time.        |
-| `suppress` | `untilNextPublication` | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability until the next release is published. |
+| Function   | Parameters                            | Return                                                            | Description                                                   |
+|------------|---------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------|
+| `suppress` | [`permanent`](#specifiers)            | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability permanently.                         |
+| `suppress` | [`temporarily`](#specifiers)          | [Execution Suppress Temporarily](#Execution-Suppress-Temporarily) | Suppress a vulnerability for a certain amount of time.        |
+| `suppress` | [`untilNextPublication`](#specifiers) | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability until the next release is published. |
 
 ##### Execution Suppress Temporarily
 
