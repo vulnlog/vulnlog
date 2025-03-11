@@ -16,7 +16,6 @@ class VlReleaseContextImpl : VlReleaseContext {
     private val defaultReleasesVersion = mutableListOf<VlRelease>()
     private val branchToReleases = mutableMapOf(defaultReleaseBranch to defaultReleasesVersion)
 
-    // TODO diese methode wird fuer publicationDate == null verwendet, das ist nicht korrekt
     override fun release(
         version: String,
         publicationDate: String?,

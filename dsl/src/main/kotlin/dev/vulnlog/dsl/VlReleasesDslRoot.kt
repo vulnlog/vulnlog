@@ -6,7 +6,9 @@ interface VlReleasesDslRoot {
     val branchToReleases: Map<ReleaseBranchData, List<ReleaseVersionData>>
 
     /**
-     * Add release branches.
+     * Define releases.
+     *
+     * @since v0.5.0
      */
     fun releases(block: (@VlDslMarker VlReleaseContext).() -> Unit)
 }

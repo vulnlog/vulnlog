@@ -3,6 +3,9 @@ package dev.vulnlog.dsl
 import java.time.LocalDate
 import kotlin.reflect.KProperty
 
+/**
+ * A provider that can provide release branches.
+ */
 class ReleaseBranch private constructor(private val id: Int, val name: String) : Comparable<ReleaseBranch> {
     companion object Factory {
         private var counter = 0

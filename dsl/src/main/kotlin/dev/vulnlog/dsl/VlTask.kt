@@ -39,32 +39,34 @@ interface VlTaskInitStep {
 
 interface VlTaskUpdateStep {
     /**
-     * TODO also missing in the README.md
+     * Update at least to the specified version.
+     *
+     * @since v0.5.0
      */
     infix fun atLeastTo(version: String): VlTaskOnStep
 }
 
 interface VlTaskFollowUpSpecificationStep {
     /**
-     * TODO
-     *
-     * @since v0.5.0
-     */
-    infix fun andUpdateAtLeastTo(version: String): VlTaskOnStep
-
-    /**
-     * TODO
+     * No further action required on specified release branch range.
      *
      * @since v0.5.0
      */
     infix fun andNoActionOn(releases: ClosedRange<ReleaseBranch>): VlExecutionInitStep
 
     /**
-     * TODO
+     * No further action required on specified release branch.
      *
      * @since v0.5.0
      */
     infix fun andNoActionOn(releaseGroup: ReleaseGroup): VlExecutionInitStep
+
+    /**
+     * Update at least to the specified version.
+     *
+     * @since v0.5.0
+     */
+    infix fun andUpdateAtLeastTo(version: String): VlTaskOnStep
 }
 
 interface VlTaskOnStep {
