@@ -1,4 +1,9 @@
-package dev.vulnlog.dsl
+package dev.vulnlog.dsl.impl
+
+import dev.vulnlog.dsl.ReleaseBranchData
+import dev.vulnlog.dsl.ReleaseVersionData
+import dev.vulnlog.dsl.VlReleaseContext
+import dev.vulnlog.dsl.VlReleasesDslRoot
 
 class VlReleasesDslRootImpl : VlReleasesDslRoot {
     override var branchToReleases = mapOf<ReleaseBranchData, List<ReleaseVersionData>>()

@@ -1,5 +1,8 @@
-package dev.vulnlog.dsl
+package dev.vulnlog.dsl.impl
 
+import dev.vulnlog.dsl.ReleaseBranch
+import dev.vulnlog.dsl.VlBranchContext
+import dev.vulnlog.dsl.VlRelease
 import dev.vulnlog.dsl.VlRelease.Companion.createRelease
 
 class VlBranchContextImpl(releaseBranchName: String) : VlBranchContext {
