@@ -67,3 +67,6 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: dsl/build/apiDoc/latest/
           server-dir: dslapi/latest/
+
+      - name: Publish Gradle plugin
+        run: ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }}

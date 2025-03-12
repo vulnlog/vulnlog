@@ -7,12 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-03-12
+
+### Added
+
+- CI: Add Gradle Vulnlog publishing to CI pipeline.
+
 ## [0.5.0] - 2025-03-10
 
 ### Added
 
 - CLI: Simple HTML report generation with subcommand _report_.
-- Gradle Plugin: New task to print the CLI version (`showCliVersion`) and generate reports (`generateReport`)
+- Gradle Plugin: New task to print the CLI version (`showCliVersion`) and generate reports (`generateReport`).
 
 ### Changed
 
