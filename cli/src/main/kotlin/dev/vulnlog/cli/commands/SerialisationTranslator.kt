@@ -61,7 +61,7 @@ class SerialisationTranslator {
     }
 
     private fun VulnlogAnalysisData.toAnalysis(): Analysis {
-        return Analysis(analysedAt, verdict, reasoning)
+        return Analysis(analysedAt, verdict.level, reasoning)
     }
 
     private fun VulnlogTaskData.toTask(): Task? {

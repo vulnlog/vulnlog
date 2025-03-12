@@ -133,6 +133,16 @@ Suppression specifier.
 | `temporarily`          | Temporarily suppress a vulnerability.                                      |
 | `untilNextPublication` | Suppress a vulnerability until the successor release version is published. |
 
+Verdict specifier.
+
+| Specifier     | Description                                                                                  |
+|---------------|----------------------------------------------------------------------------------------------|
+| `critical`    | Vulnerability analysis resulted in critical impact to software project.                      |
+| `high`        | Vulnerability analysis revealed high impact on software project.                             |
+| `moderate`    | Vulnerability analysis revealed moderate impact on software project.                         |
+| `low`         | Vulnerability analysis revealed low impact on software project.                              |
+| `notAffected` | Vulnerability analysis revealed that the vulnerability does not affect the software project. |
+
 ### Release Block
 
 Define a release version and optionally a publication date or a release branch.

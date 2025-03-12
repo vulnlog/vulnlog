@@ -1,10 +1,16 @@
 package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.AnalysisBuilder
+import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlAnalyseInitStep
 import dev.vulnlog.dsl.VlAnalyseReasoningStep
 import dev.vulnlog.dsl.VlAnalyseVerdictStep
 import dev.vulnlog.dsl.VlTaskInitStep
+import dev.vulnlog.dsl.critical
+import dev.vulnlog.dsl.high
+import dev.vulnlog.dsl.low
+import dev.vulnlog.dsl.moderate
+import dev.vulnlog.dsl.notAffected
 import java.time.LocalDate
 
 class VlAnalyseInitStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseInitStep {
@@ -13,7 +19,14 @@ class VlAnalyseInitStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) 
         return VlAnalyseVerdictStepImpl(analysisBuilder)
     }
 
+    @Deprecated("The method verdict(String) is deprecated. Use the method verdict(VerdictSpecification) instead.")
     override infix fun verdict(verdict: String): VlAnalyseReasoningStep {
+        analysisBuilder.value.analysedAt = analysisBuilder.value.reportData.awareOfAt
+        analysisBuilder.value.verdict = getVerdictTypeHeuristically(verdict)
+        return VlAnalyseReasoningStepImpl(analysisBuilder)
+    }
+
+    override fun verdict(verdict: VerdictSpecification): VlAnalyseReasoningStep {
         analysisBuilder.value.analysedAt = analysisBuilder.value.reportData.awareOfAt
         analysisBuilder.value.verdict = verdict
         return VlAnalyseReasoningStepImpl(analysisBuilder)
@@ -21,7 +34,13 @@ class VlAnalyseInitStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) 
 }
 
 class VlAnalyseVerdictStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseVerdictStep {
+    @Deprecated("The method verdict(String) is deprecated. Use the method verdict(VerdictSpecification) instead.")
     override infix fun verdict(verdict: String): VlAnalyseReasoningStep {
+        analysisBuilder.value.verdict = getVerdictTypeHeuristically(verdict)
+        return VlAnalyseReasoningStepImpl(analysisBuilder)
+    }
+
+    override fun verdict(verdict: VerdictSpecification): VlAnalyseReasoningStep {
         analysisBuilder.value.verdict = verdict
         return VlAnalyseReasoningStepImpl(analysisBuilder)
     }
@@ -31,5 +50,16 @@ class VlAnalyseReasoningStepImpl(private val analysisBuilder: Lazy<AnalysisBuild
     override infix fun because(reasoning: String): VlTaskInitStep {
         analysisBuilder.value.reasoning = reasoning
         return VlTaskInitStepImpl(lazy { analysisBuilder.value.build() })
+    }
+}
+
+private fun getVerdictTypeHeuristically(verdict: String): VerdictSpecification {
+    return when (verdict) {
+        critical.level -> critical
+        high.level -> high
+        moderate.level -> moderate
+        low.level -> low
+        notAffected.level -> notAffected
+        else -> error("Unknown verdict: '$verdict'")
     }
 }
