@@ -2,15 +2,19 @@ package dev.vulnlog.dsl
 
 import java.time.LocalDate
 
-public data class ReportData(val scanner: String, val awareOfAt: LocalDate, val affectedReleases: List<ReleaseBranch>)
+public data class ReportData(
+    val reporter: VlReporter,
+    val awareOfAt: LocalDate,
+    val affectedReleases: List<ReleaseBranch>,
+)
 
 public class ReportBuilder {
-    public var scannerName: String? = null
+    public var reporter: VlReporter? = null
     public var awareOfAt: LocalDate? = null
     public val affectedReleases: MutableList<ReleaseBranch> = mutableListOf()
 
     public fun build(): AnalysisBuilder {
-        return AnalysisBuilder(ReportData(scannerName!!, awareOfAt!!, affectedReleases))
+        return AnalysisBuilder(ReportData(reporter!!, awareOfAt!!, affectedReleases))
     }
 }
 
@@ -20,7 +24,15 @@ public interface VlReportInitStep {
      *
      * @since v0.5.0
      */
-    public infix fun from(scanner: String): VlReportReporterStep
+    @Deprecated("Use a default reporter instead. Will be removed in upcoming releases.")
+    public infix fun from(reporter: String): VlReportReporterStep
+
+    /**
+     * The reporter that found the vulnerability.
+     *
+     * @since v0.6.0
+     */
+    public infix fun from(reporter: VlReporter): VlReportReporterStep
 }
 
 public interface VlReportReporterStep {
@@ -42,19 +54,19 @@ public interface VlReportOnStep {
 }
 
 public sealed interface VulnlogReportData {
-    public val scanner: String
+    public val reporter: VlReporter
     public val awareAt: LocalDate
     public val affected: List<ReleaseBranchData>
 }
 
 public data class VulnlogReportDataImpl(
-    override val scanner: String,
+    override val reporter: VlReporter,
     override val awareAt: LocalDate,
     override val affected: List<ReleaseBranchData>,
 ) : VulnlogReportData
 
 public object VulnlogReportDataEmpty : VulnlogReportData {
-    override val scanner: String = ""
+    override val reporter: VlReporter = snykOpenSource
     override val awareAt: LocalDate = LocalDate.MIN
     override val affected: List<ReleaseBranchData> = emptyList()
 

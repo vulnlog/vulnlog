@@ -57,7 +57,7 @@ class SerialisationTranslator {
     }
 
     private fun VulnlogReportData.toReport(): Report {
-        return Report(scanner, awareAt)
+        return Report(reporter.name, awareAt)
     }
 
     private fun VulnlogAnalysisData.toAnalysis(): Analysis {
