@@ -56,7 +56,7 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dsl/build/apiDoc/latest/
+          local-dir: dsl/build/apiDoc/
           server-dir: dslapi/${{ github.ref_name }}/
 
       - name: Upload API Documentation to webserver to 'latest'
@@ -65,7 +65,7 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dsl/build/apiDoc/latest/
+          local-dir: dsl/build/apiDoc/
           server-dir: dslapi/latest/
 
       - name: Publish Gradle plugin
