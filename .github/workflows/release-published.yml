@@ -40,10 +40,29 @@ jobs:
           name: cli-artifact
           path: cli/build/distributions/*.zip
 
+      - name: Upload DSL API artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dsl-api-artifact
+          path: dsl/build/apiDoc/
+
   release:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
       - name: Publish DSL JAR to Maven Central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USER }}
