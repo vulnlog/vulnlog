@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2025-03-12
+
+### Change
+
+- CI: Split CI publishing pipeline.
+
 ## [0.5.1] - 2025-03-12
 
-### Added
+### Change
 
 - CI: Add Gradle Vulnlog publishing to CI pipeline.
 
