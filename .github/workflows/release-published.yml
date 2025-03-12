@@ -9,10 +9,9 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
     steps:
-
       - name: Check out project
         uses: actions/checkout@v4
 
@@ -26,18 +25,25 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Create CLI distribution ZIP
+      - name: Check the project
+        run: ./gradlew check
+
+      - name: Create project ZIP
         run: ./gradlew :cli:distZip
 
-      - name: Upload CLI artifact to webserver to '${{ github.ref_name }}'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: cli/build/distributions/
-          server-dir: releases/${{ github.ref_name }}/
+      - name: Create API documentation
+        run: ./gradlew :dsl:dokkaHtml
 
+      - name: Upload CLI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-artifact
+          path: cli/build/distributions/*.zip
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
       - name: Publish DSL JAR to Maven Central
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USER }}
@@ -47,8 +53,33 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: ./gradlew clean publishAndReleaseToMavenCentral --no-configuration-cache
 
-      - name: Create API documentation
-        run: ./gradlew :dsl:dokkaHtml
+      - name: Publish Gradle plugin
+        run: ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }}
+
+  upload:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download CLI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-artifact
+          path: cliArtifact/
+
+      - name: Download API documentation artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dsl-api-artifact
+          path: dslApiArtifact/
+
+      - name: Upload CLI artifact to webserver to '${{ github.ref_name }}'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: cliArtifact/
+          server-dir: releases/${{ github.ref_name }}/
 
       - name: Upload API Documentation to webserver to '${{ github.ref_name }}'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -56,7 +87,7 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dsl/build/apiDoc/
+          local-dir: dslApiArtifact/
           server-dir: dslapi/${{ github.ref_name }}/
 
       - name: Upload API Documentation to webserver to 'latest'
@@ -65,8 +96,5 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: dsl/build/apiDoc/
+          local-dir: dslApiArtifact/
           server-dir: dslapi/latest/
-
-      - name: Publish Gradle plugin
-        run: ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }}
