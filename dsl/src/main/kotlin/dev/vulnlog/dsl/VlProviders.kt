@@ -22,13 +22,13 @@ public data class ReleaseBranch(public val name: String) : Comparable<ReleaseBra
  */
 public interface ReleaseBranchProvider {
     public companion object Factory : ReadOnlyProperty<Any?, ReleaseBranch> {
-        private val allReleases: MutableList<Rb> = mutableListOf()
+        private val allReleases: MutableList<ProviderData<ReleaseBranch>> = mutableListOf()
         private var counter = 0
 
         public fun create(name: String): ReleaseBranch {
             val releaseBranch = ReleaseBranch(name)
-            val rB = Rb(releaseBranch.providerName(), counter++, releaseBranch)
-            allReleases.add(rB)
+            val providerData = ProviderData(releaseBranch.providerName(), counter++, releaseBranch)
+            allReleases.add(providerData)
             return releaseBranch
         }
 
@@ -36,20 +36,43 @@ public interface ReleaseBranchProvider {
             thisRef: Any?,
             property: KProperty<*>,
         ): ReleaseBranch {
-            return allReleases.filter { it.providerName == property.name }.map { it.releaseBranch }.first()
+            return allReleases.filter { it.providerName == property.name }.map { it.dataClass }.first()
         }
 
         public fun compare(
             a: ReleaseBranch,
             b: ReleaseBranch,
         ): Int {
-            val rb1 = allReleases.first { it.releaseBranch == a }
-            val rb2 = allReleases.first { it.releaseBranch == b }
-            return rb1.position.compareTo(rb2.position)
+            val aPosition = allReleases.first { it.dataClass == a }.position
+            val bPosition = allReleases.first { it.dataClass == b }.position
+            return aPosition.compareTo(bPosition)
         }
 
-        public fun allReleases(): List<ReleaseBranch> = allReleases.map(Rb::releaseBranch)
+        public fun allReleases(): List<ReleaseBranch> = allReleases.map(ProviderData<ReleaseBranch>::dataClass)
     }
 }
 
-internal data class Rb(val providerName: String, val position: Int, val releaseBranch: ReleaseBranch)
+public interface ReporterProvider {
+    public companion object Factory : ReadOnlyProperty<Any?, VlReporter> {
+        private val allReporters: MutableList<ProviderData<VlReporter>> = mutableListOf()
+        private var counter = 0
+
+        public fun create(name: String): VlReporter {
+            val reporter: VlReporter = VlReporterImpl(name)
+            val providerData = ProviderData(reporter.providerName(), counter++, reporter)
+            allReporters.add(providerData)
+            return reporter
+        }
+
+        override fun getValue(
+            thisRef: Any?,
+            property: KProperty<*>,
+        ): VlReporter {
+            return allReporters.filter { it.providerName == property.name }.map { it.dataClass }.first()
+        }
+
+        public fun allReleases(): List<VlReporter> = allReporters.map(ProviderData<VlReporter>::dataClass)
+    }
+}
+
+internal data class ProviderData<T>(val providerName: String, val position: Int, val dataClass: T)
