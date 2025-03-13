@@ -6,7 +6,7 @@ import dev.vulnlog.dsl.Execution
 import dev.vulnlog.dsl.ExecutionBuilder
 import dev.vulnlog.dsl.ExecutionOnStep
 import dev.vulnlog.dsl.ReleaseBranch
-import dev.vulnlog.dsl.ReleaseBranch.Factory.allReleases
+import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReleaseGroup
 import dev.vulnlog.dsl.SuppressionSpecifier
 import dev.vulnlog.dsl.SuppressionSpecifierPermanent
@@ -41,9 +41,9 @@ class ExecutionOnStepImpl(
         val duration: String = getDuration(executionBuilder.suppressionSpecifier)
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
-                All -> allReleases
+                All -> allReleases()
                 AllOther ->
-                    allReleases.filterNot { a ->
+                    allReleases().filterNot { a ->
                         executionBuilder.executions.flatMap { it.releases }.contains(a)
                     }
             }
@@ -52,7 +52,7 @@ class ExecutionOnStepImpl(
     }
 
     override infix fun on(releases: ClosedRange<ReleaseBranch>): VlExecutionInitStep {
-        val releaseList = allReleases.filter { it in releases }
+        val releaseList = allReleases().filter { it in releases }
         val duration: String = getDuration(executionBuilder.suppressionSpecifier)
         executionBuilder.executions += Execution("suppress", duration, releaseList)
         return vlExecutionInitStep

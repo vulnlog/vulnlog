@@ -1,7 +1,7 @@
 package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.ReleaseBranch
-import dev.vulnlog.dsl.ReleaseBranch.Factory.allReleases
+import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReportBuilder
 import dev.vulnlog.dsl.VlAnalyseInitStep
 import dev.vulnlog.dsl.VlDefaultReporter
@@ -33,7 +33,7 @@ class VlReportReporterStepImpl(private val reportBuilder: ReportBuilder) : VlRep
 
 class VlReportOnStepImpl(private val reportBuilder: ReportBuilder) : VlReportOnStep {
     override infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep {
-        val releaseList = allReleases.filter { it in releases }
+        val releaseList = allReleases().filter { it in releases }
         reportBuilder.affectedReleases += releaseList
         return VlAnalyseInitStepImpl(lazy { reportBuilder.build() })
     }

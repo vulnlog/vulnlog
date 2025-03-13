@@ -4,7 +4,7 @@ import dev.vulnlog.dsl.All
 import dev.vulnlog.dsl.AllOther
 import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranch
-import dev.vulnlog.dsl.ReleaseBranch.Factory.allReleases
+import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReleaseGroup
 import dev.vulnlog.dsl.Task
 import dev.vulnlog.dsl.TaskBuilder
@@ -26,9 +26,9 @@ class VlTaskInitStepImpl(private val taskBuilder: Lazy<TaskBuilder>) : VlTaskIni
     override infix fun noActionOn(releaseGroup: ReleaseGroup): VlExecutionInitStep {
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
-                All -> allReleases
+                All -> allReleases()
                 AllOther ->
-                    allReleases.filterNot { a ->
+                    allReleases().filterNot { a ->
                         taskBuilder.value.tasks.flatMap { b -> b.releases }.contains(a)
                     }
             }
@@ -37,7 +37,7 @@ class VlTaskInitStepImpl(private val taskBuilder: Lazy<TaskBuilder>) : VlTaskIni
     }
 
     override infix fun waitOnAllFor(duration: Duration): VlExecutionInitStep {
-        taskBuilder.value.tasks += Task(WaitAction(duration), allReleases)
+        taskBuilder.value.tasks += Task(WaitAction(duration), allReleases())
         return VlExecutionInitStepImpl(lazy { taskBuilder.value.build() })
     }
 }
@@ -62,7 +62,7 @@ class VlTaskFollowUpSpecificationStepImpl(
     }
 
     override infix fun andNoActionOn(releases: ClosedRange<ReleaseBranch>): VlExecutionInitStep {
-        val releaseList = allReleases.filter { it in releases }
+        val releaseList = allReleases().filter { it in releases }
         taskBuilder.tasks += Task(NoActionAction, releaseList)
         return VlExecutionInitStepImpl(lazy { taskBuilder.build() })
     }
@@ -70,8 +70,8 @@ class VlTaskFollowUpSpecificationStepImpl(
     override infix fun andNoActionOn(releaseGroup: ReleaseGroup): VlExecutionInitStep {
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
-                All -> allReleases
-                AllOther -> allReleases.filterNot { a -> taskBuilder.tasks.flatMap { b -> b.releases }.contains(a) }
+                All -> allReleases()
+                AllOther -> allReleases().filterNot { a -> taskBuilder.tasks.flatMap { b -> b.releases }.contains(a) }
             }
         taskBuilder.tasks += Task(NoActionAction, releaseList)
         return VlExecutionInitStepImpl(lazy { taskBuilder.build() })
@@ -85,9 +85,9 @@ class VlTaskOnStepImpl(
     override infix fun on(releaseGroup: ReleaseGroup): VlTaskFollowUpSpecificationStepImpl {
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
-                All -> allReleases
+                All -> allReleases()
                 AllOther ->
-                    allReleases.filterNot { a ->
+                    allReleases().filterNot { a ->
                         taskBuilder.tasks.flatMap { b -> b.releases }.contains(a)
                     }
             }
@@ -96,7 +96,7 @@ class VlTaskOnStepImpl(
     }
 
     override infix fun on(releases: ClosedRange<ReleaseBranch>): VlTaskFollowUpSpecificationStepImpl {
-        val releaseList = allReleases.filter { it in releases }
+        val releaseList = allReleases().filter { it in releases }
         taskBuilder.tasks += Task(taskBuilder.action!!, releaseList)
         return VlTaskFollowUpSpecificationStepImpl(vlTaskInitStep, taskBuilder)
     }
