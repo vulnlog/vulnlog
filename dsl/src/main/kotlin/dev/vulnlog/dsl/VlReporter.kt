@@ -1,31 +1,29 @@
 package dev.vulnlog.dsl
 
+import dev.vulnlog.dsl.util.toCamelCase
+
 @Deprecated(message = "Default SCA scanner reporter is deprecated and will be removed in upcoming releases.")
 public const val SCA_SCANNER: String = "SCANNER"
 
 public interface VlReporter {
     public val name: String
+
+    /**
+     * Returns a providable representation of the release branch name.
+     */
+    public fun providerName(): String {
+        return name.toCamelCase()
+    }
 }
 
-public data class VlDefaultReporter(override val name: String) : VlReporter
+public sealed interface ReporterData {
+    public val name: String
+}
 
-/**
- * Snyk Open Source default reporter.
- *
- * @since v0.6.0
- */
-public val snykOpenSource: VlDefaultReporter = VlDefaultReporter("Snyk Open Source")
+public data class ReporterDataImpl(override val name: String) : ReporterData
 
-/**
- * OWASP Dependency Check default reporter.
- *
- * @since v0.6.0
- */
-public val owaspDependencyCheck: VlDefaultReporter = VlDefaultReporter("OWASP Dependency Check")
+public data object DefaultReporterDataImpl : ReporterData {
+    override val name: String = "Default Reporter Data"
+}
 
-/**
- * Semgrep Supply Chain default reporter.
- *
- * @since v0.6.0
- */
-public val semgrepSupplyChain: VlDefaultReporter = VlDefaultReporter("Semgrep Supply Chain")
+public data class VlReporterImpl(override val name: String) : VlReporter

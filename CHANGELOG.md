@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Introduce `reporters` and `reporter` DSL to define custom reporter. The existing `SCA_SCANNER` is deprecated and will
+  be removed in an upcoming release.
 - Introduce verdict types (`notAffected`, `low`, `moderate`, `high` and `critical`) to the DSL. The existing string
   based verdict is deprecated and will be removed in an upcoming release.
 - More DSL API documentation.
-- Three default reporter (Snyk Open Source, OWASP Dependency Check and Semgrep Supply Chain).
 
 ## [0.5.3] - 2025-03-12
 

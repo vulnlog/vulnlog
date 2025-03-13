@@ -4,17 +4,17 @@ import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReportBuilder
 import dev.vulnlog.dsl.VlAnalyseInitStep
-import dev.vulnlog.dsl.VlDefaultReporter
 import dev.vulnlog.dsl.VlReportInitStep
 import dev.vulnlog.dsl.VlReportOnStep
 import dev.vulnlog.dsl.VlReportReporterStep
 import dev.vulnlog.dsl.VlReporter
+import dev.vulnlog.dsl.VlReporterImpl
 import java.time.LocalDate
 
 class VlReportInitStepImpl(private val reportBuilder: ReportBuilder) : VlReportInitStep {
     @Deprecated("Use a default reporter instead. Will be removed in upcoming releases.")
     override infix fun from(reporter: String): VlReportReporterStep {
-        reportBuilder.reporter = VlDefaultReporter(reporter)
+        reportBuilder.reporter = VlReporterImpl(reporter)
         return VlReportReporterStepImpl(reportBuilder)
     }
 

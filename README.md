@@ -48,36 +48,42 @@ Check that the Gradle plugin is correctly applied by running the `showCliVersion
 Vulnlog 0.5.3
 ```
 
-Create a Vulnlog definitions file that contains the release definitions for your project. An example file is
-`definitions.vl.kts`:
+Create a Vulnlog definitions file that contains the release definitions and a vulnerability reporter for your project.
+An example file is`definitions.vl.kts`:
 
 ```kotlin
 releases {
-    branch("v1") {
+    branch("branch 1") {
         release("0.1.0", "2025-01-01")
         release("0.1.1", "2025-01-23")
         release("0.2.0")
     }
-    branch("v2") {
+    branch("branch 2") {
         release("2.0.0", "2025-02-01")
         release("2.1.0")
     }
 }
+
+reporters {
+    reporter("demo reporter")
+}
 ```
 
-This defines two release branches, `v1` and `v2`, which contain multiple releases (`0.1.0`, `0.1.1`, `0.2.0`, `2.0.0`
-and `2.1.0`). A release without a release date is still in development.
+This defines two release branches `branch1` and `branch2` containing multiple releases. A release without a publication
+date is still in development. Also, a reporter `demoReporter` is defined.
 
-The next step is to create a project vulnlog file containing your vulnerability analysis. For this demo example, the
+The next step is to create a project Vulnlog file containing your vulnerability analysis. For this demo example, the
 file used is `demo.vl.kts`:
 
 ```kotlin
-val v1 by ReleaseBranch
-val v2 by ReleaseBranch
+val branch1 by ReleaseBranchProvider
+val branch2 by ReleaseBranchProvider
+
+val demoReporter by ReporterProvider
 
 vuln("CVE-1337-42") {
-    report from SCA_SCANNER at "2025-01-28" on v1..v2
-    analysis analysedAt "2025-01-30" verdict "not affected" because """
+    report from demoReporter at "2025-01-28" on branch1..branch2
+    analysis analysedAt "2025-01-30" verdict notAffected because """
         This is just a demo entry for demonstration purpose.
     """.trimIndent()
     task update "vulnerable.dependency" atLeastTo "1.2.3" on all
@@ -85,8 +91,8 @@ vuln("CVE-1337-42") {
 }
 ```
 
-The first two lines introduce the two release branches, `v1` and `v2`. The _CVE CVE-1337-42_ is made up for
-demonstration purposes.
+The first two lines introduce the two release branches. The third line introduces a reporter. The _CVE-1337-42_ is made
+up for demonstration purposes.
 
 - `report` describes which reporter found this CVE, when you became aware of it, and on which release branches the CVE
   was found.
@@ -95,7 +101,7 @@ demonstration purposes.
 - `execution` describes what should be done with this report until it is fixed.
 
 Now generate one report per release branch: `vl definitions.vl.kts report --output ./`. This should produce
-`./report-v1.html` and `./report-v2.html`.
+`./report-branch1.html` and `./report-branch2.html`.
 
 ## DSL
 
@@ -103,10 +109,11 @@ Now generate one report per release branch: `vl definitions.vl.kts report --outp
 
 Top level DSL definitions.
 
-| Function   | Parameters                                                                              | Return | Description                                                                  |
-|------------|-----------------------------------------------------------------------------------------|--------|------------------------------------------------------------------------------|
-| `releases` | [Release Block](#Release-Block)                                                         | -      | Top level defining a release block.                                          |
-| `vuln`     | The ID or IDs of one or multiple vulnerability identifier and [Vuln Block](#Vuln-Block) | -      | Define a vulnerability entry with a single vulnerability ID or multiple IDs. |
+| Function    | Parameters                                                                              | Return | Description                                                                  |
+|-------------|-----------------------------------------------------------------------------------------|--------|------------------------------------------------------------------------------|
+| `releases`  | [Release Block](#release-block)                                                         | -      | Top level defining a release block.                                          |
+| `vuln`      | The ID or IDs of one or multiple vulnerability identifier and [Vuln Block](#vuln-block) | -      | Define a vulnerability entry with a single vulnerability ID or multiple IDs. |
+| `reporters` | [Reporter Block](#reporter-block)                                                       | -      | Top level defining a reporters block.                                        |
 
 ### Providers
 
@@ -265,6 +272,15 @@ Define on what release branches the reported vulnerability were found.
 | `on`     | A Release specifier.                      | A complete [Execution](#Execution)  | 
 | `on`     | A range of release branches e.g. `v1..v2` | A complete [Execution](#Execution)  | 
 | `on`     | A release branches e.g. `v1`              | A complete  [Execution](#Execution) | 
+
+### Reporter Block
+
+Define a reporter to use in `vuln` definitions. A reporter is anything or anyone who makes you aware of a vulnerability
+in your software project.
+
+| Function   | Parameters                  | Return |
+|------------|-----------------------------|--------|
+| `reporter` | Define a specific reporter. | -      |
 
 ## Contributing & Support
 

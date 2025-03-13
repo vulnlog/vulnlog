@@ -66,7 +66,7 @@ public data class VulnlogReportDataImpl(
 ) : VulnlogReportData
 
 public object VulnlogReportDataEmpty : VulnlogReportData {
-    override val reporter: VlReporter = snykOpenSource
+    override val reporter: VlReporter = VlReporterImpl("")
     override val awareAt: LocalDate = LocalDate.MIN
     override val affected: List<ReleaseBranchData> = emptyList()
 
