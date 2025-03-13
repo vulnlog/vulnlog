@@ -1,5 +1,6 @@
 package dev.vulnlog.report
 
+import dev.vulnlog.dsl.util.toCamelCase
 import java.io.File
 
 data class HtmlReport(
@@ -7,7 +8,8 @@ data class HtmlReport(
     val htmlContent: String,
 ) {
     fun writeFile(output: File) {
-        val file = output.resolve("report-$releaseBranchName.html")
+        val fileName = "report-${releaseBranchName.toCamelCase()}.html"
+        val file = output.resolve(fileName)
         file.bufferedWriter().use { it.write(htmlContent) }
     }
 }

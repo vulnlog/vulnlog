@@ -42,6 +42,10 @@ tasks.dokkaHtml {
                 matchingRegex = "dev.vulnlog.dsl.impl.*"
                 suppress = true
             }
+            perPackageOption {
+                matchingRegex = "dev.vulnlog.dsl.util.*"
+                suppress = true
+            }
         }
     }
 }

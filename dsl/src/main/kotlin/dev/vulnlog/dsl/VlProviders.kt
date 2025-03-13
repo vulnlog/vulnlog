@@ -1,11 +1,19 @@
 package dev.vulnlog.dsl
 
+import dev.vulnlog.dsl.util.toCamelCase
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
 public data class ReleaseBranch(public val name: String) : Comparable<ReleaseBranch> {
     override fun compareTo(other: ReleaseBranch): Int {
         return ReleaseBranchProvider.compare(this, other)
+    }
+
+    /**
+     * Returns a providable representation of the release branch name.
+     */
+    public fun providerName(): String {
+        return name.toCamelCase()
     }
 }
 
@@ -18,9 +26,8 @@ public interface ReleaseBranchProvider {
         private var counter = 0
 
         public fun create(name: String): ReleaseBranch {
-            val providerName = name
             val releaseBranch = ReleaseBranch(name)
-            val rB = Rb(providerName, counter++, releaseBranch)
+            val rB = Rb(releaseBranch.providerName(), counter++, releaseBranch)
             allReleases.add(rB)
             return releaseBranch
         }
