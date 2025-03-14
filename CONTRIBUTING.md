@@ -67,8 +67,10 @@ If you find a bug or want to request a feature:
 
 ## Community & Support
 
-- Follow us on Bluesky for updates, discussions, and
-  announcements: [vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
+- Follow us on Bluesky or Mastodon for updates, discussions, and
+  announcements:
+    - [vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
+    - [infosec.exchange/@vulnlog](https://infosec.exchange/@vulnlog)
 - Contact us via issues or pull requests.
 
 ## License

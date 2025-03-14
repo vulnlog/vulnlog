@@ -5,11 +5,9 @@
 **Caution: The project is still in early development, the DSL, CLI commands and the report are subject to change.** Any
 feedback on the tool is very appreciated!
 
-
 ![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)
 ![License](https://img.shields.io/github/license/vulnlog/vulnlog)
-
 
 If you analyze and manage software vulnerabilities reported by a Software Component Analyzer (SCA), Vulnlog helps
 streamline the process.
@@ -26,7 +24,7 @@ vulnerable dependency should be updated to version x. Vulnlog helps you with you
 
 - [Installation](#how-to-use-vulnlog-in-your-project)
 - [DSL Reference](#dsl)
-- [Contributing](#contributing)
+- [Contributing & Support](#contributing--support)
 - [License](#license)
 
 Also, checkout the release change logs in [CHANGELOG.md](CHANGELOG.md), the DSL troubleshooting guide
@@ -230,9 +228,14 @@ Define on what release branches the reported vulnerability were found.
 | `on`     | A range of release branches e.g. `v1..v2` | A complete [Execution](#Execution)  | 
 | `on`     | A release branches e.g. `v1`              | A complete  [Execution](#Execution) | 
 
-## Contributing
+## Contributing & Support
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
+
+If you like the project, please consider giving it a star ⭐ and follow us on Bluesky and Mastodon:
+
+- [vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
+- [infosec.exchange/@vulnlog](https://infosec.exchange/@vulnlog)
 
 ## License
 
