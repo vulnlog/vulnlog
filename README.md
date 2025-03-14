@@ -67,12 +67,6 @@ releases {
 }
 ```
 
-This defines two release branches `v1` and `v2` containing multiple releases (`0.1.0`, `0.1.1` `0.2.0`, `2.0.0` and
-`2.1.0`). A release without a publication date is still in development.
-
-Next, a project Vulnlog file is created containing your vulnerability analysis. For this demo example the file
-`demo.vl.kts` is used:
-
 This defines two release branches, `v1` and `v2`, which contain multiple releases (`0.1.0`, `0.1.1`, `0.2.0`, `2.0.0`
 and `2.1.0`). A release without a release date is still in development.
 
