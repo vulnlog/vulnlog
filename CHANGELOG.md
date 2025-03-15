@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-03-15
+
 ### Added
 
 - Introduce `reporters` and `reporter` DSL to define custom reporter. The existing `SCA_SCANNER` is deprecated and will
