@@ -3,7 +3,6 @@ package dev.vulnlog.dslinterpreter.impl
 import dev.vulnlog.dsl.All
 import dev.vulnlog.dsl.AllOther
 import dev.vulnlog.dsl.AnalysisData
-import dev.vulnlog.dsl.ExecutionBuilder
 import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchData

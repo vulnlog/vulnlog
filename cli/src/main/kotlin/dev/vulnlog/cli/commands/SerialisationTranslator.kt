@@ -51,7 +51,7 @@ class SerialisationTranslator {
                 vulnlogData.reportData?.toReport(),
                 vulnlogData.analysisData?.toAnalysis(),
                 vulnlogData.taskData?.toTask(),
-                vulnlogData.executionData.toExecution(),
+                vulnlogData.executionData?.toExecution(),
             )
         }
     }

@@ -6,10 +6,9 @@ import dev.vulnlog.dsl.DefaultReleaseBranchDataImpl
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.VulnlogData
 import dev.vulnlog.dsl.VulnlogExecutionData
-import dev.vulnlog.dsl.VulnlogExecutionDataEmpty
-import dev.vulnlog.dsl.VulnlogExecutionDataImpl
 import dev.vulnlog.dsl.VulnlogReportData
 import dev.vulnlog.dsl.VulnlogTaskData
+import dev.vulnlog.dslinterpreter.impl.VulnlogExecutionDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogReportDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogTaskDataImpl
 
@@ -77,13 +76,12 @@ fun filterOnReleaseBranch(
 
 fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
-    executionData: VulnlogExecutionData,
-): VulnlogExecutionData {
-    return when (executionData) {
-        is VulnlogExecutionDataEmpty -> executionData
-        is VulnlogExecutionDataImpl -> {
-            val filteredOnReleaseBranch = executionData.executions.filter { it.releases.contains(releaseBranch) }
-            executionData.copy(executions = filteredOnReleaseBranch)
-        }
+    executionData: VulnlogExecutionData?,
+): VulnlogExecutionData? {
+    return if (executionData == null) {
+        null
+    } else {
+        val filteredOnReleaseBranch = executionData.executions.filter { it.releases.contains(releaseBranch) }
+        (executionData as VulnlogExecutionDataImpl).copy(executions = filteredOnReleaseBranch)
     }
 }

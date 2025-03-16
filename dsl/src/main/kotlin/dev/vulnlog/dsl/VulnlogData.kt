@@ -5,5 +5,5 @@ public data class VulnlogData(
     val reportData: VulnlogReportData? = null,
     val analysisData: VulnlogAnalysisData? = null,
     val taskData: VulnlogTaskData? = null,
-    val executionData: VulnlogExecutionData = VulnlogExecutionDataEmpty,
+    val executionData: VulnlogExecutionData? = null,
 )

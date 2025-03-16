@@ -3,7 +3,8 @@ package dev.vulnlog.dslinterpreter.impl
 import dev.vulnlog.dsl.All
 import dev.vulnlog.dsl.AllOther
 import dev.vulnlog.dsl.Execution
-import dev.vulnlog.dsl.ExecutionBuilder
+import dev.vulnlog.dsl.ExecutionData
+import dev.vulnlog.dsl.ExecutionData2
 import dev.vulnlog.dsl.ExecutionOnStep
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
@@ -12,9 +13,20 @@ import dev.vulnlog.dsl.SuppressionSpecifier
 import dev.vulnlog.dsl.SuppressionSpecifierPermanent
 import dev.vulnlog.dsl.SuppressionSpecifierTemporarily
 import dev.vulnlog.dsl.SuppressionSpecifierUntilNextPublication
+import dev.vulnlog.dsl.TaskData
 import dev.vulnlog.dsl.VlExecutionInitStep
 import dev.vulnlog.dsl.VlExecutionSuppressTemporarilyStep
+import dev.vulnlog.dsl.VulnlogExecutionData
 import kotlin.time.Duration
+
+class ExecutionBuilder(val taskData: TaskData) {
+    val executions: MutableList<Execution> = mutableListOf()
+    var suppressionSpecifier: SuppressionSpecifier? = null
+
+    fun build(): ExecutionData {
+        return ExecutionData(taskData, executions)
+    }
+}
 
 class VlExecutionInitStepImpl(private val executionBuilder: Lazy<ExecutionBuilder>) : VlExecutionInitStep {
     override infix fun suppress(specifier: SuppressionSpecifierPermanent): ExecutionOnStep {
@@ -83,3 +95,5 @@ class VlExecutionSuppressTemporarilyStepImpl(
         return ExecutionOnStepImpl(vlExecutionInitStepImpl, executionBuilder)
     }
 }
+
+data class VulnlogExecutionDataImpl(override val executions: List<ExecutionData2>) : VulnlogExecutionData

@@ -9,15 +9,6 @@ public val Int.days: Duration
 
 public data class ExecutionData(val taskData: TaskData, val executions: List<Execution>)
 
-public class ExecutionBuilder(public val taskData: TaskData) {
-    public val executions: MutableList<Execution> = mutableListOf()
-    public var suppressionSpecifier: SuppressionSpecifier? = null
-
-    public fun build(): ExecutionData {
-        return ExecutionData(taskData, executions)
-    }
-}
-
 public interface VlExecutionInitStep {
     /**
      * Suppress a vulnerability permanently.
@@ -77,16 +68,6 @@ public data class Execution(val action: String, val duration: String, val releas
 
 public data class ExecutionData2(val action: String, val duration: String, val releases: List<ReleaseBranchData>)
 
-public sealed interface VulnlogExecutionData {
+public interface VulnlogExecutionData {
     public val executions: List<ExecutionData2>
-}
-
-public data class VulnlogExecutionDataImpl(override val executions: List<ExecutionData2>) : VulnlogExecutionData
-
-public object VulnlogExecutionDataEmpty : VulnlogExecutionData {
-    override val executions: List<ExecutionData2> = emptyList()
-
-    override fun toString(): String {
-        return "VulnlogExecutionDataEmpty()"
-    }
 }
