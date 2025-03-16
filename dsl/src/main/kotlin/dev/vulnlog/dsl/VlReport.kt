@@ -3,20 +3,10 @@ package dev.vulnlog.dsl
 import java.time.LocalDate
 
 public data class ReportData(
-    val reporter: VlReporter,
-    val awareOfAt: LocalDate,
+    val reporter: VlReporter?,
+    val awareOfAt: LocalDate?,
     val affectedReleases: List<ReleaseBranch>,
 )
-
-public class ReportBuilder {
-    public var reporter: VlReporter? = null
-    public var awareOfAt: LocalDate? = null
-    public val affectedReleases: MutableList<ReleaseBranch> = mutableListOf()
-
-    public fun build(): AnalysisBuilder {
-        return AnalysisBuilder(ReportData(reporter!!, awareOfAt!!, affectedReleases))
-    }
-}
 
 public interface VlReportInitStep {
     /**
@@ -53,24 +43,8 @@ public interface VlReportOnStep {
     public infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep
 }
 
-public sealed interface VulnlogReportData {
+public interface VulnlogReportData {
     public val reporter: VlReporter
     public val awareAt: LocalDate
     public val affected: List<ReleaseBranchData>
-}
-
-public data class VulnlogReportDataImpl(
-    override val reporter: VlReporter,
-    override val awareAt: LocalDate,
-    override val affected: List<ReleaseBranchData>,
-) : VulnlogReportData
-
-public object VulnlogReportDataEmpty : VulnlogReportData {
-    override val reporter: VlReporter = VlReporterImpl("")
-    override val awareAt: LocalDate = LocalDate.MIN
-    override val affected: List<ReleaseBranchData> = emptyList()
-
-    override fun toString(): String {
-        return "VulnlogReportDataEmpty()"
-    }
 }

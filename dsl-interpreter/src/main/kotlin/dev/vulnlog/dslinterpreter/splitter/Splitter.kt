@@ -9,11 +9,10 @@ import dev.vulnlog.dsl.VulnlogExecutionData
 import dev.vulnlog.dsl.VulnlogExecutionDataEmpty
 import dev.vulnlog.dsl.VulnlogExecutionDataImpl
 import dev.vulnlog.dsl.VulnlogReportData
-import dev.vulnlog.dsl.VulnlogReportDataEmpty
-import dev.vulnlog.dsl.VulnlogReportDataImpl
 import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.VulnlogTaskDataEmpty
 import dev.vulnlog.dsl.VulnlogTaskDataImpl
+import dev.vulnlog.dslinterpreter.impl.VulnlogReportDataImpl
 
 fun vulnerabilityPerBranch(
     releases: Set<ReleaseBranchData>,
@@ -31,7 +30,7 @@ fun vulnerabilityPerBranch(
 private fun splitAndGroupByBranch(vulnerabilities: List<VulnlogData>): Map<ReleaseBranchData, List<VulnlogData>> {
     val splitVulnerabilities: Map<ReleaseBranchData, List<VulnlogData>> =
         vulnerabilities.map { vulnerability ->
-            val affectedReleaseBranches = vulnerability.reportData.affected
+            val affectedReleaseBranches = vulnerability.reportData?.affected ?: emptyList()
             val splitVulnerabilities: Map<ReleaseBranchData, VulnlogData> =
                 affectedReleaseBranches.associateWith { releaseBranch ->
                     val filteredReport = filterOnReleaseBranch(releaseBranch, vulnerability.reportData)
@@ -53,11 +52,12 @@ private fun splitAndGroupByBranch(vulnerabilities: List<VulnlogData>): Map<Relea
 
 fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
-    reportData: VulnlogReportData,
-): VulnlogReportData {
-    return when (reportData) {
-        is VulnlogReportDataEmpty -> reportData
-        is VulnlogReportDataImpl -> reportData.copy(affected = reportData.affected.filter { it == releaseBranch })
+    reportData: VulnlogReportData?,
+): VulnlogReportData? {
+    return if (reportData == null) {
+        null
+    } else {
+        (reportData as VulnlogReportDataImpl).copy(affected = reportData.affected.filter { it == releaseBranch })
     }
 }
 
