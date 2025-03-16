@@ -3,7 +3,6 @@ package dev.vulnlog.dslinterpreter.impl
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
-import dev.vulnlog.dsl.ReporterData
 import dev.vulnlog.dsl.VlAnalyseInitStep
 import dev.vulnlog.dsl.VlReportInitStep
 import dev.vulnlog.dsl.VlReportOnStep
@@ -12,8 +11,6 @@ import dev.vulnlog.dsl.VlReporter
 import dev.vulnlog.dsl.VlReporterImpl
 import dev.vulnlog.dsl.VulnlogReportData
 import java.time.LocalDate
-
-data class ReporterDataImpl(override val name: String) : ReporterData
 
 data class ReportData(
     val reporter: VlReporter?,
