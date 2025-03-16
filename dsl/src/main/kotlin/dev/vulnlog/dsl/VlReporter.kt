@@ -16,14 +16,8 @@ public interface VlReporter {
     }
 }
 
-public sealed interface ReporterData {
+public interface ReporterData {
     public val name: String
-}
-
-public data class ReporterDataImpl(override val name: String) : ReporterData
-
-public data object DefaultReporterDataImpl : ReporterData {
-    override val name: String = "Default Reporter Data"
 }
 
 public data class VlReporterImpl(override val name: String) : VlReporter

@@ -1,7 +1,5 @@
 package dev.vulnlog.dslinterpreter.impl
 
-import dev.vulnlog.dsl.AnalysisData
-import dev.vulnlog.dsl.ReportData
 import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlAnalyseInitStep
 import dev.vulnlog.dsl.VlAnalyseReasoningStep
@@ -14,6 +12,12 @@ import dev.vulnlog.dsl.low
 import dev.vulnlog.dsl.moderate
 import dev.vulnlog.dsl.notAffected
 import java.time.LocalDate
+
+data class AnalysisData(
+    val analysedAt: LocalDate?,
+    var verdict: VerdictSpecification?,
+    var reasoning: String?,
+)
 
 class AnalysisBuilder(val reportData: ReportData) {
     var analysedAt: LocalDate? = null

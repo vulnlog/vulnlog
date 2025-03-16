@@ -2,15 +2,12 @@ package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.All
 import dev.vulnlog.dsl.AllOther
-import dev.vulnlog.dsl.AnalysisData
 import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReleaseGroup
-import dev.vulnlog.dsl.Task
 import dev.vulnlog.dsl.TaskAction
-import dev.vulnlog.dsl.TaskData
 import dev.vulnlog.dsl.UpdateAction
 import dev.vulnlog.dsl.VlExecutionInitStep
 import dev.vulnlog.dsl.VlTaskFollowUpSpecificationStep
@@ -20,6 +17,10 @@ import dev.vulnlog.dsl.VlTaskUpdateStep
 import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.WaitAction
 import kotlin.time.Duration
+
+data class TaskData(val analysisData: AnalysisData?, val tasks: List<Task>)
+
+data class Task(val taskAction: TaskAction, val releases: List<ReleaseBranch>)
 
 class TaskBuilder(val analysisData: AnalysisData) {
     var dependencyName: String? = null

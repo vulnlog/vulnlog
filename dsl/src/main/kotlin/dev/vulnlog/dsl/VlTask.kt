@@ -2,7 +2,9 @@ package dev.vulnlog.dsl
 
 import kotlin.time.Duration
 
-public data class TaskData(val analysisData: AnalysisData?, val tasks: List<Task>)
+public interface VulnlogTaskData {
+    public val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>>
+}
 
 public interface VlTaskInitStep {
     /**
@@ -83,9 +85,3 @@ public data object NoActionAction : TaskAction
 public data class UpdateAction(val dependency: String, val version: String) : TaskAction
 
 public data class WaitAction(val forAmountOfTime: Duration) : TaskAction
-
-public data class Task(val taskAction: TaskAction, val releases: List<ReleaseBranch>)
-
-public interface VulnlogTaskData {
-    public val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>>
-}

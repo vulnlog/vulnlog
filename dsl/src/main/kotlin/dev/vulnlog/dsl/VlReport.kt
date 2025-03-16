@@ -2,11 +2,11 @@ package dev.vulnlog.dsl
 
 import java.time.LocalDate
 
-public data class ReportData(
-    val reporter: VlReporter?,
-    val awareOfAt: LocalDate?,
-    val affectedReleases: List<ReleaseBranch>,
-)
+public interface VulnlogReportData {
+    public val reporter: VlReporter
+    public val awareAt: LocalDate
+    public val affected: List<ReleaseBranchData>
+}
 
 public interface VlReportInitStep {
     /**
@@ -41,10 +41,4 @@ public interface VlReportOnStep {
      * @since v0.5.0
      */
     public infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep
-}
-
-public interface VulnlogReportData {
-    public val reporter: VlReporter
-    public val awareAt: LocalDate
-    public val affected: List<ReleaseBranchData>
 }

@@ -2,11 +2,11 @@ package dev.vulnlog.dsl
 
 import java.time.LocalDate
 
-public data class AnalysisData(
-    val analysedAt: LocalDate?,
-    var verdict: VerdictSpecification?,
-    var reasoning: String?,
-)
+public interface VulnlogAnalysisData {
+    public val analysedAt: LocalDate
+    public val verdict: VerdictSpecification
+    public val reasoning: String
+}
 
 public sealed interface VerdictSpecification {
     public val level: String
@@ -105,10 +105,4 @@ public interface VlAnalyseReasoningStep {
      * @since v0.5.0
      */
     public infix fun because(reasoning: String): VlTaskInitStep
-}
-
-public interface VulnlogAnalysisData {
-    public val analysedAt: LocalDate
-    public val verdict: VerdictSpecification
-    public val reasoning: String
 }

@@ -21,6 +21,11 @@ public data class ReleaseBranch(public val name: String) : Comparable<ReleaseBra
  * A provider that can provide release branches.
  */
 public interface ReleaseBranchProvider {
+    /**
+     * Provide a release branche for the specified variable name.
+     *
+     * @since v0.5.0
+     */
     public companion object Factory : ReadOnlyProperty<Any?, ReleaseBranch> {
         private val allReleases: MutableList<ProviderData<ReleaseBranch>> = mutableListOf()
         private var counter = 0
@@ -52,7 +57,15 @@ public interface ReleaseBranchProvider {
     }
 }
 
+/**
+ * A provider that can provide reporters.
+ */
 public interface ReporterProvider {
+    /**
+     * Provides a reporter for the specified variable name.
+     *
+     * @since v0.6.0
+     */
     public companion object Factory : ReadOnlyProperty<Any?, VlReporter> {
         private val allReporters: MutableList<ProviderData<VlReporter>> = mutableListOf()
         private var counter = 0

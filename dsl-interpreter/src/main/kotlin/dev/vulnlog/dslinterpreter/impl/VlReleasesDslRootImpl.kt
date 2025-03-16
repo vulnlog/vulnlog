@@ -3,7 +3,6 @@ package dev.vulnlog.dslinterpreter.impl
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.ReporterData
-import dev.vulnlog.dsl.ReporterDataImpl
 import dev.vulnlog.dsl.VlReleaseContext
 import dev.vulnlog.dsl.VlReleasesDslRoot
 import dev.vulnlog.dsl.VlReporterContext

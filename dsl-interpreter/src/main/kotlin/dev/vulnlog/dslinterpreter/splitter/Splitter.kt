@@ -2,12 +2,12 @@
 
 package dev.vulnlog.dslinterpreter.splitter
 
-import dev.vulnlog.dsl.DefaultReleaseBranchDataImpl
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.VulnlogData
 import dev.vulnlog.dsl.VulnlogExecutionData
 import dev.vulnlog.dsl.VulnlogReportData
 import dev.vulnlog.dsl.VulnlogTaskData
+import dev.vulnlog.dslinterpreter.impl.DefaultReleaseBranchDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogExecutionDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogReportDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogTaskDataImpl

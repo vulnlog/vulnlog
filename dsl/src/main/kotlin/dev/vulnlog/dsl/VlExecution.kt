@@ -7,7 +7,11 @@ import kotlin.time.toDuration
 public val Int.days: Duration
     get() = toDuration(DurationUnit.DAYS)
 
-public data class ExecutionData(val taskData: TaskData, val executions: List<Execution>)
+public interface VulnlogExecutionData {
+    public val executions: List<VulnlogExecution>
+}
+
+public data class VulnlogExecution(val action: String, val duration: String, val releases: List<ReleaseBranchData>)
 
 public interface VlExecutionInitStep {
     /**
@@ -62,12 +66,4 @@ public interface VlExecutionSuppressTemporarilyStep {
      * @since v0.5.0
      */
     public infix fun forTime(duration: Duration): ExecutionOnStep
-}
-
-public data class Execution(val action: String, val duration: String, val releases: List<ReleaseBranch>)
-
-public data class ExecutionData2(val action: String, val duration: String, val releases: List<ReleaseBranchData>)
-
-public interface VulnlogExecutionData {
-    public val executions: List<ExecutionData2>
 }

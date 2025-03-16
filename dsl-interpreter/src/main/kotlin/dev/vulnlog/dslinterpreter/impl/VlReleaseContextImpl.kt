@@ -1,11 +1,8 @@
 package dev.vulnlog.dslinterpreter.impl
 
-import dev.vulnlog.dsl.DefaultReleaseBranchDataImpl
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dsl.ReleaseBranchDataImpl
 import dev.vulnlog.dsl.ReleaseBranchProvider
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dsl.ReleaseVersionDataImpl
 import dev.vulnlog.dsl.VlBranchContext
 import dev.vulnlog.dsl.VlRelease
 import dev.vulnlog.dsl.VlRelease.Companion.createRelease
