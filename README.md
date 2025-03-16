@@ -1,29 +1,46 @@
 <div style="text-align: center;"><img src="https://vulnlog.dev/logo-draft.png" width="100"  alt="The Vulnlog draft project logo"/></div>
 
-# Vulnlog - Software Vulnerability Logging for Developers
-
-**Caution: The project is still in early development, the DSL, CLI commands and the report are subject to change.** Any
-feedback on the tool is very appreciated!
+# Vulnlog – A Simple Way to Track Software Vulnerabilities
 
 ![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)
 ![License](https://img.shields.io/github/license/vulnlog/vulnlog)
 
-If you analyze and manage software vulnerabilities reported by a Software Component Analyzer (SCA), Vulnlog helps
-streamline the process.
+Managing vulnerabilities in your software shouldn’t be a hassle. Vulnlog helps you keep track of security issues
+efficiently, ensuring that reported vulnerabilities are logged, analysed, and addressed in a structured way.
 
-Vulnlog provides a simple Domain Specific Language (DSL) for describing reported vulnerabilities. The DSL also allows
-you to define how and when the reported vulnerability should be handled. For example, in the next bugfix release, a
-vulnerable dependency should be updated to version x. Vulnlog helps you with your software project:
+- Log all reported vulnerabilities in your repository with a simple to learn Domain Specific Language (DSL)
+- Plan fixes for upcoming releases
+- Generate clear reports for your team in your CI pipeline
 
-- Log all reported software vulnerabilities in your repository.
-- Create vulnerability reports for your team members and the project owner or manager.
-- Don't forget to update vulnerable dependencies in your next bug fix release.
+Example: Keeping Track of a Reported Vulnerability. Define how a reported vulnerability should be handled in the Vulnlog
+DSL:
+
+```kotlin
+vuln("CVE-1337-42") {
+    report from demoReporter at "2025-01-28" on branch1..branch2
+    analysis analysedAt "2025-01-30" verdict notAffected because """
+        This is just a demo entry for demonstration purpose.
+    """.trimIndent()
+    task update "vulnerable.dependency" atLeastTo "1.2.3" on all
+    execution suppress untilNextPublication on all
+}
+```
+
+Vulnlog integrates smoothly into your development workflow, making it easier to stay on top of security issues.
+
+The Vulnlog CLI generates reports from the Vulnlog DSL:
+
+![Example report generated from the Vulnlog DSL by the Vulnlog CLI](assets/Example-Report.png)
+
+**Caution: The project is still in early development, the DSL, CLI commands and the report are subject to change.** Any
+feedback on the tool is very appreciated!
 
 ## Table of Contents
 
 - [Installation](#how-to-use-vulnlog-in-your-project)
 - [DSL Reference](#dsl)
+- [CLI Reference](#cli-reference)
 - [HTML Report](#html-report)
 - [Contributing & Support](#contributing--support)
 - [License](#license)
@@ -31,7 +48,9 @@ vulnerable dependency should be updated to version x. Vulnlog helps you with you
 Also, checkout the release change logs in [CHANGELOG.md](CHANGELOG.md), the DSL troubleshooting guide
 in [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and the [DSL API documentation](https://vulnlog.dev/dslapi/latest/).
 
-## How to use Vulnlog in your Project
+## Quick Start
+
+### Bring Vulnlog into your Gradle Project
 
 The easiest way is to use the Gradle Vulnlog plugin. Add the Vulnlog DSL plugin to your `build.gradle.kts` file:
 
@@ -48,6 +67,8 @@ Check that the Gradle plugin is correctly applied by running the `showCliVersion
 ./gradlew showCliVersion
 Vulnlog $version
 ```
+
+### Generate your first Report
 
 Create a Vulnlog definitions file that contains the release definitions and a vulnerability reporter for your project.
 An example file is`definitions.vl.kts`:
@@ -104,7 +125,7 @@ up for demonstration purposes.
 Now generate one report per release branch: `vl definitions.vl.kts report --output ./`. This should produce
 `./report-branch1.html` and `./report-branch2.html`.
 
-## DSL
+## DSL Reference
 
 ### Container Blocks
 
@@ -283,6 +304,30 @@ in your software project.
 | Function   | Parameters                  | Return |
 |------------|-----------------------------|--------|
 | `reporter` | Define a specific reporter. | -      |
+
+## CLI Reference
+
+The Vulnlog CLI can interpret the Vulnlog DSL and generates reports. Tha latest version can be downloaded in
+the [Release](https://github.com/vulnlog/vulnlog/releases) section.
+
+```terminal
+$ ./bin/vl --help
+Usage: main [<options>] <vulnlogfile> <command> [<args>]...
+
+  CLI application to parse Vulnlog files.
+
+Options:
+  --vuln=<text>...    Filter to specific vulnerabilities
+  --branch=<text>...  Filter to specific branches
+  -v, --version       Show version number and exit.
+  -h, --help          Show this message and exit
+
+Arguments:
+  <vulnlogfile>  The Vulnlog definition files to read.
+
+Commands:
+  report  Generate a Vulnlog report files.
+```
 
 ## HTML Report
 
