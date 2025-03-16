@@ -49,7 +49,7 @@ class SerialisationTranslator {
             Vulnerability(
                 vulnlogData.ids,
                 vulnlogData.reportData?.toReport(),
-                vulnlogData.analysisData.toAnalysis(),
+                vulnlogData.analysisData?.toAnalysis(),
                 vulnlogData.taskData.toTask(),
                 vulnlogData.executionData.toExecution(),
             )

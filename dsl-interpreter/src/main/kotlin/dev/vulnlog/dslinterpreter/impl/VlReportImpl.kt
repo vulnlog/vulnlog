@@ -1,6 +1,5 @@
 package dev.vulnlog.dslinterpreter.impl
 
-import dev.vulnlog.dsl.AnalysisBuilder
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases

@@ -1,17 +1,30 @@
 package dev.vulnlog.dslinterpreter.impl
 
-import dev.vulnlog.dsl.AnalysisBuilder
+import dev.vulnlog.dsl.AnalysisData
+import dev.vulnlog.dsl.ReportData
+import dev.vulnlog.dsl.TaskBuilder
 import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlAnalyseInitStep
 import dev.vulnlog.dsl.VlAnalyseReasoningStep
 import dev.vulnlog.dsl.VlAnalyseVerdictStep
 import dev.vulnlog.dsl.VlTaskInitStep
+import dev.vulnlog.dsl.VulnlogAnalysisData
 import dev.vulnlog.dsl.critical
 import dev.vulnlog.dsl.high
 import dev.vulnlog.dsl.low
 import dev.vulnlog.dsl.moderate
 import dev.vulnlog.dsl.notAffected
 import java.time.LocalDate
+
+class AnalysisBuilder(val reportData: ReportData) {
+    var analysedAt: LocalDate? = null
+    var verdict: VerdictSpecification? = null
+    var reasoning: String? = null
+
+    fun build(): TaskBuilder {
+        return TaskBuilder(AnalysisData(analysedAt, verdict, reasoning))
+    }
+}
 
 class VlAnalyseInitStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseInitStep {
     override infix fun analysedAt(date: String): VlAnalyseVerdictStep {
@@ -63,3 +76,9 @@ private fun getVerdictTypeHeuristically(verdict: String): VerdictSpecification {
         else -> error("Unknown verdict: '$verdict'")
     }
 }
+
+data class VulnlogAnalysisDataImpl(
+    override val analysedAt: LocalDate,
+    override val verdict: VerdictSpecification,
+    override val reasoning: String,
+) : VulnlogAnalysisData

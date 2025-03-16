@@ -2,17 +2,11 @@ package dev.vulnlog.dsl
 
 import java.time.LocalDate
 
-public class AnalysisBuilder(public val reportData: ReportData) {
-    public var analysedAt: LocalDate? = null
-    public var verdict: VerdictSpecification? = null
-    public var reasoning: String? = null
-
-    public fun build(): TaskBuilder {
-        return TaskBuilder(AnalysisData(analysedAt!!, verdict!!, reasoning!!))
-    }
-}
-
-public data class AnalysisData(val analysedAt: LocalDate, var verdict: VerdictSpecification, var reasoning: String)
+public data class AnalysisData(
+    val analysedAt: LocalDate?,
+    var verdict: VerdictSpecification?,
+    var reasoning: String?,
+)
 
 public sealed interface VerdictSpecification {
     public val level: String
@@ -113,24 +107,8 @@ public interface VlAnalyseReasoningStep {
     public infix fun because(reasoning: String): VlTaskInitStep
 }
 
-public sealed interface VulnlogAnalysisData {
+public interface VulnlogAnalysisData {
     public val analysedAt: LocalDate
     public val verdict: VerdictSpecification
     public val reasoning: String
-}
-
-public data class VulnlogAnalysisDataImpl(
-    override val analysedAt: LocalDate,
-    override val verdict: VerdictSpecification,
-    override val reasoning: String,
-) : VulnlogAnalysisData
-
-public object VulnlogAnalysisDataEmpty : VulnlogAnalysisData {
-    override val analysedAt: LocalDate = LocalDate.MIN
-    override val verdict: VerdictSpecification = notAffected
-    override val reasoning: String = ""
-
-    override fun toString(): String {
-        return "VulnlogAnalysisDataEmpty()"
-    }
 }
