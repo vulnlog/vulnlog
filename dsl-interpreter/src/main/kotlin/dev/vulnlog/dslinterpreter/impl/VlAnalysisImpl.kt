@@ -2,7 +2,6 @@ package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.AnalysisData
 import dev.vulnlog.dsl.ReportData
-import dev.vulnlog.dsl.TaskBuilder
 import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlAnalyseInitStep
 import dev.vulnlog.dsl.VlAnalyseReasoningStep

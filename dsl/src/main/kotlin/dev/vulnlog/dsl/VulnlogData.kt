@@ -4,6 +4,6 @@ public data class VulnlogData(
     val ids: List<String>,
     val reportData: VulnlogReportData? = null,
     val analysisData: VulnlogAnalysisData? = null,
-    val taskData: VulnlogTaskData = VulnlogTaskDataEmpty,
+    val taskData: VulnlogTaskData? = null,
     val executionData: VulnlogExecutionData = VulnlogExecutionDataEmpty,
 )

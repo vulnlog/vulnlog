@@ -50,7 +50,7 @@ class SerialisationTranslator {
                 vulnlogData.ids,
                 vulnlogData.reportData?.toReport(),
                 vulnlogData.analysisData?.toAnalysis(),
-                vulnlogData.taskData.toTask(),
+                vulnlogData.taskData?.toTask(),
                 vulnlogData.executionData.toExecution(),
             )
         }
@@ -68,8 +68,7 @@ class SerialisationTranslator {
         if (taskOnReleaseBranch.keys.isEmpty()) {
             return null
         }
-        val task = taskOnReleaseBranch.keys.first()
-        return when (task) {
+        return when (val task = taskOnReleaseBranch.keys.first()) {
             is NoActionAction -> Task("no action required")
             is UpdateAction -> Task("update", listOf(task.dependency, "to", task.version))
             is WaitAction -> Task("wait", listOf("for", task.forAmountOfTime.inWholeDays.toString(), "days"))

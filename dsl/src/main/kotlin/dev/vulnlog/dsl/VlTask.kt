@@ -2,17 +2,7 @@ package dev.vulnlog.dsl
 
 import kotlin.time.Duration
 
-public data class TaskData(val analysisData: AnalysisData, val tasks: List<Task>)
-
-public class TaskBuilder(public val analysisData: AnalysisData) {
-    public var dependencyName: String? = null
-    public var action: TaskAction? = null
-    public val tasks: MutableList<Task> = mutableListOf()
-
-    public fun build(): ExecutionBuilder {
-        return ExecutionBuilder(TaskData(analysisData, tasks))
-    }
-}
+public data class TaskData(val analysisData: AnalysisData?, val tasks: List<Task>)
 
 public interface VlTaskInitStep {
     /**
@@ -96,17 +86,6 @@ public data class WaitAction(val forAmountOfTime: Duration) : TaskAction
 
 public data class Task(val taskAction: TaskAction, val releases: List<ReleaseBranch>)
 
-public sealed interface VulnlogTaskData {
+public interface VulnlogTaskData {
     public val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>>
-}
-
-public data class VulnlogTaskDataImpl(override val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>>) :
-    VulnlogTaskData
-
-public object VulnlogTaskDataEmpty : VulnlogTaskData {
-    override val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>> = emptyMap()
-
-    override fun toString(): String {
-        return "VulnlogAnalysisDataEmpty()"
-    }
 }

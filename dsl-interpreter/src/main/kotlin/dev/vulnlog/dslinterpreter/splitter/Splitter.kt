@@ -10,9 +10,8 @@ import dev.vulnlog.dsl.VulnlogExecutionDataEmpty
 import dev.vulnlog.dsl.VulnlogExecutionDataImpl
 import dev.vulnlog.dsl.VulnlogReportData
 import dev.vulnlog.dsl.VulnlogTaskData
-import dev.vulnlog.dsl.VulnlogTaskDataEmpty
-import dev.vulnlog.dsl.VulnlogTaskDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogReportDataImpl
+import dev.vulnlog.dslinterpreter.impl.VulnlogTaskDataImpl
 
 fun vulnerabilityPerBranch(
     releases: Set<ReleaseBranchData>,
@@ -63,17 +62,16 @@ fun filterOnReleaseBranch(
 
 fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
-    taskData: VulnlogTaskData,
-): VulnlogTaskData {
-    return when (taskData) {
-        is VulnlogTaskDataEmpty -> taskData
-        is VulnlogTaskDataImpl -> {
-            val filteredOnReleaseBranch =
-                taskData.taskOnReleaseBranch.entries
-                    .associate { it.key to it.value.filter { rb -> rb == releaseBranch } }
-                    .filter { it.value.isNotEmpty() }
-            taskData.copy(taskOnReleaseBranch = filteredOnReleaseBranch)
-        }
+    taskData: VulnlogTaskData?,
+): VulnlogTaskData? {
+    return if (taskData == null) {
+        null
+    } else {
+        val filteredOnReleaseBranch =
+            taskData.taskOnReleaseBranch.entries
+                .associate { it.key to it.value.filter { rb -> rb == releaseBranch } }
+                .filter { it.value.isNotEmpty() }
+        (taskData as VulnlogTaskDataImpl).copy(taskOnReleaseBranch = filteredOnReleaseBranch)
     }
 }
 
