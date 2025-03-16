@@ -1,39 +1,42 @@
-<div style="text-align: center;"><img src="https://vulnlog.dev/logo-draft.png" width="100"  alt="The Vulnlog draft project logo"/></div>
+<div style="text-align: center;"><img src="https://vulnlog.dev/logo/banner-1500x500-light-grey.png" alt="The Vulnlog draft project logo"/></div>
 
-# Vulnlog - Software Vulnerability Logging for Developers
-
-**Caution: The project is still in early development, the DSL, CLI commands and the report are subject to change.** Any
-feedback on the tool is very appreciated!
+# Vulnlog – Software Vulnerability Tracking for Development Teams
 
 ![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)
 ![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)
 ![License](https://img.shields.io/github/license/vulnlog/vulnlog)
 
-If you analyze and manage software vulnerabilities reported by a Software Component Analyzer (SCA), Vulnlog helps
-streamline the process.
+Log and treat software vulnerabilities in one place.
 
-Vulnlog provides a simple Domain Specific Language (DSL) for describing reported vulnerabilities. The DSL also allows
-you to define how and when the reported vulnerability should be handled. For example, in the next bugfix release, a
-vulnerable dependency should be updated to version x. Vulnlog helps you with your software project:
+Vulnlog is an open-source tool and DSL for documenting software vulnerabilities and integrating vulnerability reporting
+and management into your development workflow.
 
-- Log all reported software vulnerabilities in your repository.
-- Create vulnerability reports for your team members and the project owner or manager.
-- Don't forget to update vulnerable dependencies in your next bug fix release.
+Define reported vulnerabilities for your software project in a simple DSL. Let your CI pipeline generate reports for you
+and your team.
 
-## Table of Contents
+![From the DSL to Reports](assets/dsl-to-reports.png)
 
-- [Installation](#how-to-use-vulnlog-in-your-project)
-- [DSL Reference](#dsl)
+**Caution: The project is still in early development, the DSL, CLI commands, the Gradle plugin and the HTML report are
+subject to change.** Any feedback on the tool is very appreciated!
+
+For more information, check out the [project website](https://vulnlog.dev/), the release change logs
+in [CHANGELOG.md](CHANGELOG.md), the DSL troubleshooting guide in [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and
+the [DSL API documentation](https://vulnlog.dev/dslapi/latest/).
+
+To see the Vulnlog in action, check out this [demo project](https://github.com/vulnlog/demo).
+
+- [Quick Start](#quick-start)
+- [DSL Reference](#dsl-reference)
+- [CLI Reference](#cli-reference)
+- [Gradle Plugin Reference](#gradle-plugin-reference)
 - [HTML Report](#html-report)
 - [Contributing & Support](#contributing--support)
 - [License](#license)
 
-Also, checkout the release change logs in [CHANGELOG.md](CHANGELOG.md), the DSL troubleshooting guide
-in [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and the [DSL API documentation](https://vulnlog.dev/dslapi/latest/).
+## Quick Start
 
-## How to use Vulnlog in your Project
-
-The easiest way is to use the Gradle Vulnlog plugin. Add the Vulnlog DSL plugin to your `build.gradle.kts` file:
+The easiest way is to use the [Gradle Vulnlog plugin](https://plugins.gradle.org/plugin/dev.vulnlog.dslplugin). Add the
+Vulnlog DSL plugin to your `build.gradle.kts` file:
 
 ```kotlin
 plugins {
@@ -48,6 +51,8 @@ Check that the Gradle plugin is correctly applied by running the `showCliVersion
 ./gradlew showCliVersion
 Vulnlog $version
 ```
+
+### Generate your first Report
 
 Create a Vulnlog definitions file that contains the release definitions and a vulnerability reporter for your project.
 An example file is`definitions.vl.kts`:
@@ -97,14 +102,14 @@ up for demonstration purposes.
 
 - `report` describes which reporter found this CVE, when you became aware of it, and on which release branches the CVE
   was found.
-- `analysis` describes when you analysed this report and the verdict you assigned, with a reason.
+- `analysis` describes when you analyzed this report and the verdict you assigned, with a reason.
 - `task` describes what actions are needed to get rid of this report, usually a dependency update.
 - `execution` describes what should be done with this report until it is fixed.
 
 Now generate one report per release branch: `vl definitions.vl.kts report --output ./`. This should produce
 `./report-branch1.html` and `./report-branch2.html`.
 
-## DSL
+## DSL Reference
 
 ### Container Blocks
 
@@ -154,7 +159,6 @@ Verdict specifier.
 ### Release Block
 
 Define a release version and optionally a publication date or a release branch.
-Release version without publication date are still in development.
 
 | Function  | Parameters                                                   | Return                                        |
 |-----------|--------------------------------------------------------------|-----------------------------------------------|
@@ -163,8 +167,7 @@ Release version without publication date are still in development.
 
 #### Release Branch Block
 
-Define a release version and optionally a publication date in YYYY-MM-dd. Release version without publication date are
-in development.
+Define a release version and optionally a publication date in YYYY-MM-dd.
 
 | Function  | Parameters                                                   | Return |
 |-----------|--------------------------------------------------------------|--------|
@@ -181,7 +184,7 @@ in development.
 
 #### Report
 
-Defines what reporter found the vulnerability.
+Defines which reporter found the vulnerability.
 
 | Function | Parameters                                  | Return                      |
 |----------|---------------------------------------------|-----------------------------|
@@ -198,7 +201,7 @@ Defines the date since when the software security engineering team is aware of t
 
 ###### Report From On
 
-Define on what release branches the reported vulnerability were found.
+Define on what release branches the reported vulnerability was found.
 
 | Function | Parameters                                | Return                                   |
 |----------|-------------------------------------------|------------------------------------------|
@@ -285,9 +288,37 @@ in your software project.
 |------------|-----------------------------|--------|
 | `reporter` | Define a specific reporter. | -      |
 
+## CLI Reference
+
+The Vulnlog CLI can interpret the Vulnlog DSL and generate reports. The latest version can be downloaded in
+the [Release](https://github.com/vulnlog/vulnlog/releases) section.
+
+```terminal
+$ ./bin/vl --help
+Usage: main [<options>] <vulnlogfile> <command> [<args>]...
+
+  CLI application to parse Vulnlog files.
+
+Options:
+  --vuln=<text>...    Filter to specific vulnerabilities
+  --branch=<text>...  Filter to specific branches
+  -v, --version       Show version number and exit.
+  -h, --help          Show this message and exit
+
+Arguments:
+  <vulnlogfile>  The Vulnlog definition files to read.
+
+Commands:
+  report  Generate a Vulnlog report files.
+```
+
 ## HTML Report
 
-The generated HTML report contains a table with these top level information:
+The Vulnlog CLI generates reports from the Vulnlog DSL file:
+
+![Example report generated from the Vulnlog DSL by the Vulnlog CLI](assets/example-report.png)
+
+The generated HTML report contains a table with this top-level information:
 
 - **ID**: Describes the vulnerability with an ID. The ID does not need a special format and usually comes from your SCA
   scanner. It is also possible to use an (internal) issue number of your ticketing system.
@@ -297,13 +328,13 @@ The generated HTML report contains a table with these top level information:
 - **Reasoning**: Reasoning behind the rating.
 - **Task**: What is necessary to get rid of this vulnerability report.
 - **Affected**: What versions are affected by the vulnerability.
-- **Fix**: In what version the vulnerability is planed to be fixed.
+- **Fix**: In what version the vulnerability is planned to be fixed.
 
 ### Status Description
 
-- **Affected**: The software project is affected by this vulnerability.
-- **Fixed**: The software project is not anymore affected by this vulnerability.
-- **Not Affected**: The software project is not affected by this vulnerability.
+- **Affected**: This vulnerability affects the software project.
+- **Fixed**: This vulnerability does not anymore affect the software project.
+- **Not Affected**: This vulnerability does not affect the software project.
 - **Under Investigation**: If the software project is affected by this vulnerability is currently under investigation.
 - **Unknown**: The state of this vulnerability report is not known.
 
@@ -322,14 +353,43 @@ flowchart LR
     H -->|no| J(unkown)
 ```
 
+## Gradle Plugin Reference
+
+```kotlin
+vulnlog {
+
+    /**
+     * Specify the version of the Vulnlog DSL and CLI to use.
+     * If not defined, the Vulnlog Gradle plugins version is used.
+     */
+    version: Property<String>
+
+    /**
+     * Specify the Vulnlog definitions file.
+     */
+    definitionsFile: RegularFileProperty
+
+    /**
+     * Specify one or multiple release branches to generate a report for.
+     * If not specified, reports for all release branches are generated.
+     */
+    releaseBranch: ListProperty<String>
+
+    /**
+     * Specify the Vulnlog report output directory location.
+     */
+    reportOutput: DirectoryProperty
+}
+```
+
 ## Contributing & Support
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
 
-If you like the project, please consider giving it a star ⭐ and follow us on Bluesky and Mastodon:
+If you like the project, please consider giving it a star ⭐ and follow us on social media:
 
-- [vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
-- [infosec.exchange/@vulnlog](https://infosec.exchange/@vulnlog)
+- Bluesky: [@vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
+- Mastodon: [@vulnlog@infosec.exchange](https://infosec.exchange/@vulnlog)
 
 ## License
 
