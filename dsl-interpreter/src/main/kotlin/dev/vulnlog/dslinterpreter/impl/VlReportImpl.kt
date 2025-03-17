@@ -12,7 +12,7 @@ import dev.vulnlog.dsl.VlReporterImpl
 import dev.vulnlog.dsl.VulnlogReportData
 import java.time.LocalDate
 
-data class ReportData(
+data class DslReportData(
     val reporter: VlReporter?,
     val awareOfAt: LocalDate?,
     val affectedReleases: List<ReleaseBranch>,
@@ -24,7 +24,7 @@ class ReportBuilder {
     val affectedReleases: MutableList<ReleaseBranch> = mutableListOf()
 
     fun build(): AnalysisBuilder {
-        return AnalysisBuilder(ReportData(reporter, awareOfAt, affectedReleases))
+        return AnalysisBuilder(DslReportData(reporter, awareOfAt, affectedReleases))
     }
 }
 

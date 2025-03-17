@@ -3,12 +3,13 @@ package dev.vulnlog.cli.commands
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.VlDslRoot
-import dev.vulnlog.dsl.VulnlogData
+import dev.vulnlog.dsl.VulnerabilityData
+import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 
 data class Filtered(
     val releaseBranches: Map<ReleaseBranchData, List<ReleaseVersionData>>,
-    val vulnerabilitiesPerBranch: Map<ReleaseBranchData, List<VulnlogData>>,
+    val vulnerabilitiesPerBranch: Map<ReleaseBranchData, List<VulnerabilityData>>,
 )
 
 class DslResultFilter(
@@ -35,22 +36,22 @@ class DslResultFilter(
         }
     }
 
-    private fun filterVulnerabilities(evalResult: VlDslRoot): Map<ReleaseBranchData, List<VulnlogData>> {
-        val vulnerabilities: List<VulnlogData> = evalResult.data
-        val splitVulnToBranches = vulnerabilityPerBranch(evalResult.branchToReleases.keys, vulnerabilities)
+    private fun filterVulnerabilities(evalResult: VlDslRoot): Map<ReleaseBranchData, List<VulnerabilityData>> {
+        val vulnerabilityRepository = (evalResult as VlDslRootImpl).vulnerabilityDataRepository
+        val splitVulnToBranches = vulnerabilityPerBranch(evalResult.branchToReleases.keys, vulnerabilityRepository)
         return filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
     }
 
     private fun filterAndSplitToSeparateReleaseBranches(
-        splitVulnToBranches: Map<ReleaseBranchData, List<VulnlogData>>,
-    ): Map<ReleaseBranchData, List<VulnlogData>> {
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
+    ): Map<ReleaseBranchData, List<VulnerabilityData>> {
         val filteredReleaseBranches = filterOnlySpecifiedReleaseBranches(splitVulnToBranches)
         return filterOnlySpecifiedVulnIds(filteredReleaseBranches)
     }
 
     private fun filterOnlySpecifiedReleaseBranches(
-        splitVulnToBranches: Map<ReleaseBranchData, List<VulnlogData>>,
-    ): Map<ReleaseBranchData, List<VulnlogData>> {
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
+    ): Map<ReleaseBranchData, List<VulnerabilityData>> {
         return if (filterBranches != null) {
             splitVulnToBranches.filter { filterBranches.contains(it.key.name) }
         } else {
@@ -58,7 +59,7 @@ class DslResultFilter(
         }
     }
 
-    private fun filterOnlySpecifiedVulnIds(splitVulnToBranches: Map<ReleaseBranchData, List<VulnlogData>>) =
+    private fun filterOnlySpecifiedVulnIds(splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>) =
         if (filterVulnerabilities != null) {
             splitVulnToBranches
                 .map { data ->

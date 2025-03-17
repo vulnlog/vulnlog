@@ -16,16 +16,16 @@ import dev.vulnlog.dsl.VulnlogExecution
 import dev.vulnlog.dsl.VulnlogExecutionData
 import kotlin.time.Duration
 
-data class ExecutionData(val taskData: TaskData, val executions: List<Execution>)
+data class DslExecutionData(val dslTaskData: DslTaskData, val executions: List<Execution>)
 
 data class Execution(val action: String, val duration: String, val releases: List<ReleaseBranch>)
 
-class ExecutionBuilder(val taskData: TaskData) {
+class ExecutionBuilder(val dslTaskData: DslTaskData) {
     val executions: MutableList<Execution> = mutableListOf()
     var suppressionSpecifier: SuppressionSpecifier? = null
 
-    fun build(): ExecutionData {
-        return ExecutionData(taskData, executions)
+    fun build(): DslExecutionData {
+        return DslExecutionData(dslTaskData, executions)
     }
 }
 

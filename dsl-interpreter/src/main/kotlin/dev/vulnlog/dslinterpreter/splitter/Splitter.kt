@@ -3,7 +3,7 @@
 package dev.vulnlog.dslinterpreter.splitter
 
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dsl.VulnlogData
+import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.VulnlogExecutionData
 import dev.vulnlog.dsl.VulnlogReportData
 import dev.vulnlog.dsl.VulnlogTaskData
@@ -14,8 +14,8 @@ import dev.vulnlog.dslinterpreter.impl.VulnlogTaskDataImpl
 
 fun vulnerabilityPerBranch(
     releases: Set<ReleaseBranchData>,
-    vulnerabilities: List<VulnlogData>,
-): Map<ReleaseBranchData, List<VulnlogData>> {
+    vulnerabilities: List<VulnerabilityData>,
+): Map<ReleaseBranchData, List<VulnerabilityData>> {
     return if (vulnerabilities.isEmpty()) {
         emptyMap()
     } else if (releases.isEmpty()) {
@@ -25,11 +25,13 @@ fun vulnerabilityPerBranch(
     }
 }
 
-private fun splitAndGroupByBranch(vulnerabilities: List<VulnlogData>): Map<ReleaseBranchData, List<VulnlogData>> {
-    val splitVulnerabilities: Map<ReleaseBranchData, List<VulnlogData>> =
+private fun splitAndGroupByBranch(
+    vulnerabilities: List<VulnerabilityData>,
+): Map<ReleaseBranchData, List<VulnerabilityData>> {
+    val splitVulnerabilities: Map<ReleaseBranchData, List<VulnerabilityData>> =
         vulnerabilities.map { vulnerability ->
             val affectedReleaseBranches = vulnerability.reportData?.affected ?: emptyList()
-            val splitVulnerabilities: Map<ReleaseBranchData, VulnlogData> =
+            val splitVulnerabilities: Map<ReleaseBranchData, VulnerabilityData> =
                 affectedReleaseBranches.associateWith { releaseBranch ->
                     val filteredReport = filterOnReleaseBranch(releaseBranch, vulnerability.reportData)
                     val filteredTask = filterOnReleaseBranch(releaseBranch, vulnerability.taskData)
