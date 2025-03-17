@@ -1,8 +1,12 @@
 package dev.vulnlog.dslinterpreter
 
 import dev.vulnlog.dsl.VlDslRoot
+import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.definition.VulnlogCompilationConfiguration
 import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
+import dev.vulnlog.dslinterpreter.impl.VlReleasesDslRootImpl
+import dev.vulnlog.dslinterpreter.impl.VlVulnerabilityDslRootImpl
+import dev.vulnlog.dslinterpreter.service.VulnerabilityServiceImpl
 import java.io.File
 import java.nio.file.Path
 import java.security.MessageDigest
@@ -32,7 +36,15 @@ class ScriptingHost {
     private val host: BasicScriptingHost = BasicJvmScriptingHost()
 
     fun eval(scripts: List<File>): Result<VlDslRoot> {
-        val dslRoot = VlDslRootImpl()
+        val vulnerabilityDataRepository = mutableListOf<VulnerabilityData>()
+        val vulnerabilityService = VulnerabilityServiceImpl(vulnerabilityDataRepository)
+
+        val dslRoot =
+            VlDslRootImpl(
+                vulnerabilityDataRepository,
+                VlReleasesDslRootImpl(),
+                VlVulnerabilityDslRootImpl(vulnerabilityService),
+            )
 
         fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
             val compilationConfiguration =

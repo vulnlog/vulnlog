@@ -13,19 +13,19 @@ import dev.vulnlog.dsl.moderate
 import dev.vulnlog.dsl.notAffected
 import java.time.LocalDate
 
-data class AnalysisData(
+data class DslAnalysisData(
     val analysedAt: LocalDate?,
     var verdict: VerdictSpecification?,
     var reasoning: String?,
 )
 
-class AnalysisBuilder(val reportData: ReportData) {
+class AnalysisBuilder(val dslReportData: DslReportData) {
     var analysedAt: LocalDate? = null
     var verdict: VerdictSpecification? = null
     var reasoning: String? = null
 
     fun build(): TaskBuilder {
-        return TaskBuilder(AnalysisData(analysedAt, verdict, reasoning))
+        return TaskBuilder(DslAnalysisData(analysedAt, verdict, reasoning))
     }
 }
 
@@ -37,13 +37,13 @@ class VlAnalyseInitStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) 
 
     @Deprecated("The method verdict(String) is deprecated. Use the method verdict(VerdictSpecification) instead.")
     override infix fun verdict(verdict: String): VlAnalyseReasoningStep {
-        analysisBuilder.value.analysedAt = analysisBuilder.value.reportData.awareOfAt
+        analysisBuilder.value.analysedAt = analysisBuilder.value.dslReportData.awareOfAt
         analysisBuilder.value.verdict = getVerdictTypeHeuristically(verdict)
         return VlAnalyseReasoningStepImpl(analysisBuilder)
     }
 
     override fun verdict(verdict: VerdictSpecification): VlAnalyseReasoningStep {
-        analysisBuilder.value.analysedAt = analysisBuilder.value.reportData.awareOfAt
+        analysisBuilder.value.analysedAt = analysisBuilder.value.dslReportData.awareOfAt
         analysisBuilder.value.verdict = verdict
         return VlAnalyseReasoningStepImpl(analysisBuilder)
     }

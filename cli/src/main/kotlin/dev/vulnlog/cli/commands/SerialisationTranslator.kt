@@ -13,8 +13,8 @@ import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.UpdateAction
+import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.VulnlogAnalysisData
-import dev.vulnlog.dsl.VulnlogData
 import dev.vulnlog.dsl.VulnlogExecutionData
 import dev.vulnlog.dsl.VulnlogReportData
 import dev.vulnlog.dsl.VulnlogTaskData
@@ -39,12 +39,12 @@ class SerialisationTranslator {
             publicationDate = releaseDate,
         )
 
-    private fun Map<ReleaseBranchData, List<VulnlogData>>.toReleaseBranchVulnerabilities() =
+    private fun Map<ReleaseBranchData, List<VulnerabilityData>>.toReleaseBranchVulnerabilities() =
         map { (releaseBranch, vulnerabilities) ->
             ReleaseBranchVulnerabilities(releaseBranch.name, vulnerabilities.toVulnerability())
         }
 
-    private fun List<VulnlogData>.toVulnerability(): List<Vulnerability> {
+    private fun List<VulnerabilityData>.toVulnerability(): List<Vulnerability> {
         return map { vulnlogData ->
             Vulnerability(
                 vulnlogData.ids,

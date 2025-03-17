@@ -18,17 +18,17 @@ import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.WaitAction
 import kotlin.time.Duration
 
-data class TaskData(val analysisData: AnalysisData?, val tasks: List<Task>)
+data class DslTaskData(val analysisData: DslAnalysisData?, val tasks: List<Task>)
 
 data class Task(val taskAction: TaskAction, val releases: List<ReleaseBranch>)
 
-class TaskBuilder(val analysisData: AnalysisData) {
+class TaskBuilder(val dslAnalysisData: DslAnalysisData) {
     var dependencyName: String? = null
     var action: TaskAction? = null
     val tasks: MutableList<Task> = mutableListOf()
 
     fun build(): ExecutionBuilder {
-        return ExecutionBuilder(TaskData(analysisData, tasks))
+        return ExecutionBuilder(DslTaskData(dslAnalysisData, tasks))
     }
 }
 
