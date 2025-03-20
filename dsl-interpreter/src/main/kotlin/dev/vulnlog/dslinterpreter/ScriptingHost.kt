@@ -1,11 +1,14 @@
 package dev.vulnlog.dslinterpreter
 
+import dev.vulnlog.dsl.ReporterData
 import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.definition.VulnlogCompilationConfiguration
 import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
 import dev.vulnlog.dslinterpreter.impl.VlReleasesDslRootImpl
 import dev.vulnlog.dslinterpreter.impl.VlVulnerabilityDslRootImpl
+import dev.vulnlog.dslinterpreter.repository.BranchRepositoryImpl
+import dev.vulnlog.dslinterpreter.service.AffectedVersionsServiceImpl
 import dev.vulnlog.dslinterpreter.service.VulnerabilityServiceImpl
 import java.io.File
 import java.nio.file.Path
@@ -36,13 +39,17 @@ class ScriptingHost {
     private val host: BasicScriptingHost = BasicJvmScriptingHost()
 
     fun eval(scripts: List<File>): Result<VlDslRoot> {
+        val branchRepository = BranchRepositoryImpl()
+        val reporterRepository = mutableListOf<ReporterData>()
         val vulnerabilityDataRepository = mutableListOf<VulnerabilityData>()
-        val vulnerabilityService = VulnerabilityServiceImpl(vulnerabilityDataRepository)
+        val affectedVersionsService = AffectedVersionsServiceImpl(branchRepository)
+        val vulnerabilityService = VulnerabilityServiceImpl(affectedVersionsService, vulnerabilityDataRepository)
 
         val dslRoot =
             VlDslRootImpl(
+                branchRepository,
                 vulnerabilityDataRepository,
-                VlReleasesDslRootImpl(),
+                VlReleasesDslRootImpl(branchRepository, reporterRepository),
                 VlVulnerabilityDslRootImpl(vulnerabilityService),
             )
 

@@ -4,6 +4,9 @@ import dev.vulnlog.dsl.util.toCamelCase
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
+/**
+ * Providable release branch.
+ */
 public data class ReleaseBranch(public val name: String) : Comparable<ReleaseBranch> {
     override fun compareTo(other: ReleaseBranch): Int {
         return ReleaseBranchProvider.compare(this, other)

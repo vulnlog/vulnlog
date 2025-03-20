@@ -11,6 +11,7 @@ import dev.vulnlog.dslinterpreter.impl.DefaultReleaseBranchDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogExecutionDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogReportDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogTaskDataImpl
+import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
 
 fun vulnerabilityPerBranch(
     releases: Set<ReleaseBranchData>,
@@ -36,10 +37,13 @@ private fun splitAndGroupByBranch(
                     val filteredReport = filterOnReleaseBranch(releaseBranch, vulnerability.reportData)
                     val filteredTask = filterOnReleaseBranch(releaseBranch, vulnerability.taskData)
                     val filteredExecution = filterOnReleaseBranch(releaseBranch, vulnerability.executionData)
+                    val filteredInvolvedReleaseVersion =
+                        filterInvolvedReleaseVersions(filteredReport, vulnerability.involvedReleaseVersions)
                     vulnerability.copy(
                         reportData = filteredReport,
                         taskData = filteredTask,
                         executionData = filteredExecution,
+                        involvedReleaseVersions = filteredInvolvedReleaseVersion,
                     )
                 }
             splitVulnerabilities
@@ -85,5 +89,19 @@ fun filterOnReleaseBranch(
     } else {
         val filteredOnReleaseBranch = executionData.executions.filter { it.releases.contains(releaseBranch) }
         (executionData as VulnlogExecutionDataImpl).copy(executions = filteredOnReleaseBranch)
+    }
+}
+
+fun filterInvolvedReleaseVersions(
+    filteredReport: VulnlogReportData?,
+    involvedReleaseVersions: BranchToInvolvedVersions?,
+): BranchToInvolvedVersions {
+    return if (involvedReleaseVersions == null ||
+        filteredReport?.affected?.first() == null ||
+        involvedReleaseVersions[filteredReport.affected.first()] == null
+    ) {
+        emptyMap()
+    } else {
+        mapOf(filteredReport.affected.first() to involvedReleaseVersions[filteredReport.affected.first()]!!)
     }
 }
