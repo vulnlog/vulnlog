@@ -6,24 +6,28 @@ import dev.vulnlog.dsl.ReporterData
 import dev.vulnlog.dsl.VlReleaseContext
 import dev.vulnlog.dsl.VlReleasesDslRoot
 import dev.vulnlog.dsl.VlReporterContext
+import dev.vulnlog.dslinterpreter.repository.BranchRepository
 
-class VlReleasesDslRootImpl : VlReleasesDslRoot {
-    override var branchToReleases = mapOf<ReleaseBranchData, List<ReleaseVersionData>>()
-    override var reporters = listOf<ReporterData>()
-
+class VlReleasesDslRootImpl(
+    private val branchRepository: BranchRepository,
+    private val reporterDataRepository: MutableList<ReporterData>,
+) : VlReleasesDslRoot {
     override fun releases(block: VlReleaseContext.() -> Unit) =
         with(VlReleaseContextImpl()) {
             block()
-            this@VlReleasesDslRootImpl.branchToReleases += getBranchToReleases()
+            val branchToReleases: Map<ReleaseBranchData, List<ReleaseVersionData>> = getBranchToReleases()
+            branchToReleases.forEach { (branch, releaseVersions) ->
+                this@VlReleasesDslRootImpl.branchRepository.add(
+                    branch,
+                    releaseVersions,
+                )
+            }
         }
 
-    override fun reporters(block: (VlReporterContext).() -> Unit) =
+    override fun reporters(block: (VlReporterContext).() -> Unit): Unit =
         with(VlReporterContextImpl()) {
             block()
-            this@VlReleasesDslRootImpl.reporters = reporters.map { ReporterDataImpl(it.name) }
+            val reporterData = reporters.map { ReporterDataImpl(it.name) }
+            this@VlReleasesDslRootImpl.reporterDataRepository.addAll(reporterData)
         }
-
-    override fun toString(): String {
-        return "VlDslReleasesImpl(branchToReleases=$branchToReleases)"
-    }
 }

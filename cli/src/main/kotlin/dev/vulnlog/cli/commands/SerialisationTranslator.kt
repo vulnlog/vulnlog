@@ -2,6 +2,8 @@ package dev.vulnlog.cli.commands
 
 import dev.vulnlog.cli.serialisable.Analysis
 import dev.vulnlog.cli.serialisable.Execution
+import dev.vulnlog.cli.serialisable.InvolvedReleaseVersion
+import dev.vulnlog.cli.serialisable.InvolvedReleaseVersions
 import dev.vulnlog.cli.serialisable.ReleaseBranchVulnerabilities
 import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.ReleaseVersion
@@ -19,6 +21,7 @@ import dev.vulnlog.dsl.VulnlogExecutionData
 import dev.vulnlog.dsl.VulnlogReportData
 import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.WaitAction
+import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
 
 class SerialisationTranslator {
     fun translate(filteredResult: Filtered): Vulnlog {
@@ -52,6 +55,7 @@ class SerialisationTranslator {
                 vulnlogData.analysisData?.toAnalysis(),
                 vulnlogData.taskData?.toTask(),
                 vulnlogData.executionData?.toExecution(),
+                vulnlogData.involvedReleaseVersions.toInvolvedReleaseVersions(),
             )
         }
     }
@@ -82,4 +86,16 @@ class SerialisationTranslator {
         val execution = executions.first()
         return Execution(execution.action, execution.duration)
     }
+
+    private fun BranchToInvolvedVersions.toInvolvedReleaseVersions(): InvolvedReleaseVersions? =
+        if (isEmpty()) {
+            null
+        } else {
+            val firstAndOnlyEntry = values.first()
+            val affected = firstAndOnlyEntry.affected
+            val involvedAffected = InvolvedReleaseVersion(affected?.version, affected?.releaseDate.toString())
+            val upcoming = firstAndOnlyEntry.upcoming
+            val involvedUpcoming = InvolvedReleaseVersion(upcoming?.version, upcoming?.releaseDate.toString())
+            InvolvedReleaseVersions(involvedAffected, involvedUpcoming)
+        }
 }

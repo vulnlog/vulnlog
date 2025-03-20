@@ -17,7 +17,8 @@ class DslResultFilter(
     private val filterBranches: List<String>?,
 ) {
     fun filter(evalResult: VlDslRoot): Filtered {
-        val filteredReleaseBranches = filterReleaseBranches(evalResult.branchToReleases)
+        val branchRepository = (evalResult as VlDslRootImpl).branchRepository
+        val filteredReleaseBranches = filterReleaseBranches(branchRepository.getBranchesToReleaseVersions())
         val filteredVulnerabilities = filterVulnerabilities(evalResult)
 
         val releaseBranchesWithVulnerabilities =
@@ -37,8 +38,10 @@ class DslResultFilter(
     }
 
     private fun filterVulnerabilities(evalResult: VlDslRoot): Map<ReleaseBranchData, List<VulnerabilityData>> {
-        val vulnerabilityRepository = (evalResult as VlDslRootImpl).vulnerabilityDataRepository
-        val splitVulnToBranches = vulnerabilityPerBranch(evalResult.branchToReleases.keys, vulnerabilityRepository)
+        val branchRepository = (evalResult as VlDslRootImpl).branchRepository
+        val vulnerabilityRepository = (evalResult).vulnerabilityDataRepository
+        val splitVulnToBranches =
+            vulnerabilityPerBranch(branchRepository.getAllBranches(), vulnerabilityRepository)
         return filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
     }
 

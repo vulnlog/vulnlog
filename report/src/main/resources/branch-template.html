@@ -148,6 +148,10 @@
                 simpleRow.appendChild(reasoning)
                 let task = document.createElement("td")
                 simpleRow.appendChild(task)
+                let affected = document.createElement("td")
+                simpleRow.appendChild(affected)
+                let fixIn = document.createElement("td")
+                simpleRow.appendChild(fixIn)
                 let execution = document.createElement("td")
                 simpleRow.appendChild(execution)
 
@@ -164,6 +168,32 @@
                     task.innerText = vulnData.task.action + " " + vulnData.task.details.join(" ")
                 }
                 reasoning.innerText = vulnData.analysis.reasoning
+                if (vulnData.involved.affectedReleaseVersion === null) {
+                    affected.innerText = ""
+                } else {
+                    if (vulnData.involved.affectedReleaseVersion.version === null) {
+                        affected.innerText = ""
+                    } else {
+                        let text = vulnData.involved.affectedReleaseVersion.version
+                        if (vulnData.involved.affectedReleaseVersion.publicationDate !== "null") {
+                            text = text + " " + vulnData.involved.affectedReleaseVersion.publicationDate
+                        }
+                        affected.innerText = text
+                    }
+                }
+                if (vulnData.involved.fixedReleaseVersion === null) {
+                    fixIn.innerText = ""
+                } else {
+                    if (vulnData.involved.fixedReleaseVersion.version === null) {
+                        fixIn.innerText = ""
+                    } else {
+                        let text = vulnData.involved.fixedReleaseVersion.version
+                        if (vulnData.involved.fixedReleaseVersion.publicationDate !== "null") {
+                            text = text + " " + vulnData.involved.fixedReleaseVersion.publicationDate
+                        }
+                        fixIn.innerText = text
+                    }
+                }
                 if (vulnData.execution === null) {
                     execution.innerText = ""
                 } else {
@@ -194,6 +224,8 @@
         <th>Rating</th>
         <th>Reasoning</th>
         <th>Task</th>
+        <th>Affected Version</th>
+        <th>Fix in Version</th>
         <th>Execution</th>
     </tr>
     <tbody id="unifiedVulnerabilities"></tbody>
