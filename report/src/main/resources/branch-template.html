@@ -29,34 +29,52 @@
         }
 
         body {
-            width: min(900px, 100% - 3rem);
+            width: min(1200px, 100% - 3rem);
             margin-inline: auto;
         }
 
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
         table {
-            border-collapse: collapse;
             width: 100%;
+            min-width: 800px; /* Prevents columns from squeezing too much */
         }
 
         #titleRow {
             background-color: rgba(0, 0, 0, 0.15);
         }
 
+        tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
         tr:hover {
-            background-color: rgba(0, 0, 0, 0.025);
+            background-color: rgba(0, 0, 0, 0.08);
         }
 
         caption,
         th,
         td {
             border-color: var(--text-color);
-            padding-left: 0.5em;
-            padding-right: 0.5em;
+            padding: 0.9em;
+            word-break: break-word;
+            vertical-align: middle;
         }
 
         caption,
         th {
             text-align: left;
+        }
+
+        th:nth-child(1), td:nth-child(1) {
+            width: 15%;
+        }
+
+        td:nth-child(4) {
+            white-space: pre-line;
         }
 
         caption {
@@ -65,7 +83,7 @@
             text-transform: capitalize;
         }
 
-        .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
+        .ratingCritical, .ratingHigh, .ratingModerate, .ratingLow, .ratingNotAffected, .ratingNone {
             text-align: center;
             text-transform: uppercase;
             color: var(--text-color);
@@ -82,7 +100,7 @@
             color: #f5f5f5;
         }
 
-        .ratingMedium {
+        .ratingModerate {
             background-color: #fdcb58;
             color: #333333;
         }
@@ -92,37 +110,65 @@
             color: #f0f0f0;
         }
 
+        .ratingNotAffected {
+            background-color: #7cb342;
+            color: #f0f0f0;
+        }
+
         .ratingNone {
+        }
+
+        #idFilter {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s ease-in-out;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        #idFilter:focus {
+            border-color: #007bff;
+            box-shadow: 0px 0px 8px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Clear button styling */
+        #clearFilter {
+            padding: 10px 15px;
+            font-size: 1.1rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        #clearFilter:hover {
+            background: #0056b3;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            #idFilter {
+                background: #333;
+                color: white;
+                border-color: #555;
+            }
+
+            #idFilter:focus {
+                border-color: #4da8ff;
+                box-shadow: 0px 0px 8px rgba(77, 168, 255, 0.5);
+            }
         }
 
         @media (prefers-color-scheme: dark) {
             :where(html) {
                 --background-color: hsl(228, 5%, 15%);
                 --text-color: hsl(228, 5%, 80%);
-            }
-        }
-
-        @media (max-width: 650px) {
-            th {
-                display: none;
-            }
-
-            td {
-                display: block;
-            }
-
-            td::before {
-                content: attr(data-cell) ": ";
-                font-weight: 700;
-                text-transform: capitalize;
-            }
-
-            td:last-child {
-                margin-bottom: 1.5rem;
-            }
-
-            .ratingCritical, .ratingHigh, .ratingMedium, .ratingLow, .ratingNone {
-                text-align: left;
             }
         }
     </style>
@@ -161,7 +207,34 @@
                 } else {
                     report.innerText = vulnData.report.analyser
                 }
-                rating.innerText = vulnData.analysis.verdict
+                let verdict = vulnData.analysis.verdict;
+                switch (verdict) {
+                    case "":
+                        rating.classList.add('ratingNone')
+                        rating.innerText = ''
+                        break;
+                    case "not affected":
+                        rating.classList.add('ratingNotAffected')
+                        rating.innerText = 'N'
+                        break;
+                    case "low":
+                        rating.classList.add('ratingLow')
+                        rating.innerText = 'L'
+                        break;
+                    case "moderate":
+                        rating.classList.add('ratingModerate')
+                        rating.innerText = 'M'
+                        break;
+                    case "high":
+                        rating.classList.add('ratingHigh')
+                        rating.innerText = 'H'
+                        break;
+                    case "critical":
+                        rating.classList.add('ratingCritical')
+                        rating.innerText = 'C'
+                        break;
+                }
+                rating.title = verdict
                 if (vulnData.task === null) {
                     task.innerText = ""
                 } else {
@@ -174,11 +247,16 @@
                     if (vulnData.involved.affectedReleaseVersion.version === null) {
                         affected.innerText = ""
                     } else {
-                        let text = vulnData.involved.affectedReleaseVersion.version
-                        if (vulnData.involved.affectedReleaseVersion.publicationDate !== "null") {
-                            text = text + " " + vulnData.involved.affectedReleaseVersion.publicationDate
+                        let version = vulnData.involved.affectedReleaseVersion.version
+                        let title = "Version " + version + " is not yet published"
+                        let publicationDate = vulnData.involved.affectedReleaseVersion.publicationDate;
+                        let versionAndPublicationDate = version
+                        if (publicationDate !== "null") {
+                            versionAndPublicationDate = version + " / " + publicationDate
+                            title = "Version " + version + " is published on " + publicationDate
                         }
-                        affected.innerText = text
+                        affected.innerText = versionAndPublicationDate
+                        affected.title = title
                     }
                 }
                 if (vulnData.involved.fixedReleaseVersion === null) {
@@ -187,11 +265,16 @@
                     if (vulnData.involved.fixedReleaseVersion.version === null) {
                         fixIn.innerText = ""
                     } else {
-                        let text = vulnData.involved.fixedReleaseVersion.version
-                        if (vulnData.involved.fixedReleaseVersion.publicationDate !== "null") {
-                            text = text + " " + vulnData.involved.fixedReleaseVersion.publicationDate
+                        let version = vulnData.involved.fixedReleaseVersion.version
+                        let title = "Version " + version + " is not yet published"
+                        let publicationDate = vulnData.involved.fixedReleaseVersion.publicationDate;
+                        let versionAndPublicationDate = version
+                        if (publicationDate !== "null") {
+                            versionAndPublicationDate = version + " / " + publicationDate
+                            title = "Version " + version + " is published on " + publicationDate
                         }
-                        fixIn.innerText = text
+                        fixIn.innerText = versionAndPublicationDate
+                        fixIn.title = title
                     }
                 }
                 if (vulnData.execution === null) {
@@ -213,26 +296,58 @@
     </script>
 </head>
 <body>
-<h1>Vulnlog Report</h1>
-<h2 id="releaseBranch"></h2>
-<p>Report generated on <span id="generationDate"></span></p>
-<table>
-    <caption>Vulnerabilities</caption>
-    <tr id="titleRow">
-        <th>ID</th>
-        <th>Report</th>
-        <th>Rating</th>
-        <th>Reasoning</th>
-        <th>Task</th>
-        <th>Affected Version</th>
-        <th>Fix in Version</th>
-        <th>Execution</th>
-    </tr>
-    <tbody id="unifiedVulnerabilities"></tbody>
-</table>
+<header>
+    <h1>Vulnlog Report</h1>
+    <p>Report for <em><span id="releaseBranch"></span></em> generated on <em><span id="generationDate"></span></em></p>
+</header>
+<main>
+    <h2>Vulnerabilities</h2>
+    <form onsubmit="return false;" style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" id="idFilter" placeholder="🔍 Search CVE ID..." />
+        <button type="reset" id="clearFilter">Clear</button>
+    </form>
+
+
+
+    <div class="table-container">
+        <table>
+            <tr id="titleRow">
+                <th>ID</th>
+                <th title="Who found the vulnerability and reported it">Reporter</th>
+                <th title="The impact the vulnerability may have on the software">Rating</th>
+                <th title="Reasoning behind the rating">Reasoning</th>
+                <th title="What is necessary to get rid of this vulnerability report">Task</th>
+                <th title="What verions are affected by the vulnerability">Affected Version</th>
+                <th title="In what version the vulnerability is planed to be fixed">Fix in Version</th>
+                <th title="What will be done until a fixed version will be released">Execution</th>
+            </tr>
+            <tbody id="allVulnerabilities"></tbody>
+        </table>
+    </div>
+</main>
+<footer>
+    <p>
+        <!-- report-footer -->
+    </p>
+    <p>Visit <a href="https://vulnlog.dev" target="_blank">vulnlog.dev</a> for more information.</p>
+</footer>
 <script>
-    let tableBody = document.getElementById("unifiedVulnerabilities");
+    let tableBody = document.getElementById("allVulnerabilities");
     init(tableBody)
+
+    document.getElementById("idFilter").addEventListener("input", function () {
+        let filterValue = this.value.trim().toLowerCase();
+        document.querySelectorAll("#allVulnerabilities tr").forEach(row => {
+            let idCell = row.cells[0].innerText.toLowerCase();
+            row.style.display = idCell.includes(filterValue) ? "" : "none";
+        });
+    });
+
+    document.getElementById("clearFilter").addEventListener("click", function () {
+        setTimeout(() => {
+            document.getElementById("idFilter").dispatchEvent(new Event("input"));
+        }, 10); // Small delay ensures input is cleared first
+    });
 </script>
 </body>
 </html>
