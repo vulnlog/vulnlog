@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 fun generateReport(
+    cliVersion: String,
     jsonData: String,
     releaseBranchName: String,
     creationData: LocalDateTime,
@@ -18,7 +19,11 @@ fun generateReport(
 
     val wrappedJsonVulnData = "<script type=\"application/json\" id=\"vuln-data\">$jsonData</script>"
     val vulnMarker = "    <!-- vuln-data -->"
-    val vulnData = reportData.replace(vulnMarker, wrappedJsonVulnData)
+    var vulnData = reportData.replace(vulnMarker, wrappedJsonVulnData)
+
+    val footerValue = "This report was generated with Vulnlog $cliVersion"
+    val footerMarker = "        <!-- report-footer -->"
+    vulnData = vulnData.replace(footerMarker, footerValue)
 
     return HtmlReport(releaseBranchName, vulnData)
 }

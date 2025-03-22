@@ -16,7 +16,11 @@ import dev.vulnlog.cli.serialisable.Vulnlog
 import dev.vulnlog.dslinterpreter.ScriptingHost
 import java.io.File
 
-data class ConfigAndDataForSubcommand(var releaseBranchs: List<String>, var vulnlogs: List<String>)
+data class ConfigAndDataForSubcommand(
+    var cliVerison: String,
+    var releaseBranches: List<String>,
+    var vulnlogs: List<String>,
+)
 
 class MainCommand : CliktCommand() {
     override fun help(context: Context): String = "CLI application to parse Vulnlog files."
@@ -40,12 +44,12 @@ class MainCommand : CliktCommand() {
     )
         .varargValues()
 
-    private val config by findOrSetObject { ConfigAndDataForSubcommand(emptyList(), emptyList()) }
+    private val config by findOrSetObject { ConfigAndDataForSubcommand("", emptyList(), emptyList()) }
+    private val cliVersion: String = object {}.javaClass.getResource("/version.txt")?.readText()?.lines()?.first() ?: ""
 
     init {
         eagerOption("-v", "--version", help = "Show version number and exit.") {
-            val version = object {}.javaClass.getResource("/version.txt")?.readText()?.lines()?.first() ?: ""
-            throw PrintMessage("Vulnlog $version")
+            throw PrintMessage("Vulnlog $cliVersion")
         }
     }
 
@@ -79,7 +83,8 @@ class MainCommand : CliktCommand() {
             printer.print(serialisableData)
         } else {
             val relevantReleaseBranches = serialisableData.releaseBranches
-            config.releaseBranchs = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
+            config.cliVerison = cliVersion
+            config.releaseBranches = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
             config.vulnlogs =
                 relevantReleaseBranches.map { branch ->
                     Vulnlog(
