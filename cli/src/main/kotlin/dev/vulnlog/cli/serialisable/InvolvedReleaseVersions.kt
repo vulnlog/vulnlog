@@ -1,6 +1,7 @@
 package dev.vulnlog.cli.serialisable
 
 import kotlinx.serialization.Serializable
+import java.time.LocalDate
 
 @Serializable
 data class InvolvedReleaseVersions(
@@ -9,4 +10,8 @@ data class InvolvedReleaseVersions(
 )
 
 @Serializable
-data class InvolvedReleaseVersion(val version: String?, val publicationDate: String?)
+data class InvolvedReleaseVersion(
+    val version: String?,
+    @Serializable(with = LocalDateSerialiser::class)
+    val publicationDate: LocalDate?,
+)

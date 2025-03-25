@@ -93,9 +93,9 @@ class SerialisationTranslator {
         } else {
             val firstAndOnlyEntry = values.first()
             val affected = firstAndOnlyEntry.affected
-            val involvedAffected = InvolvedReleaseVersion(affected?.version, affected?.releaseDate.toString())
+            val involvedAffected = InvolvedReleaseVersion(affected?.version, affected?.releaseDate)
             val upcoming = firstAndOnlyEntry.upcoming
-            val involvedUpcoming = InvolvedReleaseVersion(upcoming?.version, upcoming?.releaseDate.toString())
+            val involvedUpcoming = InvolvedReleaseVersion(upcoming?.version, upcoming?.releaseDate)
             InvolvedReleaseVersions(involvedAffected, involvedUpcoming)
         }
 }
