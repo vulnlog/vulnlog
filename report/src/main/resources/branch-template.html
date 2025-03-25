@@ -1,352 +1,194 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-    <title>VL Reporting</title>
+    <title>Vulnlog Reporting</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Vulnlog vulnerability report for release branch x.y.">
-    <style>
-        *,
-        ::before,
-        ::after {
-            box-sizing: border-box;
-        }
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.1/css/bulma.min.css" rel="stylesheet"
+          integrity="sha384-u1DpPo/VC1cCewPdLA1ujElPdm1c/ZVa5MNAV6930PlrYYXhoKH/+hui6tE7szxu" crossorigin="anonymous">
+    <link href="https://cdn.datatables.net/v/bm/jq-3.7.0/dt-2.2.2/datatables.min.css" rel="stylesheet"
+          integrity="sha384-NQR9ysESFMRrrks4rwDgTlpUgpKPftZV/S48q+tang2oiEqMIFGM4VDLBYAYdNLc" crossorigin="anonymous">
+    <script src="https://cdn.datatables.net/v/bm/jq-3.7.0/dt-2.2.2/datatables.min.js"
+            integrity="sha384-SZXx6mFkCRJyGW8C8nsVaJpL1eMbIWwRRly7435CnZNwoIdr1QE2NpCihEcTIaM7"
+            crossorigin="anonymous"></script>
+    <script>
+        let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        let html = document.querySelector('html');
 
-        :where(html) {
-            --background-color: #fff;
-            --text-color: #222;
-        }
-
-        html {
-            font-family: sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-        }
-
-        a {
-            color: var(--text-color);
-            text-decoration: underline;
-        }
-
-        body {
-            width: min(1200px, 100% - 3rem);
-            margin-inline: auto;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            max-width: 100%;
-        }
-
-        table {
-            width: 100%;
-            min-width: 800px; /* Prevents columns from squeezing too much */
-        }
-
-        #titleRow {
-            background-color: rgba(0, 0, 0, 0.15);
-        }
-
-        tr:nth-child(even) {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        tr:hover {
-            background-color: rgba(0, 0, 0, 0.08);
-        }
-
-        caption,
-        th,
-        td {
-            border-color: var(--text-color);
-            padding: 0.9em;
-            word-break: break-word;
-            vertical-align: middle;
-        }
-
-        caption,
-        th {
-            text-align: left;
-        }
-
-        th:nth-child(1), td:nth-child(1) {
-            width: 15%;
-        }
-
-        td:nth-child(4) {
-            white-space: pre-line;
-        }
-
-        caption {
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .ratingCritical, .ratingHigh, .ratingModerate, .ratingLow, .ratingNotAffected, .ratingNone {
-            text-align: center;
-            text-transform: uppercase;
-            color: var(--text-color);
-            font-weight: bolder;
-        }
-
-        .ratingCritical {
-            background-color: #dd2e44;
-            color: #f0f0f0;
-        }
-
-        .ratingHigh {
-            background-color: #f4900c;
-            color: #f5f5f5;
-        }
-
-        .ratingModerate {
-            background-color: #fdcb58;
-            color: #333333;
-        }
-
-        .ratingLow {
-            background-color: #55acee;
-            color: #f0f0f0;
-        }
-
-        .ratingNotAffected {
-            background-color: #7cb342;
-            color: #f0f0f0;
-        }
-
-        .ratingNone {
-        }
-
-        #idFilter {
-            width: 100%;
-            max-width: 300px;
-            padding: 10px 15px;
-            font-size: 1.1rem;
-            border: 2px solid #ccc;
-            border-radius: 8px;
-            outline: none;
-            transition: all 0.3s ease-in-out;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        #idFilter:focus {
-            border-color: #007bff;
-            box-shadow: 0px 0px 8px rgba(0, 123, 255, 0.5);
-        }
-
-        /* Clear button styling */
-        #clearFilter {
-            padding: 10px 15px;
-            font-size: 1.1rem;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        #clearFilter:hover {
-            background: #0056b3;
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            #idFilter {
-                background: #333;
-                color: white;
-                border-color: #555;
-            }
-
-            #idFilter:focus {
-                border-color: #4da8ff;
-                box-shadow: 0px 0px 8px rgba(77, 168, 255, 0.5);
-            }
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :where(html) {
-                --background-color: hsl(228, 5%, 15%);
-                --text-color: hsl(228, 5%, 80%);
-            }
-        }
-    </style>
+        html.classList.add(prefers);
+        html.setAttribute('data-bs-theme', prefers);
+    </script>
     <!-- report-data -->
     <!-- vuln-data -->
-    <script>
-        let unifiedVulnerabilityData = JSON.parse(document.getElementById('vuln-data').innerHTML);
-
-        let vulns = unifiedVulnerabilityData.releaseBrancheVulnerabilities[0].vulnerabilities
-
-        function initUnifiedTable(tableBody) {
-            for (let i = 0; i < vulns.length; i++) {
-                let vulnData = vulns[i]
-
-                let simpleRow = document.createElement("tr")
-                let id = document.createElement("td")
-                simpleRow.appendChild(id)
-                let report = document.createElement("td")
-                simpleRow.appendChild(report)
-                let rating = document.createElement("td")
-                simpleRow.appendChild(rating)
-                let reasoning = document.createElement("td")
-                simpleRow.appendChild(reasoning)
-                let task = document.createElement("td")
-                simpleRow.appendChild(task)
-                let affected = document.createElement("td")
-                simpleRow.appendChild(affected)
-                let fixIn = document.createElement("td")
-                simpleRow.appendChild(fixIn)
-                let execution = document.createElement("td")
-                simpleRow.appendChild(execution)
-
-                id.innerText = vulnData.ids[0]
-                if (vulnData.report === null) {
-                    report.innerText = ""
-                } else {
-                    report.innerText = vulnData.report.analyser
-                }
-                let verdict = vulnData.analysis.verdict;
-                switch (verdict) {
-                    case "":
-                        rating.classList.add('ratingNone')
-                        rating.innerText = ''
-                        break;
-                    case "not affected":
-                        rating.classList.add('ratingNotAffected')
-                        rating.innerText = 'N'
-                        break;
-                    case "low":
-                        rating.classList.add('ratingLow')
-                        rating.innerText = 'L'
-                        break;
-                    case "moderate":
-                        rating.classList.add('ratingModerate')
-                        rating.innerText = 'M'
-                        break;
-                    case "high":
-                        rating.classList.add('ratingHigh')
-                        rating.innerText = 'H'
-                        break;
-                    case "critical":
-                        rating.classList.add('ratingCritical')
-                        rating.innerText = 'C'
-                        break;
-                }
-                rating.title = verdict
-                if (vulnData.task === null) {
-                    task.innerText = ""
-                } else {
-                    task.innerText = vulnData.task.action + " " + vulnData.task.details.join(" ")
-                }
-                reasoning.innerText = vulnData.analysis.reasoning
-                if (vulnData.involved.affectedReleaseVersion === null) {
-                    affected.innerText = ""
-                } else {
-                    if (vulnData.involved.affectedReleaseVersion.version === null) {
-                        affected.innerText = ""
-                    } else {
-                        let version = vulnData.involved.affectedReleaseVersion.version
-                        let title = "Version " + version + " is not yet published"
-                        let publicationDate = vulnData.involved.affectedReleaseVersion.publicationDate;
-                        let versionAndPublicationDate = version
-                        if (publicationDate !== "null") {
-                            versionAndPublicationDate = version + " / " + publicationDate
-                            title = "Version " + version + " is published on " + publicationDate
-                        }
-                        affected.innerText = versionAndPublicationDate
-                        affected.title = title
-                    }
-                }
-                if (vulnData.involved.fixedReleaseVersion === null) {
-                    fixIn.innerText = ""
-                } else {
-                    if (vulnData.involved.fixedReleaseVersion.version === null) {
-                        fixIn.innerText = ""
-                    } else {
-                        let version = vulnData.involved.fixedReleaseVersion.version
-                        let title = "Version " + version + " is not yet published"
-                        let publicationDate = vulnData.involved.fixedReleaseVersion.publicationDate;
-                        let versionAndPublicationDate = version
-                        if (publicationDate !== "null") {
-                            versionAndPublicationDate = version + " / " + publicationDate
-                            title = "Version " + version + " is published on " + publicationDate
-                        }
-                        fixIn.innerText = versionAndPublicationDate
-                        fixIn.title = title
-                    }
-                }
-                if (vulnData.execution === null) {
-                    execution.innerText = ""
-                } else {
-                    execution.innerText = vulnData.execution.action + " " + vulnData.execution.duration
-                }
-
-                tableBody.appendChild(simpleRow)
-            }
-        }
-
-        function init(tableBody) {
-            let reportData = JSON.parse(document.getElementById('report-data').innerHTML);
-            document.getElementById("releaseBranch").innerText = reportData.releaseBranchName
-            document.getElementById("generationDate").innerText = reportData.generationDate
-            initUnifiedTable(tableBody)
-        }
-    </script>
 </head>
 <body>
 <header>
-    <h1>Vulnlog Report</h1>
-    <p>Report for <em><span id="releaseBranch"></span></em> generated on <em><span id="generationDate"></span></em></p>
+    <section class="section">
+        <div class="container mb-5">
+            <h1 class="title is-1">Vulnlog Report</h1>
+        </div>
+        <div class="container">
+            <p>Report for <em><span id="releaseBranch"></span></em> generated on <em><span
+                    id="generationDate"></span></em></p>
+        </div>
+    </section>
 </header>
 <main>
-    <h2>Vulnerabilities</h2>
-    <form onsubmit="return false;" style="display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="idFilter" placeholder="🔍 Search CVE ID..." />
-        <button type="reset" id="clearFilter">Clear</button>
-    </form>
-
-
-
-    <div class="table-container">
-        <table>
-            <tr id="titleRow">
-                <th>ID</th>
-                <th title="Who found the vulnerability and reported it">Reporter</th>
-                <th title="The impact the vulnerability may have on the software">Rating</th>
-                <th title="Reasoning behind the rating">Reasoning</th>
-                <th title="What is necessary to get rid of this vulnerability report">Task</th>
-                <th title="What verions are affected by the vulnerability">Affected Version</th>
-                <th title="In what version the vulnerability is planed to be fixed">Fix in Version</th>
-                <th title="What will be done until a fixed version will be released">Execution</th>
-            </tr>
-            <tbody id="allVulnerabilities"></tbody>
-        </table>
-    </div>
+    <section class="section">
+        <div class="container">
+            <h2 class="title is-3">Vulnerabilities</h2>
+        </div>
+        <div class="container">
+            <table id="example" class="table is-hoverable">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th title="The impact the vulnerability may have on the software">Rating</th>
+                    <th title="Reasoning behind the rating">Reasoning</th>
+                    <th title="What is necessary to get rid of this vulnerability report">Task</th>
+                    <th title="What verions are affected by the vulnerability">Affected</th>
+                    <th title="In what version the vulnerability is planed to be fixed">Fix</th>
+                    <th></th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </section>
 </main>
-<footer>
-    <p>
-        <!-- report-footer -->
-    </p>
-    <p>Visit <a href="https://vulnlog.dev" target="_blank">vulnlog.dev</a> for more information.</p>
+<footer class="footer">
+    <div class="container has-text-centered">
+        <p>
+            <!-- report-footer -->. Visit <a href="https://vulnlog.dev" target="_blank">vulnlog.dev</a> for more
+            information.
+        </p>
+    </div>
 </footer>
 <script>
-    let tableBody = document.getElementById("allVulnerabilities");
-    init(tableBody)
+    let reportData = JSON.parse(document.getElementById('report-data').innerHTML);
+    document.getElementById("releaseBranch").innerText = reportData.releaseBranchName
+    document.getElementById("generationDate").innerText = reportData.generationDate
 
-    document.getElementById("idFilter").addEventListener("input", function () {
-        let filterValue = this.value.trim().toLowerCase();
-        document.querySelectorAll("#allVulnerabilities tr").forEach(row => {
-            let idCell = row.cells[0].innerText.toLowerCase();
-            row.style.display = idCell.includes(filterValue) ? "" : "none";
-        });
+    let unifiedVulnerabilityData2 = JSON.parse(document.getElementById('vuln-data').innerHTML);
+    let vulns = unifiedVulnerabilityData2.releaseBrancheVulnerabilities[0].vulnerabilities
+
+    function format(d) {
+        let id = d.ids.join((', '))
+        let reporter = d.report.analyser
+        let reporterDate = d.report.awareAt
+
+        return (
+            '<div class="columns">' +
+            '<div class="column">' + '<p>ID: ' + id + '</p>' + '</div>' +
+            '<div class="column">' + '<p>Reporter: ' + reporter + ' / ' + reporterDate + '</p></div>' +
+            '<div class="column">' + '<p>Analysis</p>' + '</div>' +
+            '<div class="column">' + '<p>Task</p>' + '</div>' +
+            '<div class="column">' + '<p>Execution</p>' + '</div>' +
+            '<div class="column">' + '<p>Involved</p>' + '</div>' +
+            '</div>'
+        );
+    }
+
+    let table = new DataTable('#example', {
+        columns: [
+            {
+                data: 'ids',
+                render: function (data, type) {
+                    let result = ""
+                    if (type === 'display') {
+                        result = data[0]
+                    } else if (type === 'filter') {
+                        result = data.join((' '))
+                    }
+                    return result
+                }
+            },
+            {
+                data: 'analysis.verdict',
+                render: function (data, type) {
+                    if (type === 'display' || type === 'filter') {
+                        switch (data) {
+                            case "":
+                                return 'under investigation'
+                            case "not affected":
+                                return '🟩 not affected'
+                            case "low":
+                                return '🟦 low'
+                            case "moderate":
+                                return '🟨 moderate'
+                            case "high":
+                                return '🟧 high'
+                            case "critical":
+                                return '🟥 critical'
+                        }
+                    }
+                    switch (data) {
+                        case "":
+                            return "f"
+                        case "not affected":
+                            return "a"
+                        case "low":
+                            return "b"
+                        case "moderate":
+                            return "c"
+                        case "high":
+                            return "d"
+                        case "critical":
+                            return "e"
+                    }
+                },
+            },
+            {data: 'analysis.reasoning'},
+            {
+                data: 'task',
+                render: data => data.action + ' ' + data.details.join(' ')
+            },
+            {
+                data: 'involved',
+                render: function (data) {
+                    let publicationData = data.affectedReleaseVersion.publicationDate
+                    let text = data.affectedReleaseVersion.version
+                    if (publicationData) {
+                        text += ' / ' + publicationData
+                    }
+                    return text
+                }
+            },
+            {
+                data: 'involved',
+                render: function (data) {
+                    let text = data.fixedReleaseVersion.version
+                    let publicationData = data.fixedReleaseVersion.publicationDate
+                    if (publicationData) {
+                        text += ' / ' + publicationData
+                    }
+                    return text
+                }
+            },
+            {
+                // className: 'dt-control',
+                className: 'dt-control',
+                orderable: false,
+                data: null,
+                defaultContent: '',
+            },
+        ],
+        data: vulns,
+        order:
+            [[1, 'desc']],
+        paging:
+            false,
     });
 
-    document.getElementById("clearFilter").addEventListener("click", function () {
-        setTimeout(() => {
-            document.getElementById("idFilter").dispatchEvent(new Event("input"));
-        }, 10); // Small delay ensures input is cleared first
+    table.on('click', 'td.dt-control', function (e) {
+        let tr = e.target.closest('tr');
+        let row = table.row(tr);
+
+        if (row.child.isShown()) {
+            row.child.hide();
+        } else {
+            row.child(format(row.data())).show();
+        }
     });
 </script>
 </body>
