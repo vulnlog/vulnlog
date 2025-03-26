@@ -40,7 +40,7 @@
             <h2 class="title is-3">Vulnerabilities</h2>
         </div>
         <div class="container">
-            <table id="example" class="table is-hoverable">
+            <table id="table" class="table is-hoverable">
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -72,24 +72,112 @@
     let unifiedVulnerabilityData2 = JSON.parse(document.getElementById('vuln-data').innerHTML);
     let vulns = unifiedVulnerabilityData2.releaseBrancheVulnerabilities[0].vulnerabilities
 
+    function formatReporter(reporter, awareDate) {
+        let result
+        result = '<div class="container">Reporter</div>'
+        result += '<div class="container">' + reporter + ' at ' + awareDate + '</div>'
+        return result
+    }
+
+    function formatVersionAndDate(version, publicationDate) {
+        let result = ''
+        if (version) {
+            result = version
+            if (publicationDate) {
+                result += ' published at ' + publicationDate
+            } else {
+                result += ' not yet published'
+            }
+        }
+        return result
+    }
+
+    function formatVerdictToEmoji(verdict) {
+        switch (verdict) {
+            case "":
+                return 'under investigation'
+            case "not affected":
+                return '🟩 not affected'
+            case "low":
+                return '🟦 low'
+            case "moderate":
+                return '🟨 moderate'
+            case "high":
+                return '🟧 high'
+            case "critical":
+                return '🟥 critical'
+        }
+    }
+
+    function formatAnalysis(analysisDate, analysisVerdict, analysisReasoning) {
+        let result
+        result = '<div class="container"><p>Analysed at: <span>' + analysisDate + '</span></p></div>'
+        result += '<div class="container"><p>Verdict: <span>' + formatVerdictToEmoji(analysisVerdict) + '</span></p></div>'
+        result += '<div class="container"><p>' + analysisReasoning + '</p></div>'
+        result += '<span className="icon-text"><span className="icon"><i className="fas fa-home"></i></span><span>Home</span></span>'
+        return result
+    }
+
+    function formatTask(taskAction, taskDetails) {
+        return taskAction + ' ' + taskDetails;
+    }
+
     function format(d) {
         let id = d.ids.join((', '))
+
         let reporter = d.report.analyser
         let reporterDate = d.report.awareAt
+        let reporterPrinting = formatReporter(reporter, reporterDate)
+
+        let affectedVersion = d.involved.affectedReleaseVersion.version
+        let affectedPublicationData = d.involved.affectedReleaseVersion.publicationDate
+        let affectedPrinting = formatVersionAndDate(affectedVersion, affectedPublicationData)
+
+        let fixedVersion = d.involved.fixedReleaseVersion.version
+        let fixedPublicationData = d.involved.fixedReleaseVersion.publicationDate
+        let fixedPrinting = formatVersionAndDate(fixedVersion, fixedPublicationData)
+
+        let analysisDate = d.analysis.analysedAt
+        let analysisVerdict = d.analysis.verdict
+        let analysisReasoning = d.analysis.reasoning
+        let analysisPrinting = formatAnalysis(analysisDate, analysisVerdict, analysisReasoning)
+
+        let timeline = ''
+        if (affectedVersion) {
+            timeline += '<div class="column is-narrow"><p>Affected: <span class="tag">' + affectedVersion + '</span><br /><span class="tag">' + affectedPublicationData + '</span></p></div>'
+        }
+        if (reporter) {
+            timeline += '<div class="column is-narrow"><p>Reporter: <span class="tag">' + reporter + '</span><br /><span class="tag">' + reporterDate + '</span></p></div>'
+        }
+        if (analysisVerdict) {
+            timeline += '<div class="column is-narrow"><p>Verdict: <span class="tag">' + formatVerdictToEmoji(analysisVerdict) + '</span><br /><span class="tag">' + analysisDate + '</span></p></div>'
+        }
+        if (fixedVersion) {
+            timeline += '<div class="column is-narrow"><p>Fix: <span class="tag">' + fixedVersion + '</span><br /><span class="tag">' + (fixedPublicationData ? fixedPublicationData : 'not yet published') + '</span></p></div>'
+        }
+
+        let taskAction = d.task.action
+        let taskDetails = d.task.details.join(', ')
+        let taskPrinting = formatTask(taskAction, taskDetails)
+
+        let executionAction = d.execution.action
+        let executionDuration = d.execution.duration
+        let executionPrinting = formatTask(executionAction, executionDuration)
 
         return (
-            '<div class="columns">' +
-            '<div class="column">' + '<p>ID: ' + id + '</p>' + '</div>' +
-            '<div class="column">' + '<p>Reporter: ' + reporter + ' / ' + reporterDate + '</p></div>' +
-            '<div class="column">' + '<p>Analysis</p>' + '</div>' +
-            '<div class="column">' + '<p>Task</p>' + '</div>' +
-            '<div class="column">' + '<p>Execution</p>' + '</div>' +
-            '<div class="column">' + '<p>Involved</p>' + '</div>' +
+            '<div class="columns is-centered">' +
+            timeline +
+            '</div>' +
+            '<div class="columns is-multiline">' +
+            '<div class="column is-full">' + '<p>ID: ' + id + '</p>' + '</div>' +
+            '<div class="column is-full">' + '<p>Analysis: </p>' + analysisReasoning + '</div>' +
+            '<div class="column is-full">' + '<p>Task: </p>' + taskPrinting + '</div>' +
+            '<div class="column is-full">' + '<p>Execution: </p>' + executionPrinting + '</div>' +
             '</div>'
         );
     }
 
-    let table = new DataTable('#example', {
+    let table = new DataTable('#table', {
         columns: [
             {
                 data: 'ids',
@@ -107,20 +195,7 @@
                 data: 'analysis.verdict',
                 render: function (data, type) {
                     if (type === 'display' || type === 'filter') {
-                        switch (data) {
-                            case "":
-                                return 'under investigation'
-                            case "not affected":
-                                return '🟩 not affected'
-                            case "low":
-                                return '🟦 low'
-                            case "moderate":
-                                return '🟨 moderate'
-                            case "high":
-                                return '🟧 high'
-                            case "critical":
-                                return '🟥 critical'
-                        }
+                        return formatVerdictToEmoji(data)
                     }
                     switch (data) {
                         case "":
@@ -166,7 +241,6 @@
                 }
             },
             {
-                // className: 'dt-control',
                 className: 'dt-control',
                 orderable: false,
                 data: null,
