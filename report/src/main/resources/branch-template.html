@@ -156,13 +156,19 @@
             timeline += '<div class="column is-narrow"><p>Fix: <span class="tag">' + fixedVersion + '</span><br /><span class="tag">' + (fixedPublicationData ? fixedPublicationData : 'not yet published') + '</span></p></div>'
         }
 
-        let taskAction = d.task.action
-        let taskDetails = d.task.details.join(', ')
-        let taskPrinting = formatTask(taskAction, taskDetails)
+        let taskPrinting = '-'
+        if (d.task) {
+            let taskAction = d.task.action
+            let taskDetails = d.task.details.join(', ')
+            taskPrinting = formatTask(taskAction, taskDetails)
+        }
 
-        let executionAction = d.execution.action
-        let executionDuration = d.execution.duration
-        let executionPrinting = formatTask(executionAction, executionDuration)
+        let executionPrinting = '-'
+        if (d.execution) {
+            let executionAction = d.execution.action
+            let executionDuration = d.execution.duration
+            executionPrinting = formatTask(executionAction, executionDuration)
+        }
 
         return (
             '<div class="columns is-centered">' +
