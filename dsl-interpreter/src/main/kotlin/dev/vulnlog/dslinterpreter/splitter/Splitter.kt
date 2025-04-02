@@ -4,8 +4,13 @@ package dev.vulnlog.dslinterpreter.splitter
 
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.VulnerabilityData
+import dev.vulnlog.dsl.VulnlogExecution
 import dev.vulnlog.dsl.VulnlogExecutionData
+import dev.vulnlog.dsl.VulnlogFixExecution
 import dev.vulnlog.dsl.VulnlogReportData
+import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
+import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
+import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
 import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dslinterpreter.impl.DefaultReleaseBranchDataImpl
 import dev.vulnlog.dslinterpreter.impl.VulnlogExecutionDataImpl
@@ -83,12 +88,31 @@ fun filterOnReleaseBranch(
 fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
     executionData: VulnlogExecutionData?,
-): VulnlogExecutionData? {
-    return if (executionData == null) {
-        null
-    } else {
-        val filteredOnReleaseBranch = executionData.executions.filter { it.releases.contains(releaseBranch) }
+): VulnlogExecutionData? =
+    executionData?.let {
+        val filteredOnReleaseBranch =
+            executionData.executions
+                .map { a -> a.releases.filter { rb -> rb == releaseBranch }.associateBy { a } }
+                .flatMap { it.entries }
+                .groupBy { it.key }
+                .mapValues { entry -> entry.value.map { it.value }.first() }
+                .map(::createVulnlogExecution)
         (executionData as VulnlogExecutionDataImpl).copy(executions = filteredOnReleaseBranch)
+    }
+
+private fun createVulnlogExecution(entry: Map.Entry<VulnlogExecution, ReleaseBranchData>): VulnlogExecution {
+    val key = entry.key
+    val releases = listOf(entry.value)
+    return when (key) {
+        is VulnlogFixExecution -> key.copy(releases = releases)
+        is VulnlogSuppressPermanentExecution -> key.copy(releases = releases)
+        is VulnlogSuppressUntilExecution -> key.copy(releases = releases)
+        is VulnlogSuppressUntilNextPublicationExecution -> {
+            val release = key.releases.first()
+            val involvedReleaseVersion = key.involved[releases.first()]!!
+            val involved = mapOf(release to involvedReleaseVersion)
+            key.copy(releases = releases, involved = involved)
+        }
     }
 }
 

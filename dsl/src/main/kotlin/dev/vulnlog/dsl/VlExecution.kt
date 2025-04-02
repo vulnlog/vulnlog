@@ -1,5 +1,6 @@
 package dev.vulnlog.dsl
 
+import java.time.LocalDate
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
@@ -11,7 +12,33 @@ public interface VulnlogExecutionData {
     public val executions: List<VulnlogExecution>
 }
 
-public data class VulnlogExecution(val action: String, val duration: String, val releases: List<ReleaseBranchData>)
+public sealed interface VulnlogExecution {
+    public val action: String
+    public val releases: List<ReleaseBranchData>
+}
+
+public data class VulnlogSuppressUntilExecution(
+    override val action: String,
+    override val releases: List<ReleaseBranchData>,
+    val untilDate: LocalDate,
+) : VulnlogExecution
+
+public data class VulnlogSuppressUntilNextPublicationExecution(
+    override val action: String,
+    override val releases: List<ReleaseBranchData>,
+    val involved: Map<ReleaseBranchData, InvolvedReleaseVersion>,
+) : VulnlogExecution
+
+public data class VulnlogSuppressPermanentExecution(
+    override val action: String,
+    override val releases: List<ReleaseBranchData>,
+) : VulnlogExecution
+
+public data class VulnlogFixExecution(
+    override val action: String,
+    override val releases: List<ReleaseBranchData>,
+    val fixDate: LocalDate,
+) : VulnlogExecution
 
 public interface VlExecutionInitStep {
     /**
@@ -34,6 +61,13 @@ public interface VlExecutionInitStep {
      * @since v0.5.0
      */
     public infix fun suppress(specifier: SuppressionSpecifierUntilNextPublication): ExecutionOnStep
+
+    /**
+     * Mark a vulnerability as fixed.
+     *
+     * @since v0.7.0
+     */
+    public infix fun fixedAt(date: String): ExecutionOnStep
 }
 
 public interface ExecutionOnStep {

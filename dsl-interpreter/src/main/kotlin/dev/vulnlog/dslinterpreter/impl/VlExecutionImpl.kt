@@ -6,7 +6,6 @@ import dev.vulnlog.dsl.ExecutionOnStep
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReleaseGroup
-import dev.vulnlog.dsl.SuppressionSpecifier
 import dev.vulnlog.dsl.SuppressionSpecifierPermanent
 import dev.vulnlog.dsl.SuppressionSpecifierTemporarily
 import dev.vulnlog.dsl.SuppressionSpecifierUntilNextPublication
@@ -14,15 +13,40 @@ import dev.vulnlog.dsl.VlExecutionInitStep
 import dev.vulnlog.dsl.VlExecutionSuppressTemporarilyStep
 import dev.vulnlog.dsl.VulnlogExecution
 import dev.vulnlog.dsl.VulnlogExecutionData
+import java.time.LocalDate
 import kotlin.time.Duration
 
 data class DslExecutionData(val dslTaskData: DslTaskData, val executions: List<Execution>)
 
-data class Execution(val action: String, val duration: String, val releases: List<ReleaseBranch>)
+sealed interface Execution {
+    val action: String
+    val releases: List<ReleaseBranch>
+}
+
+data class SuppressionPermanentExecution(
+    override val action: String = "suppress",
+    override val releases: List<ReleaseBranch>,
+) : Execution
+
+data class SuppressionEventExecution(
+    override val action: String = "suppress",
+    override val releases: List<ReleaseBranch>,
+) : Execution
+
+data class SuppressionDateExecution(
+    override val action: String = "suppress",
+    override val releases: List<ReleaseBranch>,
+    val suppressUntilDate: LocalDate,
+) : Execution
+
+data class FixedExecution(
+    override val action: String = "fix",
+    val fixDate: LocalDate,
+    override val releases: List<ReleaseBranch>,
+) : Execution
 
 class ExecutionBuilder(val dslTaskData: DslTaskData) {
     val executions: MutableList<Execution> = mutableListOf()
-    var suppressionSpecifier: SuppressionSpecifier? = null
 
     fun build(): DslExecutionData {
         return DslExecutionData(dslTaskData, executions)
@@ -31,27 +55,38 @@ class ExecutionBuilder(val dslTaskData: DslTaskData) {
 
 class VlExecutionInitStepImpl(private val executionBuilder: Lazy<ExecutionBuilder>) : VlExecutionInitStep {
     override infix fun suppress(specifier: SuppressionSpecifierPermanent): ExecutionOnStep {
-        executionBuilder.value.suppressionSpecifier = specifier
-        return ExecutionOnStepImpl(this, executionBuilder.value)
+        val suppress =
+            { releaseBranches: List<ReleaseBranch> -> SuppressionPermanentExecution(releases = releaseBranches) }
+        return ExecutionOnStepImpl(this, executionBuilder.value, suppress)
     }
 
     override infix fun suppress(specifier: SuppressionSpecifierTemporarily): VlExecutionSuppressTemporarilyStep {
-        executionBuilder.value.suppressionSpecifier = specifier
         return VlExecutionSuppressTemporarilyStepImpl(this, executionBuilder.value)
     }
 
     override infix fun suppress(specifier: SuppressionSpecifierUntilNextPublication): ExecutionOnStep {
-        executionBuilder.value.suppressionSpecifier = specifier
-        return ExecutionOnStepImpl(this, executionBuilder.value)
+        val suppress =
+            { releaseBranches: List<ReleaseBranch> -> SuppressionEventExecution(releases = releaseBranches) }
+        return ExecutionOnStepImpl(this, executionBuilder.value, suppress)
+    }
+
+    override fun fixedAt(date: String): ExecutionOnStep {
+        val fix = { releaseBranches: List<ReleaseBranch> ->
+            FixedExecution(
+                fixDate = LocalDate.parse(date),
+                releases = releaseBranches,
+            )
+        }
+        return ExecutionOnStepImpl(this, executionBuilder.value, fix)
     }
 }
 
 class ExecutionOnStepImpl(
     private val vlExecutionInitStep: VlExecutionInitStep,
     private val executionBuilder: ExecutionBuilder,
+    private val executionLambda: (List<ReleaseBranch>) -> Execution,
 ) : ExecutionOnStep {
     override infix fun on(releaseGroup: ReleaseGroup): VlExecutionInitStep {
-        val duration: String = getDuration(executionBuilder.suppressionSpecifier)
         val releaseList: List<ReleaseBranch> =
             when (releaseGroup) {
                 All -> allReleases()
@@ -60,30 +95,22 @@ class ExecutionOnStepImpl(
                         executionBuilder.executions.flatMap { it.releases }.contains(a)
                     }
             }
-        executionBuilder.executions += Execution("suppress", duration, releaseList)
+        val execution: Execution = executionLambda.invoke(releaseList)
+        executionBuilder.executions += execution
         return vlExecutionInitStep
     }
 
     override infix fun on(releases: ClosedRange<ReleaseBranch>): VlExecutionInitStep {
         val releaseList = allReleases().filter { it in releases }
-        val duration: String = getDuration(executionBuilder.suppressionSpecifier)
-        executionBuilder.executions += Execution("suppress", duration, releaseList)
+        val execution: Execution = executionLambda.invoke(releaseList)
+        executionBuilder.executions += execution
         return vlExecutionInitStep
     }
 
     override infix fun on(release: ReleaseBranch): VlExecutionInitStep {
-        val duration: String = getDuration(executionBuilder.suppressionSpecifier)
-        executionBuilder.executions += Execution("suppress", duration, listOf(release))
+        val execution: Execution = executionLambda.invoke(listOf(release))
+        executionBuilder.executions += execution
         return vlExecutionInitStep
-    }
-
-    private fun getDuration(relativePublication: SuppressionSpecifier?): String {
-        return when (relativePublication) {
-            is SuppressionSpecifierPermanent -> "permanent"
-            is SuppressionSpecifierTemporarily -> "temporarily for ${relativePublication.duration}"
-            is SuppressionSpecifierUntilNextPublication -> "until next release in release branch"
-            null -> error("booom")
-        }
     }
 }
 
@@ -92,8 +119,12 @@ class VlExecutionSuppressTemporarilyStepImpl(
     private val executionBuilder: ExecutionBuilder,
 ) : VlExecutionSuppressTemporarilyStep {
     override infix fun forTime(duration: Duration): ExecutionOnStep {
-        executionBuilder.suppressionSpecifier = SuppressionSpecifierTemporarily(duration)
-        return ExecutionOnStepImpl(vlExecutionInitStepImpl, executionBuilder)
+        val suppressUntil: LocalDate =
+            executionBuilder.dslTaskData.analysisData?.analysedAt?.plusDays(duration.inWholeDays)!!
+        val suppression = { releaseBranches: List<ReleaseBranch> ->
+            SuppressionDateExecution(suppressUntilDate = suppressUntil, releases = releaseBranches)
+        }
+        return ExecutionOnStepImpl(vlExecutionInitStepImpl, executionBuilder, suppression)
     }
 }
 

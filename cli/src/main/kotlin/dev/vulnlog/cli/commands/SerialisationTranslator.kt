@@ -2,13 +2,17 @@ package dev.vulnlog.cli.commands
 
 import dev.vulnlog.cli.serialisable.Analysis
 import dev.vulnlog.cli.serialisable.Execution
+import dev.vulnlog.cli.serialisable.FixExecution
 import dev.vulnlog.cli.serialisable.InvolvedReleaseVersion
 import dev.vulnlog.cli.serialisable.InvolvedReleaseVersions
+import dev.vulnlog.cli.serialisable.PermanentSuppressionExecution
 import dev.vulnlog.cli.serialisable.ReleaseBranchVulnerabilities
 import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.ReleaseVersion
 import dev.vulnlog.cli.serialisable.Report
 import dev.vulnlog.cli.serialisable.Task
+import dev.vulnlog.cli.serialisable.TemporarySuppressionExecution
+import dev.vulnlog.cli.serialisable.UntilNextReleaseSuppressionExecution
 import dev.vulnlog.cli.serialisable.Vulnerability
 import dev.vulnlog.cli.serialisable.Vulnlog
 import dev.vulnlog.dsl.NoActionAction
@@ -18,7 +22,11 @@ import dev.vulnlog.dsl.UpdateAction
 import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.VulnlogAnalysisData
 import dev.vulnlog.dsl.VulnlogExecutionData
+import dev.vulnlog.dsl.VulnlogFixExecution
 import dev.vulnlog.dsl.VulnlogReportData
+import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
+import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
+import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
 import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.WaitAction
 import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
@@ -84,7 +92,20 @@ class SerialisationTranslator {
             return null
         }
         val execution = executions.first()
-        return Execution(execution.action, execution.duration)
+        val action = execution.action
+        val releases = execution.releases.map { it.name }
+        return when (execution) {
+            is VulnlogFixExecution -> FixExecution(action, releases, execution.fixDate)
+            is VulnlogSuppressPermanentExecution -> PermanentSuppressionExecution(action, releases)
+            is VulnlogSuppressUntilExecution -> TemporarySuppressionExecution(action, releases, execution.untilDate)
+            is VulnlogSuppressUntilNextPublicationExecution ->
+                UntilNextReleaseSuppressionExecution(
+                    action,
+                    releases,
+                    execution.involved.values.first().upcoming?.version,
+                    execution.involved.values.first().upcoming?.releaseDate,
+                )
+        }
     }
 
     private fun BranchToInvolvedVersions.toInvolvedReleaseVersions(): InvolvedReleaseVersions? =
