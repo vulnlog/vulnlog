@@ -122,6 +122,26 @@
         return taskAction + ' ' + taskDetails;
     }
 
+    function formatFixExecution(fixDate, releases) {
+        return 'fixed at ' + fixDate + ' on ' + releases.join(", ");
+    }
+
+    function formatPermanentSuppressionExecution(releases) {
+        return 'suppress permanently' + ' on ' + releases.join(", ");
+    }
+
+    function formatTemporarySuppressionExecution(releases, untilDate) {
+        return 'suppress temporarily until ' + untilDate + ' on ' + releases.join(", ");
+    }
+
+    function formatUntilNextReleaseSuppressionExecution(nextReleaseVersionName, nextReleaseVersionDate) {
+        if (nextReleaseVersionDate === null) {
+            return 'suppress until publication of ' + nextReleaseVersionName + ' (no publication date known yet)';
+        } else {
+            return 'suppress until publication of ' + nextReleaseVersionName + ' on ' + nextReleaseVersionDate;
+        }
+    }
+
     function format(d) {
         let id = d.ids.join((', '))
 
@@ -163,11 +183,26 @@
             taskPrinting = formatTask(taskAction, taskDetails)
         }
 
-        let executionPrinting = '-'
+        let executionPrinting
         if (d.execution) {
-            let executionAction = d.execution.action
-            let executionDuration = d.execution.duration
-            executionPrinting = formatTask(executionAction, executionDuration)
+            if (d.execution.type === 'fix') {
+                let fixDate = d.execution.fixDate
+                let releases = d.execution.releases
+                executionPrinting = formatFixExecution(fixDate, releases)
+            } else if (d.execution.type === 'permanent_suppression') {
+                let releases = d.execution.releases
+                executionPrinting = formatPermanentSuppressionExecution(releases)
+            } else if (d.execution.type === 'temporary_suppression') {
+                let releases = d.execution.releases
+                let untilDate = d.execution.untilDate
+                executionPrinting = formatTemporarySuppressionExecution(releases, untilDate)
+            } else if (d.execution.type === 'until_next_release_suppression') {
+                let nextReleaseVersionName = d.execution.nextReleaseName
+                let nextReleaseVersionDate = d.execution.nextReleaseDate
+                executionPrinting = formatUntilNextReleaseSuppressionExecution(nextReleaseVersionName, nextReleaseVersionDate)
+            } else {
+                executionPrinting = '-'
+            }
         }
 
         return (

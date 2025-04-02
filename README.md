@@ -253,11 +253,12 @@ Define on what release branches the reported vulnerability were found.
 
 #### Execution
 
-| Function   | Parameters                            | Return                                                            | Description                                                   |
-|------------|---------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------|
-| `suppress` | [`permanent`](#specifiers)            | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability permanently.                         |
-| `suppress` | [`temporarily`](#specifiers)          | [Execution Suppress Temporarily](#Execution-Suppress-Temporarily) | Suppress a vulnerability for a certain amount of time.        |
-| `suppress` | [`untilNextPublication`](#specifiers) | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability until the next release is published. |
+| Function   | Parameters                                                 | Return                                                            | Description                                                   |
+|------------|------------------------------------------------------------|-------------------------------------------------------------------|---------------------------------------------------------------|
+| `fixedAt`  | A date string in the format YYYY-MM-dd, e.g. `2025-03-07`. | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Mark a vulnerability as fixed.                                |
+| `suppress` | [`permanent`](#specifiers)                                 | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability permanently.                         |
+| `suppress` | [`temporarily`](#specifiers)                               | [Execution Suppress Temporarily](#Execution-Suppress-Temporarily) | Suppress a vulnerability for a certain amount of time.        |
+| `suppress` | [`untilNextPublication`](#specifiers)                      | [Task At Least To](#Execution-Specify-Release-Branch-Versions)    | Suppress a vulnerability until the next release is published. |
 
 ##### Execution Suppress Temporarily
 
