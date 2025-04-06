@@ -75,7 +75,7 @@ class MainCommand : CliktCommand() {
         val vlDslRoot = result.getOrThrow() as VlDslRootImpl
         val branchRepository = vlDslRoot.branchRepository
         val vulnerabilityRepository = vlDslRoot.vulnerabilityDataRepository
-        val splitVulnToBranches = vulnerabilityPerBranch(branchRepository.getAllBranches(), vulnerabilityRepository)
+        val splitVulnToBranches = vulnerabilityPerBranch(vulnerabilityRepository)
 
         val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
         val filteredResult = filterDsl.filter(splitVulnToBranches, branchRepository.getBranchesToReleaseVersions())

@@ -69,28 +69,8 @@
     document.getElementById("releaseBranch").innerText = reportData.releaseBranchName
     document.getElementById("generationDate").innerText = reportData.generationDate
 
-    let unifiedVulnerabilityData2 = JSON.parse(document.getElementById('vuln-data').innerHTML);
-    let vulns = unifiedVulnerabilityData2.releaseBrancheVulnerabilities[0].vulnerabilities
-
-    function formatReporter(reporter, awareDate) {
-        let result
-        result = '<div class="container">Reporter</div>'
-        result += '<div class="container">' + reporter + ' at ' + awareDate + '</div>'
-        return result
-    }
-
-    function formatVersionAndDate(version, publicationDate) {
-        let result = ''
-        if (version) {
-            result = version
-            if (publicationDate) {
-                result += ' published at ' + publicationDate
-            } else {
-                result += ' not yet published'
-            }
-        }
-        return result
-    }
+    let unifiedVulnerabilityData = JSON.parse(document.getElementById('vuln-data').innerHTML);
+    let vulns = unifiedVulnerabilityData.releaseBrancheVulnerabilities[0].vulnerabilities
 
     function formatVerdictToEmoji(verdict) {
         switch (verdict) {
@@ -123,15 +103,15 @@
     }
 
     function formatFixExecution(fixDate, releases) {
-        return 'fixed at ' + fixDate + ' on ' + releases.join(", ");
+        return 'fixed at ' + fixDate + ' on ' + releases;
     }
 
     function formatPermanentSuppressionExecution(releases) {
-        return 'suppress permanently' + ' on ' + releases.join(", ");
+        return 'suppress permanently' + ' on ' + releases;
     }
 
     function formatTemporarySuppressionExecution(releases, untilDate) {
-        return 'suppress temporarily until ' + untilDate + ' on ' + releases.join(", ");
+        return 'suppress temporarily until ' + untilDate + ' on ' + releases;
     }
 
     function formatUntilNextReleaseSuppressionExecution(nextReleaseVersionName, nextReleaseVersionDate) {
@@ -147,20 +127,32 @@
 
         let reporter = d.report.analyser
         let reporterDate = d.report.awareAt
-        let reporterPrinting = formatReporter(reporter, reporterDate)
 
-        let affectedVersion = d.involved.affectedReleaseVersion.version
-        let affectedPublicationData = d.involved.affectedReleaseVersion.publicationDate
-        let affectedPrinting = formatVersionAndDate(affectedVersion, affectedPublicationData)
+        let affectedVersion = null
+        let affectedPublicationData = '-'
 
-        let fixedVersion = d.involved.fixedReleaseVersion.version
-        let fixedPublicationData = d.involved.fixedReleaseVersion.publicationDate
-        let fixedPrinting = formatVersionAndDate(fixedVersion, fixedPublicationData)
+        let fixedVersion = null
+        let fixedPublicationData = '-'
+        if (d.involved) {
+            if (d.involved.affectedReleaseVersion) {
+                affectedVersion = d.involved.affectedReleaseVersion.version
+                affectedPublicationData = d.involved.affectedReleaseVersion.publicationDate
+            }
 
-        let analysisDate = d.analysis.analysedAt
-        let analysisVerdict = d.analysis.verdict
-        let analysisReasoning = d.analysis.reasoning
-        let analysisPrinting = formatAnalysis(analysisDate, analysisVerdict, analysisReasoning)
+            if (d.involved.fixedReleaseVersion) {
+                fixedVersion = d.involved.fixedReleaseVersion.version
+                fixedPublicationData = d.involved.fixedReleaseVersion.publicationDate
+            }
+        }
+
+        let analysisDate = '-'
+        let analysisVerdict = null
+        let analysisReasoning = '-'
+        if (d.analysis) {
+            analysisDate = d.analysis.analysedAt
+            analysisVerdict = d.analysis.verdict
+            analysisReasoning = d.analysis.reasoning
+        }
 
         let timeline = ''
         if (affectedVersion) {
@@ -203,6 +195,8 @@
             } else {
                 executionPrinting = '-'
             }
+        } else {
+            executionPrinting = '-'
         }
 
         return (
@@ -235,6 +229,9 @@
             {
                 data: 'analysis.verdict',
                 render: function (data, type) {
+                    if (data === null) {
+                        return '-'
+                    }
                     if (type === 'display' || type === 'filter') {
                         return formatVerdictToEmoji(data)
                     }
@@ -257,11 +254,20 @@
             {data: 'analysis.reasoning'},
             {
                 data: 'task',
-                render: data => data.action + ' ' + data.details.join(' ')
+                render: function (data) {
+                    if (data === null) {
+                        return '-'
+                    } else {
+                        return data.action + ' ' + data.details.join(' ')
+                    }
+                }
             },
             {
                 data: 'involved',
                 render: function (data) {
+                    if (data === null || data.affectedReleaseVersion === null || data.affectedReleaseVersion.version === null) {
+                        return '-'
+                    }
                     let publicationData = data.affectedReleaseVersion.publicationDate
                     let text = data.affectedReleaseVersion.version
                     if (publicationData) {
@@ -273,6 +279,9 @@
             {
                 data: 'involved',
                 render: function (data) {
+                    if (data === null || data.fixedReleaseVersion === null || data.fixedReleaseVersion.version === null) {
+                        return '-'
+                    }
                     let text = data.fixedReleaseVersion.version
                     let publicationData = data.fixedReleaseVersion.publicationDate
                     if (publicationData) {
