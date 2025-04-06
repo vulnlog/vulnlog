@@ -60,6 +60,7 @@ class SerialisationTranslator {
         return map { vulnlogData ->
             Vulnerability(
                 vulnlogData.ids,
+                vulnlogData.status,
                 vulnlogData.reportData.toReport(),
                 vulnlogData.analysisData?.toAnalysis(),
                 vulnlogData.taskData?.toTask(),

@@ -44,10 +44,11 @@
                 <thead>
                 <tr>
                     <th>ID</th>
+                    <th>Status</th>
                     <th title="The impact the vulnerability may have on the software">Rating</th>
                     <th title="Reasoning behind the rating">Reasoning</th>
                     <th title="What is necessary to get rid of this vulnerability report">Task</th>
-                    <th title="What verions are affected by the vulnerability">Affected</th>
+                    <th title="What versions are affected by the vulnerability">Affected</th>
                     <th title="In what version the vulnerability is planed to be fixed">Fix</th>
                     <th></th>
                 </tr>
@@ -227,6 +228,44 @@
                 }
             },
             {
+                data: 'status',
+                render: function (data, type) {
+                    if (data === null) {
+                        return '-'
+                    }
+                    if (type === 'display' || type === 'filter') {
+                        switch (data) {
+                            case "":
+                                return ''
+                            case "UNKNOWN":
+                                return 'unknown'
+                            case "UNDER_INVESTIGATION":
+                                return 'under investigation'
+                            case "AFFECTED":
+                                return 'affected'
+                            case "FIXED":
+                                return 'fixed'
+                            case "NOT_AFFECTED":
+                                return 'not affected'
+                        }
+                    }
+                    switch (data) {
+                        case "":
+                            return 'f'
+                        case "UNKNOWN":
+                            return 'e'
+                        case "UNDER_INVESTIGATION":
+                            return 'd'
+                        case "AFFECTED":
+                            return 'c'
+                        case "FIXED":
+                            return 'b'
+                        case "NOT_AFFECTED":
+                            return 'a'
+                    }
+                }
+            },
+            {
                 data: 'analysis.verdict',
                 render: function (data, type) {
                     if (data === null) {
@@ -238,16 +277,16 @@
                     switch (data) {
                         case "":
                             return "f"
-                        case "not affected":
-                            return "a"
-                        case "low":
-                            return "b"
-                        case "moderate":
-                            return "c"
-                        case "high":
-                            return "d"
                         case "critical":
                             return "e"
+                        case "high":
+                            return "d"
+                        case "moderate":
+                            return "c"
+                        case "low":
+                            return "b"
+                        case "not affected":
+                            return "a"
                     }
                 },
             },
@@ -298,10 +337,8 @@
             },
         ],
         data: vulns,
-        order:
-            [[1, 'desc']],
-        paging:
-            false,
+        order: [[1, 'desc'], [2, 'desc']],
+        paging: false,
     });
 
     table.on('click', 'td.dt-control', function (e) {

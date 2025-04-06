@@ -24,6 +24,7 @@ vulnerable dependency should be updated to version x. Vulnlog helps you with you
 
 - [Installation](#how-to-use-vulnlog-in-your-project)
 - [DSL Reference](#dsl)
+- [HTML Report](#html-report)
 - [Contributing & Support](#contributing--support)
 - [License](#license)
 
@@ -282,6 +283,43 @@ in your software project.
 | Function   | Parameters                  | Return |
 |------------|-----------------------------|--------|
 | `reporter` | Define a specific reporter. | -      |
+
+## HTML Report
+
+The generated HTML report contains a table with these top level information:
+
+- **ID**: Describes the vulnerability with an ID. The ID does not need a special format and usually comes from your SCA
+  scanner. It is also possible to use an (internal) issue number of your ticketing system.
+- **Status**: The status a reported vulnerability has. See [Status Description](#status-description) below for more
+  information.
+- **Rating**: The impact the vulnerability may have on the software.
+- **Reasoning**: Reasoning behind the rating.
+- **Task**: What is necessary to get rid of this vulnerability report.
+- **Affected**: What versions are affected by the vulnerability.
+- **Fix**: In what version the vulnerability is planed to be fixed.
+
+### Status Description
+
+- **Affected**: The software project is affected by this vulnerability.
+- **Fixed**: The software project is not anymore affected by this vulnerability.
+- **Not Affected**: The software project is not affected by this vulnerability.
+- **Under Investigation**: If the software project is affected by this vulnerability is currently under investigation.
+- **Unknown**: The state of this vulnerability report is not known.
+
+The status of a vulnerability is calculated as follows:
+
+```mermaid
+flowchart LR
+    A(Start) --> B
+    B{is analysis\ndefined} -->|no| C(under investigation)
+    B -->|yes| D{is verdict\nequals\nnot affecte}
+    D -->|yes| E(not affected)
+    D -->|no| F{is verdict\nnot not affected\nand execution has fixedAt\nor upcoming release\nis in the past}
+    F -->|yes| G(fixed)
+    F -->|no| H{is verdict\nnot not affected\nand upcoming release is not defined\nor upcoming release\nis in the future}
+    H -->|yes| I(affected)
+    H -->|no| J(unkown)
+```
 
 ## Contributing & Support
 
