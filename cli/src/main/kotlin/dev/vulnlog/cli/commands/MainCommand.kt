@@ -14,6 +14,8 @@ import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.Vulnlog
 import dev.vulnlog.dslinterpreter.ScriptingHost
+import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
+import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 import java.io.File
 
 data class ConfigAndDataForSubcommand(
@@ -70,8 +72,13 @@ class MainCommand : CliktCommand() {
         val result = host.eval(defFirst)
         result.onFailure { error(it) }
 
+        val vlDslRoot = result.getOrThrow() as VlDslRootImpl
+        val branchRepository = vlDslRoot.branchRepository
+        val vulnerabilityRepository = vlDslRoot.vulnerabilityDataRepository
+        val splitVulnToBranches = vulnerabilityPerBranch(branchRepository.getAllBranches(), vulnerabilityRepository)
+
         val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
-        val filteredResult = filterDsl.filter(result.getOrThrow())
+        val filteredResult = filterDsl.filter(splitVulnToBranches, branchRepository.getBranchesToReleaseVersions())
 
         val translator = SerialisationTranslator()
         val serialisableData: Vulnlog = translator.translate(filteredResult)

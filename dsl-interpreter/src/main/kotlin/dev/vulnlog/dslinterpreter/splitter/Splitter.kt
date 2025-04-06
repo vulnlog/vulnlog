@@ -59,7 +59,7 @@ private fun splitAndGroupByBranch(
     return splitVulnerabilities
 }
 
-fun filterOnReleaseBranch(
+private fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
     reportData: VulnlogReportData?,
 ): VulnlogReportData? {
@@ -70,7 +70,7 @@ fun filterOnReleaseBranch(
     }
 }
 
-fun filterOnReleaseBranch(
+private fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
     taskData: VulnlogTaskData?,
 ): VulnlogTaskData? {
@@ -85,7 +85,7 @@ fun filterOnReleaseBranch(
     }
 }
 
-fun filterOnReleaseBranch(
+private fun filterOnReleaseBranch(
     releaseBranch: ReleaseBranchData,
     executionData: VulnlogExecutionData?,
 ): VulnlogExecutionData? =
@@ -116,7 +116,7 @@ private fun createVulnlogExecution(entry: Map.Entry<VulnlogExecution, ReleaseBra
     }
 }
 
-fun filterInvolvedReleaseVersions(
+private fun filterInvolvedReleaseVersions(
     filteredReport: VulnlogReportData?,
     involvedReleaseVersions: BranchToInvolvedVersions?,
 ): BranchToInvolvedVersions {

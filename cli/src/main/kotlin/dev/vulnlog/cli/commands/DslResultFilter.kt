@@ -2,10 +2,7 @@ package dev.vulnlog.cli.commands
 
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VulnerabilityData
-import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
-import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 
 data class Filtered(
     val releaseBranches: Map<ReleaseBranchData, List<ReleaseVersionData>>,
@@ -16,13 +13,14 @@ class DslResultFilter(
     private val filterVulnerabilities: List<String>?,
     private val filterBranches: List<String>?,
 ) {
-    fun filter(evalResult: VlDslRoot): Filtered {
-        val branchRepository = (evalResult as VlDslRootImpl).branchRepository
-        val filteredReleaseBranches = filterReleaseBranches(branchRepository.getBranchesToReleaseVersions())
-        val filteredVulnerabilities = filterVulnerabilities(evalResult)
-
+    fun filter(
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
+        releaseBranchesToReleaseVersions: Map<ReleaseBranchData, List<ReleaseVersionData>>,
+    ): Filtered {
+        val filteredVulnerabilities = filterVulnerabilities(splitVulnToBranches)
+        val filteredReleaseBranches = filterReleaseBranches(releaseBranchesToReleaseVersions)
         val releaseBranchesWithVulnerabilities =
-            filteredReleaseBranches.filter { (a, _) -> filteredVulnerabilities.keys.contains(a) }
+            filteredReleaseBranches.filter { (rb, _) -> filteredVulnerabilities.keys.contains(rb) }
 
         return Filtered(releaseBranchesWithVulnerabilities, filteredVulnerabilities)
     }
@@ -37,13 +35,9 @@ class DslResultFilter(
         }
     }
 
-    private fun filterVulnerabilities(evalResult: VlDslRoot): Map<ReleaseBranchData, List<VulnerabilityData>> {
-        val branchRepository = (evalResult as VlDslRootImpl).branchRepository
-        val vulnerabilityRepository = (evalResult).vulnerabilityDataRepository
-        val splitVulnToBranches =
-            vulnerabilityPerBranch(branchRepository.getAllBranches(), vulnerabilityRepository)
-        return filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
-    }
+    private fun filterVulnerabilities(
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
+    ): Map<ReleaseBranchData, List<VulnerabilityData>> = filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
 
     private fun filterAndSplitToSeparateReleaseBranches(
         splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
