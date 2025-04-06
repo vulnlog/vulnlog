@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add affected and fixed version information in report.
 - Introduce `fixedAt` DSL to define a vulnerability report as fixed.
+- Add vulnerability report status per entry (`under investigation`, `not affected`, `affected`, `fixed` and `unknown`)
 
 ## [0.6.0] - 2025-03-15
 

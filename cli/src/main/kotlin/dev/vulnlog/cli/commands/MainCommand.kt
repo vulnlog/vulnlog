@@ -13,8 +13,12 @@ import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.Vulnlog
+import dev.vulnlog.cli.service.StatusService
+import dev.vulnlog.cli.service.ruleSet
+import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dslinterpreter.ScriptingHost
 import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
+import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 import java.io.File
 
@@ -75,10 +79,14 @@ class MainCommand : CliktCommand() {
         val vlDslRoot = result.getOrThrow() as VlDslRootImpl
         val branchRepository = vlDslRoot.branchRepository
         val vulnerabilityRepository = vlDslRoot.vulnerabilityDataRepository
-        val splitVulnToBranches = vulnerabilityPerBranch(vulnerabilityRepository)
+        val splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> =
+            vulnerabilityPerBranch(vulnerabilityRepository)
+
+        val statusService = StatusService(ruleSet)
+        val splitVulnsWithStatus = statusService.calculateStatus(splitVulnToBranches)
 
         val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
-        val filteredResult = filterDsl.filter(splitVulnToBranches, branchRepository.getBranchesToReleaseVersions())
+        val filteredResult = filterDsl.filter(splitVulnsWithStatus, branchRepository.getBranchesToReleaseVersions())
 
         val translator = SerialisationTranslator()
         val serialisableData: Vulnlog = translator.translate(filteredResult)

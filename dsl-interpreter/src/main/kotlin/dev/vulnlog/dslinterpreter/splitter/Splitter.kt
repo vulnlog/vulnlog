@@ -2,6 +2,7 @@ package dev.vulnlog.dslinterpreter.splitter
 
 import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
+import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.TaskAction
 import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlReporter
@@ -22,6 +23,7 @@ import java.time.LocalDate
 data class VulnerabilityDataPerBranch(
     val branch: ReleaseBranchData,
     val ids: List<String>,
+    val status: ResultStatus = ResultStatus.UNKNOWN,
     val reportData: ReportDataPerBranch,
     val analysisData: AnalysisDataPerBranch? = null,
     val taskData: TaskDataPerBranch? = null,
@@ -99,13 +101,13 @@ private fun splitAndGroupByBranch(
                         val filteredInvolvedReleaseVersion =
                             filterInvolvedReleaseVersions(releaseBranch, vulnerability.involvedReleaseVersions)
                         VulnerabilityDataPerBranch(
-                            releaseBranch,
-                            vulnerability.ids,
-                            report,
-                            filteredAnalysis,
-                            filteredTask,
-                            filteredExecution,
-                            filteredInvolvedReleaseVersion,
+                            branch = releaseBranch,
+                            ids = vulnerability.ids,
+                            reportData = report,
+                            analysisData = filteredAnalysis,
+                            taskData = filteredTask,
+                            executionData = filteredExecution,
+                            involvedReleaseVersions = filteredInvolvedReleaseVersion,
                         )
                     }
                 }
