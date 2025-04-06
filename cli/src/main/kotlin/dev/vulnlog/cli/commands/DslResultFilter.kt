@@ -2,11 +2,11 @@ package dev.vulnlog.cli.commands
 
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dsl.VulnerabilityData
+import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 
 data class Filtered(
     val releaseBranches: Map<ReleaseBranchData, List<ReleaseVersionData>>,
-    val vulnerabilitiesPerBranch: Map<ReleaseBranchData, List<VulnerabilityData>>,
+    val vulnerabilitiesPerBranch: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>,
 )
 
 class DslResultFilter(
@@ -14,7 +14,7 @@ class DslResultFilter(
     private val filterBranches: List<String>?,
 ) {
     fun filter(
-        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>,
         releaseBranchesToReleaseVersions: Map<ReleaseBranchData, List<ReleaseVersionData>>,
     ): Filtered {
         val filteredVulnerabilities = filterVulnerabilities(splitVulnToBranches)
@@ -36,19 +36,20 @@ class DslResultFilter(
     }
 
     private fun filterVulnerabilities(
-        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
-    ): Map<ReleaseBranchData, List<VulnerabilityData>> = filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>,
+    ): Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> =
+        filterAndSplitToSeparateReleaseBranches(splitVulnToBranches)
 
     private fun filterAndSplitToSeparateReleaseBranches(
-        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
-    ): Map<ReleaseBranchData, List<VulnerabilityData>> {
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>,
+    ): Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> {
         val filteredReleaseBranches = filterOnlySpecifiedReleaseBranches(splitVulnToBranches)
         return filterOnlySpecifiedVulnIds(filteredReleaseBranches)
     }
 
     private fun filterOnlySpecifiedReleaseBranches(
-        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>,
-    ): Map<ReleaseBranchData, List<VulnerabilityData>> {
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>,
+    ): Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> {
         return if (filterBranches != null) {
             splitVulnToBranches.filter { filterBranches.contains(it.key.name) }
         } else {
@@ -56,17 +57,18 @@ class DslResultFilter(
         }
     }
 
-    private fun filterOnlySpecifiedVulnIds(splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityData>>) =
-        if (filterVulnerabilities != null) {
-            splitVulnToBranches
-                .map { data ->
-                    val vulnerabilityIntersection =
-                        data.value.filter { filterVulnerabilities.intersect(it.ids.toSet()).isNotEmpty() }
-                    data.key to vulnerabilityIntersection
-                }
-                .toMap()
-                .filter { (_, vulnlogData) -> vulnlogData.isNotEmpty() }
-        } else {
-            splitVulnToBranches
-        }
+    private fun filterOnlySpecifiedVulnIds(
+        splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>,
+    ) = if (filterVulnerabilities != null) {
+        splitVulnToBranches
+            .map { data ->
+                val vulnerabilityIntersection =
+                    data.value.filter { filterVulnerabilities.intersect(it.ids.toSet()).isNotEmpty() }
+                data.key to vulnerabilityIntersection
+            }
+            .toMap()
+            .filter { (_, vulnlogData) -> vulnlogData.isNotEmpty() }
+    } else {
+        splitVulnToBranches
+    }
 }

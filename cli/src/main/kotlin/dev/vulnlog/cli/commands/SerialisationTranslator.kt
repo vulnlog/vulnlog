@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package dev.vulnlog.cli.commands
 
 import dev.vulnlog.cli.serialisable.Analysis
@@ -19,17 +21,16 @@ import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.UpdateAction
-import dev.vulnlog.dsl.VulnerabilityData
-import dev.vulnlog.dsl.VulnlogAnalysisData
-import dev.vulnlog.dsl.VulnlogExecutionData
-import dev.vulnlog.dsl.VulnlogFixExecution
-import dev.vulnlog.dsl.VulnlogReportData
-import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
-import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
-import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
-import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.WaitAction
-import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
+import dev.vulnlog.dslinterpreter.splitter.AnalysisDataPerBranch
+import dev.vulnlog.dslinterpreter.splitter.ExecutionDataPerBranch
+import dev.vulnlog.dslinterpreter.splitter.FixedExecutionPerBranch
+import dev.vulnlog.dslinterpreter.splitter.ReportDataPerBranch
+import dev.vulnlog.dslinterpreter.splitter.SuppressionDateExecutionPerBranch
+import dev.vulnlog.dslinterpreter.splitter.SuppressionEventExecutionPerBranch
+import dev.vulnlog.dslinterpreter.splitter.SuppressionPermanentExecutionPerBranch
+import dev.vulnlog.dslinterpreter.splitter.TaskDataPerBranch
+import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 
 class SerialisationTranslator {
     fun translate(filteredResult: Filtered): Vulnlog {
@@ -50,73 +51,84 @@ class SerialisationTranslator {
             publicationDate = releaseDate,
         )
 
-    private fun Map<ReleaseBranchData, List<VulnerabilityData>>.toReleaseBranchVulnerabilities() =
+    private fun Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>.toReleaseBranchVulnerabilities() =
         map { (releaseBranch, vulnerabilities) ->
             ReleaseBranchVulnerabilities(releaseBranch.name, vulnerabilities.toVulnerability())
         }
 
-    private fun List<VulnerabilityData>.toVulnerability(): List<Vulnerability> {
+    private fun List<VulnerabilityDataPerBranch>.toVulnerability(): List<Vulnerability> {
         return map { vulnlogData ->
             Vulnerability(
                 vulnlogData.ids,
-                vulnlogData.reportData?.toReport(),
+                vulnlogData.reportData.toReport(),
                 vulnlogData.analysisData?.toAnalysis(),
                 vulnlogData.taskData?.toTask(),
-                vulnlogData.executionData?.toExecution(),
-                vulnlogData.involvedReleaseVersions.toInvolvedReleaseVersions(),
+                vulnlogData.executionData?.toExecution(vulnlogData.branch, vulnlogData.involvedReleaseVersions),
+                vulnlogData.involvedReleaseVersions?.toInvolvedReleaseVersions(),
             )
         }
     }
 
-    private fun VulnlogReportData.toReport(): Report {
+    private fun ReportDataPerBranch.toReport(): Report {
         return Report(reporter.name, awareAt)
     }
 
-    private fun VulnlogAnalysisData.toAnalysis(): Analysis {
+    private fun AnalysisDataPerBranch.toAnalysis(): Analysis {
         return Analysis(analysedAt, verdict.level, reasoning)
     }
 
-    private fun VulnlogTaskData.toTask(): Task? {
-        if (taskOnReleaseBranch.keys.isEmpty()) {
-            return null
-        }
-        return when (val task = taskOnReleaseBranch.keys.first()) {
+    private fun TaskDataPerBranch.toTask(): Task? {
+        return when (val task = taskAction) {
             is NoActionAction -> Task("no action required")
             is UpdateAction -> Task("update", listOf(task.dependency, "to", task.version))
             is WaitAction -> Task("wait", listOf("for", task.forAmountOfTime.inWholeDays.toString(), "days"))
         }
     }
 
-    private fun VulnlogExecutionData.toExecution(): Execution? {
-        if (executions.isEmpty()) {
-            return null
-        }
-        val execution = executions.first()
+    private fun ExecutionDataPerBranch.toExecution(
+        branch: ReleaseBranchData,
+        involved: dev.vulnlog.dsl.InvolvedReleaseVersion?,
+    ): Execution? {
+        val execution = execution
         val action = execution.action
-        val releases = execution.releases.map { it.name }
         return when (execution) {
-            is VulnlogFixExecution -> FixExecution(action, releases, execution.fixDate)
-            is VulnlogSuppressPermanentExecution -> PermanentSuppressionExecution(action, releases)
-            is VulnlogSuppressUntilExecution -> TemporarySuppressionExecution(action, releases, execution.untilDate)
-            is VulnlogSuppressUntilNextPublicationExecution ->
+            is FixedExecutionPerBranch -> FixExecution(action, branch.name, execution.fixDate)
+            is SuppressionDateExecutionPerBranch ->
+                TemporarySuppressionExecution(
+                    action,
+                    branch.name,
+                    execution.suppressUntilDate,
+                )
+
+            is SuppressionEventExecutionPerBranch ->
                 UntilNextReleaseSuppressionExecution(
                     action,
-                    releases,
-                    execution.involved.values.first().upcoming?.version,
-                    execution.involved.values.first().upcoming?.releaseDate,
+                    branch.name,
+                    involved?.upcoming?.version,
+                    involved?.upcoming?.releaseDate,
                 )
+
+            is SuppressionPermanentExecutionPerBranch -> PermanentSuppressionExecution(action, branch.name)
         }
     }
 
-    private fun BranchToInvolvedVersions.toInvolvedReleaseVersions(): InvolvedReleaseVersions? =
-        if (isEmpty()) {
+    private fun dev.vulnlog.dsl.InvolvedReleaseVersion.toInvolvedReleaseVersions(): InvolvedReleaseVersions? {
+        val involvedAffected = involvedReleaseVersion(affected, affected)
+        val involvedUpcoming = involvedReleaseVersion(upcoming, upcoming)
+        return if (involvedAffected == null && involvedUpcoming == null) {
             null
         } else {
-            val firstAndOnlyEntry = values.first()
-            val affected = firstAndOnlyEntry.affected
-            val involvedAffected = InvolvedReleaseVersion(affected?.version, affected?.releaseDate)
-            val upcoming = firstAndOnlyEntry.upcoming
-            val involvedUpcoming = InvolvedReleaseVersion(upcoming?.version, upcoming?.releaseDate)
             InvolvedReleaseVersions(involvedAffected, involvedUpcoming)
+        }
+    }
+
+    private fun involvedReleaseVersion(
+        involvedAffected: ReleaseVersionData?,
+        involvedUpcoming: ReleaseVersionData?,
+    ): InvolvedReleaseVersion? =
+        if (involvedAffected == null && involvedUpcoming == null) {
+            null
+        } else {
+            InvolvedReleaseVersion(involvedAffected?.version, involvedUpcoming?.releaseDate)
         }
 }
