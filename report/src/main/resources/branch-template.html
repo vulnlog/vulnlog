@@ -126,8 +126,7 @@
     function format(d) {
         let id = d.ids.join((', '))
 
-        let reporter = d.report.analyser
-        let reporterDate = d.report.awareAt
+        let reporters = d.reports
 
         let affectedVersion = null
         let affectedPublicationData = '-'
@@ -159,8 +158,9 @@
         if (affectedVersion) {
             timeline += '<div class="column is-narrow"><p>Affected: <span class="tag">' + affectedVersion + '</span><br /><span class="tag">' + affectedPublicationData + '</span></p></div>'
         }
-        if (reporter) {
-            timeline += '<div class="column is-narrow"><p>Reporter: <span class="tag">' + reporter + '</span><br /><span class="tag">' + reporterDate + '</span></p></div>'
+        if (reporters.length !== 0) {
+            let reporterNames = reporters.map(r => '<span class="tag">' + r.analyser + '</span>').join(' ')
+            timeline += '<div class="column is-narrow"><p>Reporter: ' + reporterNames + '<br /><span class="tag">' + reporters[0].awareAt + '</span></p></div>'
         }
         if (analysisVerdict) {
             timeline += '<div class="column is-narrow"><p>Verdict: <span class="tag">' + formatVerdictToEmoji(analysisVerdict) + '</span><br /><span class="tag">' + analysisDate + '</span></p></div>'

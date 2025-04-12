@@ -32,7 +32,7 @@ data class VulnerabilityDataPerBranch(
 )
 
 data class ReportDataPerBranch(
-    val reporter: VlReporter,
+    val reporters: Set<VlReporter>,
     val awareAt: LocalDate,
 )
 
@@ -133,7 +133,7 @@ private fun filterOnReleaseBranch(
         } else if (relevant.isEmpty()) {
             null
         } else {
-            ReportDataPerBranch(reportData.reporter, reportData.awareAt)
+            ReportDataPerBranch(reportData.reporters, reportData.awareAt)
         }
     }
 }
