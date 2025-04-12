@@ -20,6 +20,9 @@ import dev.vulnlog.dslinterpreter.ScriptingHost
 import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
 import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.parameter.parametersOf
 import java.io.File
 
 data class ConfigAndDataForSubcommand(
@@ -28,7 +31,7 @@ data class ConfigAndDataForSubcommand(
     var vulnlogs: List<String>,
 )
 
-class MainCommand : CliktCommand() {
+class MainCommand : CliktCommand(), KoinComponent {
     override fun help(context: Context): String = "CLI application to parse Vulnlog files."
 
     override val invokeWithoutSubcommand = true
@@ -59,10 +62,13 @@ class MainCommand : CliktCommand() {
         }
     }
 
+    private val host: ScriptingHost by inject()
+    private val translator: SerialisationTranslator by inject()
+    private val statusService: StatusService by inject { parametersOf(ruleSet) }
+    private val printer: JsonPrinter by inject { parametersOf(Output(::echo)) }
+
     override fun run() {
         echo("File to read: ${vulnlogFile.name}")
-
-        val host = ScriptingHost()
 
         val files =
             vulnlogFile.parentFile
@@ -82,16 +88,12 @@ class MainCommand : CliktCommand() {
         val splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> =
             vulnerabilityPerBranch(vulnerabilityRepository)
 
-        val statusService = StatusService(ruleSet)
         val splitVulnsWithStatus = statusService.calculateStatus(splitVulnToBranches)
 
         val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
         val filteredResult = filterDsl.filter(splitVulnsWithStatus, branchRepository.getBranchesToReleaseVersions())
 
-        val translator = SerialisationTranslator()
         val serialisableData: Vulnlog = translator.translate(filteredResult)
-
-        val printer = JsonPrinter(::echo)
 
         val subcommand = currentContext.invokedSubcommand
         if (subcommand == null) {

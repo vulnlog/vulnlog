@@ -2,15 +2,15 @@ package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dsl.ReporterData
 import dev.vulnlog.dsl.VlReleaseContext
 import dev.vulnlog.dsl.VlReleasesDslRoot
 import dev.vulnlog.dsl.VlReporterContext
 import dev.vulnlog.dslinterpreter.repository.BranchRepository
+import dev.vulnlog.dslinterpreter.repository.ReporterRepository
 
 class VlReleasesDslRootImpl(
     private val branchRepository: BranchRepository,
-    private val reporterDataRepository: MutableList<ReporterData>,
+    private val reporterDataRepository: ReporterRepository,
 ) : VlReleasesDslRoot {
     override fun releases(block: VlReleaseContext.() -> Unit) =
         with(VlReleaseContextImpl()) {

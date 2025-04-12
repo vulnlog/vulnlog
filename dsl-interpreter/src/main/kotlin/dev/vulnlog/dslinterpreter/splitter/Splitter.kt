@@ -6,7 +6,6 @@ import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.TaskAction
 import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlReporter
-import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.VulnlogAnalysisData
 import dev.vulnlog.dsl.VulnlogExecution
 import dev.vulnlog.dsl.VulnlogExecutionData
@@ -17,6 +16,7 @@ import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
 import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dslinterpreter.impl.InvolvedReleaseVersionImpl
+import dev.vulnlog.dslinterpreter.repository.VulnerabilityDataRepository
 import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
 import java.time.LocalDate
 
@@ -76,7 +76,7 @@ data class SuppressionEventExecutionPerBranch(
  * Splits a vulnerability report into distinct reports per affected release branch.
  */
 fun vulnerabilityPerBranch(
-    vulnerabilities: List<VulnerabilityData>,
+    vulnerabilities: VulnerabilityDataRepository,
 ): Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> {
     return if (vulnerabilities.isEmpty()) {
         emptyMap()
@@ -86,10 +86,10 @@ fun vulnerabilityPerBranch(
 }
 
 private fun splitAndGroupByBranch(
-    vulnerabilities: List<VulnerabilityData>,
+    vulnerabilities: VulnerabilityDataRepository,
 ): Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> {
     val splitVulnerabilities: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> =
-        vulnerabilities.asSequence().map { vulnerability ->
+        vulnerabilities.getVulnerabilities().asSequence().map { vulnerability ->
             val affectedReleaseBranches = vulnerability.reportData?.affected ?: emptyList()
             val splitVulnerabilities: Map<ReleaseBranchData, VulnerabilityDataPerBranch?> =
                 affectedReleaseBranches.associateWith { releaseBranch ->
