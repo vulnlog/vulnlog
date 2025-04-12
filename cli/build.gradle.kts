@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":report"))
 
     implementation(libs.clikt)
+    implementation(libs.koinCore)
     implementation(libs.kotlinxSerializationJson)
 }
 

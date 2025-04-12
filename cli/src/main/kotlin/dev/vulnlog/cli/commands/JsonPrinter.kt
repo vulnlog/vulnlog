@@ -9,7 +9,7 @@ import dev.vulnlog.cli.serialisable.Vulnlog
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
-class JsonPrinter(private val printer: (String) -> Unit) {
+class JsonPrinter(private val printer: Output) {
     private val format =
         Json {
             allowStructuredMapKeys = true
@@ -40,7 +40,7 @@ class JsonPrinter(private val printer: (String) -> Unit) {
         }
 
     fun print(vulnlog: Vulnlog) {
-        printer(format.encodeToString(vulnlog))
+        printer.output(format.encodeToString(vulnlog))
     }
 
     fun translate(vulnlog: Vulnlog): String {

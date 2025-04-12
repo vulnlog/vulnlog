@@ -1,15 +1,7 @@
 package dev.vulnlog.dslinterpreter
 
-import dev.vulnlog.dsl.ReporterData
 import dev.vulnlog.dsl.VlDslRoot
-import dev.vulnlog.dsl.VulnerabilityData
 import dev.vulnlog.dsl.definition.VulnlogCompilationConfiguration
-import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
-import dev.vulnlog.dslinterpreter.impl.VlReleasesDslRootImpl
-import dev.vulnlog.dslinterpreter.impl.VlVulnerabilityDslRootImpl
-import dev.vulnlog.dslinterpreter.repository.BranchRepositoryImpl
-import dev.vulnlog.dslinterpreter.service.AffectedVersionsServiceImpl
-import dev.vulnlog.dslinterpreter.service.VulnerabilityServiceImpl
 import java.io.File
 import java.nio.file.Path
 import java.security.MessageDigest
@@ -35,24 +27,17 @@ import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
 import kotlin.script.experimental.jvmhost.CompiledScriptJarsCache
 
-class ScriptingHost {
+class ScriptingHost(private val dslRoot: VlDslRoot) {
     private val host: BasicScriptingHost = BasicJvmScriptingHost()
 
+    /**
+     * Evaluates a list of script files and processes them to generate a result as a `VlDslRoot` object.
+     *
+     * @param scripts List of script files to be evaluated. Each file should contain valid script content.
+     * @return A `Result` containing the `VlDslRoot` object if evaluation is successful, or a failure result
+     * in case of an error.
+     */
     fun eval(scripts: List<File>): Result<VlDslRoot> {
-        val branchRepository = BranchRepositoryImpl()
-        val reporterRepository = mutableListOf<ReporterData>()
-        val vulnerabilityDataRepository = mutableListOf<VulnerabilityData>()
-        val affectedVersionsService = AffectedVersionsServiceImpl(branchRepository)
-        val vulnerabilityService = VulnerabilityServiceImpl(affectedVersionsService, vulnerabilityDataRepository)
-
-        val dslRoot =
-            VlDslRootImpl(
-                branchRepository,
-                vulnerabilityDataRepository,
-                VlReleasesDslRootImpl(branchRepository, reporterRepository),
-                VlVulnerabilityDslRootImpl(vulnerabilityService),
-            )
-
         fun evalFile(scriptFile: SourceCode): ResultWithDiagnostics<EvaluationResult> {
             val compilationConfiguration =
                 VulnlogCompilationConfiguration.with {
