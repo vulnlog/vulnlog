@@ -183,9 +183,10 @@ in development.
 
 Defines what reporter found the vulnerability.
 
-| Function | Parameters                                 | Return                      |
-|----------|--------------------------------------------|-----------------------------|
-| `from`   | The reporter that found the vulnerability. | [Report From](#Report-From) |
+| Function | Parameters                                  | Return                      |
+|----------|---------------------------------------------|-----------------------------|
+| `from`   | The reporter that found the vulnerability.  | [Report From](#Report-From) |
+| `from`   | The reporters that found the vulnerability. | [Report From](#Report-From) |
 
 ##### Report From
 

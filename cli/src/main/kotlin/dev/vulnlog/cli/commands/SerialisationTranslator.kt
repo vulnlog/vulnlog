@@ -70,8 +70,8 @@ class SerialisationTranslator {
         }
     }
 
-    private fun ReportDataPerBranch.toReport(): Report {
-        return Report(reporter.name, awareAt)
+    private fun ReportDataPerBranch.toReport(): Set<Report> {
+        return reporters.map { Report(it.name, awareAt) }.toSet()
     }
 
     private fun AnalysisDataPerBranch.toAnalysis(): Analysis {

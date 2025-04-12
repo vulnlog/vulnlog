@@ -3,7 +3,7 @@ package dev.vulnlog.dsl
 import java.time.LocalDate
 
 public interface VulnlogReportData {
-    public val reporter: VlReporter
+    public val reporters: Set<VlReporter>
     public val awareAt: LocalDate
     public val affected: List<ReleaseBranchData>
 }
@@ -23,6 +23,13 @@ public interface VlReportInitStep {
      * @since v0.6.0
      */
     public infix fun from(reporter: VlReporter): VlReportReporterStep
+
+    /**
+     * The reporters that found the vulnerability.
+     *
+     * @since v0.6.0
+     */
+    public infix fun from(reporter: Set<VlReporter>): VlReportReporterStep
 }
 
 public interface VlReportReporterStep {

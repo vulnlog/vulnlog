@@ -13,13 +13,13 @@ import dev.vulnlog.dsl.VulnlogReportData
 import java.time.LocalDate
 
 data class DslReportData(
-    val reporter: VlReporter?,
+    val reporters: Set<VlReporter>,
     val awareOfAt: LocalDate?,
     val affectedReleases: List<ReleaseBranch>,
 )
 
 class ReportBuilder {
-    var reporter: VlReporter? = null
+    var reporter: Set<VlReporter> = emptySet()
     var awareOfAt: LocalDate? = null
     val affectedReleases: MutableList<ReleaseBranch> = mutableListOf()
 
@@ -31,11 +31,16 @@ class ReportBuilder {
 class VlReportInitStepImpl(private val reportBuilder: ReportBuilder) : VlReportInitStep {
     @Deprecated("Use a default reporter instead. Will be removed in upcoming releases.")
     override infix fun from(reporter: String): VlReportReporterStep {
-        reportBuilder.reporter = VlReporterImpl(reporter)
+        reportBuilder.reporter = setOf(VlReporterImpl(reporter))
         return VlReportReporterStepImpl(reportBuilder)
     }
 
     override fun from(reporter: VlReporter): VlReportReporterStep {
+        reportBuilder.reporter = setOf(reporter)
+        return VlReportReporterStepImpl(reportBuilder)
+    }
+
+    override fun from(reporter: Set<VlReporter>): VlReportReporterStep {
         reportBuilder.reporter = reporter
         return VlReportReporterStepImpl(reportBuilder)
     }
@@ -57,7 +62,7 @@ class VlReportOnStepImpl(private val reportBuilder: ReportBuilder) : VlReportOnS
 }
 
 data class VulnlogReportDataImpl(
-    override val reporter: VlReporter,
+    override val reporters: Set<VlReporter>,
     override val awareAt: LocalDate,
     override val affected: List<ReleaseBranchData>,
 ) : VulnlogReportData
