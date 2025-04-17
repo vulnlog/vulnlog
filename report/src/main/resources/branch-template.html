@@ -172,7 +172,7 @@
         let taskPrinting = '-'
         if (d.task) {
             let taskAction = d.task.action
-            let taskDetails = d.task.details.join(', ')
+            let taskDetails = d.task.details.join(' ')
             taskPrinting = formatTask(taskAction, taskDetails)
         }
 
