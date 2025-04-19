@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-    <title>Vulnlog Reporting</title>
+    <title>Vulnerability Reporting</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Vulnlog vulnerability report for release branch x.y.">
@@ -12,33 +12,25 @@
     <script src="https://cdn.datatables.net/v/bm/jq-3.7.0/dt-2.2.2/datatables.min.js"
             integrity="sha384-SZXx6mFkCRJyGW8C8nsVaJpL1eMbIWwRRly7435CnZNwoIdr1QE2NpCihEcTIaM7"
             crossorigin="anonymous"></script>
-    <script>
-        let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        let html = document.querySelector('html');
-
-        html.classList.add(prefers);
-        html.setAttribute('data-bs-theme', prefers);
-    </script>
     <!-- report-data -->
     <!-- vuln-data -->
 </head>
 <body>
 <header>
-    <section class="section">
-        <div class="container mb-5">
-            <h1 class="title is-1">Vulnlog Report</h1>
-        </div>
-        <div class="container">
-            <p>Report for <em><span id="releaseBranch"></span></em> generated on <em><span
-                    id="generationDate"></span></em></p>
-        </div>
-    </section>
+    <div class="container mb-5">
+        <nav class="navbar" role="navigation" aria-label="main navigation">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="https://vulnlog.dev">
+                    <img id="logo" src="https://vulnlog.dev/logo/font-logo-white.svg" alt="Vulnlog logo"/>
+                </a>
+            </div>
+        </nav>
+        <h2 class="title is-2">Vulnerability Report <span id="releaseBranch"></span></h2>
+        <h4 class="subtitle is-4"><span id="generationDate"></span></h4>
+    </div>
 </header>
 <main>
     <section class="section">
-        <div class="container">
-            <h2 class="title is-3">Vulnerabilities</h2>
-        </div>
         <div class="container">
             <table id="table" class="table is-hoverable">
                 <thead>
@@ -88,15 +80,6 @@
             case "critical":
                 return '🟥 critical'
         }
-    }
-
-    function formatAnalysis(analysisDate, analysisVerdict, analysisReasoning) {
-        let result
-        result = '<div class="container"><p>Analysed at: <span>' + analysisDate + '</span></p></div>'
-        result += '<div class="container"><p>Verdict: <span>' + formatVerdictToEmoji(analysisVerdict) + '</span></p></div>'
-        result += '<div class="container"><p>' + analysisReasoning + '</p></div>'
-        result += '<span className="icon-text"><span className="icon"><i className="fas fa-home"></i></span><span>Home</span></span>'
-        return result
     }
 
     function formatTask(taskAction, taskDetails) {
@@ -351,6 +334,19 @@
             row.child(format(row.data())).show();
         }
     });
+</script>
+<script>
+    let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    let html = document.querySelector('html');
+
+    html.classList.add(prefers);
+    html.setAttribute('data-bs-theme', prefers);
+
+    if (prefers === 'dark') {
+        document.getElementById('logo').src = "https://vulnlog.dev/logo/font-logo-white.svg"
+    } else {
+        document.getElementById('logo').src = "https://vulnlog.dev/logo/font-logo-black.svg"
+    }
 </script>
 </body>
 </html>
