@@ -7,20 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- HTML Report: Add affected and fixed version information in report.
+## [0.7.0] - 2025-04-19
+
+### Added
+
+- HTML Report: Add affected and fixed version information in the HTML report.
 - DSL: Introduce `fixedAt` statement to define a vulnerability report as fixed.
 - HTML Report: Add vulnerability report status per entry (`under investigation`, `not affected`, `affected`, `fixed` and
   `unknown`)
 - DSL: Support multiple reporters in `from` statement.
+- Improved the design and table functionality in the HTML report.
 
 ## [0.6.0] - 2025-03-15
 
 ### Added
 
-- Introduce `reporters` and `reporter` DSL to define custom reporter. The existing `SCA_SCANNER` is deprecated and will
+- Introduce `reporters` and `reporter` DSL to define a custom reporter. The existing `SCA_SCANNER` is deprecated and
+  will
   be removed in an upcoming release.
-- Introduce verdict types (`notAffected`, `low`, `moderate`, `high` and `critical`) to the DSL. The existing string
-  based verdict is deprecated and will be removed in an upcoming release.
+- Introduce verdict types (`notAffected`, `low`, `moderate`, `high` and `critical`) to the DSL. The existing
+  string-based verdict is deprecated and will be removed in an upcoming release.
 - More DSL API documentation.
 
 ## [0.5.3] - 2025-03-12
@@ -39,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Change
 
-- CI: Add Gradle Vulnlog publishing to CI pipeline.
+- CI: Add Gradle Vulnlog publishing to the CI pipeline.
 
 ## [0.5.0] - 2025-03-10
 
@@ -91,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Reduced DSL artefact size by moving implementation classes to DSL interpreting package.
+- Reduced DSL artefact size by moving implementation classes to the DSL interpreting package.
 - DSL API web publication to https://vulnlog.dev/dslapi/SNAPSHOT and https://vulnlog.dev/dslapi/latest by the CI
   pipeline.
 - Add MVP CLI application to parse simple Vulnlog files and print information to STDOUT. Also, simple filter flags are
