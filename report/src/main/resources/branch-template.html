@@ -273,7 +273,15 @@
                     }
                 },
             },
-            {data: 'analysis.reasoning'},
+            {
+                data: 'analysis.reasoning',
+                render: function (data) {
+                    if (data === null) {
+                        return '-'
+                    }
+                    return data;
+                }
+            },
             {
                 data: 'task',
                 render: function (data) {
