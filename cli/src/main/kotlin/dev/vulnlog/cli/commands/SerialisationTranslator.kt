@@ -78,7 +78,7 @@ class SerialisationTranslator {
         return Analysis(analysedAt, verdict.level, reasoning)
     }
 
-    private fun TaskDataPerBranch.toTask(): Task? {
+    private fun TaskDataPerBranch.toTask(): Task {
         return when (val task = taskAction) {
             is NoActionAction -> Task("no action required")
             is UpdateAction -> Task("update", listOf(task.dependency, "to", task.version))
@@ -89,7 +89,7 @@ class SerialisationTranslator {
     private fun ExecutionDataPerBranch.toExecution(
         branch: ReleaseBranchData,
         involved: dev.vulnlog.dsl.InvolvedReleaseVersion?,
-    ): Execution? {
+    ): Execution {
         val execution = execution
         val action = execution.action
         return when (execution) {

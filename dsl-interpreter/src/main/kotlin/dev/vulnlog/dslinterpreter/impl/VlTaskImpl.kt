@@ -71,6 +71,29 @@ class VlTaskFollowUpSpecificationStepImpl(
     private val vlTaskInitStep: VlTaskInitStep,
     private val taskBuilder: TaskBuilder,
 ) : VlTaskFollowUpSpecificationStep {
+    override fun update(dependency: String): VlTaskUpdateStep {
+        taskBuilder.dependencyName = dependency
+        return VlTaskUpdateStepImpl(this, taskBuilder)
+    }
+
+    override fun noActionOn(releaseGroup: ReleaseGroup): VlExecutionInitStep {
+        val releaseList: List<ReleaseBranch> =
+            when (releaseGroup) {
+                All -> allReleases()
+                AllOther ->
+                    allReleases().filterNot { a ->
+                        taskBuilder.tasks.flatMap { b -> b.releases }.contains(a)
+                    }
+            }
+        taskBuilder.tasks += Task(NoActionAction, releaseList)
+        return VlExecutionInitStepImpl(lazy { taskBuilder.build() })
+    }
+
+    override fun waitOnAllFor(duration: Duration): VlExecutionInitStep {
+        taskBuilder.tasks += Task(WaitAction(duration), allReleases())
+        return VlExecutionInitStepImpl(lazy { taskBuilder.build() })
+    }
+
     override infix fun andUpdateAtLeastTo(version: String): VlTaskOnStep {
         taskBuilder.action = UpdateAction(taskBuilder.dependencyName!!, version)
         return VlTaskOnStepImpl(vlTaskInitStep, taskBuilder)

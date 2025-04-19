@@ -8,7 +8,7 @@ public interface VulnlogTaskData {
 
 public interface VlTaskInitStep {
     /**
-     * The dependency to update as string.
+     * The dependency to update as a string.
      *
      * @since v0.5.0
      */
@@ -38,7 +38,7 @@ public interface VlTaskUpdateStep {
     public infix fun atLeastTo(version: String): VlTaskOnStep
 }
 
-public interface VlTaskFollowUpSpecificationStep {
+public interface VlTaskFollowUpSpecificationStep : VlTaskInitStep {
     /**
      * No further action required on specified release branch range.
      *
