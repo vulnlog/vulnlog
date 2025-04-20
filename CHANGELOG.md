@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- DSL: The `temporarily` specifier no longer requires an include statement in a Vulnlog file.
+
 ## [0.7.0] - 2025-04-19
 
 ### Added

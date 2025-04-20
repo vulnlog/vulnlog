@@ -13,16 +13,14 @@ public data object SuppressionSpecifierPermanent : SuppressionSpecifier
  */
 public val permanent: SuppressionSpecifierPermanent = SuppressionSpecifierPermanent
 
-public data class SuppressionSpecifierTemporarily(val duration: Duration) : SuppressionSpecifier {
-    public companion object {
-        /**
-         * Temporarily suppress a vulnerability.
-         *
-         * @since v0.5.0
-         */
-        public val temporarily: SuppressionSpecifierTemporarily = SuppressionSpecifierTemporarily(0.days)
-    }
-}
+public data class SuppressionSpecifierTemporarily(val duration: Duration) : SuppressionSpecifier
+
+/**
+ * Temporarily suppress a vulnerability.
+ *
+ * @since v0.5.0
+ */
+public val temporarily: SuppressionSpecifierTemporarily = SuppressionSpecifierTemporarily(0.days)
 
 public data object SuppressionSpecifierUntilNextPublication : SuppressionSpecifier
 
