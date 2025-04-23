@@ -155,7 +155,10 @@
         let taskPrinting = '-'
         if (d.task) {
             let taskAction = d.task.action
-            let taskDetails = d.task.details.join(' ')
+            let taskDetails = ''
+            if (d.task.details !== undefined) {
+                taskDetails = d.task.details.join(' ')
+            }
             taskPrinting = formatTask(taskAction, taskDetails)
         }
 
@@ -288,7 +291,11 @@
                     if (data === null) {
                         return '-'
                     } else {
-                        return data.action + ' ' + data.details.join(' ')
+                        let result = data.action
+                        if (data.details !== undefined) {
+                            result + ' ' + data.details.join(' ')
+                        }
+                        return result
                     }
                 }
             },
