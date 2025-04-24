@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2025-04-2
+
 ### Changed
 
 - DSL: The `temporarily` specifier no longer requires an include statement in a Vulnlog file.
+- Make the HTML report self-contained and independent of internet resources.
+
+### Fixed
+
+- Fix parsing of JSON data when task data is undefined
 
 ## [0.7.0] - 2025-04-19
 
