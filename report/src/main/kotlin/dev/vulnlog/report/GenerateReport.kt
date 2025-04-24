@@ -9,21 +9,40 @@ fun generateReport(
     releaseBranchName: String,
     creationData: LocalDateTime,
 ): HtmlReport {
-    val template = object {}.javaClass.getResource("/branch-template.html")?.readText(Charsets.UTF_8).orEmpty()
+    var htmlReport = createHtmlSkeleton()
 
     val formatedDate = creationData.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
     val reportJsonData = "{ \"releaseBranchName\": \"$releaseBranchName\", \"generationDate\":\"$formatedDate\"}"
     val wrappedJsonReportData = "<script type=\"application/json\" id=\"report-data\">$reportJsonData</script>"
     val reportMarker = "    <!-- report-data -->"
-    val reportData = template.replace(reportMarker, wrappedJsonReportData)
+    htmlReport = htmlReport.replace(reportMarker, wrappedJsonReportData)
 
     val wrappedJsonVulnData = "<script type=\"application/json\" id=\"vuln-data\">$jsonData</script>"
     val vulnMarker = "    <!-- vuln-data -->"
-    var vulnData = reportData.replace(vulnMarker, wrappedJsonVulnData)
+    htmlReport = htmlReport.replace(vulnMarker, wrappedJsonVulnData)
 
     val footerValue = "This report was generated with Vulnlog $cliVersion"
     val footerMarker = "        <!-- report-footer -->"
-    vulnData = vulnData.replace(footerMarker, footerValue)
+    htmlReport = htmlReport.replace(footerMarker, footerValue)
 
-    return HtmlReport(releaseBranchName, vulnData)
+    return HtmlReport(releaseBranchName, htmlReport)
 }
+
+private fun createHtmlSkeleton(): String {
+    val template = readAsString("/branch-template.html")
+    val bulmaCss = readAsString("/bulma.css")
+    val datatablesCss = readAsString("/datatables.css")
+    val datatablesJs = readAsString("/datatables.js")
+    val logoDark = readAsString("/logo-dark.svg").replace("\n", "")
+    val logoLight = readAsString("/logo-light.svg").replace("\n", "")
+
+    var report = template.replace("        /* datatables-css */", datatablesCss)
+    report = report.replace("        // datatables-js", datatablesJs)
+    report = report.replace("        /* bulma-css */", bulmaCss)
+    report = report.replace("            // logo-light", "'$logoLight'")
+    report = report.replace("            // logo-dark", "'$logoDark'")
+    return report
+}
+
+private fun readAsString(filename: String) =
+    object {}.javaClass.getResource(filename)?.readText(Charsets.UTF_8).orEmpty()

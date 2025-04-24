@@ -4,14 +4,14 @@
     <title>Vulnerability Reporting</title>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Vulnlog vulnerability report for release branch x.y.">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/1.0.1/css/bulma.min.css" rel="stylesheet"
-          integrity="sha384-u1DpPo/VC1cCewPdLA1ujElPdm1c/ZVa5MNAV6930PlrYYXhoKH/+hui6tE7szxu" crossorigin="anonymous">
-    <link href="https://cdn.datatables.net/v/bm/jq-3.7.0/dt-2.2.2/datatables.min.css" rel="stylesheet"
-          integrity="sha384-NQR9ysESFMRrrks4rwDgTlpUgpKPftZV/S48q+tang2oiEqMIFGM4VDLBYAYdNLc" crossorigin="anonymous">
-    <script src="https://cdn.datatables.net/v/bm/jq-3.7.0/dt-2.2.2/datatables.min.js"
-            integrity="sha384-SZXx6mFkCRJyGW8C8nsVaJpL1eMbIWwRRly7435CnZNwoIdr1QE2NpCihEcTIaM7"
-            crossorigin="anonymous"></script>
+    <meta name="description" content="Vulnlog vulnerability report for a release branch.">
+    <style>
+        /* bulma-css */
+        /* datatables-css */
+    </style>
+    <script>
+        // datatables-js
+    </script>
     <!-- report-data -->
     <!-- vuln-data -->
 </head>
@@ -21,7 +21,7 @@
         <nav class="navbar" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="https://vulnlog.dev">
-                    <img id="logo" src="https://vulnlog.dev/logo/font-logo-white.svg" alt="Vulnlog logo"/>
+                    <img id="logo" src="" alt="Vulnlog logo"/>
                 </a>
             </div>
         </nav>
@@ -358,9 +358,13 @@
     html.setAttribute('data-bs-theme', prefers);
 
     if (prefers === 'dark') {
-        document.getElementById('logo').src = "https://vulnlog.dev/logo/font-logo-white.svg"
+        document.getElementById('logo').src = "data:image/svg+xml," + encodeURIComponent(
+            // logo-light
+        );
     } else {
-        document.getElementById('logo').src = "https://vulnlog.dev/logo/font-logo-black.svg"
+        document.getElementById('logo').src = "data:image/svg+xml," + encodeURIComponent(
+            // logo-dark
+        );
     }
 </script>
 </body>
