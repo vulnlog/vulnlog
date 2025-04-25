@@ -293,7 +293,7 @@
                     } else {
                         let result = data.action
                         if (data.details !== undefined) {
-                            result + ' ' + data.details.join(' ')
+                            result = result + ' ' + data.details.join(' ')
                         }
                         return result
                     }
