@@ -3,7 +3,9 @@ package dev.vulnlog.gradleplugin
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.property
 
 open class VulnlogPluginExtension(objects: ObjectFactory) {
@@ -19,10 +21,10 @@ open class VulnlogPluginExtension(objects: ObjectFactory) {
     val definitionsFile: RegularFileProperty = objects.fileProperty()
 
     /**
-     * Specify the release branch to generate a report for.
+     * Specify one or multiple release branches to generate a report for.
      * If not specified, reports for all release branches are generated.
      */
-    val releaseBranch: Property<String> = objects.property<String>()
+    val releaseBranch: ListProperty<String> = objects.listProperty()
 
     /**
      * Specify the Vulnlog report output directory location.

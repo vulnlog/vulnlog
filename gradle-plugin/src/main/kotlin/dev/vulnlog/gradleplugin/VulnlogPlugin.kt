@@ -60,9 +60,9 @@ abstract class VulnlogPlugin : Plugin<Project> {
                 classpath = version.map { layout.buildDirectory.dir("vulnlog/vl-$it/lib").get().asFileTree }.get()
                 mainClass.set("dev.vulnlog.cli.AppKt")
                 val arguments = mutableListOf<String>(extension.definitionsFile.get().asFile.path)
-                if (extension.releaseBranch.isPresent) {
+                if (extension.releaseBranch.get().isNotEmpty()) {
                     arguments.add("--branch")
-                    arguments.add(extension.releaseBranch.get())
+                    extension.releaseBranch.get().forEach { arguments.add(it) }
                 }
                 arguments.add("report")
                 arguments.add("--output")
