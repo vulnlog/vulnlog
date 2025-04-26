@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix missing task information in the HTML report overview.
+- Improve and fix the logo in the HTML report.
+
 ## [0.7.1] - 2025-04-2
 
 ### Changed
