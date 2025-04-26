@@ -8,6 +8,16 @@
     <style>
         /* bulma-css */
         /* datatables-css */
+        @media (prefers-color-scheme: dark) {
+            .fill-colour {
+                fill: #ebecf0;
+            }
+        }
+        @media (prefers-color-scheme: light) {
+            .fill-colour {
+                fill: #2e333d;
+            }
+        }
     </style>
     <script>
         // datatables-js
@@ -21,7 +31,7 @@
         <nav class="navbar" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <a class="navbar-item" href="https://vulnlog.dev">
-                    <img id="logo" src="" alt="Vulnlog logo"/>
+                    <!-- logo-vulnlog -->
                 </a>
             </div>
         </nav>
@@ -29,7 +39,7 @@
         <h4 class="subtitle is-4"><span id="generationDate"></span></h4>
     </div>
 </header>
-<main>
+<main data-bs-theme="dark">
     <section class="section">
         <div class="container">
             <table id="table" class="table is-hoverable">
@@ -356,16 +366,6 @@
 
     html.classList.add(prefers);
     html.setAttribute('data-bs-theme', prefers);
-
-    if (prefers === 'dark') {
-        document.getElementById('logo').src = "data:image/svg+xml," + encodeURIComponent(
-            // logo-light
-        );
-    } else {
-        document.getElementById('logo').src = "data:image/svg+xml," + encodeURIComponent(
-            // logo-dark
-        );
-    }
 </script>
 </body>
 </html>

@@ -33,14 +33,12 @@ private fun createHtmlSkeleton(): String {
     val bulmaCss = readAsString("/bulma.css")
     val datatablesCss = readAsString("/datatables.css")
     val datatablesJs = readAsString("/datatables.js")
-    val logoDark = readAsString("/logo-dark.svg").replace("\n", "")
-    val logoLight = readAsString("/logo-light.svg").replace("\n", "")
+    val logo = readAsString("/logo-vulnlog.svg").replace("\n", " ").replace("\\s+".toRegex(), " ")
 
     var report = template.replace("        /* datatables-css */", datatablesCss)
     report = report.replace("        // datatables-js", datatablesJs)
     report = report.replace("        /* bulma-css */", bulmaCss)
-    report = report.replace("            // logo-light", "'$logoLight'")
-    report = report.replace("            // logo-dark", "'$logoDark'")
+    report = report.replace("                    <!-- logo-vulnlog -->", "                    $logo")
     return report
 }
 
