@@ -30,17 +30,19 @@ fun generateReport(
 
 private fun createHtmlSkeleton(): String {
     val template = readAsString("/branch-template.html")
-    val bulmaCss = readAsString("/bulma.css")
-    val datatablesCss = readAsString("/datatables.css")
-    val datatablesJs = readAsString("/datatables.js")
-    val logo = readAsString("/logo-vulnlog.svg").replace("\n", " ").replace("\\s+".toRegex(), " ")
+    val bulmaCss = readAsString("/bulma.css").minify()
+    val datatablesCss = readAsString("/datatables.css").minify()
+    val datatablesJs = readAsString("/datatables.js").minify()
+    val logo = readAsString("/logo-vulnlog.svg").minify()
 
-    var report = template.replace("        /* datatables-css */", datatablesCss)
-    report = report.replace("        // datatables-js", datatablesJs)
-    report = report.replace("        /* bulma-css */", bulmaCss)
+    var report = template.replace("        /* datatables-css */", "        $datatablesCss")
+    report = report.replace("        // datatables-js", "        $datatablesJs")
+    report = report.replace("        /* bulma-css */", "        $bulmaCss")
     report = report.replace("                    <!-- logo-vulnlog -->", "                    $logo")
     return report
 }
 
 private fun readAsString(filename: String) =
     object {}.javaClass.getResource(filename)?.readText(Charsets.UTF_8).orEmpty()
+
+private fun String.minify(): String = this.replace("\n", " ").replace("\\s+".toRegex(), " ")
