@@ -30,14 +30,12 @@ fun generateReport(
 
 private fun createHtmlSkeleton(): String {
     val template = readAsString("/branch-template.html")
-    val bulmaCss = readAsString("/bulma.css").minify()
-    val datatablesCss = readAsString("/datatables.css").minify()
-    val datatablesJs = readAsString("/datatables.js").minify()
+    val datatablesCss = readAsString("/datatables.min.css")
+    val datatablesJs = readAsString("/datatables.min.js")
     val logo = readAsString("/logo-vulnlog.svg").minify()
 
     var report = template.replace("        /* datatables-css */", "        $datatablesCss")
     report = report.replace("        // datatables-js", "        $datatablesJs")
-    report = report.replace("        /* bulma-css */", "        $bulmaCss")
     report = report.replace("                    <!-- logo-vulnlog -->", "                    $logo")
     return report
 }

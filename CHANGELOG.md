@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Gradle Plugin: Support to only generate HTML reports for specified release branches by `releaseBranch.addAll()` in the
   `vulnlog` Gradle plugin extension.
+- Add advanced filtering options in the HTML report to only show relevant information.
 
 ## [0.7.1] - 2025-04-2
 

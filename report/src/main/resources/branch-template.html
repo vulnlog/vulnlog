@@ -13,6 +13,7 @@
                 fill: #ebecf0;
             }
         }
+
         @media (prefers-color-scheme: light) {
             .fill-colour {
                 fill: #2e333d;
@@ -39,25 +40,23 @@
         <h4 class="subtitle is-4"><span id="generationDate"></span></h4>
     </div>
 </header>
-<main data-bs-theme="dark">
-    <section class="section">
-        <div class="container">
-            <table id="table" class="table is-hoverable">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Status</th>
-                    <th title="The impact the vulnerability may have on the software">Rating</th>
-                    <th title="Reasoning behind the rating">Reasoning</th>
-                    <th title="What is necessary to get rid of this vulnerability report">Task</th>
-                    <th title="What versions are affected by the vulnerability">Affected</th>
-                    <th title="In what version the vulnerability is planed to be fixed">Fix</th>
-                    <th></th>
-                </tr>
-                </thead>
-            </table>
-        </div>
-    </section>
+<main>
+    <div class="container">
+        <table id="table" class="table is-hoverable">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Status</th>
+                <th title="The impact the vulnerability may have on the software">Rating</th>
+                <th title="Reasoning behind the rating">Reasoning</th>
+                <th title="What is necessary to get rid of this vulnerability report">Task</th>
+                <th title="What versions are affected by the vulnerability">Affected</th>
+                <th title="In what version the vulnerability is planed to be fixed">Fix</th>
+                <th></th>
+            </tr>
+            </thead>
+        </table>
+    </div>
 </main>
 <footer class="footer">
     <div class="container has-text-centered">
@@ -347,6 +346,46 @@
         data: vulns,
         order: [[1, 'desc'], [2, 'desc']],
         paging: false,
+        layout: {
+            topEnd: {
+                search: {
+                    text: '',
+                    placeholder: 'Search',
+                }
+            },
+            topStart: {
+                buttons: [
+                    {
+                        extend: 'searchBuilder',
+                        config: {
+                            depthLimit: 2,
+                            greyscale: true,
+                            preDefined: {
+                                criteria: [
+                                    {
+                                        condition: '!=',
+                                        data: 'Status',
+                                        value: ['fixed']
+                                    },
+                                    {
+                                        condition: '!=',
+                                        data: 'Status',
+                                        value: ['not affected']
+                                    }
+                                ],
+                                logic: 'AND'
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        language: {
+            searchBuilder: {
+                title: '',
+                button: 'Filter'
+            }
+        }
     });
 
     table.on('click', 'td.dt-control', function (e) {
