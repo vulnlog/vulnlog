@@ -1,7 +1,7 @@
 package dev.vulnlog.cli.service
 
 import dev.vulnlog.dsl.ResultStatus
-import dev.vulnlog.dsl.VerdictSpecification
+import dev.vulnlog.dsl.VlVerdict
 import dev.vulnlog.dsl.notAffected
 import dev.vulnlog.dslinterpreter.splitter.FixedExecutionPerBranch
 import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
@@ -41,7 +41,7 @@ object CheckUnderInvestigation : AbstractFindResultStatus() {
 
 object CheckNotAffected : AbstractFindResultStatus() {
     override fun handle(vulnerability: VulnerabilityDataPerBranch): ResultStatus {
-        val verdict: VerdictSpecification = vulnerability.analysisData!!.verdict
+        val verdict: VlVerdict = vulnerability.analysisData!!.verdict
         return if (verdict == notAffected) {
             ResultStatus.NOT_AFFECTED
         } else {
@@ -52,7 +52,7 @@ object CheckNotAffected : AbstractFindResultStatus() {
 
 object CheckFixed : AbstractFindResultStatus() {
     override fun handle(vulnerability: VulnerabilityDataPerBranch): ResultStatus {
-        val verdict: VerdictSpecification = vulnerability.analysisData!!.verdict
+        val verdict: VlVerdict = vulnerability.analysisData!!.verdict
         val upcomingReleaseDate: LocalDate? = vulnerability.involvedReleaseVersions?.upcoming?.releaseDate
         return if (verdict != notAffected && vulnerability.executionData?.execution is FixedExecutionPerBranch) {
             ResultStatus.FIXED
@@ -66,7 +66,7 @@ object CheckFixed : AbstractFindResultStatus() {
 
 object CheckAffected : AbstractFindResultStatus() {
     override fun handle(vulnerability: VulnerabilityDataPerBranch): ResultStatus {
-        val verdict: VerdictSpecification = vulnerability.analysisData!!.verdict
+        val verdict: VlVerdict = vulnerability.analysisData!!.verdict
         val upcomingReleaseDate: LocalDate? = vulnerability.involvedReleaseVersions?.upcoming?.releaseDate
         return if (verdict != notAffected && upcomingReleaseDate == null) {
             ResultStatus.AFFECTED

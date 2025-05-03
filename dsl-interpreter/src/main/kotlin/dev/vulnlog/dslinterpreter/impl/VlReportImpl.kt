@@ -3,12 +3,11 @@ package dev.vulnlog.dslinterpreter.impl
 import dev.vulnlog.dsl.ReleaseBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
-import dev.vulnlog.dsl.VlAnalyseInitStep
-import dev.vulnlog.dsl.VlReportInitStep
-import dev.vulnlog.dsl.VlReportOnStep
-import dev.vulnlog.dsl.VlReportReporterStep
+import dev.vulnlog.dsl.VlAnalyseInitState
+import dev.vulnlog.dsl.VlReportInitState
+import dev.vulnlog.dsl.VlReportOnState
+import dev.vulnlog.dsl.VlReportReporterState
 import dev.vulnlog.dsl.VlReporter
-import dev.vulnlog.dsl.VlReporterImpl
 import dev.vulnlog.dsl.VulnlogReportData
 import java.time.LocalDate
 
@@ -28,36 +27,30 @@ class ReportBuilder {
     }
 }
 
-class VlReportInitStepImpl(private val reportBuilder: ReportBuilder) : VlReportInitStep {
-    @Deprecated("Use a default reporter instead. Will be removed in upcoming releases.")
-    override infix fun from(reporter: String): VlReportReporterStep {
-        reportBuilder.reporter = setOf(VlReporterImpl(reporter))
-        return VlReportReporterStepImpl(reportBuilder)
-    }
-
-    override fun from(reporter: VlReporter): VlReportReporterStep {
+class VlReportInitStateImpl(private val reportBuilder: ReportBuilder) : VlReportInitState {
+    override fun from(reporter: VlReporter): VlReportReporterState {
         reportBuilder.reporter = setOf(reporter)
-        return VlReportReporterStepImpl(reportBuilder)
+        return VlReportReporterStateImpl(reportBuilder)
     }
 
-    override fun from(reporter: Set<VlReporter>): VlReportReporterStep {
-        reportBuilder.reporter = reporter
-        return VlReportReporterStepImpl(reportBuilder)
+    override fun from(reporters: Set<VlReporter>): VlReportReporterState {
+        reportBuilder.reporter = reporters
+        return VlReportReporterStateImpl(reportBuilder)
     }
 }
 
-class VlReportReporterStepImpl(private val reportBuilder: ReportBuilder) : VlReportReporterStep {
-    override infix fun at(date: String): VlReportOnStep {
+class VlReportReporterStateImpl(private val reportBuilder: ReportBuilder) : VlReportReporterState {
+    override infix fun at(date: String): VlReportOnState {
         reportBuilder.awareOfAt = LocalDate.parse(date)
-        return VlReportOnStepImpl(reportBuilder)
+        return VlReportOnStateImpl(reportBuilder)
     }
 }
 
-class VlReportOnStepImpl(private val reportBuilder: ReportBuilder) : VlReportOnStep {
-    override infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep {
+class VlReportOnStateImpl(private val reportBuilder: ReportBuilder) : VlReportOnState {
+    override infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitState {
         val releaseList = allReleases().filter { it in releases }
         reportBuilder.affectedReleases += releaseList
-        return VlAnalyseInitStepImpl(lazy { reportBuilder.build() })
+        return VlAnalyseInitStateImpl(lazy { reportBuilder.build() })
     }
 }
 

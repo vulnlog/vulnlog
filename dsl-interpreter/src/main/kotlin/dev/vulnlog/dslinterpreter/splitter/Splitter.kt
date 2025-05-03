@@ -4,8 +4,8 @@ import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.TaskAction
-import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.VlReporter
+import dev.vulnlog.dsl.VlVerdict
 import dev.vulnlog.dsl.VulnlogAnalysisData
 import dev.vulnlog.dsl.VulnlogExecution
 import dev.vulnlog.dsl.VulnlogExecutionData
@@ -38,7 +38,7 @@ data class ReportDataPerBranch(
 
 data class AnalysisDataPerBranch(
     val analysedAt: LocalDate,
-    val verdict: VerdictSpecification,
+    val verdict: VlVerdict,
     val reasoning: String,
 )
 
