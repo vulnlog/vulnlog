@@ -8,44 +8,45 @@ public interface VulnlogReportData {
     public val affected: List<ReleaseBranchData>
 }
 
-public interface VlReportInitStep {
+/**
+ * Represents the initial state of a vulnerability report within the vulnerability reporting DSL.
+ */
+public interface VlReportInitState {
     /**
-     * The reporter that found the vulnerability.
-     *
-     * @since v0.5.0
-     */
-    @Deprecated("Use a default reporter instead. Will be removed in upcoming releases.")
-    public infix fun from(reporter: String): VlReportReporterStep
-
-    /**
-     * The reporter that found the vulnerability.
+     * The [reporter] that reported the vulnerability.
      *
      * @since v0.6.0
      */
-    public infix fun from(reporter: VlReporter): VlReportReporterStep
+    public infix fun from(reporter: VlReporter): VlReportReporterState
 
     /**
-     * The reporters that found the vulnerability.
+     * The [reporters] that reported the vulnerability.
      *
      * @since v0.6.0
      */
-    public infix fun from(reporter: Set<VlReporter>): VlReportReporterStep
+    public infix fun from(reporters: Set<VlReporter>): VlReportReporterState
 }
 
-public interface VlReportReporterStep {
+/**
+ * Defines the date since when the software security engineering team is aware of this vulnerability.
+ */
+public interface VlReportReporterState {
     /**
      * A date string in the format YYYY-MM-dd, e.g. `2025-03-07`
      *
      * @since v0.5.0
      */
-    public infix fun at(date: String): VlReportOnStep
+    public infix fun at(date: String): VlReportOnState
 }
 
-public interface VlReportOnStep {
+/**
+ * Define on what release branches the reported vulnerability was found.
+ */
+public interface VlReportOnState {
     /**
      * A range of release branches e.g. `v1..v2`
      *
      * @since v0.5.0
      */
-    public infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitStep
+    public infix fun on(releases: ClosedRange<ReleaseBranch>): VlAnalyseInitState
 }
