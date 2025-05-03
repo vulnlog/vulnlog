@@ -1,27 +1,22 @@
 package dev.vulnlog.dslinterpreter.impl
 
-import dev.vulnlog.dsl.VerdictSpecification
-import dev.vulnlog.dsl.VlAnalyseInitStep
-import dev.vulnlog.dsl.VlAnalyseReasoningStep
-import dev.vulnlog.dsl.VlAnalyseVerdictStep
-import dev.vulnlog.dsl.VlTaskInitStep
+import dev.vulnlog.dsl.VlAnalyseInitState
+import dev.vulnlog.dsl.VlAnalyseReasoningState
+import dev.vulnlog.dsl.VlAnalyseVerdictState
+import dev.vulnlog.dsl.VlTaskInitState
+import dev.vulnlog.dsl.VlVerdict
 import dev.vulnlog.dsl.VulnlogAnalysisData
-import dev.vulnlog.dsl.critical
-import dev.vulnlog.dsl.high
-import dev.vulnlog.dsl.low
-import dev.vulnlog.dsl.moderate
-import dev.vulnlog.dsl.notAffected
 import java.time.LocalDate
 
 data class DslAnalysisData(
     val analysedAt: LocalDate?,
-    var verdict: VerdictSpecification?,
+    var verdict: VlVerdict?,
     var reasoning: String?,
 )
 
 class AnalysisBuilder(val dslReportData: DslReportData) {
     var analysedAt: LocalDate? = null
-    var verdict: VerdictSpecification? = null
+    var verdict: VlVerdict? = null
     var reasoning: String? = null
 
     fun build(): TaskBuilder {
@@ -29,59 +24,35 @@ class AnalysisBuilder(val dslReportData: DslReportData) {
     }
 }
 
-class VlAnalyseInitStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseInitStep {
-    override infix fun analysedAt(date: String): VlAnalyseVerdictStep {
+class VlAnalyseInitStateImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseInitState {
+    override infix fun analysedAt(date: String): VlAnalyseVerdictState {
         analysisBuilder.value.analysedAt = LocalDate.parse(date)
-        return VlAnalyseVerdictStepImpl(analysisBuilder)
+        return VlAnalyseVerdictStateImpl(analysisBuilder)
     }
 
-    @Deprecated("The method verdict(String) is deprecated. Use the method verdict(VerdictSpecification) instead.")
-    override infix fun verdict(verdict: String): VlAnalyseReasoningStep {
-        analysisBuilder.value.analysedAt = analysisBuilder.value.dslReportData.awareOfAt
-        analysisBuilder.value.verdict = getVerdictTypeHeuristically(verdict)
-        return VlAnalyseReasoningStepImpl(analysisBuilder)
-    }
-
-    override fun verdict(verdict: VerdictSpecification): VlAnalyseReasoningStep {
+    override fun verdict(verdict: VlVerdict): VlAnalyseReasoningState {
         analysisBuilder.value.analysedAt = analysisBuilder.value.dslReportData.awareOfAt
         analysisBuilder.value.verdict = verdict
-        return VlAnalyseReasoningStepImpl(analysisBuilder)
+        return VlAnalyseReasoningStateImpl(analysisBuilder)
     }
 }
 
-class VlAnalyseVerdictStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseVerdictStep {
-    @Deprecated("The method verdict(String) is deprecated. Use the method verdict(VerdictSpecification) instead.")
-    override infix fun verdict(verdict: String): VlAnalyseReasoningStep {
-        analysisBuilder.value.verdict = getVerdictTypeHeuristically(verdict)
-        return VlAnalyseReasoningStepImpl(analysisBuilder)
-    }
-
-    override fun verdict(verdict: VerdictSpecification): VlAnalyseReasoningStep {
+class VlAnalyseVerdictStateImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseVerdictState {
+    override fun verdict(verdict: VlVerdict): VlAnalyseReasoningState {
         analysisBuilder.value.verdict = verdict
-        return VlAnalyseReasoningStepImpl(analysisBuilder)
+        return VlAnalyseReasoningStateImpl(analysisBuilder)
     }
 }
 
-class VlAnalyseReasoningStepImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseReasoningStep {
-    override infix fun because(reasoning: String): VlTaskInitStep {
+class VlAnalyseReasoningStateImpl(private val analysisBuilder: Lazy<AnalysisBuilder>) : VlAnalyseReasoningState {
+    override infix fun because(reasoning: String): VlTaskInitState {
         analysisBuilder.value.reasoning = reasoning
-        return VlTaskInitStepImpl(lazy { analysisBuilder.value.build() })
-    }
-}
-
-private fun getVerdictTypeHeuristically(verdict: String): VerdictSpecification {
-    return when (verdict) {
-        critical.level -> critical
-        high.level -> high
-        moderate.level -> moderate
-        low.level -> low
-        notAffected.level -> notAffected
-        else -> error("Unknown verdict: '$verdict'")
+        return VlTaskInitStateImpl(lazy { analysisBuilder.value.build() })
     }
 }
 
 data class VulnlogAnalysisDataImpl(
     override val analysedAt: LocalDate,
-    override val verdict: VerdictSpecification,
+    override val verdict: VlVerdict,
     override val reasoning: String,
 ) : VulnlogAnalysisData

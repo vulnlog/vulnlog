@@ -40,64 +40,79 @@ public data class VulnlogFixExecution(
     val fixDate: LocalDate,
 ) : VulnlogExecution
 
-public interface VlExecutionInitStep {
+/**
+ * Represents the initial state of an execution in the vulnerability lifecycle management DSL.
+ * This interface provides methods to suppress or resolve vulnerabilities during the DSL workflow.
+ */
+public interface VlExecutionInitState {
     /**
      * Suppress a vulnerability permanently.
      *
      * @since v0.5.0
      */
-    public infix fun suppress(specifier: SuppressionSpecifierPermanent): ExecutionOnStep
+    public infix fun suppress(specifier: VlSuppressionPermanent): VlExecutionOnState
 
     /**
      * Suppress a vulnerability for a certain amount of time.
      *
      * @since v0.5.0
      */
-    public infix fun suppress(specifier: SuppressionSpecifierTemporarily): VlExecutionSuppressTemporarilyStep
+    public infix fun suppress(specifier: VlSuppressionTemporarily): VlExecutionSuppressTemporarilyState
 
     /**
      * Suppress a vulnerability until the next release is published.
      *
      * @since v0.5.0
      */
-    public infix fun suppress(specifier: SuppressionSpecifierUntilNextPublication): ExecutionOnStep
+    public infix fun suppress(specifier: VlSuppressionUntilNextPublication): VlExecutionOnState
 
     /**
-     * Mark a vulnerability as fixed.
+     * Mark a vulnerability as fixed at [date] e.g. `2025-03-07`.
      *
      * @since v0.7.0
      */
-    public infix fun fixedAt(date: String): ExecutionOnStep
+    public infix fun fixedAt(date: String): VlExecutionOnState
 }
 
-public interface ExecutionOnStep {
+/**
+ * Represents the transition state for executing actions on specific releases or release groups
+ * within the vulnerability lifecycle management DSL.
+ *
+ * This interface provides methods to specify the target releases or release groups where the defined
+ * actions will be applied.
+ */
+public interface VlExecutionOnState {
     /**
-     * A Release specifier.
+     * Describe on what [releaseGroup] this execution applies.
      *
      * @since v0.5.0
      */
-    public infix fun on(releaseGroup: ReleaseGroup): VlExecutionInitStep
+    public infix fun on(releaseGroup: ReleaseGroup): VlExecutionInitState
 
     /**
-     * A range of release branches e.g. `v1..v2`
+     * Describe on what [releases] this execution applies.
      *
      * @since v0.5.0
      */
-    public infix fun on(releases: ClosedRange<ReleaseBranch>): VlExecutionInitStep
+    public infix fun on(releases: ClosedRange<ReleaseBranch>): VlExecutionInitState
 
     /**
-     * A release branches e.g. `v1`
+     * Describe on what [release] this execution applies.
      *
      * @since v0.5.0
      */
-    public infix fun on(release: ReleaseBranch): VlExecutionInitStep
+    public infix fun on(release: ReleaseBranch): VlExecutionInitState
 }
 
-public interface VlExecutionSuppressTemporarilyStep {
+/**
+ * Represents a state in the vulnerability lifecycle management DSL where execution is temporarily suppressed.
+ * This interface allows specifying a waiting duration before transitioning to the next state.
+ */
+public interface VlExecutionSuppressTemporarilyState {
     /**
      * Duration to wait fore, e.g. `14.days`
      *
      * @since v0.5.0
      */
-    public infix fun forTime(duration: Duration): ExecutionOnStep
+    public infix fun forTime(duration: Duration): VlExecutionOnState
 }
