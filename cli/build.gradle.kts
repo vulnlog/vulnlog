@@ -11,7 +11,9 @@ version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     implementation(project(":dsl-interpreter"))
+    implementation(project(":common"))
     implementation(project(":report"))
+    implementation(project(":suppression"))
 
     implementation(libs.clikt)
     implementation(libs.koinCore)

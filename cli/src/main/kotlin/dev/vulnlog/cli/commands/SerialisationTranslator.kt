@@ -2,6 +2,7 @@
 
 package dev.vulnlog.cli.commands
 
+import Filtered
 import dev.vulnlog.cli.serialisable.Analysis
 import dev.vulnlog.cli.serialisable.Execution
 import dev.vulnlog.cli.serialisable.FixExecution
@@ -17,20 +18,20 @@ import dev.vulnlog.cli.serialisable.TemporarySuppressionExecution
 import dev.vulnlog.cli.serialisable.UntilNextReleaseSuppressionExecution
 import dev.vulnlog.cli.serialisable.Vulnerability
 import dev.vulnlog.cli.serialisable.Vulnlog
+import dev.vulnlog.common.AnalysisDataPerBranch
+import dev.vulnlog.common.ExecutionDataPerBranch
+import dev.vulnlog.common.FixedExecutionPerBranch
+import dev.vulnlog.common.ReportDataPerBranch
+import dev.vulnlog.common.SuppressionDateExecutionPerBranch
+import dev.vulnlog.common.SuppressionEventExecutionPerBranch
+import dev.vulnlog.common.SuppressionPermanentExecutionPerBranch
+import dev.vulnlog.common.TaskDataPerBranch
+import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.UpdateAction
 import dev.vulnlog.dsl.WaitAction
-import dev.vulnlog.dslinterpreter.splitter.AnalysisDataPerBranch
-import dev.vulnlog.dslinterpreter.splitter.ExecutionDataPerBranch
-import dev.vulnlog.dslinterpreter.splitter.FixedExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.ReportDataPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionDateExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionEventExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionPermanentExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.TaskDataPerBranch
-import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 
 class SerialisationTranslator {
     fun translate(filteredResult: Filtered): Vulnlog {

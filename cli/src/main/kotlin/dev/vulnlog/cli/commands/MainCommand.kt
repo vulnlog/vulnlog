@@ -1,5 +1,6 @@
 package dev.vulnlog.cli.commands
 
+import Filtered
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.PrintMessage
@@ -15,10 +16,10 @@ import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.Vulnlog
 import dev.vulnlog.cli.service.StatusService
 import dev.vulnlog.cli.service.ruleSet
+import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dslinterpreter.ScriptingHost
 import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
-import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -29,6 +30,7 @@ data class ConfigAndDataForSubcommand(
     var cliVerison: String,
     var releaseBranches: List<String>,
     var vulnlogs: List<String>,
+    var filteredResult: Filtered?,
 )
 
 class MainCommand : CliktCommand(), KoinComponent {
@@ -53,7 +55,7 @@ class MainCommand : CliktCommand(), KoinComponent {
     )
         .varargValues()
 
-    private val config by findOrSetObject { ConfigAndDataForSubcommand("", emptyList(), emptyList()) }
+    private val config by findOrSetObject { ConfigAndDataForSubcommand("", emptyList(), emptyList(), null) }
     private val cliVersion: String = object {}.javaClass.getResource("/version.txt")?.readText()?.lines()?.first() ?: ""
 
     init {
@@ -91,25 +93,33 @@ class MainCommand : CliktCommand(), KoinComponent {
         val splitVulnsWithStatus = statusService.calculateStatus(splitVulnToBranches)
 
         val filterDsl = DslResultFilter(filterVulnerabilities, filterBranches)
-        val filteredResult = filterDsl.filter(splitVulnsWithStatus, branchRepository.getBranchesToReleaseVersions())
+        val filteredResult: Filtered =
+            filterDsl.filter(splitVulnsWithStatus, branchRepository.getBranchesToReleaseVersions())
 
         val serialisableData: Vulnlog = translator.translate(filteredResult)
 
+        config.cliVerison = cliVersion
+
         val subcommand = currentContext.invokedSubcommand
-        if (subcommand == null) {
-            printer.print(serialisableData)
-        } else {
-            val relevantReleaseBranches = serialisableData.releaseBranches
-            config.cliVerison = cliVersion
-            config.releaseBranches = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
-            config.vulnlogs =
-                relevantReleaseBranches.map { branch ->
-                    Vulnlog(
-                        listOf(branch),
-                        serialisableData.releaseBrancheVulnerabilities
-                            .filter { it.releaseBranch == branch.releaseBranch },
-                    )
-                }.map { printer.translate(it) }
+        when (subcommand) {
+            is ReportCommand -> {
+                val relevantReleaseBranches = serialisableData.releaseBranches
+                config.releaseBranches = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
+                config.vulnlogs =
+                    relevantReleaseBranches.map { branch ->
+                        Vulnlog(
+                            listOf(branch),
+                            serialisableData.releaseBrancheVulnerabilities
+                                .filter { it.releaseBranch == branch.releaseBranch },
+                        )
+                    }.map { printer.translate(it) }
+            }
+
+            is SuppressCommand -> {
+                config.filteredResult = filteredResult
+            }
+
+            else -> printer.print(serialisableData)
         }
     }
 }
