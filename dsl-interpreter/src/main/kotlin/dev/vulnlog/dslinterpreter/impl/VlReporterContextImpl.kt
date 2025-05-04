@@ -1,13 +1,17 @@
 package dev.vulnlog.dslinterpreter.impl
 
-import dev.vulnlog.dsl.ReporterProvider
-import dev.vulnlog.dsl.VlReporter
+import dev.vulnlog.dsl.VlReporterConfig
 import dev.vulnlog.dsl.VlReporterContext
+import dev.vulnlog.dsl.VlSuppressContext
 
 class VlReporterContextImpl : VlReporterContext {
-    val reporters = mutableListOf<VlReporter>()
+    var config: VlReporterConfig? = null
 
-    override fun reporter(reporter: String) {
-        reporters += ReporterProvider.create(reporter)
+    override fun suppression(block: (VlSuppressContext).() -> Unit) {
+        block.let { ctx ->
+            VlSuppressContextImpl()
+                .apply(ctx)
+                .also { config = VlReporterConfig(it.templateFilename, it.idMatcher, it.template) }
+        }
     }
 }

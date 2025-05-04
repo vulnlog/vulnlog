@@ -73,8 +73,11 @@ public interface ReporterProvider {
         private val allReporters: MutableList<ProviderData<VlReporter>> = mutableListOf()
         private var counter = 0
 
-        public fun create(name: String): VlReporter {
-            val reporter: VlReporter = VlReporterImpl(name)
+        public fun create(
+            name: String,
+            config: VlReporterConfig?,
+        ): VlReporter {
+            val reporter: VlReporter = VlReporterImpl(name, config)
             val providerData = ProviderData(reporter.providerName(), counter++, reporter)
             allReporters.add(providerData)
             return reporter
