@@ -1,11 +1,18 @@
 package dev.vulnlog.dslinterpreter.splitter
 
+import dev.vulnlog.common.AnalysisDataPerBranch
+import dev.vulnlog.common.ExecutionDataPerBranch
+import dev.vulnlog.common.ExecutionPerBranch
+import dev.vulnlog.common.FixedExecutionPerBranch
+import dev.vulnlog.common.ReportDataPerBranch
+import dev.vulnlog.common.SuppressionDateExecutionPerBranch
+import dev.vulnlog.common.SuppressionEventExecutionPerBranch
+import dev.vulnlog.common.SuppressionPermanentExecutionPerBranch
+import dev.vulnlog.common.TaskDataPerBranch
+import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.TaskAction
-import dev.vulnlog.dsl.VlReporter
-import dev.vulnlog.dsl.VlVerdict
 import dev.vulnlog.dsl.VulnlogAnalysisData
 import dev.vulnlog.dsl.VulnlogExecution
 import dev.vulnlog.dsl.VulnlogExecutionData
@@ -18,59 +25,6 @@ import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dslinterpreter.impl.InvolvedReleaseVersionImpl
 import dev.vulnlog.dslinterpreter.repository.VulnerabilityDataRepository
 import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
-import java.time.LocalDate
-
-data class VulnerabilityDataPerBranch(
-    val branch: ReleaseBranchData,
-    val ids: List<String>,
-    val status: ResultStatus = ResultStatus.UNKNOWN,
-    val reportData: ReportDataPerBranch,
-    val analysisData: AnalysisDataPerBranch? = null,
-    val taskData: TaskDataPerBranch? = null,
-    val executionData: ExecutionDataPerBranch? = null,
-    val involvedReleaseVersions: InvolvedReleaseVersion? = null,
-)
-
-data class ReportDataPerBranch(
-    val reporters: Set<VlReporter>,
-    val awareAt: LocalDate,
-)
-
-data class AnalysisDataPerBranch(
-    val analysedAt: LocalDate,
-    val verdict: VlVerdict,
-    val reasoning: String,
-)
-
-data class TaskDataPerBranch(
-    val taskAction: TaskAction,
-)
-
-data class ExecutionDataPerBranch(
-    val execution: ExecutionPerBranch,
-)
-
-sealed interface ExecutionPerBranch {
-    val action: String
-}
-
-data class FixedExecutionPerBranch(
-    override val action: String = "fix",
-    val fixDate: LocalDate,
-) : ExecutionPerBranch
-
-data class SuppressionPermanentExecutionPerBranch(
-    override val action: String = "suppress",
-) : ExecutionPerBranch
-
-data class SuppressionDateExecutionPerBranch(
-    override val action: String = "suppress",
-    val suppressUntilDate: LocalDate,
-) : ExecutionPerBranch
-
-data class SuppressionEventExecutionPerBranch(
-    override val action: String = "suppress",
-) : ExecutionPerBranch
 
 /**
  * Splits a vulnerability report into distinct reports per affected release branch.
