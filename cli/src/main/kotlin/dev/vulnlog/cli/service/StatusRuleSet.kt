@@ -1,11 +1,11 @@
 package dev.vulnlog.cli.service
 
+import dev.vulnlog.common.FixedExecutionPerBranch
+import dev.vulnlog.common.SuppressionEventExecutionPerBranch
+import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.VlVerdict
 import dev.vulnlog.dsl.notAffected
-import dev.vulnlog.dslinterpreter.splitter.FixedExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionEventExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 import java.time.LocalDate
 
 interface FindResultStatus {

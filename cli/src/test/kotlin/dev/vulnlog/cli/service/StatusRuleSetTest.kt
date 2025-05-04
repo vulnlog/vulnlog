@@ -1,17 +1,17 @@
 package dev.vulnlog.cli.service
 
+import dev.vulnlog.common.AnalysisDataPerBranch
+import dev.vulnlog.common.FixedExecutionPerBranch
+import dev.vulnlog.common.SuppressionDateExecutionPerBranch
+import dev.vulnlog.common.SuppressionEventExecutionPerBranch
+import dev.vulnlog.common.SuppressionPermanentExecutionPerBranch
+import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.critical
 import dev.vulnlog.dsl.high
 import dev.vulnlog.dsl.low
 import dev.vulnlog.dsl.moderate
 import dev.vulnlog.dsl.notAffected
-import dev.vulnlog.dslinterpreter.splitter.AnalysisDataPerBranch
-import dev.vulnlog.dslinterpreter.splitter.FixedExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionDateExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionEventExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.SuppressionPermanentExecutionPerBranch
-import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.every
