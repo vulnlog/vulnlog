@@ -2,10 +2,9 @@ plugins {
     id("vulnlog.lib-convention")
 }
 
-description = "The Vulnlog report generation functionality."
+description = "The Vulnlog suppression file generation functionality."
 
 dependencies {
-    implementation(project(":dsl"))
     implementation(project(":common"))
 }
 

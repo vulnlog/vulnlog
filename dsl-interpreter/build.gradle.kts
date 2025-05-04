@@ -9,5 +9,6 @@ version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     api(project(":dsl"))
+    implementation(project(":common"))
     implementation(libs.bundles.kotlinScript)
 }
