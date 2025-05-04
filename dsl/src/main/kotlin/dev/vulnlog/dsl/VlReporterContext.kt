@@ -1,10 +1,7 @@
 package dev.vulnlog.dsl
 
+import dev.vulnlog.dsl.definition.VlDslMarker
+
 public interface VlReporterContext {
-    /**
-     * Define a reporter.
-     *
-     * @since v0.6.0
-     */
-    public fun reporter(reporter: String)
+    public fun suppression(block: (@VlDslMarker VlSuppressContext).() -> Unit)
 }
