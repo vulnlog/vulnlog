@@ -5,8 +5,10 @@ rootProject.name = "vulnlog"
 
 include(
     "cli",
+    "common",
     "dsl",
     "dsl-interpreter",
     "gradle-plugin",
     "report",
+    "suppression",
 )

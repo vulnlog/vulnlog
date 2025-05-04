@@ -1,7 +1,7 @@
 package dev.vulnlog.cli.service
 
+import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 
 class StatusService(private val ruleset: AbstractFindResultStatus) {
     fun calculateStatus(
