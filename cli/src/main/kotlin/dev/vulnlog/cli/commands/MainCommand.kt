@@ -27,7 +27,7 @@ import org.koin.core.parameter.parametersOf
 import java.io.File
 
 data class ConfigAndDataForSubcommand(
-    var cliVerison: String,
+    var cliVersion: String,
     var releaseBranches: List<String>,
     var vulnlogs: List<String>,
     var filteredResult: Filtered?,
@@ -98,7 +98,7 @@ class MainCommand : CliktCommand(), KoinComponent {
 
         val serialisableData: Vulnlog = translator.translate(filteredResult)
 
-        config.cliVerison = cliVersion
+        config.cliVersion = cliVersion
 
         val subcommand = currentContext.invokedSubcommand
         when (subcommand) {
