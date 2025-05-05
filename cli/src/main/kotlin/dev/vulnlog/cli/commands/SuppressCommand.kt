@@ -6,15 +6,13 @@ import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
-import dev.vulnlog.report.generateReport
 import dev.vulnlog.suppression.SuppressionConfig
 import dev.vulnlog.suppression.SuppressionGenerator
 import dev.vulnlog.suppression.SuppressionWriter
-import dev.vulnlog.suppression.WritableSuppression
+import dev.vulnlog.suppression.VulnPerBranchAndRecord
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
-import java.time.LocalDateTime
 
 class SuppressCommand : CliktCommand(), KoinComponent {
     override fun help(context: Context): String = "Generate a Vulnlog suppression files."
@@ -39,21 +37,13 @@ class SuppressCommand : CliktCommand(), KoinComponent {
          * Load templates, if non is available fail
          * Write suppression files per release branch in output directory
          */
-        val suppressionConfig =
-            SuppressionConfig(config.cliVerison, config.filteredResult, templateDir)
+        val suppressionConfig = SuppressionConfig(config.cliVersion, config.filteredResult, templateDir)
 
         val suppressionGenerator: SuppressionGenerator by inject { parametersOf(suppressionConfig) }
         val suppressionWriter: SuppressionWriter by inject { parametersOf(suppressionOutputDir) }
 
-        val generatedSuppressions: Set<WritableSuppression> = suppressionGenerator.generateSuppressions()
-        suppressionWriter.writeSuppression(generatedSuppressions)
-
-        config.releaseBranches.withIndex().map { (index, branch) ->
-            val htmlReport = generateReport(config.cliVerison, config.vulnlogs[index], branch, LocalDateTime.now())
-            if (!suppressionOutputDir.exists()) {
-                suppressionOutputDir.mkdirs()
-            }
-            htmlReport.writeFile(suppressionOutputDir)
-        }
+        val vulsPerBranchAndRecord: Set<VulnPerBranchAndRecord> = suppressionGenerator.mapVulnsPerBranchAndReporter()
+        // next translate to SuppressionRecords
+        suppressionWriter.writeSuppression(vulsPerBranchAndRecord)
     }
 }

@@ -20,7 +20,7 @@ class ReportCommand : CliktCommand() {
 
     override fun run() {
         config.releaseBranches.withIndex().map { (index, branch) ->
-            val htmlReport = generateReport(config.cliVerison, config.vulnlogs[index], branch, LocalDateTime.now())
+            val htmlReport = generateReport(config.cliVersion, config.vulnlogs[index], branch, LocalDateTime.now())
             if (!reportOutputDir.exists()) {
                 reportOutputDir.mkdirs()
             }
