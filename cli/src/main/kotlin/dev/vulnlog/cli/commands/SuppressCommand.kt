@@ -9,7 +9,7 @@ import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.suppression.SuppressionConfig
 import dev.vulnlog.suppression.SuppressionGenerator
 import dev.vulnlog.suppression.SuppressionWriter
-import dev.vulnlog.suppression.VulnPerBranchAndRecord
+import dev.vulnlog.suppression.VulnsPerBranchAndRecord
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
@@ -42,8 +42,8 @@ class SuppressCommand : CliktCommand(), KoinComponent {
         val suppressionGenerator: SuppressionGenerator by inject { parametersOf(suppressionConfig) }
         val suppressionWriter: SuppressionWriter by inject { parametersOf(suppressionOutputDir) }
 
-        val vulsPerBranchAndRecord: Set<VulnPerBranchAndRecord> = suppressionGenerator.mapVulnsPerBranchAndReporter()
+        val vulnsPerBranchAndRecord: Set<VulnsPerBranchAndRecord> = suppressionGenerator.mapVulnsPerBranchAndReporter()
         // next translate to SuppressionRecords
-        suppressionWriter.writeSuppression(vulsPerBranchAndRecord)
+        suppressionWriter.writeSuppression(vulnsPerBranchAndRecord)
     }
 }
