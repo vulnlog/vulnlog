@@ -10,7 +10,11 @@ class SuppressionGenerator(private val suppressionConfig: SuppressionConfig) {
             splitVulnerabilitiesPerBranchAndReporter(suppressionConfig.releaseBranches?.vulnerabilitiesPerBranch)
 
         return splitVulns.flatMap { (branch, reporterToVulns) ->
-            reporterToVulns.map { (reporter, vulns) -> VulnsPerBranchAndRecord(branch, reporter, vulns.toSet()) }
+            reporterToVulns
+                .map { (reporter, vulns) ->
+                    val filteredById = vulns.filter { it.ids[0].startsWith(reporter.config!!.idMatcher) }
+                    VulnsPerBranchAndRecord(branch, reporter, filteredById.toSet())
+                }
         }.toSet()
     }
 
