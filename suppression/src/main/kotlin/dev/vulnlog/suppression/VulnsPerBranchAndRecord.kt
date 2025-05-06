@@ -4,8 +4,8 @@ import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.VlReporterImpl
 
-data class VulnPerBranchAndRecord(
+data class VulnsPerBranchAndRecord(
     val name: ReleaseBranchData,
     val entry: VlReporterImpl,
-    val vuln: VulnerabilityDataPerBranch,
+    val vuln: Set<VulnerabilityDataPerBranch>,
 )
