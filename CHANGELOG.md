@@ -11,8 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix missing task information in the HTML report overview.
 - Improve and fix the logo in the HTML report.
+- Permanently suppressed vulnerabilities do not have a fix version in the HTML
+  report. [#27](https://github.com/vulnlog/vulnlog/issues/27)
 
-## [0.7.1] - 2025-04-2
+## [0.7.1] - 2025-04-24
 
 ### Changed
 

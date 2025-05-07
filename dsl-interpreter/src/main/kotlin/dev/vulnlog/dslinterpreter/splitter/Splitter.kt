@@ -99,7 +99,11 @@ private fun splitAndGroupByBranch(
                         val filteredTask = filterOnReleaseBranch(releaseBranch, vulnerability.taskData)
                         val filteredExecution = filterOnReleaseBranch(releaseBranch, vulnerability.executionData)
                         val filteredInvolvedReleaseVersion =
-                            filterInvolvedReleaseVersions(releaseBranch, vulnerability.involvedReleaseVersions)
+                            filterInvolvedReleaseVersions(
+                                releaseBranch,
+                                vulnerability.involvedReleaseVersions,
+                                filteredExecution,
+                            )
                         VulnerabilityDataPerBranch(
                             branch = releaseBranch,
                             ids = vulnerability.ids,
@@ -201,12 +205,15 @@ private fun createVulnlogExecution(entry: Map.Entry<VulnlogExecution, ReleaseBra
 private fun filterInvolvedReleaseVersions(
     releaseBranch: ReleaseBranchData,
     involvedReleaseVersions: BranchToInvolvedVersions?,
+    filteredExecution: ExecutionDataPerBranch?,
 ): InvolvedReleaseVersion? {
     val affected = involvedReleaseVersions?.get(releaseBranch)?.affected
     val upcoming = involvedReleaseVersions?.get(releaseBranch)?.upcoming
     return if (affected == null && upcoming == null) {
         null
+    } else if (filteredExecution != null && filteredExecution.execution is SuppressionPermanentExecutionPerBranch) {
+        InvolvedReleaseVersionImpl(affected, null)
     } else {
-        return InvolvedReleaseVersionImpl(affected, upcoming)
+        InvolvedReleaseVersionImpl(affected, upcoming)
     }
 }
