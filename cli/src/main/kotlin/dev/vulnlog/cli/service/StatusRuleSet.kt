@@ -4,6 +4,7 @@ import dev.vulnlog.dsl.ResultStatus
 import dev.vulnlog.dsl.VerdictSpecification
 import dev.vulnlog.dsl.notAffected
 import dev.vulnlog.dslinterpreter.splitter.FixedExecutionPerBranch
+import dev.vulnlog.dslinterpreter.splitter.SuppressionEventExecutionPerBranch
 import dev.vulnlog.dslinterpreter.splitter.VulnerabilityDataPerBranch
 import java.time.LocalDate
 
@@ -56,7 +57,10 @@ object CheckFixed : AbstractFindResultStatus() {
         val upcomingReleaseDate: LocalDate? = vulnerability.involvedReleaseVersions?.upcoming?.releaseDate
         return if (verdict != notAffected && vulnerability.executionData?.execution is FixedExecutionPerBranch) {
             ResultStatus.FIXED
-        } else if (verdict != notAffected && upcomingReleaseDate?.isBefore(LocalDate.now()) == true) {
+        } else if (verdict != notAffected &&
+            vulnerability.executionData?.execution is SuppressionEventExecutionPerBranch &&
+            upcomingReleaseDate?.isBefore(LocalDate.now()) == true
+        ) {
             ResultStatus.FIXED
         } else {
             next?.handle(vulnerability) ?: ResultStatus.UNKNOWN
