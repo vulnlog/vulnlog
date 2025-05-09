@@ -7,7 +7,7 @@ import dev.vulnlog.dsl.VlReporterImpl
 class SuppressionGenerator(private val suppressionConfig: SuppressionConfig) {
     fun mapVulnsPerBranchAndReporter(): Set<VulnsPerBranchAndRecord> {
         val splitVulns =
-            splitVulnerabilitiesPerBranchAndReporter(suppressionConfig.releaseBranches?.vulnerabilitiesPerBranch)
+            splitVulnerabilitiesPerBranchAndReporter(suppressionConfig.releaseBranches.vulnerabilitiesPerBranch)
 
         return splitVulns.flatMap { (branch, reporterToVulns) ->
             reporterToVulns
@@ -22,7 +22,13 @@ class SuppressionGenerator(private val suppressionConfig: SuppressionConfig) {
         releaseBranchToVulnerabilities: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>>?,
     ): Set<Pair<ReleaseBranchData, Map<VlReporterImpl, List<VulnerabilityDataPerBranch>>>> {
         return releaseBranchToVulnerabilities?.map { (branch, vulns) ->
-            branch to vulns.map { vuln -> replicateVulnPerIdAndGroupByReporter(vuln) }.reduce { acc, map -> acc + map }
+            val reporterToVulns: Map<VlReporterImpl, List<VulnerabilityDataPerBranch>> =
+                vulns.map { vuln -> replicateVulnPerIdAndGroupByReporter(vuln) }
+                    .filter { it.isNotEmpty() }
+                    .flatMap { it.entries }
+                    .groupBy({ it.key }, { it.value })
+                    .mapValues { (_, lists) -> lists.flatten() }
+            branch to reporterToVulns
         }?.toSet() ?: emptySet()
     }
 
