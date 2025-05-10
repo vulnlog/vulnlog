@@ -1,9 +1,9 @@
 package dev.vulnlog.dslinterpreter.service
 
+import dev.vulnlog.common.InvolvedReleaseVersionImpl
 import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dslinterpreter.impl.InvolvedReleaseVersionImpl
 import dev.vulnlog.dslinterpreter.repository.BranchRepository
 import java.time.LocalDate
 

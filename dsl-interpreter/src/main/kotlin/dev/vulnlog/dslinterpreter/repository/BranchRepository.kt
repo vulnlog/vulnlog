@@ -1,8 +1,8 @@
 package dev.vulnlog.dslinterpreter.repository
 
+import dev.vulnlog.common.ReleaseBranchDataImpl
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dslinterpreter.impl.ReleaseBranchDataImpl
 import java.time.LocalDate
 
 val DEFAULT_BRANCH = ReleaseBranchDataImpl("default release branch")
