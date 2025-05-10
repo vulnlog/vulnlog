@@ -5,7 +5,7 @@ import java.io.File
 @Suppress("unused")
 class SuppressionWriter(outputDir: File) {
     @Suppress("unused")
-    fun writeSuppression(generatedSuppressions: Set<VulnsPerBranchAndRecord>) {
+    fun writeSuppression(generatedSuppressions: Set<SuppressionRecord>) {
         TODO("Not yet implemented")
     }
 }

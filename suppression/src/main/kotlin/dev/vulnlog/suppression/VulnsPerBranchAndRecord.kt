@@ -1,11 +1,23 @@
 package dev.vulnlog.suppression
 
-import dev.vulnlog.common.VulnerabilityDataPerBranch
+import dev.vulnlog.common.SuppressionExecution
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dsl.VlReporterImpl
+import dev.vulnlog.dsl.ResultStatus
+import dev.vulnlog.dsl.VlReporter
+import java.time.LocalDate
 
 data class VulnsPerBranchAndRecord(
-    val name: ReleaseBranchData,
-    val entry: VlReporterImpl,
-    val vuln: Set<VulnerabilityDataPerBranch>,
+    val releaseBranch: ReleaseBranchData,
+    val reporter: VlReporter,
+    val vuln: Set<SuppressVulnerability>,
+)
+
+data class SuppressVulnerability(
+    val id: String,
+    val status: ResultStatus,
+    val reporter: VlReporter,
+    val reportDate: LocalDate,
+    val analysisReasoning: String,
+    val suppressType: SuppressionExecution?,
+    val suppressUntilDate: LocalDate?,
 )
