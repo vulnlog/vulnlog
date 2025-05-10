@@ -72,9 +72,9 @@ class StatusRuleSetTest : FunSpec({
 
     listOf(critical, high, moderate, low).forEach { verdict ->
         listOf(
-            SuppressionPermanentExecutionPerBranch(),
+            SuppressionPermanentExecutionPerBranch,
             SuppressionDateExecutionPerBranch(suppressUntilDate = LocalDate.now()),
-            SuppressionEventExecutionPerBranch(),
+            SuppressionEventExecutionPerBranch(LocalDate.now()),
         ).forEach { br ->
             test("result is affected when verdict is ${verdict.level} and x is $br") {
                 val analysisData = mockk<AnalysisDataPerBranch>()
@@ -96,7 +96,7 @@ class StatusRuleSetTest : FunSpec({
     listOf(critical, high, moderate, low).forEach { verdict ->
         listOf(
             FixedExecutionPerBranch(fixDate = LocalDate.now()),
-            SuppressionEventExecutionPerBranch(),
+            SuppressionEventExecutionPerBranch(LocalDate.now().minusDays(42)),
         ).forEach { br ->
             test("result is fixed when verdict is ${verdict.level} and the upcoming release date in the past") {
                 val analysisData = mockk<AnalysisDataPerBranch>()
@@ -137,7 +137,8 @@ class StatusRuleSetTest : FunSpec({
         val vulnerability = mockk<VulnerabilityDataPerBranch>()
         every { vulnerability.analysisData } returns analysisData
         every { vulnerability.involvedReleaseVersions?.upcoming?.releaseDate } returns LocalDate.now().minusDays(1)
-        every { vulnerability.executionData?.execution } returns SuppressionEventExecutionPerBranch()
+        val execution = SuppressionEventExecutionPerBranch(LocalDate.now().plusDays(42))
+        every { vulnerability.executionData?.execution } returns execution
 
         val result = ruleSet.handle(vulnerability)
 
