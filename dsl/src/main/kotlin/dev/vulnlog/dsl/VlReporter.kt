@@ -17,4 +17,4 @@ public interface ReporterData {
     public val name: String
 }
 
-public data class VlReporterImpl(override val name: String, val config: VlReporterConfig?) : VlReporter
+public data class VlReporterImpl(override val name: String, val config: VlReporterConfig? = null) : VlReporter

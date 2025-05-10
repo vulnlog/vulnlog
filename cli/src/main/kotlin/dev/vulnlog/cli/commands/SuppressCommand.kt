@@ -6,8 +6,10 @@ import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import dev.vulnlog.suppression.SuppressionCollectorService
 import dev.vulnlog.suppression.SuppressionConfig
-import dev.vulnlog.suppression.SuppressionGenerator
+import dev.vulnlog.suppression.SuppressionRecord
+import dev.vulnlog.suppression.SuppressionRecordTranslator
 import dev.vulnlog.suppression.SuppressionWriter
 import dev.vulnlog.suppression.VulnsPerBranchAndRecord
 import org.koin.core.component.KoinComponent
@@ -19,6 +21,7 @@ class SuppressCommand : CliktCommand(), KoinComponent {
 
     private val templateDir by option("--template-dir")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
+        .required()
 
     private val suppressionOutputDir by option("--output")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
@@ -37,13 +40,14 @@ class SuppressCommand : CliktCommand(), KoinComponent {
          * Load templates, if non is available fail
          * Write suppression files per release branch in output directory
          */
-        val suppressionConfig = SuppressionConfig(config.cliVersion, config.filteredResult, templateDir)
+        val suppressionConfig = SuppressionConfig(config.cliVersion, templateDir)
 
-        val suppressionGenerator: SuppressionGenerator by inject { parametersOf(suppressionConfig) }
+        val suppressionCollector: SuppressionCollectorService by inject { parametersOf(suppressionConfig) }
+        val suppressionTranslator by inject<SuppressionRecordTranslator>()
         val suppressionWriter: SuppressionWriter by inject { parametersOf(suppressionOutputDir) }
 
-        val vulnsPerBranchAndRecord: Set<VulnsPerBranchAndRecord> = suppressionGenerator.mapVulnsPerBranchAndReporter()
-        // next translate to SuppressionRecords
-        suppressionWriter.writeSuppression(vulnsPerBranchAndRecord)
+        val vulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionCollector.collect(config.filteredResult!!)
+        val suppressionRecord: Set<SuppressionRecord> = suppressionTranslator.translate(vulnsToSuppress)
+        suppressionWriter.writeSuppression(suppressionRecord)
     }
 }

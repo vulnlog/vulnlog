@@ -4,6 +4,7 @@ import dev.vulnlog.common.AnalysisDataPerBranch
 import dev.vulnlog.common.ExecutionDataPerBranch
 import dev.vulnlog.common.ExecutionPerBranch
 import dev.vulnlog.common.FixedExecutionPerBranch
+import dev.vulnlog.common.InvolvedReleaseVersionImpl
 import dev.vulnlog.common.ReportDataPerBranch
 import dev.vulnlog.common.SuppressionDateExecutionPerBranch
 import dev.vulnlog.common.SuppressionEventExecutionPerBranch
@@ -22,7 +23,6 @@ import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
 import dev.vulnlog.dsl.VulnlogTaskData
-import dev.vulnlog.dslinterpreter.impl.InvolvedReleaseVersionImpl
 import dev.vulnlog.dslinterpreter.repository.VulnerabilityDataRepository
 import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
 
@@ -147,12 +147,14 @@ private fun filterOnReleaseBranch(
     }
 
 private fun createVulnlogExecution(entry: Map.Entry<VulnlogExecution, ReleaseBranchData>): ExecutionPerBranch {
-    val key = entry.key
+    val key: VulnlogExecution = entry.key
     return when (key) {
         is VulnlogFixExecution -> FixedExecutionPerBranch(fixDate = key.fixDate)
-        is VulnlogSuppressPermanentExecution -> SuppressionPermanentExecutionPerBranch()
+        is VulnlogSuppressPermanentExecution -> SuppressionPermanentExecutionPerBranch
         is VulnlogSuppressUntilExecution -> SuppressionDateExecutionPerBranch(suppressUntilDate = key.untilDate)
-        is VulnlogSuppressUntilNextPublicationExecution -> SuppressionEventExecutionPerBranch()
+        is VulnlogSuppressUntilNextPublicationExecution -> {
+            SuppressionEventExecutionPerBranch(key.involved.entries.map { it.value.upcoming?.releaseDate }.first())
+        }
     }
 }
 

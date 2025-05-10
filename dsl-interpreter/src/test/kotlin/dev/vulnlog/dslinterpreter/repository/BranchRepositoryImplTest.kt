@@ -1,7 +1,7 @@
 package dev.vulnlog.dslinterpreter.repository
 
-import dev.vulnlog.dslinterpreter.impl.ReleaseBranchDataImpl
-import dev.vulnlog.dslinterpreter.impl.ReleaseVersionDataImpl
+import dev.vulnlog.common.ReleaseBranchDataImpl
+import dev.vulnlog.common.ReleaseVersionDataImpl
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
