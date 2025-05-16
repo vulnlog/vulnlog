@@ -8,6 +8,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.suppression.SuppressionCollectorService
 import dev.vulnlog.suppression.SuppressionConfig
+import dev.vulnlog.suppression.SuppressionFilter
 import dev.vulnlog.suppression.SuppressionRecord
 import dev.vulnlog.suppression.SuppressionRecordTranslator
 import dev.vulnlog.suppression.SuppressionWriter
@@ -45,9 +46,25 @@ class SuppressCommand : CliktCommand(), KoinComponent {
         val suppressionCollector: SuppressionCollectorService by inject { parametersOf(suppressionConfig) }
         val suppressionTranslator by inject<SuppressionRecordTranslator>()
         val suppressionWriter: SuppressionWriter by inject { parametersOf(suppressionOutputDir) }
+        val suppressionFilter by inject<SuppressionFilter>()
 
         val vulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionCollector.collect(config.filteredResult!!)
-        val suppressionRecord: Set<SuppressionRecord> = suppressionTranslator.translate(vulnsToSuppress)
+        val filteredVulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionFilter.filter(vulnsToSuppress)
+        val suppressionRecord: Set<SuppressionRecord> = suppressionTranslator.translate(filteredVulnsToSuppress)
+        suppressionRecord
+            .groupBy { it.releaseBranch.name }
+            .forEach { a ->
+                println(a.key)
+                a.value.groupBy { b -> b.reporter.name }
+                    .forEach { c ->
+                        println("  ${c.key}")
+                        c.value.forEach { d ->
+                            println(d.suppression)
+                        }
+                        println()
+                    }
+                println()
+            }
         suppressionWriter.writeSuppression(suppressionRecord)
     }
 }
