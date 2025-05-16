@@ -1,6 +1,7 @@
 package dev.vulnlog.cli.modules
 
 import dev.vulnlog.suppression.SuppressionCollectorService
+import dev.vulnlog.suppression.SuppressionFilter
 import dev.vulnlog.suppression.SuppressionRecordTranslator
 import dev.vulnlog.suppression.SuppressionVulnerabilityMapperService
 import dev.vulnlog.suppression.SuppressionWriter
@@ -12,6 +13,7 @@ val suppressionModule =
     module {
         single { output -> SuppressionWriter(output.get()) }
         singleOf(::SuppressionCollectorService)
+        singleOf(::SuppressionFilter)
         singleOf(::SuppressionRecordTranslator)
         singleOf(::SuppressionVulnerabilityMapperService)
         singleOf(::VulnerabilitySplitterService)
