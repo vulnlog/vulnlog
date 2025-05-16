@@ -19,5 +19,6 @@ data class SuppressVulnerability(
     val reportDate: LocalDate,
     val analysisReasoning: String,
     val suppressType: SuppressionExecution?,
-    val suppressUntilDate: LocalDate?,
+    val suppressionStart: LocalDate,
+    val suppressionEnd: LocalDate?,
 )

@@ -1,3 +1,10 @@
 package dev.vulnlog.suppression
 
-data class SuppressionRecord(val a: String)
+import dev.vulnlog.dsl.ReleaseBranchData
+import dev.vulnlog.dsl.VlReporterImpl
+
+data class SuppressionRecord(
+    val releaseBranch: ReleaseBranchData,
+    val reporter: VlReporterImpl,
+    val suppression: String,
+)
