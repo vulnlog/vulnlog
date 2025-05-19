@@ -6,8 +6,12 @@ import com.github.ajalt.clikt.core.requireObject
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import dev.vulnlog.suppression.ConsoleWriter
+import dev.vulnlog.suppression.FileWriter
+import dev.vulnlog.suppression.OutputWriter
 import dev.vulnlog.suppression.SuppressionCollectorService
 import dev.vulnlog.suppression.SuppressionConfig
+import dev.vulnlog.suppression.SuppressionFileInfo
 import dev.vulnlog.suppression.SuppressionFilter
 import dev.vulnlog.suppression.SuppressionRecord
 import dev.vulnlog.suppression.SuppressionRecordTranslator
@@ -26,45 +30,30 @@ class SuppressCommand : CliktCommand(), KoinComponent {
 
     private val suppressionOutputDir by option("--output")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
-        .required()
 
     private val config by requireObject<ConfigAndDataForSubcommand>()
 
     override fun run() {
-        /*
-         * Generate suppression files containing all suppressed vulnerabilities per branch and report.
-         * One release branch can have zero, one or multiple suppression files.
-         * One vulnerability can be in zero, one or multiple suppression files.
-         * Per release branch and reporter only one suppression file is generated.
-         *
-         * Task:
-         * Load templates, if non is available fail
-         * Write suppression files per release branch in output directory
-         */
-        val suppressionConfig = SuppressionConfig(config.cliVersion, templateDir)
+        val suppressionConfig = SuppressionConfig(config.cliVersion)
+        val outputWriter: OutputWriter = suppressionOutputDir?.let { FileWriter(it) } ?: ConsoleWriter(::echo)
 
         val suppressionCollector: SuppressionCollectorService by inject { parametersOf(suppressionConfig) }
         val suppressionTranslator by inject<SuppressionRecordTranslator>()
-        val suppressionWriter: SuppressionWriter by inject { parametersOf(suppressionOutputDir) }
+        val suppressionWriter: SuppressionWriter by inject { parametersOf(outputWriter) }
         val suppressionFilter by inject<SuppressionFilter>()
+
+        val templateNameToContent: Map<SuppressionFileInfo, List<String>> =
+            templateDir.listFiles()
+                ?.filter { it.isFile }
+                ?.associate { SuppressionFileInfo(it.nameWithoutExtension, it.extension) to it.readLines() }
+                ?: emptyMap()
+        if (templateNameToContent.isEmpty()) {
+            error("No template files were found in: $templateDir")
+        }
 
         val vulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionCollector.collect(config.filteredResult!!)
         val filteredVulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionFilter.filter(vulnsToSuppress)
         val suppressionRecord: Set<SuppressionRecord> = suppressionTranslator.translate(filteredVulnsToSuppress)
-        suppressionRecord
-            .groupBy { it.releaseBranch.name }
-            .forEach { a ->
-                println(a.key)
-                a.value.groupBy { b -> b.reporter.name }
-                    .forEach { c ->
-                        println("  ${c.key}")
-                        c.value.forEach { d ->
-                            println(d.suppression)
-                        }
-                        println()
-                    }
-                println()
-            }
-        suppressionWriter.writeSuppression(suppressionRecord)
+        suppressionWriter.writeSuppression(templateNameToContent, suppressionRecord)
     }
 }
