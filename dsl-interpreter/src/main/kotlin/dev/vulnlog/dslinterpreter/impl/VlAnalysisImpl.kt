@@ -20,7 +20,15 @@ class AnalysisBuilder(val dslReportData: DslReportData) {
     var reasoning: String? = null
 
     fun build(): TaskBuilder {
-        return TaskBuilder(DslAnalysisData(analysedAt, verdict, reasoning))
+        return TaskBuilder(
+            DslAnalysisData(
+                analysedAt,
+                verdict,
+                reasoning
+                    ?.replace("\\s+".toRegex(), " ")
+                    ?.replace("\\n", " "),
+            ),
+        )
     }
 }
 
