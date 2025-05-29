@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `vulnlog` Gradle plugin extension.
 - Add advanced filtering options in the HTML report to only show relevant information.
 
+### Changed
+
+- Change the sorting in the HTML report to _Rating_, _Affected_, _Fix_ all descending.
+
 ## [0.7.2] - 2025-05-08
 
 ### Fixed
