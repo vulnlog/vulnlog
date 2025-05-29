@@ -8,6 +8,18 @@
     <style>
         /* bulma-css */
         /* datatables-css */
+        :root {
+            --bulma-primary-h: 325deg;
+            --bulma-primary-s: 97%;
+            --bulma-primary-l: 55%;
+            --bulma-link-h: 304deg;
+            --bulma-link-s: 38%;
+            --bulma-link-l: 42%;
+            --bulma-info-h: 311deg;
+            --bulma-info-s: 100%;
+            --bulma-info-l: 98%;
+        }
+
         @media (prefers-color-scheme: dark) {
             .fill-colour {
                 fill: #ebecf0;
@@ -388,6 +400,7 @@
         }
     });
 
+    // toggle child rows
     table.on('click', 'td.dt-control', function (e) {
         let tr = e.target.closest('tr');
         let row = table.row(tr);
@@ -398,6 +411,25 @@
             row.child(format(row.data())).show();
         }
     });
+
+    // indicate if any condition is active
+    const filterButton = $('.button')
+    function updateFilterButtonState() {
+        const sbDetails = table.searchBuilder.getDetails();
+        const hasConditions = sbDetails.criteria && sbDetails.criteria.length > 0;
+
+        if (hasConditions) {
+            filterButton.addClass('is-active');
+        } else {
+            filterButton.removeClass('is-active');
+        }
+    }
+
+    table.on('draw.dt', function () {
+        updateFilterButtonState();
+    });
+
+    updateFilterButtonState();
 </script>
 <script>
     let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
