@@ -430,6 +430,27 @@
     });
 
     updateFilterButtonState();
+
+    // add a clear/remove text to the search field
+    const searchField = $('#dt-search-0')
+    searchField.wrap('<div class="field has-addons" style="display:inline-flex"></div>')
+    searchField.after(
+        '<div class="control">' +
+        '  <button type="button" class="button" id="clear-dt-search" title="Clear search">' +
+        '    <span class="icon">X</span>' +
+        '  </button>' +
+        '</div>'
+    );
+
+    $('#clear-dt-search').on('click', function () {
+        searchField.val('');
+        table.search('').draw();
+        // toggleClearButton();
+        searchField.focus();
+    });
+
+    // set focus to the search field on a page load
+    searchField.focus();
 </script>
 <script>
     let prefers = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
