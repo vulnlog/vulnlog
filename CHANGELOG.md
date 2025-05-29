@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `vulnlog` Gradle plugin extension.
 - Add advanced filtering options in the HTML report to only show relevant information.
 - Visually indicate whether an HTML report filter/condition is active or not.
+- Add a search clear button next to the HTML report search field and set focus on the search field on a page load.
 
 ### Changed
 
