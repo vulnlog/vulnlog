@@ -71,7 +71,6 @@ class SuppressionWriter(private val outputWriter: OutputWriter) {
         val transformedContent =
             suppression
                 .flatMap { it.split("\\n".toRegex()) }
-                .filterNot { it.isBlank() }
                 .map { " ".repeat(whitespaceCount) + it }
         val content: List<String> = beforeContent + transformedContent + afterContent
         OutputData(outputFileName, content)
