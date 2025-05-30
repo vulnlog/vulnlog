@@ -73,4 +73,30 @@ class SuppressionTokenReplacerTest : FunSpec({
 
         result shouldBe expected
     }
+
+    test("a template line with only token that is not translated should be removed") {
+        val template =
+            """
+            |abc {{ def }} ghi
+            |  {{ pqr }}
+            |    {{ stu }} vwx
+            |yz
+            """.trimMargin()
+        val tokens =
+            mapOf(
+                "foo" to "baz",
+                "def" to "123",
+                "stu" to "789",
+            )
+        val expected =
+            """
+            |abc 123 ghi
+            |    789 vwx
+            |yz
+            """.trimMargin()
+
+        val result = tokenReplacer.replaceTokens(SuppressionTokenData(template, tokens))
+
+        result shouldBe expected
+    }
 })

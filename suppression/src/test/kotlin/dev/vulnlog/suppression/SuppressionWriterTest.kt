@@ -93,4 +93,31 @@ class SuppressionWriterTest : FunSpec({
         outputWriter.filename shouldBe expectedFilename
         outputWriter.content shouldBe expectedContent
     }
+
+    test("empty lines in template are not removed") {
+        val outputWriter = DummyWriter()
+        val writer = SuppressionWriter(outputWriter)
+
+        writer.writeSuppression(
+            mapOf(
+                SuppressionFileInfo("simpleTemplate", "txt") to listOf("", "HEAD", "  vulnlogEntries", "FOOT", ""),
+            ),
+            setOf(simpleSuppression),
+        )
+
+        val expectedFilename = "simpletemplate-default-release-branch.txt"
+        val expectedContent =
+            """
+            |
+            |HEAD
+            |  foo
+            |    bar
+            |      baz
+            |FOOT
+            |
+            """.trimMargin()
+
+        outputWriter.filename shouldBe expectedFilename
+        outputWriter.content shouldBe expectedContent
+    }
 })

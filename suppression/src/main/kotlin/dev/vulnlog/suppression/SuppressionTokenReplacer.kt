@@ -7,6 +7,9 @@ data class SuppressionTokenData(
     val tokenToReplacement: Map<String, String?>,
 )
 
+// Marker to indicate empty lines for optional template values
+private const val EMPTY_LINE_MARKER = "___EMPTY_LINE___"
+
 /**
  * A utility class designed to replace placeholder tokens within a template string.
  *
@@ -29,15 +32,18 @@ class SuppressionTokenReplacer {
      * respective replacement values or removed if no replacement is available.
      */
     fun replaceTokens(tokenData: SuppressionTokenData): String {
-        return tokenData.template
-            .lines().joinToString("\n") { line ->
+        return tokenData.template.lines()
+            .map { line ->
                 val matcher = pattern.matcher(line)
                 if (matcher.matches()) {
-                    replaceTokenInLine(line, matcher.group(1).trim(), tokenData.tokenToReplacement)
+                    val translatedLine = replaceTokenInLine(line, matcher.group(1).trim(), tokenData.tokenToReplacement)
+                    if (translatedLine.trim().isEmpty()) EMPTY_LINE_MARKER else translatedLine
                 } else {
                     line
                 }
             }
+            .filter { it != EMPTY_LINE_MARKER }
+            .joinToString("\n")
     }
 
     private fun replaceTokenInLine(
