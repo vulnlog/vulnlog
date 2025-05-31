@@ -3,6 +3,7 @@ package dev.vulnlog.cli.commands
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.requireObject
+import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
@@ -22,14 +23,31 @@ import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 
 class SuppressCommand : CliktCommand(), KoinComponent {
-    override fun help(context: Context): String = "Generate a Vulnlog suppression files."
+    override fun help(context: Context): String =
+        """
+        Generate a Vulnlog suppression files per release branch and reporter.
+        
+        The --branch and --vuln filters can be used to reduce vulnerabilities in the suppression files.
+        """.trimIndent()
 
+    private val templateDirHelpText =
+        """
+        Directory containing template files.
+        Per reporter one template file is expected. The file name must correspond with the `templateFilename` in
+        the Vulnlog DSL definitions file (`reporter.suppression.templateFilname`).
+        """.trimIndent()
     private val templateDir by option("--template-dir")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
         .required()
-
+        .help(templateDirHelpText)
+    private val suppressionOutputDirHelpText =
+        """
+        Directory to write suppression files. If not specified, suppression files are written to STDOUT. 
+        The directory will be created if it does not exist.
+        """.trimIndent()
     private val suppressionOutputDir by option("--output")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
+        .help(suppressionOutputDirHelpText)
 
     private val config by requireObject<ConfigAndDataForSubcommand>()
 
