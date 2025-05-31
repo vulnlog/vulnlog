@@ -31,5 +31,15 @@ open class VulnlogPluginExtension(objects: ObjectFactory) {
      */
     val reportOutput: DirectoryProperty = objects.directoryProperty()
 
+    /**
+     * Specify the Vulnlog suppression template file directory location.
+     */
+    val suppressionTemplates: DirectoryProperty = objects.directoryProperty()
+
+    /**
+     * Specify the Vulnlog suppression file output directory location.
+     */
+    val suppressionOutput: DirectoryProperty = objects.directoryProperty()
+
     private fun readVersion() = javaClass.getResource("/version.txt")?.readText()?.lines()?.first().orEmpty()
 }
