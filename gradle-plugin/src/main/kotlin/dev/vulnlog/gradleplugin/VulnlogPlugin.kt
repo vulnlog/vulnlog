@@ -69,5 +69,26 @@ abstract class VulnlogPlugin : Plugin<Project> {
                 arguments.add("${extension.reportOutput.get()}")
                 args = arguments
             }
+
+            tasks.register("generateSuppression", JavaExec::class.java) {
+                description = "Generate a Vulnlog suppression files."
+                group = "Vulnlog"
+
+                dependsOn(unzipTask)
+
+                classpath = version.map { layout.buildDirectory.dir("vulnlog/vl-$it/lib").get().asFileTree }.get()
+                mainClass.set("dev.vulnlog.cli.AppKt")
+                val arguments = mutableListOf<String>(extension.definitionsFile.get().asFile.path)
+                if (extension.releaseBranch.get().isNotEmpty()) {
+                    arguments.add("--branch")
+                    extension.releaseBranch.get().forEach { arguments.add(it) }
+                }
+                arguments.add("suppress")
+                arguments.add("--template-dir")
+                arguments.add("${extension.suppressionTemplates.get()}")
+                arguments.add("--output")
+                arguments.add("${extension.suppressionOutput.get()}")
+                args = arguments
+            }
         }
 }

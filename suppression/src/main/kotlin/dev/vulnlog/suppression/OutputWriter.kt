@@ -10,6 +10,9 @@ interface OutputWriter {
 
 class FileWriter(private val outputDir: File) : OutputWriter {
     override fun writeText(data: OutputData) {
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
         outputDir.resolve(data.filename).writeText(data.content.joinToString("\n"))
     }
 }
