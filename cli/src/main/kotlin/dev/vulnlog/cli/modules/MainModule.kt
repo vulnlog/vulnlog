@@ -2,6 +2,7 @@ package dev.vulnlog.cli.modules
 
 import dev.vulnlog.cli.commands.JsonPrinter
 import dev.vulnlog.cli.commands.SerialisationTranslator
+import dev.vulnlog.cli.service.RawVulnlogDslParser
 import dev.vulnlog.cli.service.StatusService
 import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VlReleasesDslRoot
@@ -30,6 +31,7 @@ val mainModule =
         single { ruleSet -> StatusService(ruleSet.get()) }
         singleOf(::AffectedVersionsServiceImpl) bind AffectedVersionsService::class
         singleOf(::BranchRepositoryImpl) bind BranchRepository::class
+        singleOf(::RawVulnlogDslParser)
         singleOf(::ReporterRepositoryImpl) bind ReporterRepository::class
         singleOf(::ScriptingHost)
         singleOf(::SerialisationTranslator)

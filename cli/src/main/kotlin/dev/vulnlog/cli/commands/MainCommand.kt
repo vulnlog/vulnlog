@@ -14,11 +14,11 @@ import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.cli.serialisable.ReleaseBranche
 import dev.vulnlog.cli.serialisable.Vulnlog
+import dev.vulnlog.cli.service.RawVulnlogDslParser
 import dev.vulnlog.cli.service.StatusService
 import dev.vulnlog.cli.service.ruleSet
 import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dslinterpreter.ScriptingHost
 import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 import org.koin.core.component.KoinComponent
@@ -64,27 +64,15 @@ class MainCommand : CliktCommand(), KoinComponent {
         }
     }
 
-    private val host: ScriptingHost by inject()
+    private val rawVulnlogDslParser: RawVulnlogDslParser by inject { parametersOf(Output(::echo)) }
     private val translator: SerialisationTranslator by inject()
     private val statusService: StatusService by inject { parametersOf(ruleSet) }
     private val printer: JsonPrinter by inject { parametersOf(Output(::echo)) }
 
     override fun run() {
-        echo("File to read: ${vulnlogFile.name}")
+        // parse the raw Vulnlog DSL definition file and the surrounding Vulnlog files.
+        val vlDslRoot: VlDslRootImpl = rawVulnlogDslParser.readAndParse(vulnlogFile)
 
-        val files =
-            vulnlogFile.parentFile
-                .listFiles { file -> file.name.endsWith("vl.kts") && file.name != vulnlogFile.name }
-                ?.toList() ?: emptyList()
-        if (files.isNotEmpty()) {
-            echo("Also read: ${files.joinToString(", ") { it.name }}")
-        }
-        val defFirst: List<File> = listOf(vulnlogFile).plus(files)
-
-        val result = host.eval(defFirst)
-        result.onFailure { error(it) }
-
-        val vlDslRoot = result.getOrThrow() as VlDslRootImpl
         val branchRepository = vlDslRoot.branchRepository
         val vulnerabilityRepository = vlDslRoot.vulnerabilityDataRepository
         val splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> =
@@ -100,26 +88,27 @@ class MainCommand : CliktCommand(), KoinComponent {
 
         config.cliVersion = cliVersion
 
-        val subcommand = currentContext.invokedSubcommand
-        when (subcommand) {
-            is ReportCommand -> {
-                val relevantReleaseBranches = serialisableData.releaseBranches
-                config.releaseBranches = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
-                config.vulnlogs =
-                    relevantReleaseBranches.map { branch ->
-                        Vulnlog(
-                            listOf(branch),
-                            serialisableData.releaseBrancheVulnerabilities
-                                .filter { it.releaseBranch == branch.releaseBranch },
-                        )
-                    }.map { printer.translate(it) }
-            }
-
-            is SuppressCommand -> {
-                config.filteredResult = filteredResult
-            }
-
+        when (currentContext.invokedSubcommand) {
+            is ReportCommand -> configureReportCommand(serialisableData)
+            is SuppressCommand -> configureSuppressCommand(filteredResult)
             else -> printer.print(serialisableData)
         }
+    }
+
+    private fun configureReportCommand(serialisableData: Vulnlog) {
+        val relevantReleaseBranches = serialisableData.releaseBranches
+        config.releaseBranches = relevantReleaseBranches.map(ReleaseBranche::releaseBranch)
+        config.vulnlogs =
+            relevantReleaseBranches.map { branch ->
+                Vulnlog(
+                    listOf(branch),
+                    serialisableData.releaseBrancheVulnerabilities
+                        .filter { it.releaseBranch == branch.releaseBranch },
+                )
+            }.map { printer.translate(it) }
+    }
+
+    private fun configureSuppressCommand(filteredResult: Filtered) {
+        config.filteredResult = filteredResult
     }
 }

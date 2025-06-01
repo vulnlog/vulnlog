@@ -23,11 +23,15 @@ import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 
 class SuppressCommand : CliktCommand(), KoinComponent {
+    // the feature is not yet production ready, so hide it from help
+    override val hiddenFromHelp: Boolean = true
+
     override fun help(context: Context): String =
         """
         Generate a Vulnlog suppression files per release branch and reporter.
         
-        The --branch and --vuln filters can be used to reduce vulnerabilities in the suppression files.
+        The --branch and --vuln filters can be used to reduce vulnerabilities in the suppression files. Suppression 
+        files for all branches are created, even if no suppressed vulnerabilities are found for a branch.
         """.trimIndent()
 
     private val templateDirHelpText =

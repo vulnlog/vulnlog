@@ -24,6 +24,7 @@ class SuppressionRecordTranslator(private val tokenReplacer: SuppressionTokenRep
         releaseBranch: ReleaseBranchData,
     ): Set<SuppressionEntry> {
         val vulnTemplate = (reporter as VlReporterImpl).config?.template!!
+        if (vuln.isEmpty()) return setOf(SuppressionEntry(releaseBranch, reporter, ""))
         return vuln.map { v ->
             val replaceMap =
                 mapOf(
