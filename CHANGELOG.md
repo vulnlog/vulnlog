@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-06-01
+
 ### Added
 
 - Gradle Plugin: Support to only generate HTML reports for specified release branches by `releaseBranch.addAll()` in the
