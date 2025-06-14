@@ -19,7 +19,8 @@ import dev.vulnlog.cli.service.StatusService
 import dev.vulnlog.cli.service.ruleSet
 import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dslinterpreter.impl.VlDslRootImpl
+import dev.vulnlog.dslinterpreter.repository.BranchRepository
+import dev.vulnlog.dslinterpreter.repository.VulnerabilityDataRepository
 import dev.vulnlog.dslinterpreter.splitter.vulnerabilityPerBranch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -68,13 +69,20 @@ class MainCommand : CliktCommand(), KoinComponent {
     private val translator: SerialisationTranslator by inject()
     private val statusService: StatusService by inject { parametersOf(ruleSet) }
     private val printer: JsonPrinter by inject { parametersOf(Output(::echo)) }
+    private val branchRepository: BranchRepository by inject()
+    private val vulnerabilityRepository: VulnerabilityDataRepository by inject()
 
     override fun run() {
-        // parse the raw Vulnlog DSL definition file and the surrounding Vulnlog files.
-        val vlDslRoot: VlDslRootImpl = rawVulnlogDslParser.readAndParse(vulnlogFile)
+        // 1. parse vulnlog files
+        // 2. enhance with additional information before split (e.g. calculate the status)
+        // 3. split to single id entry
+        // 4. filter branch, vulnerability and reporter
+        // 5. enhance with additional information (optional step)
+        // 6. pass data to subseteps
 
-        val branchRepository = vlDslRoot.branchRepository
-        val vulnerabilityRepository = vlDslRoot.vulnerabilityDataRepository
+        // parse the raw Vulnlog DSL definition file and the surrounding Vulnlog files.
+        rawVulnlogDslParser.readAndParse(vulnlogFile)
+
         val splitVulnToBranches: Map<ReleaseBranchData, List<VulnerabilityDataPerBranch>> =
             vulnerabilityPerBranch(vulnerabilityRepository)
 
