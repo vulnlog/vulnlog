@@ -5,7 +5,6 @@ plugins {
 description = "The Vulnlog suppression file generation functionality."
 
 dependencies {
-    implementation(project(":dsl"))
     implementation(project(":common"))
 }
 

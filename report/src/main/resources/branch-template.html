@@ -84,7 +84,7 @@
     document.getElementById("generationDate").innerText = reportData.generationDate
 
     let unifiedVulnerabilityData = JSON.parse(document.getElementById('vuln-data').innerHTML);
-    let vulns = unifiedVulnerabilityData.releaseBrancheVulnerabilities[0].vulnerabilities
+    let vulns = unifiedVulnerabilityData.vulnerabilities
 
     function formatVerdictToEmoji(verdict) {
         switch (verdict) {
@@ -128,9 +128,9 @@
     }
 
     function format(d) {
-        let id = d.ids.join((', '))
+        let id = d.id.id + ' ' + d.id.groupIds.join(', ')
 
-        let reporters = d.reports
+        let reporters = d.reporters
 
         let affectedVersion = null
         let affectedPublicationData = '-'
@@ -163,7 +163,7 @@
             timeline += '<div class="column is-narrow"><p>Affected: <span class="tag">' + affectedVersion + '</span><br /><span class="tag">' + affectedPublicationData + '</span></p></div>'
         }
         if (reporters.length !== 0) {
-            let reporterNames = reporters.map(r => '<span class="tag">' + r.analyser + '</span>').join(' ')
+            let reporterNames = reporters.map(r => '<span class="tag">' + r.name + '</span>').join(' ')
             timeline += '<div class="column is-narrow"><p>Reporter: ' + reporterNames + '<br /><span class="tag">' + reporters[0].awareAt + '</span></p></div>'
         }
         if (analysisVerdict) {
@@ -223,13 +223,13 @@
     let table = new DataTable('#table', {
         columns: [
             {
-                data: 'ids',
+                data: 'id',
                 render: function (data, type) {
                     let result = ""
                     if (type === 'display') {
-                        result = data[0]
+                        result = data.id
                     } else if (type === 'filter') {
-                        result = data.join((' '))
+                        result = data.id + ' ' + data.groupIds.join((' '))
                     }
                     return result
                 }
@@ -244,30 +244,30 @@
                         switch (data) {
                             case "":
                                 return ''
-                            case "UNKNOWN":
+                            case "unknown":
                                 return 'unknown'
-                            case "UNDER_INVESTIGATION":
+                            case "under investigation":
                                 return 'under investigation'
-                            case "AFFECTED":
+                            case "affected":
                                 return 'affected'
-                            case "FIXED":
+                            case "fixed":
                                 return 'fixed'
-                            case "NOT_AFFECTED":
+                            case "not affected":
                                 return 'not affected'
                         }
                     }
                     switch (data) {
                         case "":
                             return 'f'
-                        case "UNKNOWN":
+                        case "unknown":
                             return 'e'
-                        case "UNDER_INVESTIGATION":
+                        case "under investigation":
                             return 'd'
-                        case "AFFECTED":
+                        case "affected":
                             return 'c'
-                        case "FIXED":
+                        case "fixed":
                             return 'b'
-                        case "NOT_AFFECTED":
+                        case "not affected":
                             return 'a'
                     }
                 }
@@ -414,6 +414,7 @@
 
     // indicate if any condition is active
     const filterButton = $('.button')
+
     function updateFilterButtonState() {
         const sbDetails = table.searchBuilder.getDetails();
         const hasConditions = sbDetails.criteria && sbDetails.criteria.length > 0;

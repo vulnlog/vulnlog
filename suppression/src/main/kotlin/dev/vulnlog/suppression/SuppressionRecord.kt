@@ -1,8 +1,8 @@
 package dev.vulnlog.suppression
 
-import dev.vulnlog.dsl.ReleaseBranchData
+import dev.vulnlog.common.model.BranchName
 
 data class SuppressionRecord(
     val templateFilename: String,
-    val branchToSuppressions: Map<ReleaseBranchData, List<String>>,
+    val branchToSuppressions: Map<BranchName, List<String>>,
 )

@@ -10,22 +10,13 @@ import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.suppression.ConsoleWriter
 import dev.vulnlog.suppression.FileWriter
 import dev.vulnlog.suppression.OutputWriter
-import dev.vulnlog.suppression.SuppressionCollectorService
-import dev.vulnlog.suppression.SuppressionConfig
-import dev.vulnlog.suppression.SuppressionFileInfo
-import dev.vulnlog.suppression.SuppressionFilter
-import dev.vulnlog.suppression.SuppressionRecord
-import dev.vulnlog.suppression.SuppressionRecordTranslator
-import dev.vulnlog.suppression.SuppressionWriter
-import dev.vulnlog.suppression.VulnsPerBranchAndRecord
+import dev.vulnlog.suppression.service.SuppressCommandArguments
+import dev.vulnlog.suppression.service.SuppressService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.parameter.parametersOf
+import java.io.File
 
 class SuppressCommand : CliktCommand(), KoinComponent {
-    // the feature is not yet production ready, so hide it from help
-    override val hiddenFromHelp: Boolean = true
-
     override fun help(context: Context): String =
         """
         Generate a Vulnlog suppression files per release branch and reporter.
@@ -40,7 +31,7 @@ class SuppressCommand : CliktCommand(), KoinComponent {
         Per reporter one template file is expected. The file name must correspond with the `templateFilename` in
         the Vulnlog DSL definitions file (`reporter.suppression.templateFilname`).
         """.trimIndent()
-    private val templateDir by option("--template-dir")
+    private val templateDir: File by option("--template-dir")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
         .required()
         .help(templateDirHelpText)
@@ -49,33 +40,16 @@ class SuppressCommand : CliktCommand(), KoinComponent {
         Directory to write suppression files. If not specified, suppression files are written to STDOUT. 
         The directory will be created if it does not exist.
         """.trimIndent()
-    private val suppressionOutputDir by option("--output")
+    private val suppressionOutputDir: File? by option("--output")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
         .help(suppressionOutputDirHelpText)
 
-    private val config by requireObject<ConfigAndDataForSubcommand>()
+    private val data by requireObject<SubcommandData>()
+    private val suppressService: SuppressService by inject()
 
     override fun run() {
-        val suppressionConfig = SuppressionConfig(config.cliVersion)
         val outputWriter: OutputWriter = suppressionOutputDir?.let { FileWriter(it) } ?: ConsoleWriter(::echo)
-
-        val suppressionCollector: SuppressionCollectorService by inject { parametersOf(suppressionConfig) }
-        val suppressionTranslator by inject<SuppressionRecordTranslator>()
-        val suppressionWriter: SuppressionWriter by inject { parametersOf(outputWriter) }
-        val suppressionFilter by inject<SuppressionFilter>()
-
-        val templateNameToContent: Map<SuppressionFileInfo, List<String>> =
-            templateDir.listFiles()
-                ?.filter { it.isFile }
-                ?.associate { SuppressionFileInfo(it.nameWithoutExtension, it.extension) to it.readLines() }
-                ?: emptyMap()
-        if (templateNameToContent.isEmpty()) {
-            error("No template files were found in: $templateDir")
-        }
-
-        val vulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionCollector.collect(config.filteredResult!!)
-        val filteredVulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionFilter.filter(vulnsToSuppress)
-        val suppressionRecord: Set<SuppressionRecord> = suppressionTranslator.translate(filteredVulnsToSuppress)
-        suppressionWriter.writeSuppression(templateNameToContent, suppressionRecord)
+        val config = SuppressCommandArguments(templateDir, outputWriter)
+        suppressService.generateSuppression(config, data.vulnEntriesFiltered)
     }
 }
