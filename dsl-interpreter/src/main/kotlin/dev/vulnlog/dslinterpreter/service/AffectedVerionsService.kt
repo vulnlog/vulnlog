@@ -1,10 +1,10 @@
 package dev.vulnlog.dslinterpreter.service
 
 import dev.vulnlog.common.InvolvedReleaseVersionImpl
+import dev.vulnlog.common.repository.BranchRepository
 import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
-import dev.vulnlog.dslinterpreter.repository.BranchRepository
 import java.time.LocalDate
 
 data class ReportForBranch(val awareAt: LocalDate, val affected: ReleaseBranchData)

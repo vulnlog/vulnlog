@@ -8,7 +8,7 @@ private const val MARKER_KEYWORD = "vulnlogEntries"
  *
  * The class utilizes a provided implementation of `OutputWriter` to write structured output data.
  */
-class SuppressionWriter(private val outputWriter: OutputWriter) {
+class SuppressionWriter {
     /**
      * Writes suppression data into output files or streams by combining templates with generated suppression records.
      *
@@ -18,6 +18,7 @@ class SuppressionWriter(private val outputWriter: OutputWriter) {
      * to be inserted into the templates.
      */
     fun writeSuppression(
+        outputWriter: OutputWriter,
         templateNameToContent: Map<SuppressionFileInfo, List<String>>,
         generatedSuppressions: Set<SuppressionRecord>,
     ) {

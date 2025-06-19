@@ -2,10 +2,10 @@ plugins {
     id("vulnlog.lib-convention")
 }
 
-description = "The Vulnlog suppression file generation functionality."
+description = "Common classes used by all CLI commands and subcommands."
 
 dependencies {
-    implementation(project(":dsl"))
+    api(project(":dsl"))
 }
 
 group = "dev.vulnlog"

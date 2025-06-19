@@ -1,5 +1,5 @@
+package dev.vulnlog.common
 
-import dev.vulnlog.common.VulnerabilityDataPerBranch
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 

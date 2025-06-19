@@ -1,6 +1,6 @@
 package dev.vulnlog.suppression
 
-import dev.vulnlog.common.DefaultReleaseBranchDataImpl
+import dev.vulnlog.common.model.BranchName
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -15,7 +15,7 @@ class SuppressionWriterTest : FunSpec({
     val simpleSuppression =
         SuppressionRecord(
             "simpleTemplate.txt",
-            mapOf(DefaultReleaseBranchDataImpl to listOf("foo", "  bar", "    baz")),
+            mapOf(BranchName("default release branch") to listOf("foo", "  bar", "    baz")),
         )
     val simpleTemplate =
         mapOf(
@@ -24,9 +24,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("empty templates and empty suppressions lead to no output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter(outputWriter)
+        val writer = SuppressionWriter()
 
-        writer.writeSuppression(emptyMap(), emptySet())
+        writer.writeSuppression(outputWriter, emptyMap(), emptySet())
 
         val expectedFilename = ""
         val expectedContent = ""
@@ -37,9 +37,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("empty suppressions lead to no output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter(outputWriter)
+        val writer = SuppressionWriter()
 
-        writer.writeSuppression(simpleTemplate, emptySet())
+        writer.writeSuppression(outputWriter, simpleTemplate, emptySet())
 
         val expectedFilename = ""
         val expectedContent = ""
@@ -50,9 +50,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("empty templates lead to no output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter(outputWriter)
+        val writer = SuppressionWriter()
 
-        writer.writeSuppression(emptyMap(), setOf(simpleSuppression))
+        writer.writeSuppression(outputWriter, emptyMap(), setOf(simpleSuppression))
 
         val expectedFilename = ""
         val expectedContent = ""
@@ -63,9 +63,13 @@ class SuppressionWriterTest : FunSpec({
 
     test("no output when template filename does not match") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter(outputWriter)
+        val writer = SuppressionWriter()
 
-        writer.writeSuppression(simpleTemplate, setOf(SuppressionRecord("simpleTemplate.txt", emptyMap())))
+        writer.writeSuppression(
+            outputWriter,
+            simpleTemplate,
+            setOf(SuppressionRecord("simpleTemplate.txt", emptyMap())),
+        )
 
         val expectedFilename = ""
         val expectedContent = ""
@@ -76,9 +80,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("correct output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter(outputWriter)
+        val writer = SuppressionWriter()
 
-        writer.writeSuppression(simpleTemplate, setOf(simpleSuppression))
+        writer.writeSuppression(outputWriter, simpleTemplate, setOf(simpleSuppression))
 
         val expectedFilename = "simpletemplate-default-release-branch.txt"
         val expectedContent =
@@ -96,9 +100,10 @@ class SuppressionWriterTest : FunSpec({
 
     test("empty lines in template are not removed") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter(outputWriter)
+        val writer = SuppressionWriter()
 
         writer.writeSuppression(
+            outputWriter,
             mapOf(
                 SuppressionFileInfo("simpleTemplate", "txt") to listOf("", "HEAD", "  vulnlogEntries", "FOOT", ""),
             ),

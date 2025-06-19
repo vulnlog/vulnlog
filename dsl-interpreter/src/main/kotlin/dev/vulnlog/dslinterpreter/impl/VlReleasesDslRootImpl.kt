@@ -1,12 +1,13 @@
 package dev.vulnlog.dslinterpreter.impl
 
+import dev.vulnlog.common.repository.BranchRepository
+import dev.vulnlog.common.repository.ReporterRepository
 import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseVersionData
 import dev.vulnlog.dsl.VlReleaseContext
 import dev.vulnlog.dsl.VlReleasesDslRoot
+import dev.vulnlog.dsl.VlReporterImpl
 import dev.vulnlog.dsl.VlReportersContext
-import dev.vulnlog.dslinterpreter.repository.BranchRepository
-import dev.vulnlog.dslinterpreter.repository.ReporterRepository
 
 class VlReleasesDslRootImpl(
     private val branchRepository: BranchRepository,
@@ -27,7 +28,10 @@ class VlReleasesDslRootImpl(
     override fun reporters(block: (VlReportersContext).() -> Unit): Unit =
         with(VlReportersContextImpl()) {
             block()
-            val reporterData = reporters.map { ReporterDataImpl(it.name) }
+            val reporterData =
+                reporters
+                    .filterIsInstance<VlReporterImpl>()
+                    .map { ReporterDataImpl(it.name, it.config) }
             this@VlReleasesDslRootImpl.reporterDataRepository.addAll(reporterData)
         }
 }

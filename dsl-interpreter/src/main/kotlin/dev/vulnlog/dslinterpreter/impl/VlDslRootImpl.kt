@@ -1,10 +1,10 @@
 package dev.vulnlog.dslinterpreter.impl
 
+import dev.vulnlog.common.repository.BranchRepository
+import dev.vulnlog.common.repository.VulnerabilityDataRepository
 import dev.vulnlog.dsl.VlDslRoot
 import dev.vulnlog.dsl.VlReleasesDslRoot
 import dev.vulnlog.dsl.VlVulnerabilityDslRoot
-import dev.vulnlog.dslinterpreter.repository.BranchRepository
-import dev.vulnlog.dslinterpreter.repository.VulnerabilityDataRepository
 
 class VlDslRootImpl(
     val branchRepository: BranchRepository,

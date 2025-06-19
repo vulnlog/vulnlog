@@ -7,10 +7,13 @@ import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
-import dev.vulnlog.report.generateReport
-import java.time.LocalDateTime
+import dev.vulnlog.report.service.HtmlReportArguments
+import dev.vulnlog.report.service.HtmlReportService
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.io.File
 
-class ReportCommand : CliktCommand() {
+class ReportCommand : CliktCommand(), KoinComponent {
     override fun help(context: Context): String = "Generate a Vulnlog report files."
 
     private val reportOutputDirHelpText =
@@ -18,20 +21,16 @@ class ReportCommand : CliktCommand() {
         Directory to write suppression files. If not specified, suppression files are written to STDOUT.
         The directory will be created if it does not exist.
         """.trimIndent()
-    private val reportOutputDir by option("--output")
+    private val reportOutputDir: File by option("--output")
         .file(mustExist = false, canBeDir = true, canBeFile = false)
         .required()
         .help(reportOutputDirHelpText)
 
-    private val config by requireObject<ConfigAndDataForSubcommand>()
+    private val data by requireObject<SubcommandData>()
+    private val htmlReportService: HtmlReportService by inject()
 
     override fun run() {
-        config.releaseBranches.withIndex().map { (index, branch) ->
-            val htmlReport = generateReport(config.cliVersion, config.vulnlogs[index], branch, LocalDateTime.now())
-            if (!reportOutputDir.exists()) {
-                reportOutputDir.mkdirs()
-            }
-            htmlReport.writeFile(reportOutputDir)
-        }
+        val config = HtmlReportArguments(reportOutputDir)
+        htmlReportService.generateReport(config, data.cliVersion, data.vulnEntriesFiltered)
     }
 }
