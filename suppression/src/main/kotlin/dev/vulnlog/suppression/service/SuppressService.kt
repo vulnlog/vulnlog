@@ -1,7 +1,7 @@
 package dev.vulnlog.suppression.service
 
+import dev.vulnlog.common.SubcommandData
 import dev.vulnlog.common.SuppressionExecution
-import dev.vulnlog.common.model.VulnEntry
 import dev.vulnlog.suppression.MapperInput
 import dev.vulnlog.suppression.OutputWriter
 import dev.vulnlog.suppression.SuppressVulnerability
@@ -14,23 +14,22 @@ import dev.vulnlog.suppression.SuppressionWriter
 import dev.vulnlog.suppression.VulnsPerBranchAndRecord
 import java.io.File
 
-data class SuppressCommandArguments(val templateDir: File, val writer: OutputWriter)
+data class SuppressCommandArguments(val templateDir: File)
 
 class SuppressService(
+    private val config: SuppressCommandArguments,
+    private val outputWriter: OutputWriter,
+    private val data: SubcommandData,
     private val suppressionVulnerabilityMapperService: SuppressionVulnerabilityMapperService,
     private val suppressionFilter: SuppressionFilter,
     private val suppressionTranslator: SuppressionRecordTranslator,
-    private val suppressionWriter: SuppressionWriter,
 ) {
-    fun generateSuppression(
-        config: SuppressCommandArguments,
-        vulnEntriesFiltered: List<VulnEntry>,
-    ) {
+    fun generateSuppression() {
         val mapperInput: List<MapperInput> =
-            vulnEntriesFiltered
+            data.vulnEntriesFiltered
                 .groupBy { it.reportedFor.branchName }
                 .map { (releaseBranch, entries) ->
-                    val foo: Map<String, List<SuppressVulnerability>> =
+                    val reporterToVulns: Map<String, List<SuppressVulnerability>> =
                         entries
                             .groupBy { it.reportedBy.reporterName }
                             .map { (reporter, entries2) ->
@@ -53,17 +52,12 @@ class SuppressService(
                                         }
                                 reporter to suppressVulnerabilities
                             }.toMap()
-                    MapperInput(releaseBranch, foo)
+                    MapperInput(releaseBranch, reporterToVulns)
                 }
 
         val vulnsToSuppress: Set<VulnsPerBranchAndRecord> =
             suppressionVulnerabilityMapperService.mapToRelevantVulnerabilities(mapperInput)
 
-//        val suppressionCollector: SuppressionCollectorService by inject { parametersOf(suppressionConfig) }
-//        val suppressionTranslator by inject<SuppressionRecordTranslator>()
-//        val suppressionWriter: SuppressionWriter by inject { parametersOf(outputWriter) }
-//        val suppressionFilter by inject<SuppressionFilter>()
-//
         val templateNameToContent: Map<SuppressionFileInfo, List<String>> =
             config.templateDir.listFiles()
                 ?.filter { it.isFile }
@@ -72,10 +66,10 @@ class SuppressService(
         if (templateNameToContent.isEmpty()) {
             error("No template files were found in: ${config.templateDir}")
         }
-//
-//        val vulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionCollector.collect(config.filteredResult!!)
         val filteredVulnsToSuppress: Set<VulnsPerBranchAndRecord> = suppressionFilter.filter(vulnsToSuppress)
         val suppressionRecord: Set<SuppressionRecord> = suppressionTranslator.translate(filteredVulnsToSuppress)
-        suppressionWriter.writeSuppression(config.writer, templateNameToContent, suppressionRecord)
+
+        val suppressionWriter = SuppressionWriter(outputWriter, data.releaseBranchesFiltered)
+        suppressionWriter.writeSuppression(templateNameToContent, suppressionRecord)
     }
 }

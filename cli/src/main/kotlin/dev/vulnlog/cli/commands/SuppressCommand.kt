@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import dev.vulnlog.common.SubcommandData
 import dev.vulnlog.suppression.ConsoleWriter
 import dev.vulnlog.suppression.FileWriter
 import dev.vulnlog.suppression.OutputWriter
@@ -14,6 +15,7 @@ import dev.vulnlog.suppression.service.SuppressCommandArguments
 import dev.vulnlog.suppression.service.SuppressService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.koin.core.parameter.parametersOf
 import java.io.File
 
 class SuppressCommand : CliktCommand(), KoinComponent {
@@ -45,11 +47,11 @@ class SuppressCommand : CliktCommand(), KoinComponent {
         .help(suppressionOutputDirHelpText)
 
     private val data by requireObject<SubcommandData>()
-    private val suppressService: SuppressService by inject()
 
     override fun run() {
+        val config = SuppressCommandArguments(templateDir)
         val outputWriter: OutputWriter = suppressionOutputDir?.let { FileWriter(it) } ?: ConsoleWriter(::echo)
-        val config = SuppressCommandArguments(templateDir, outputWriter)
-        suppressService.generateSuppression(config, data.vulnEntriesFiltered)
+        val suppressService by inject<SuppressService> { parametersOf(config, outputWriter, data) }
+        suppressService.generateSuppression()
     }
 }

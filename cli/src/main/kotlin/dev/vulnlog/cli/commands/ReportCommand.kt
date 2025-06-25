@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
+import dev.vulnlog.common.SubcommandData
 import dev.vulnlog.report.service.HtmlReportArguments
 import dev.vulnlog.report.service.HtmlReportService
 import org.koin.core.component.KoinComponent

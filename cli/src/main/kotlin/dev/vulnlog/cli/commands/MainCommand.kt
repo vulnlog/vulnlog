@@ -15,6 +15,7 @@ import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.cli.service.RawVulnlogDslParserService
 import dev.vulnlog.cli.service.VulnEntryFilterService
 import dev.vulnlog.cli.utils.Output
+import dev.vulnlog.common.SubcommandData
 import dev.vulnlog.common.model.BranchName
 import dev.vulnlog.common.model.VulnEntry
 import dev.vulnlog.common.repository.BranchRepository
@@ -23,12 +24,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import java.io.File
-
-data class SubcommandData(
-    var cliVersion: String,
-    var vulnEntriesFiltered: List<VulnEntry>,
-    var releaseBranchesFiltered: Set<BranchName>,
-)
 
 class MainCommand : CliktCommand(), KoinComponent {
     override fun help(context: Context): String = "CLI application to parse Vulnlog files."
@@ -80,7 +75,7 @@ class MainCommand : CliktCommand(), KoinComponent {
 
         when (currentContext.invokedSubcommand) {
             is ReportCommand -> configureReportCommand(filteredVulnEntries, filteredReleaseBranches)
-            is SuppressCommand -> configureSuppressCommand(filteredVulnEntries)
+            is SuppressCommand -> configureSuppressCommand(filteredVulnEntries, filteredReleaseBranches)
         }
     }
 
@@ -92,7 +87,11 @@ class MainCommand : CliktCommand(), KoinComponent {
         config.releaseBranchesFiltered = releaseBranches
     }
 
-    private fun configureSuppressCommand(vulnEntries: List<VulnEntry>) {
+    private fun configureSuppressCommand(
+        vulnEntries: List<VulnEntry>,
+        releaseBranches: Set<BranchName>,
+    ) {
         config.vulnEntriesFiltered = vulnEntries
+        config.releaseBranchesFiltered = releaseBranches
     }
 }
