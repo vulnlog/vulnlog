@@ -23,23 +23,22 @@ class SuppressionWriterTest : FunSpec({
         )
 
     test("empty templates and empty suppressions lead to no output") {
-        val outputWriter = DummyWriter()
-        val writer = SuppressionWriter()
+        val writer = SuppressionWriter(DummyWriter(), emptySet())
 
-        writer.writeSuppression(outputWriter, emptyMap(), emptySet())
+        writer.writeSuppression(emptyMap(), emptySet())
 
         val expectedFilename = ""
         val expectedContent = ""
 
-        outputWriter.filename shouldBe expectedFilename
-        outputWriter.content shouldBe expectedContent
+        DummyWriter().filename shouldBe expectedFilename
+        DummyWriter().content shouldBe expectedContent
     }
 
     test("empty suppressions lead to no output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter()
+        val writer = SuppressionWriter(outputWriter, emptySet())
 
-        writer.writeSuppression(outputWriter, simpleTemplate, emptySet())
+        writer.writeSuppression(emptyMap(), emptySet())
 
         val expectedFilename = ""
         val expectedContent = ""
@@ -50,9 +49,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("empty templates lead to no output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter()
+        val writer = SuppressionWriter(outputWriter, emptySet())
 
-        writer.writeSuppression(outputWriter, emptyMap(), setOf(simpleSuppression))
+        writer.writeSuppression(emptyMap(), setOf(simpleSuppression))
 
         val expectedFilename = ""
         val expectedContent = ""
@@ -63,11 +62,10 @@ class SuppressionWriterTest : FunSpec({
 
     test("no output when template filename does not match") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter()
+        val writer = SuppressionWriter(outputWriter, emptySet())
 
         writer.writeSuppression(
-            outputWriter,
-            simpleTemplate,
+            emptyMap(),
             setOf(SuppressionRecord("simpleTemplate.txt", emptyMap())),
         )
 
@@ -80,9 +78,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("correct output") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter()
+        val writer = SuppressionWriter(outputWriter, setOf(BranchName("default release branch")))
 
-        writer.writeSuppression(outputWriter, simpleTemplate, setOf(simpleSuppression))
+        writer.writeSuppression(simpleTemplate, setOf(simpleSuppression))
 
         val expectedFilename = "simpletemplate-default-release-branch.txt"
         val expectedContent =
@@ -100,10 +98,9 @@ class SuppressionWriterTest : FunSpec({
 
     test("empty lines in template are not removed") {
         val outputWriter = DummyWriter()
-        val writer = SuppressionWriter()
+        val writer = SuppressionWriter(outputWriter, setOf(BranchName("default release branch")))
 
         writer.writeSuppression(
-            outputWriter,
             mapOf(
                 SuppressionFileInfo("simpleTemplate", "txt") to listOf("", "HEAD", "  vulnlogEntries", "FOOT", ""),
             ),

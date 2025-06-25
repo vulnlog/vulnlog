@@ -1,5 +1,7 @@
 package dev.vulnlog.suppression
 
+import dev.vulnlog.common.model.BranchName
+
 private const val MARKER_KEYWORD = "vulnlogEntries"
 
 /**
@@ -8,7 +10,10 @@ private const val MARKER_KEYWORD = "vulnlogEntries"
  *
  * The class utilizes a provided implementation of `OutputWriter` to write structured output data.
  */
-class SuppressionWriter {
+class SuppressionWriter(
+    private val outputWriter: OutputWriter,
+    private val releaseBranchesFiltered: Set<BranchName>,
+) {
     /**
      * Writes suppression data into output files or streams by combining templates with generated suppression records.
      *
@@ -18,15 +23,15 @@ class SuppressionWriter {
      * to be inserted into the templates.
      */
     fun writeSuppression(
-        outputWriter: OutputWriter,
         templateNameToContent: Map<SuppressionFileInfo, List<String>>,
         generatedSuppressions: Set<SuppressionRecord>,
     ) {
-        insertSuppressionsIntoTemplate(generatedSuppressions, templateNameToContent)
+        insertSuppressionsIntoTemplate(releaseBranchesFiltered, generatedSuppressions, templateNameToContent)
             .forEach(outputWriter::writeText)
     }
 
     private fun insertSuppressionsIntoTemplate(
+        releaseBranchesFiltered: Set<BranchName>,
         generatedSuppressions: Set<SuppressionRecord>,
         templateNameToContent: Map<SuppressionFileInfo, List<String>>,
     ): List<OutputData> =
@@ -44,6 +49,7 @@ class SuppressionWriter {
             val templateContentBeforeMarkerLine = extractContentBeforeMarkerLine(templateContent)
             val templateContentAfterMarkerLine = extractContentAfterMarkerLine(templateContent)
             createOutputData(
+                releaseBranchesFiltered,
                 record,
                 templateEntry.key,
                 whitespaceCount,
@@ -61,20 +67,28 @@ class SuppressionWriter {
     private fun extractContentAfterMarkerLine(templateContent: List<String>) =
         templateContent.dropWhile { !it.contains(MARKER_KEYWORD) }.drop(1)
 
+    @Suppress("LongParameterList")
     private fun createOutputData(
+        releaseBranchesFiltered: Set<BranchName>,
         record: SuppressionRecord,
         entry: SuppressionFileInfo,
         whitespaceCount: Int,
         beforeContent: List<String>,
         afterContent: List<String>,
-    ) = record.branchToSuppressions.map { (branch, suppression) ->
-        val outputFileName = outputFilename(entry.filename, branch.name, entry.fileExtension)
-        val transformedContent =
-            suppression
-                .flatMap { it.split("\\n".toRegex()) }
-                .map { " ".repeat(whitespaceCount) + it }
-        val content: List<String> = beforeContent + transformedContent + afterContent
-        OutputData(outputFileName, content)
+    ): List<OutputData> {
+        return releaseBranchesFiltered.map { branch ->
+            val outputFileName = outputFilename(entry.filename, branch.name, entry.fileExtension)
+            val transformedContent: List<String> =
+                record.branchToSuppressions.filter { it.key == branch }.flatMap { (_, suppression) ->
+                    val transformedContent =
+                        suppression
+                            .flatMap { it.split("\\n".toRegex()) }
+                            .map { " ".repeat(whitespaceCount) + it }
+                    transformedContent
+                }
+            val content: List<String> = beforeContent + transformedContent + afterContent
+            OutputData(outputFileName, content)
+        }
     }
 
     private fun outputFilename(
