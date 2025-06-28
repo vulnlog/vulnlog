@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Generate suppression files for various security scanners such as OWASP Dependency Check, Snyk and Trivy. 
+
 ## [0.8.0] - 2025-06-01
 
 ### Added
