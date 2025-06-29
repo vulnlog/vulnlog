@@ -14,16 +14,23 @@ import com.github.ajalt.clikt.parameters.options.varargValues
 import com.github.ajalt.clikt.parameters.types.file
 import dev.vulnlog.cli.service.RawVulnlogDslParserService
 import dev.vulnlog.cli.service.VulnEntryFilterService
-import dev.vulnlog.cli.utils.Output
 import dev.vulnlog.common.SubcommandData
 import dev.vulnlog.common.model.BranchName
 import dev.vulnlog.common.model.VulnEntry
 import dev.vulnlog.common.repository.BranchRepository
 import dev.vulnlog.dslinterpreter.splitter.VulnEntrySplitter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import java.io.File
+
+private const val SPINNER_DELAY_MS: Long = 200
 
 class MainCommand : CliktCommand(), KoinComponent {
     override fun help(context: Context): String = "CLI application to parse Vulnlog files."
@@ -58,26 +65,52 @@ class MainCommand : CliktCommand(), KoinComponent {
         }
     }
 
-    private val rawVulnlogDslParserService: RawVulnlogDslParserService by inject { parametersOf(Output(::echo)) }
+    private val rawVulnlogDslParserService: RawVulnlogDslParserService by inject()
     private val vulnEntrySplitter: VulnEntrySplitter by inject()
     private val filter: VulnEntryFilterService by inject { parametersOf(filterVulnerabilities, filterBranches) }
     private val releaseBranchRepository: BranchRepository by inject()
 
-    override fun run() {
-        config.cliVersion = cliVersion
+    override fun run() =
+        runBlocking {
+            echo("Processing ${vulnlogFile.name}...")
 
-        rawVulnlogDslParserService.readAndParse(vulnlogFile)
+            var isActive = true
+            val job =
+                if (System.console() != null) {
+                    launch {
+                        val spinnerChars = listOf("|", "/", "-", "\\")
+                        var i = 0
+                        while (isActive) {
+                            print("\r${spinnerChars[i++ % spinnerChars.size]}")
+                            delay(SPINNER_DELAY_MS)
+                        }
+                    }
+                } else {
+                    null
+                }
 
-        val splitVulnEntries: List<VulnEntry> = vulnEntrySplitter.split()
-        val filteredVulnEntries: List<VulnEntry> = filter.filterVulnEntries(splitVulnEntries)
-        val filteredReleaseBranches: Set<BranchName> =
-            filter.filterReleaseBranches(releaseBranchRepository.getAllBranches())
+            try {
+                config.cliVersion = cliVersion
 
-        when (currentContext.invokedSubcommand) {
-            is ReportCommand -> configureReportCommand(filteredVulnEntries, filteredReleaseBranches)
-            is SuppressCommand -> configureSuppressCommand(filteredVulnEntries, filteredReleaseBranches)
+                withContext(Dispatchers.Default) {
+                    rawVulnlogDslParserService.readAndParse(vulnlogFile)
+
+                    val splitVulnEntries: List<VulnEntry> = vulnEntrySplitter.split()
+                    val filteredVulnEntries: List<VulnEntry> = filter.filterVulnEntries(splitVulnEntries)
+                    val filteredReleaseBranches: Set<BranchName> =
+                        filter.filterReleaseBranches(releaseBranchRepository.getAllBranches())
+
+                    when (currentContext.invokedSubcommand) {
+                        is ReportCommand -> configureReportCommand(filteredVulnEntries, filteredReleaseBranches)
+                        is SuppressCommand -> configureSuppressCommand(filteredVulnEntries, filteredReleaseBranches)
+                    }
+                }
+            } finally {
+                isActive = false
+                job?.cancelAndJoin()
+                println("\r✓ Done.")
+            }
         }
-    }
 
     private fun configureReportCommand(
         vulnEntries: List<VulnEntry>,

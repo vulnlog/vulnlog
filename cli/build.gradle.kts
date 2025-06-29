@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":report"))
     implementation(project(":suppression"))
 
+    implementation(libs.kotlinCoroutinesCore)
     implementation(libs.clikt)
     implementation(libs.koinCore)
     implementation(libs.kotlinxSerializationJson)
