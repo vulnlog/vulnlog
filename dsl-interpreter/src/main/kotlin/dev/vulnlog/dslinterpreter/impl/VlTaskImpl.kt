@@ -4,7 +4,6 @@ import dev.vulnlog.dsl.All
 import dev.vulnlog.dsl.AllOther
 import dev.vulnlog.dsl.NoActionAction
 import dev.vulnlog.dsl.ReleaseBranch
-import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.ReleaseGroup
 import dev.vulnlog.dsl.TaskAction
@@ -14,7 +13,6 @@ import dev.vulnlog.dsl.VlTaskFollowState
 import dev.vulnlog.dsl.VlTaskInitState
 import dev.vulnlog.dsl.VlTaskOnState
 import dev.vulnlog.dsl.VlTaskUpdateState
-import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dsl.WaitAction
 import kotlin.time.Duration
 
@@ -121,6 +119,3 @@ class VlTaskOnStateImpl(
         return VlTaskFollowStateImpl(vlTaskInitState, taskBuilder)
     }
 }
-
-data class VulnlogTaskDataImpl(override val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>>) :
-    VulnlogTaskData

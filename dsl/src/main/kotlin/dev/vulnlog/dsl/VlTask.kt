@@ -2,10 +2,6 @@ package dev.vulnlog.dsl
 
 import kotlin.time.Duration
 
-public interface VulnlogTaskData {
-    public val taskOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>>
-}
-
 /**
  * Represents the initial state of a task in the vulnerability task management DSL.
  * It serves as the starting point for defining task initialization actions within the DSL.

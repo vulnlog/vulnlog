@@ -23,6 +23,7 @@ import dev.vulnlog.common.model.VulnId
 import dev.vulnlog.common.model.VulnerabilityData
 import dev.vulnlog.common.model.VulnlogAnalysisData
 import dev.vulnlog.common.model.VulnlogReportData
+import dev.vulnlog.common.model.VulnlogTaskData
 import dev.vulnlog.common.repository.VulnerabilityDataRepository
 import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
@@ -33,7 +34,6 @@ import dev.vulnlog.dsl.VulnlogFixExecution
 import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
-import dev.vulnlog.dsl.VulnlogTaskData
 import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
 import dev.vulnlog.dslinterpreter.service.StatusService
 
