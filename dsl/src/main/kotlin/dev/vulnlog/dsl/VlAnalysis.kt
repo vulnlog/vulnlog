@@ -1,13 +1,5 @@
 package dev.vulnlog.dsl
 
-import java.time.LocalDate
-
-public interface VulnlogAnalysisData {
-    public val analysedAt: LocalDate
-    public val verdict: VlVerdict
-    public val reasoning: String
-}
-
 public sealed interface VlVerdict {
     public val level: String
 }

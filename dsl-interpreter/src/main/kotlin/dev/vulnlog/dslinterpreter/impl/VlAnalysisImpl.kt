@@ -5,7 +5,6 @@ import dev.vulnlog.dsl.VlAnalyseReasoningState
 import dev.vulnlog.dsl.VlAnalyseVerdictState
 import dev.vulnlog.dsl.VlTaskInitState
 import dev.vulnlog.dsl.VlVerdict
-import dev.vulnlog.dsl.VulnlogAnalysisData
 import java.time.LocalDate
 
 data class DslAnalysisData(
@@ -58,9 +57,3 @@ class VlAnalyseReasoningStateImpl(private val analysisBuilder: Lazy<AnalysisBuil
         return VlTaskInitStateImpl(lazy { analysisBuilder.value.build() })
     }
 }
-
-data class VulnlogAnalysisDataImpl(
-    override val analysedAt: LocalDate,
-    override val verdict: VlVerdict,
-    override val reasoning: String,
-) : VulnlogAnalysisData
