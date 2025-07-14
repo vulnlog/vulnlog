@@ -19,14 +19,16 @@ class AffectedVersionsServiceImpl(
     private val branchRepository: BranchRepository,
 ) : AffectedVersionsService {
     override fun findInvolvedVersions(reportForBranches: List<ReportForBranch>): BranchToInvolvedVersions {
-        return reportForBranches.associate { (affectedDate, branchData) ->
-            val affectedVersion: ReleaseVersionData? =
-                branchRepository.getNextReleaseVersionBefore(branchData, affectedDate)
-                    .getOrDefault(null)
-            val fixedVersion: ReleaseVersionData? =
-                branchRepository.getNextReleaseVersionAfter(branchData, affectedDate)
-                    .getOrDefault(null)
-            branchData to InvolvedReleaseVersionImpl(affectedVersion, fixedVersion)
-        }
+        return reportForBranches
+            .associate { (affectedDate, branchData) ->
+                val affectedVersion: ReleaseVersionData? =
+                    branchRepository.getNextReleaseVersionBefore(branchData, affectedDate)
+                        .getOrDefault(null)
+                // TODO find the next release after the fixedAt date
+                val fixedVersion: ReleaseVersionData? =
+                    branchRepository.getNextReleaseVersionAfter(branchData, affectedDate)
+                        .getOrDefault(null)
+                branchData to InvolvedReleaseVersionImpl(affectedVersion, fixedVersion)
+            }
     }
 }
