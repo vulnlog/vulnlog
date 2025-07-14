@@ -22,7 +22,6 @@ public data class VulnlogSuppressUntilExecution(
 public data class VulnlogSuppressUntilNextPublicationExecution(
     override val action: String,
     override val releases: List<ReleaseBranchData>,
-    val involved: Map<ReleaseBranchData, InvolvedReleaseVersion>,
 ) : VulnlogExecution
 
 public data class VulnlogSuppressPermanentExecution(

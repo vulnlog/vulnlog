@@ -12,23 +12,19 @@ data class ReportForBranch(val awareAt: LocalDate, val affected: ReleaseBranchDa
 typealias BranchToInvolvedVersions = Map<ReleaseBranchData, InvolvedReleaseVersion>
 
 interface AffectedVersionsService {
-    fun findInvolvedVersions(reportForBranches: List<ReportForBranch>): BranchToInvolvedVersions
+    fun findInvolvedVersions(reportForBranches: ReportForBranch): InvolvedReleaseVersion
 }
 
 class AffectedVersionsServiceImpl(
     private val branchRepository: BranchRepository,
 ) : AffectedVersionsService {
-    override fun findInvolvedVersions(reportForBranches: List<ReportForBranch>): BranchToInvolvedVersions {
-        return reportForBranches
-            .associate { (affectedDate, branchData) ->
-                val affectedVersion: ReleaseVersionData? =
-                    branchRepository.getNextReleaseVersionBefore(branchData, affectedDate)
-                        .getOrDefault(null)
-                // TODO find the next release after the fixedAt date
-                val fixedVersion: ReleaseVersionData? =
-                    branchRepository.getNextReleaseVersionAfter(branchData, affectedDate)
-                        .getOrDefault(null)
-                branchData to InvolvedReleaseVersionImpl(affectedVersion, fixedVersion)
-            }
+    override fun findInvolvedVersions(reportForBranches: ReportForBranch): InvolvedReleaseVersion {
+        val affectedVersion: ReleaseVersionData? =
+            branchRepository.getNextReleaseVersionBefore(reportForBranches.affected, reportForBranches.awareAt)
+                .getOrDefault(null)
+        val fixedVersion: ReleaseVersionData? =
+            branchRepository.getNextReleaseVersionAfter(reportForBranches.affected, reportForBranches.awareAt)
+                .getOrDefault(null)
+        return InvolvedReleaseVersionImpl(affectedVersion, fixedVersion)
     }
 }

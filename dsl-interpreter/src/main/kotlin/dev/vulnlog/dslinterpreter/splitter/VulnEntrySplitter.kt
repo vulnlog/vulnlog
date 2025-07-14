@@ -34,12 +34,15 @@ import dev.vulnlog.dsl.VulnlogFixExecution
 import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
 import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
-import dev.vulnlog.dslinterpreter.service.BranchToInvolvedVersions
+import dev.vulnlog.dslinterpreter.service.AffectedVersionsService
+import dev.vulnlog.dslinterpreter.service.ReportForBranch
 import dev.vulnlog.dslinterpreter.service.StatusService
+import java.time.LocalDate
 
 class VulnEntrySplitter(
     private val vulnerabilityRepository: VulnerabilityDataRepository,
     private val statusService: StatusService,
+    private val affectedVersionService: AffectedVersionsService,
 ) {
     @Suppress("LongMethod")
     fun split(): List<VulnEntry> {
@@ -67,16 +70,16 @@ class VulnEntrySplitter(
                                     filterOnReleaseBranch(releaseBranch, groupedVulnerability.taskData)
                                 val filteredExecution: ExecutionDataPerBranch? =
                                     filterOnReleaseBranch(releaseBranch, groupedVulnerability.executionData)
-                                val filteredInvolvedReleaseVersion: InvolvedReleaseVersion? =
+                                val filteredInvolvedReleaseVersion: InvolvedReleaseVersion =
                                     filterInvolvedReleaseVersions(
                                         releaseBranch,
-                                        groupedVulnerability.involvedReleaseVersions,
+                                        filteredReport,
                                         filteredExecution,
                                     )
                                 report.reporters.map { reporter ->
                                     val reportBy = ReportBy(reporter.name, report.awareAt)
                                     val involved =
-                                        filteredInvolvedReleaseVersion?.let { involved ->
+                                        filteredInvolvedReleaseVersion.let { involved ->
                                             val affected =
                                                 involved.affected?.let { affected ->
                                                     ReleaseVersion(
@@ -96,7 +99,7 @@ class VulnEntrySplitter(
                                     val reportedFor =
                                         ReportFor(
                                             BranchName(releaseBranch.name),
-                                            involved?.affected?.let { BranchVersion(it.version) },
+                                            involved.affected?.let { BranchVersion(it.version) },
                                         )
                                     VulnEntryPartialStep2(
                                         reportBy,
@@ -219,25 +222,35 @@ class VulnEntrySplitter(
             is VulnlogFixExecution -> FixedExecutionPerBranch(fixDate = key.fixDate)
             is VulnlogSuppressPermanentExecution -> SuppressionPermanentExecutionPerBranch
             is VulnlogSuppressUntilExecution -> SuppressionDateExecutionPerBranch(suppressUntilDate = key.untilDate)
-            is VulnlogSuppressUntilNextPublicationExecution -> {
-                SuppressionEventExecutionPerBranch(key.involved.entries.map { it.value.upcoming?.releaseDate }.first())
-            }
+            is VulnlogSuppressUntilNextPublicationExecution -> SuppressionEventExecutionPerBranch
         }
     }
 
     private fun filterInvolvedReleaseVersions(
         releaseBranch: ReleaseBranchData,
-        involvedReleaseVersions: BranchToInvolvedVersions?,
+        filteredReport: ReportDataPerBranch,
         filteredExecution: ExecutionDataPerBranch?,
-    ): InvolvedReleaseVersion? {
-        val affected = involvedReleaseVersions?.get(releaseBranch)?.affected
-        val upcoming = involvedReleaseVersions?.get(releaseBranch)?.upcoming
-        return if (affected == null && upcoming == null) {
-            null
-        } else if (filteredExecution != null && filteredExecution.execution is SuppressionPermanentExecutionPerBranch) {
-            InvolvedReleaseVersionImpl(affected, null)
+    ): InvolvedReleaseVersion {
+        val reportedAtDate: LocalDate = filteredReport.awareAt
+        val fixedAtDate: LocalDate? =
+            filteredExecution?.let { execution ->
+                if (execution.execution is FixedExecutionPerBranch) {
+                    (execution.execution as FixedExecutionPerBranch).fixDate
+                } else {
+                    null
+                }
+            }
+
+        val affected: InvolvedReleaseVersion =
+            affectedVersionService.findInvolvedVersions(ReportForBranch(reportedAtDate, releaseBranch))
+        val fixed: InvolvedReleaseVersion? =
+            fixedAtDate?.let { fixedAt ->
+                affectedVersionService.findInvolvedVersions(ReportForBranch(fixedAt, releaseBranch))
+            }
+        return if (fixed != null) {
+            InvolvedReleaseVersionImpl(affected.affected, fixed.upcoming)
         } else {
-            InvolvedReleaseVersionImpl(affected, upcoming)
+            InvolvedReleaseVersionImpl(affected.affected, affected.upcoming)
         }
     }
 }

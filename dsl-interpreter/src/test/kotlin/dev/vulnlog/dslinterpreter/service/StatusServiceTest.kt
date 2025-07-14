@@ -80,7 +80,7 @@ class StatusServiceTest : FunSpec({
         listOf(
             SuppressionPermanentExecutionPerBranch,
             SuppressionDateExecutionPerBranch(suppressUntilDate = LocalDate.now()),
-            SuppressionEventExecutionPerBranch(LocalDate.now()),
+            SuppressionEventExecutionPerBranch,
         ).forEach { br ->
             test("result is affected when verdict is ${verdict.level} and x is $br") {
                 val analysis = mockk<AnalysisDataPerBranch>()
@@ -100,25 +100,23 @@ class StatusServiceTest : FunSpec({
     }
 
     listOf(critical, high, moderate, low).forEach { verdict ->
-        listOf(
-            FixedExecutionPerBranch(fixDate = LocalDate.now()),
-            SuppressionEventExecutionPerBranch(LocalDate.now().minusDays(42)),
-        ).forEach { br ->
-            test("result is fixed when verdict is ${verdict.level} and the upcoming release date in the past") {
-                val analysis = mockk<AnalysisDataPerBranch>()
-                every { analysis.verdict } returns verdict
-                val vulnerability = mockk<VulnEntryPartialStep2>()
-                every { vulnerability.analysis } returns analysis
-                every {
-                    vulnerability.involved?.upcoming?.releaseDate
-                } returns LocalDate.now().minusDays(42)
-                every { vulnerability.execution?.execution } returns br
+        listOf(FixedExecutionPerBranch(fixDate = LocalDate.now()), SuppressionEventExecutionPerBranch)
+            .forEach { br ->
+                test("result is fixed when verdict is ${verdict.level} and the upcoming release date in the past") {
+                    val analysis = mockk<AnalysisDataPerBranch>()
+                    every { analysis.verdict } returns verdict
+                    val vulnerability = mockk<VulnEntryPartialStep2>()
+                    every { vulnerability.analysis } returns analysis
+                    every {
+                        vulnerability.involved?.upcoming?.releaseDate
+                    } returns LocalDate.now().minusDays(42)
+                    every { vulnerability.execution?.execution } returns br
 
-                val result = statusService.calculateStatus(vulnerability)
+                    val result = statusService.calculateStatus(vulnerability)
 
-                result shouldBe VulnStatusFixed
+                    result shouldBe VulnStatusFixed
+                }
             }
-        }
     }
 
     listOf(critical, high, moderate, low).forEach { verdict ->
@@ -143,7 +141,7 @@ class StatusServiceTest : FunSpec({
         val vulnerability = mockk<VulnEntryPartialStep2>()
         every { vulnerability.analysis } returns analysis
         every { vulnerability.involved?.upcoming?.releaseDate } returns LocalDate.now().minusDays(1)
-        val execution = SuppressionEventExecutionPerBranch(LocalDate.now().plusDays(42))
+        val execution = SuppressionEventExecutionPerBranch
         every { vulnerability.execution?.execution } returns execution
 
         val result = statusService.calculateStatus(vulnerability)
