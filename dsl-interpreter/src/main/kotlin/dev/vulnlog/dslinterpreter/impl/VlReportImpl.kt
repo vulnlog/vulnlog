@@ -1,14 +1,12 @@
 package dev.vulnlog.dslinterpreter.impl
 
 import dev.vulnlog.dsl.ReleaseBranch
-import dev.vulnlog.dsl.ReleaseBranchData
 import dev.vulnlog.dsl.ReleaseBranchProvider.Factory.allReleases
 import dev.vulnlog.dsl.VlAnalyseInitState
 import dev.vulnlog.dsl.VlReportInitState
 import dev.vulnlog.dsl.VlReportOnState
 import dev.vulnlog.dsl.VlReportReporterState
 import dev.vulnlog.dsl.VlReporter
-import dev.vulnlog.dsl.VulnlogReportData
 import java.time.LocalDate
 
 data class DslReportData(
@@ -53,9 +51,3 @@ class VlReportOnStateImpl(private val reportBuilder: ReportBuilder) : VlReportOn
         return VlAnalyseInitStateImpl(lazy { reportBuilder.build() })
     }
 }
-
-data class VulnlogReportDataImpl(
-    override val reporters: Set<VlReporter>,
-    override val awareAt: LocalDate,
-    override val affected: List<ReleaseBranchData>,
-) : VulnlogReportData

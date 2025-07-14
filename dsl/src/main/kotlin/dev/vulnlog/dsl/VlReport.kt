@@ -1,13 +1,5 @@
 package dev.vulnlog.dsl
 
-import java.time.LocalDate
-
-public interface VulnlogReportData {
-    public val reporters: Set<VlReporter>
-    public val awareAt: LocalDate
-    public val affected: List<ReleaseBranchData>
-}
-
 /**
  * Represents the initial state of a vulnerability report within the vulnerability reporting DSL.
  */
