@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- DSL: Vulnerability entries created with the `vuln` function do no longer return an object.
+
 ## [0.9.0] - 2025-06-29
 
 ### Added
 
-- Generate suppression files for various security scanners such as OWASP Dependency Check, Snyk and Trivy. 
+- Generate suppression files for various security scanners such as OWASP Dependency Check, Snyk and Trivy.
 
 ## [0.8.0] - 2025-06-01
 
