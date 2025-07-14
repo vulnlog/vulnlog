@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - DSL: Vulnerability entries created with the `vuln` function do no longer return an object.
+- DSL: Each Vulnerability entry requires a reporter.
 
 ## [0.9.0] - 2025-06-29
 

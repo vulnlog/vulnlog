@@ -54,7 +54,7 @@ class VulnEntrySplitter(
                         splitGroupedVulnerability(vulnId, primaryVulnId, groupedVulnerability)
                     }
 
-                val affectedReleaseBranches = groupedVulnerability.reportData?.affected ?: emptyList()
+                val affectedReleaseBranches = groupedVulnerability.reportData.affected
                 val step2PerBranch: Map<BranchName, List<VulnEntryPartialStep2>> =
                     affectedReleaseBranches.associate { releaseBranch ->
                         val filteredReport: ReportDataPerBranch? =
@@ -149,9 +149,9 @@ class VulnEntrySplitter(
 
     private fun filterOnReleaseBranch(
         releaseBranch: ReleaseBranchData,
-        reportData: VulnlogReportData?,
+        reportData: VulnlogReportData,
     ): ReportDataPerBranch? {
-        return reportData?.let { report ->
+        return reportData.let { report ->
             val relevant: List<ReleaseBranchData> = report.affected.filter { it == releaseBranch }
             if (relevant.size > 1) {
                 error("Multiple vulnerability reports for the same release branch: $releaseBranch")
