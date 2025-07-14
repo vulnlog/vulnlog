@@ -11,8 +11,6 @@ import dev.vulnlog.dsl.VlExecutionSuppressTemporarilyState
 import dev.vulnlog.dsl.VlSuppressionPermanent
 import dev.vulnlog.dsl.VlSuppressionTemporarily
 import dev.vulnlog.dsl.VlSuppressionUntilNextPublication
-import dev.vulnlog.dsl.VulnlogExecution
-import dev.vulnlog.dsl.VulnlogExecutionData
 import java.time.LocalDate
 import kotlin.time.Duration
 
@@ -127,5 +125,3 @@ class VlExecutionSuppressTemporarilyStateImpl(
         return VlExecutionOnStateImpl(vlExecutionInitStateImpl, executionBuilder, suppression)
     }
 }
-
-data class VulnlogExecutionDataImpl(override val executions: List<VulnlogExecution>) : VulnlogExecutionData

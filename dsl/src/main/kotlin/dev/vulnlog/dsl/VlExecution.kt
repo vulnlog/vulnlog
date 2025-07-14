@@ -8,10 +8,6 @@ import kotlin.time.toDuration
 public val Int.days: Duration
     get() = toDuration(DurationUnit.DAYS)
 
-public interface VulnlogExecutionData {
-    public val executions: List<VulnlogExecution>
-}
-
 public sealed interface VulnlogExecution {
     public val action: String
     public val releases: List<ReleaseBranchData>
