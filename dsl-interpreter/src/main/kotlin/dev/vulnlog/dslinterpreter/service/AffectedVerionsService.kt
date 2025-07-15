@@ -9,8 +9,6 @@ import java.time.LocalDate
 
 data class ReportForBranch(val awareAt: LocalDate, val affected: ReleaseBranchData)
 
-typealias BranchToInvolvedVersions = Map<ReleaseBranchData, InvolvedReleaseVersion>
-
 interface AffectedVersionsService {
     fun findInvolvedVersions(reportForBranches: ReportForBranch): InvolvedReleaseVersion
 }

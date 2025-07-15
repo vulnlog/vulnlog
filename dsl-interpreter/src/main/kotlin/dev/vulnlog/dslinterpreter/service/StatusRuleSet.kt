@@ -2,7 +2,7 @@ package dev.vulnlog.dslinterpreter.service
 
 import dev.vulnlog.common.FixedExecutionPerBranch
 import dev.vulnlog.common.SuppressionEventExecutionPerBranch
-import dev.vulnlog.common.model.VulnEntryPartialStep2
+import dev.vulnlog.common.model.VulnEntryNonIdData
 import dev.vulnlog.common.model.VulnStatus
 import dev.vulnlog.common.model.VulnStatusAffected
 import dev.vulnlog.common.model.VulnStatusFixed
@@ -14,7 +14,7 @@ import dev.vulnlog.dsl.notAffected
 import java.time.LocalDate
 
 interface FindResultStatus {
-    fun handle(vulnEntry: VulnEntryPartialStep2): VulnStatus
+    fun handle(vulnEntry: VulnEntryNonIdData): VulnStatus
 }
 
 abstract class AbstractFindResultStatus : FindResultStatus {
@@ -36,7 +36,7 @@ abstract class AbstractFindResultStatus : FindResultStatus {
 }
 
 object CheckUnderInvestigation : AbstractFindResultStatus() {
-    override fun handle(vulnEntry: VulnEntryPartialStep2): VulnStatus {
+    override fun handle(vulnEntry: VulnEntryNonIdData): VulnStatus {
         return if (vulnEntry.analysis == null) {
             VulnStatusUnderInvestigation
         } else {
@@ -46,7 +46,7 @@ object CheckUnderInvestigation : AbstractFindResultStatus() {
 }
 
 object CheckNotAffected : AbstractFindResultStatus() {
-    override fun handle(vulnEntry: VulnEntryPartialStep2): VulnStatus {
+    override fun handle(vulnEntry: VulnEntryNonIdData): VulnStatus {
         val verdict: VlVerdict = vulnEntry.analysis!!.verdict
         return if (verdict == notAffected) {
             VulnStatusNotAffected
@@ -57,7 +57,7 @@ object CheckNotAffected : AbstractFindResultStatus() {
 }
 
 object CheckFixed : AbstractFindResultStatus() {
-    override fun handle(vulnEntry: VulnEntryPartialStep2): VulnStatus {
+    override fun handle(vulnEntry: VulnEntryNonIdData): VulnStatus {
         val verdict: VlVerdict = vulnEntry.analysis!!.verdict
         val upcomingReleaseDate: LocalDate? = vulnEntry.involved?.upcoming?.releaseDate
         return if (verdict != notAffected && vulnEntry.execution?.execution is FixedExecutionPerBranch) {
@@ -74,7 +74,7 @@ object CheckFixed : AbstractFindResultStatus() {
 }
 
 object CheckAffected : AbstractFindResultStatus() {
-    override fun handle(vulnEntry: VulnEntryPartialStep2): VulnStatus {
+    override fun handle(vulnEntry: VulnEntryNonIdData): VulnStatus {
         val verdict: VlVerdict = vulnEntry.analysis!!.verdict
         val upcomingReleaseDate: LocalDate? = vulnEntry.involved?.upcoming?.releaseDate
         return if (verdict != notAffected && upcomingReleaseDate == null) {

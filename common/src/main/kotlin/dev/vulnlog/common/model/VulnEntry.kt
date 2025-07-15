@@ -18,13 +18,13 @@ data class VulnEntry(
     val status: VulnStatus,
 )
 
-data class VulnEntryPartialStep1(
+data class VulnEntryIdData(
     val id: VulnId,
     val primaryVulnId: Boolean,
     val groupIds: List<VulnId>,
 )
 
-data class VulnEntryPartialStep2(
+data class VulnEntryNonIdData(
     val reportedBy: ReportBy,
     val reportedFor: ReportFor,
     val analysis: AnalysisDataPerBranch?,

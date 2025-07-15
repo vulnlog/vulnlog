@@ -20,6 +20,11 @@ import dev.vulnlog.dslinterpreter.service.AffectedVersionsServiceImpl
 import dev.vulnlog.dslinterpreter.service.StatusService
 import dev.vulnlog.dslinterpreter.service.VulnerabilityService
 import dev.vulnlog.dslinterpreter.service.VulnerabilityServiceImpl
+import dev.vulnlog.dslinterpreter.splitter.AnalysisSplitter
+import dev.vulnlog.dslinterpreter.splitter.ExecutionSplitter
+import dev.vulnlog.dslinterpreter.splitter.InvolvedReleasesSplitter
+import dev.vulnlog.dslinterpreter.splitter.ReportSplitter
+import dev.vulnlog.dslinterpreter.splitter.TaskSplitter
 import dev.vulnlog.dslinterpreter.splitter.VulnEntrySplitter
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
@@ -29,11 +34,16 @@ val mainModule =
     module {
         single { a -> VulnEntryFilterService(a[0], a[1]) }
         singleOf(::AffectedVersionsServiceImpl) bind AffectedVersionsService::class
+        singleOf(::AnalysisSplitter)
         singleOf(::BranchRepositoryImpl) bind BranchRepository::class
+        singleOf(::ExecutionSplitter)
+        singleOf(::InvolvedReleasesSplitter)
         singleOf(::RawVulnlogDslParserService)
+        singleOf(::ReportSplitter)
         singleOf(::ReporterRepositoryImpl) bind ReporterRepository::class
         singleOf(::ScriptingHost)
         singleOf(::StatusService)
+        singleOf(::TaskSplitter)
         singleOf(::VlDslRootImpl) bind VlDslRoot::class
         singleOf(::VlReleasesDslRootImpl) bind VlReleasesDslRoot::class
         singleOf(::VlVulnerabilityDslRootImpl) bind VlVulnerabilityDslRoot::class

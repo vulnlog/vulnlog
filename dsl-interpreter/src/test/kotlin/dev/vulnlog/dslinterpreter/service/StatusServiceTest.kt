@@ -5,7 +5,7 @@ import dev.vulnlog.common.FixedExecutionPerBranch
 import dev.vulnlog.common.SuppressionDateExecutionPerBranch
 import dev.vulnlog.common.SuppressionEventExecutionPerBranch
 import dev.vulnlog.common.SuppressionPermanentExecutionPerBranch
-import dev.vulnlog.common.model.VulnEntryPartialStep2
+import dev.vulnlog.common.model.VulnEntryNonIdData
 import dev.vulnlog.common.model.VulnStatusAffected
 import dev.vulnlog.common.model.VulnStatusFixed
 import dev.vulnlog.common.model.VulnStatusNotAffected
@@ -27,7 +27,7 @@ class StatusServiceTest : FunSpec({
     val statusService = StatusService()
 
     test("result is under investigation when no analysis data defined") {
-        val vulnerability = mockk<VulnEntryPartialStep2>()
+        val vulnerability = mockk<VulnEntryNonIdData>()
         every { vulnerability.analysis } returns null
 
         val result = statusService.calculateStatus(vulnerability)
@@ -38,7 +38,7 @@ class StatusServiceTest : FunSpec({
     test("result is not affected when verdict is not affected") {
         val analysis = mockk<AnalysisDataPerBranch>()
         every { analysis.verdict } returns notAffected
-        val vulnerability = mockk<VulnEntryPartialStep2>()
+        val vulnerability = mockk<VulnEntryNonIdData>()
         every { vulnerability.analysis } returns analysis
 
         val result = statusService.calculateStatus(vulnerability)
@@ -50,7 +50,7 @@ class StatusServiceTest : FunSpec({
         test("result is affected when verdict is ${verdict.level} and no upcoming release is defined") {
             val analysis = mockk<AnalysisDataPerBranch>()
             every { analysis.verdict } returns verdict
-            val vulnerability = mockk<VulnEntryPartialStep2>()
+            val vulnerability = mockk<VulnEntryNonIdData>()
             every { vulnerability.analysis } returns analysis
             every { vulnerability.involved?.upcoming?.releaseDate } returns null
             every { vulnerability.execution } returns null
@@ -65,7 +65,7 @@ class StatusServiceTest : FunSpec({
         test("result is affected when verdict is ${verdict.level} and upcoming release date is in the future") {
             val analysis = mockk<AnalysisDataPerBranch>()
             every { analysis.verdict } returns verdict
-            val vulnerability = mockk<VulnEntryPartialStep2>()
+            val vulnerability = mockk<VulnEntryNonIdData>()
             every { vulnerability.analysis } returns analysis
             every { vulnerability.involved?.upcoming?.releaseDate } returns LocalDate.now().plusDays(42)
             every { vulnerability.execution } returns null
@@ -85,7 +85,7 @@ class StatusServiceTest : FunSpec({
             test("result is affected when verdict is ${verdict.level} and x is $br") {
                 val analysis = mockk<AnalysisDataPerBranch>()
                 every { analysis.verdict } returns verdict
-                val vulnerability = mockk<VulnEntryPartialStep2>()
+                val vulnerability = mockk<VulnEntryNonIdData>()
                 every { vulnerability.analysis } returns analysis
                 every {
                     vulnerability.involved?.upcoming?.releaseDate
@@ -105,7 +105,7 @@ class StatusServiceTest : FunSpec({
                 test("result is fixed when verdict is ${verdict.level} and the upcoming release date in the past") {
                     val analysis = mockk<AnalysisDataPerBranch>()
                     every { analysis.verdict } returns verdict
-                    val vulnerability = mockk<VulnEntryPartialStep2>()
+                    val vulnerability = mockk<VulnEntryNonIdData>()
                     every { vulnerability.analysis } returns analysis
                     every {
                         vulnerability.involved?.upcoming?.releaseDate
@@ -123,7 +123,7 @@ class StatusServiceTest : FunSpec({
         test("result is affected when verdict is ${verdict.level} and execution is fixed") {
             val analysis = mockk<AnalysisDataPerBranch>()
             every { analysis.verdict } returns verdict
-            val vulnerability = mockk<VulnEntryPartialStep2>()
+            val vulnerability = mockk<VulnEntryNonIdData>()
             every { vulnerability.analysis } returns analysis
             val fixedExecutionPerBranch = mockk<FixedExecutionPerBranch>()
             every { vulnerability.involved?.upcoming?.releaseDate } returns null
@@ -138,7 +138,7 @@ class StatusServiceTest : FunSpec({
     test("result is FIXED when verdict is high, fix in upcoming release, and past upcoming release date") {
         val analysis = mockk<AnalysisDataPerBranch>()
         every { analysis.verdict } returns high
-        val vulnerability = mockk<VulnEntryPartialStep2>()
+        val vulnerability = mockk<VulnEntryNonIdData>()
         every { vulnerability.analysis } returns analysis
         every { vulnerability.involved?.upcoming?.releaseDate } returns LocalDate.now().minusDays(1)
         val execution = SuppressionEventExecutionPerBranch
@@ -153,7 +153,7 @@ class StatusServiceTest : FunSpec({
         test("result is UNKNOWN when verdict is ${verdict.level}, upcoming release is today, execution is null") {
             val analysis = mockk<AnalysisDataPerBranch>()
             every { analysis.verdict } returns verdict
-            val vulnerability = mockk<VulnEntryPartialStep2>()
+            val vulnerability = mockk<VulnEntryNonIdData>()
             every { vulnerability.analysis } returns analysis
             every { vulnerability.involved?.upcoming?.releaseDate } returns LocalDate.now()
             every { vulnerability.execution?.execution } returns null

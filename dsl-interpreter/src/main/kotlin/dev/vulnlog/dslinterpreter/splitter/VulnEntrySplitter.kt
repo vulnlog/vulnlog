@@ -2,255 +2,124 @@ package dev.vulnlog.dslinterpreter.splitter
 
 import dev.vulnlog.common.AnalysisDataPerBranch
 import dev.vulnlog.common.ExecutionDataPerBranch
-import dev.vulnlog.common.ExecutionPerBranch
-import dev.vulnlog.common.FixedExecutionPerBranch
 import dev.vulnlog.common.InvolvedRelease
-import dev.vulnlog.common.InvolvedReleaseVersionImpl
 import dev.vulnlog.common.ReleaseVersion
 import dev.vulnlog.common.ReportDataPerBranch
-import dev.vulnlog.common.SuppressionDateExecutionPerBranch
-import dev.vulnlog.common.SuppressionEventExecutionPerBranch
-import dev.vulnlog.common.SuppressionPermanentExecutionPerBranch
 import dev.vulnlog.common.TaskDataPerBranch
 import dev.vulnlog.common.model.BranchName
 import dev.vulnlog.common.model.BranchVersion
 import dev.vulnlog.common.model.ReportBy
 import dev.vulnlog.common.model.ReportFor
 import dev.vulnlog.common.model.VulnEntry
-import dev.vulnlog.common.model.VulnEntryPartialStep1
-import dev.vulnlog.common.model.VulnEntryPartialStep2
+import dev.vulnlog.common.model.VulnEntryIdData
+import dev.vulnlog.common.model.VulnEntryNonIdData
 import dev.vulnlog.common.model.VulnId
 import dev.vulnlog.common.model.VulnerabilityData
-import dev.vulnlog.common.model.VulnlogAnalysisData
-import dev.vulnlog.common.model.VulnlogExecutionData
-import dev.vulnlog.common.model.VulnlogReportData
-import dev.vulnlog.common.model.VulnlogTaskData
-import dev.vulnlog.common.repository.VulnerabilityDataRepository
 import dev.vulnlog.dsl.InvolvedReleaseVersion
 import dev.vulnlog.dsl.ReleaseBranchData
-import dev.vulnlog.dsl.TaskAction
-import dev.vulnlog.dsl.VulnlogExecution
-import dev.vulnlog.dsl.VulnlogFixExecution
-import dev.vulnlog.dsl.VulnlogSuppressPermanentExecution
-import dev.vulnlog.dsl.VulnlogSuppressUntilExecution
-import dev.vulnlog.dsl.VulnlogSuppressUntilNextPublicationExecution
-import dev.vulnlog.dslinterpreter.service.AffectedVersionsService
-import dev.vulnlog.dslinterpreter.service.ReportForBranch
 import dev.vulnlog.dslinterpreter.service.StatusService
-import java.time.LocalDate
 
 class VulnEntrySplitter(
-    private val vulnerabilityRepository: VulnerabilityDataRepository,
     private val statusService: StatusService,
-    private val affectedVersionService: AffectedVersionsService,
+    private val reportSplitter: ReportSplitter,
+    private val analysisSplitter: AnalysisSplitter,
+    private val taskSplitter: TaskSplitter,
+    private val executionSplitter: ExecutionSplitter,
+    private val involvedReleasesSplitter: InvolvedReleasesSplitter,
 ) {
-    @Suppress("LongMethod")
-    fun split(): List<VulnEntry> {
-        if (vulnerabilityRepository.isEmpty()) return emptyList()
+    fun split(vulnerabilityData: List<VulnerabilityData>): List<VulnEntry> {
+        return vulnerabilityData.flatMap { groupedVulnerability: VulnerabilityData ->
+            val primaryVulnId = VulnId(groupedVulnerability.ids.first())
+            val splitPerId: List<VulnEntryIdData> = createVulnEntryIdData(groupedVulnerability, primaryVulnId)
+            val affectedReleaseBranches = groupedVulnerability.reportData.affected
+            val splitPerIdAndBranch: Map<BranchName, List<VulnEntryNonIdData>> =
+                affectedReleaseBranches.associate { releaseBranch ->
+                    val filteredReport: ReportDataPerBranch? =
+                        reportSplitter.filterOnReleaseBranch(releaseBranch, groupedVulnerability.reportData)
+                    val nonIdData: List<VulnEntryNonIdData> =
+                        createVulnEntryNonIdData(filteredReport, groupedVulnerability, releaseBranch)
+                    BranchName(releaseBranch.name) to nonIdData
+                }
+            createSplitVulnEntries(splitPerId, splitPerIdAndBranch)
+        }
+    }
 
-        val result: List<VulnEntry> =
-            vulnerabilityRepository.getVulnerabilities().flatMap { groupedVulnerability: VulnerabilityData ->
-                val primaryVulnId = VulnId(groupedVulnerability.ids[0])
-                val step1: List<VulnEntryPartialStep1> =
-                    groupedVulnerability.ids.map { id ->
-                        val vulnId = VulnId(id)
-                        splitGroupedVulnerability(vulnId, primaryVulnId, groupedVulnerability)
-                    }
-
-                val affectedReleaseBranches = groupedVulnerability.reportData.affected
-                val step2PerBranch: Map<BranchName, List<VulnEntryPartialStep2>> =
-                    affectedReleaseBranches.associate { releaseBranch ->
-                        val filteredReport: ReportDataPerBranch? =
-                            filterOnReleaseBranch(releaseBranch, groupedVulnerability.reportData)
-                        val step2 =
-                            filteredReport?.let { report ->
-                                val filteredAnalysis: AnalysisDataPerBranch? =
-                                    filterOnReleaseBranch(groupedVulnerability.analysisData)
-                                val filteredTask: TaskDataPerBranch? =
-                                    filterOnReleaseBranch(releaseBranch, groupedVulnerability.taskData)
-                                val filteredExecution: ExecutionDataPerBranch? =
-                                    filterOnReleaseBranch(releaseBranch, groupedVulnerability.executionData)
-                                val filteredInvolvedReleaseVersion: InvolvedReleaseVersion =
-                                    filterInvolvedReleaseVersions(
-                                        releaseBranch,
-                                        filteredReport,
-                                        filteredExecution,
-                                    )
-                                report.reporters.map { reporter ->
-                                    val reportBy = ReportBy(reporter.name, report.awareAt)
-                                    val involved =
-                                        filteredInvolvedReleaseVersion.let { involved ->
-                                            val affected =
-                                                involved.affected?.let { affected ->
-                                                    ReleaseVersion(
-                                                        affected.version,
-                                                        affected.releaseDate,
-                                                    )
-                                                }
-                                            val upcoming =
-                                                involved.upcoming?.let { upcoming ->
-                                                    ReleaseVersion(
-                                                        upcoming.version,
-                                                        upcoming.releaseDate,
-                                                    )
-                                                }
-                                            InvolvedRelease(affected, upcoming)
-                                        }
-                                    val reportedFor =
-                                        ReportFor(
-                                            BranchName(releaseBranch.name),
-                                            involved.affected?.let { BranchVersion(it.version) },
-                                        )
-                                    VulnEntryPartialStep2(
-                                        reportBy,
-                                        reportedFor,
-                                        filteredAnalysis,
-                                        filteredTask,
-                                        filteredExecution,
-                                        involved,
-                                    )
-                                }
-                            } ?: emptyList()
-
-                        BranchName(releaseBranch.name) to step2
-                    }
-
-                val foo: List<VulnEntry> =
-                    step1.flatMap { step ->
-                        step2PerBranch.entries.flatMap { (_, partial2) ->
-                            partial2.map { part ->
-                                val status = statusService.calculateStatus(part)
-                                VulnEntry(
-                                    id = step.id,
-                                    primaryVulnId = step.primaryVulnId,
-                                    groupIds = step.groupIds,
-                                    reportedBy = part.reportedBy,
-                                    reportedFor = part.reportedFor,
-                                    analysis = part.analysis,
-                                    task = part.task,
-                                    execution = part.execution,
-                                    involved = part.involved,
-                                    status = status,
-                                )
-                            }
+    private fun createVulnEntryNonIdData(
+        filteredReport: ReportDataPerBranch?,
+        groupedVulnerability: VulnerabilityData,
+        releaseBranch: ReleaseBranchData,
+    ) = filteredReport?.let { report ->
+        val filteredAnalysis: AnalysisDataPerBranch? =
+            analysisSplitter.filterOnReleaseBranch(groupedVulnerability.analysisData)
+        val filteredTask: TaskDataPerBranch? =
+            taskSplitter.filterOnReleaseBranch(releaseBranch, groupedVulnerability.taskData)
+        val filteredExecution: ExecutionDataPerBranch? =
+            executionSplitter.filterOnReleaseBranch(releaseBranch, groupedVulnerability.executionData)
+        val filteredInvolvedReleaseVersion: InvolvedReleaseVersion =
+            involvedReleasesSplitter.filterInvolvedReleaseVersions(releaseBranch, filteredReport, filteredExecution)
+        report.reporters.map { reporter ->
+            val reportBy = ReportBy(reporter.name, report.awareAt)
+            val involved =
+                filteredInvolvedReleaseVersion.let { involved ->
+                    val affected =
+                        involved.affected?.let { affected ->
+                            ReleaseVersion(
+                                affected.version,
+                                affected.releaseDate,
+                            )
                         }
-                    }
-                foo
-            }
+                    val upcoming =
+                        involved.upcoming?.let { upcoming ->
+                            ReleaseVersion(
+                                upcoming.version,
+                                upcoming.releaseDate,
+                            )
+                        }
+                    InvolvedRelease(affected, upcoming)
+                }
+            val reportedFor =
+                ReportFor(BranchName(releaseBranch.name), involved.affected?.let { BranchVersion(it.version) })
+            VulnEntryNonIdData(reportBy, reportedFor, filteredAnalysis, filteredTask, filteredExecution, involved)
+        }
+    } ?: emptyList()
 
-        return result
+    private fun createVulnEntryIdData(
+        groupedVulnerability: VulnerabilityData,
+        primaryVulnId: VulnId,
+    ) = groupedVulnerability.ids.map { id ->
+        val vulnId = VulnId(id)
+        splitGroupedVulnerability(vulnId, primaryVulnId, groupedVulnerability)
+    }
+
+    private fun createSplitVulnEntries(
+        splitPerId: List<VulnEntryIdData>,
+        splitPerIdAndBranch: Map<BranchName, List<VulnEntryNonIdData>>,
+    ) = splitPerId.flatMap { vuln ->
+        splitPerIdAndBranch.entries.flatMap { (_, vulnPerIdAndBranch) ->
+            vulnPerIdAndBranch.map { entry ->
+                val status = statusService.calculateStatus(entry)
+                VulnEntry(
+                    id = vuln.id,
+                    primaryVulnId = vuln.primaryVulnId,
+                    groupIds = vuln.groupIds,
+                    reportedBy = entry.reportedBy,
+                    reportedFor = entry.reportedFor,
+                    analysis = entry.analysis,
+                    task = entry.task,
+                    execution = entry.execution,
+                    involved = entry.involved,
+                    status = status,
+                )
+            }
+        }
     }
 
     private fun splitGroupedVulnerability(
         vulnId: VulnId,
         primaryVulnId: VulnId,
         groupedVulnerability: VulnerabilityData,
-    ): VulnEntryPartialStep1 {
+    ): VulnEntryIdData {
         val otherVulnIds: List<VulnId> = groupedVulnerability.ids.map(::VulnId).filterNot { it == vulnId }
-        return VulnEntryPartialStep1(vulnId, vulnId == primaryVulnId, otherVulnIds)
-    }
-
-    private fun filterOnReleaseBranch(
-        releaseBranch: ReleaseBranchData,
-        reportData: VulnlogReportData,
-    ): ReportDataPerBranch? {
-        return reportData.let { report ->
-            val relevant: List<ReleaseBranchData> = report.affected.filter { it == releaseBranch }
-            if (relevant.size > 1) {
-                error("Multiple vulnerability reports for the same release branch: $releaseBranch")
-            } else if (relevant.isEmpty()) {
-                null
-            } else {
-                ReportDataPerBranch(report.reporters, report.awareAt)
-            }
-        }
-    }
-
-    private fun filterOnReleaseBranch(analysisData: VulnlogAnalysisData?): AnalysisDataPerBranch? {
-        return if (analysisData == null) {
-            null
-        } else {
-            return AnalysisDataPerBranch(analysisData.analysedAt, analysisData.verdict, analysisData.reasoning)
-        }
-    }
-
-    private fun filterOnReleaseBranch(
-        releaseBranch: ReleaseBranchData,
-        taskData: VulnlogTaskData?,
-    ): TaskDataPerBranch? {
-        return if (taskData == null) {
-            null
-        } else {
-            val filteredOnReleaseBranch: Map<TaskAction, List<ReleaseBranchData>> =
-                taskData.taskOnReleaseBranch.entries
-                    .associate { it.key to it.value.filter { rb -> rb == releaseBranch } }
-                    .filter { it.value.isNotEmpty() }
-            if (filteredOnReleaseBranch.keys.size > 1) {
-                error("Multiple task actions for the same release branch are currently not supported")
-            } else if (filteredOnReleaseBranch.isEmpty() || filteredOnReleaseBranch.keys.isEmpty()) {
-                null
-            } else {
-                TaskDataPerBranch(filteredOnReleaseBranch.keys.first())
-            }
-        }
-    }
-
-    private fun filterOnReleaseBranch(
-        releaseBranch: ReleaseBranchData,
-        executionData: VulnlogExecutionData?,
-    ): ExecutionDataPerBranch? =
-        executionData?.let {
-            val filteredOnReleaseBranch =
-                executionData.executions
-                    .map { a -> a.releases.filter { rb -> rb == releaseBranch }.associateBy { a } }
-                    .flatMap { it.entries }
-                    .groupBy { it.key }
-                    .mapValues { entry -> entry.value.map { it.value }.first() }
-                    .map(::createVulnlogExecution)
-            return if (filteredOnReleaseBranch.isEmpty()) {
-                null
-            } else if (filteredOnReleaseBranch.size > 1) {
-                error("Multiple execution actions for the same release branch are currently not supported")
-            } else {
-                ExecutionDataPerBranch(filteredOnReleaseBranch.first())
-            }
-        }
-
-    private fun createVulnlogExecution(entry: Map.Entry<VulnlogExecution, ReleaseBranchData>): ExecutionPerBranch {
-        val key: VulnlogExecution = entry.key
-        return when (key) {
-            is VulnlogFixExecution -> FixedExecutionPerBranch(fixDate = key.fixDate)
-            is VulnlogSuppressPermanentExecution -> SuppressionPermanentExecutionPerBranch
-            is VulnlogSuppressUntilExecution -> SuppressionDateExecutionPerBranch(suppressUntilDate = key.untilDate)
-            is VulnlogSuppressUntilNextPublicationExecution -> SuppressionEventExecutionPerBranch
-        }
-    }
-
-    private fun filterInvolvedReleaseVersions(
-        releaseBranch: ReleaseBranchData,
-        filteredReport: ReportDataPerBranch,
-        filteredExecution: ExecutionDataPerBranch?,
-    ): InvolvedReleaseVersion {
-        val reportedAtDate: LocalDate = filteredReport.awareAt
-        val fixedAtDate: LocalDate? =
-            filteredExecution?.let { execution ->
-                if (execution.execution is FixedExecutionPerBranch) {
-                    (execution.execution as FixedExecutionPerBranch).fixDate
-                } else {
-                    null
-                }
-            }
-
-        val affected: InvolvedReleaseVersion =
-            affectedVersionService.findInvolvedVersions(ReportForBranch(reportedAtDate, releaseBranch))
-        val fixed: InvolvedReleaseVersion? =
-            fixedAtDate?.let { fixedAt ->
-                affectedVersionService.findInvolvedVersions(ReportForBranch(fixedAt, releaseBranch))
-            }
-        return if (fixed != null) {
-            InvolvedReleaseVersionImpl(affected.affected, fixed.upcoming)
-        } else {
-            InvolvedReleaseVersionImpl(affected.affected, affected.upcoming)
-        }
+        return VulnEntryIdData(vulnId, vulnId == primaryVulnId, otherVulnIds)
     }
 }

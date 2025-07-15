@@ -18,6 +18,7 @@ import dev.vulnlog.common.SubcommandData
 import dev.vulnlog.common.model.BranchName
 import dev.vulnlog.common.model.VulnEntry
 import dev.vulnlog.common.repository.BranchRepository
+import dev.vulnlog.common.repository.VulnerabilityDataRepository
 import dev.vulnlog.dslinterpreter.splitter.VulnEntrySplitter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
@@ -69,6 +70,7 @@ class MainCommand : CliktCommand(), KoinComponent {
     private val vulnEntrySplitter: VulnEntrySplitter by inject()
     private val filter: VulnEntryFilterService by inject { parametersOf(filterVulnerabilities, filterBranches) }
     private val releaseBranchRepository: BranchRepository by inject()
+    private val vulnerabilityRepository: VulnerabilityDataRepository by inject()
 
     override fun run() =
         runBlocking {
@@ -95,7 +97,8 @@ class MainCommand : CliktCommand(), KoinComponent {
                 withContext(Dispatchers.Default) {
                     rawVulnlogDslParserService.readAndParse(vulnlogFile)
 
-                    val splitVulnEntries: List<VulnEntry> = vulnEntrySplitter.split()
+                    val splitVulnEntries: List<VulnEntry> =
+                        vulnEntrySplitter.split(vulnerabilityRepository.getVulnerabilities())
                     val filteredVulnEntries: List<VulnEntry> = filter.filterVulnEntries(splitVulnEntries)
                     val filteredReleaseBranches: Set<BranchName> =
                         filter.filterReleaseBranches(releaseBranchRepository.getAllBranches())
