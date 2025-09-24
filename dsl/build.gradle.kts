@@ -1,9 +1,7 @@
-import com.vanniktech.maven.publish.SonatypeHost
-
 plugins {
     id("vulnlog.lib-convention")
     id("org.jetbrains.dokka") version "1.9.20"
-    id("com.vanniktech.maven.publish") version "0.30.0"
+    id("com.vanniktech.maven.publish") version "0.34.0"
 }
 
 description = "DLS definition for Vulnlog files."
@@ -63,7 +61,7 @@ val javadocJar by tasks.registering(Jar::class) {
 }
 
 mavenPublishing {
-    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     signAllPublications()
 
     coordinates(project.group.toString(), project.name, project.version.toString())
