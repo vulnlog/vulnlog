@@ -1,0 +1,23 @@
+:root {
+  --bulma-primary-h: 325deg;
+  --bulma-primary-s: 97%;
+  --bulma-primary-l: 55%;
+  --bulma-link-h: 304deg;
+  --bulma-link-s: 38%;
+  --bulma-link-l: 42%;
+  --bulma-info-h: 311deg;
+  --bulma-info-s: 100%;
+  --bulma-info-l: 98%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fill-colour {
+    fill: #ebecf0;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .fill-colour {
+    fill: #2e333d;
+  }
+}

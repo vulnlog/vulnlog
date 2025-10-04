@@ -1,0 +1,27 @@
+{
+  "name": "vl-web",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "SITE_URL=https://vulnlog.dev eleventy",
+    "start": "SITE_URL=http://localhost:8080 eleventy --serve",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@11ty/eleventy": "^3.1.2",
+    "@11ty/eleventy-plugin-syntaxhighlight": "^5.0.0",
+    "@kevingimbel/eleventy-plugin-mermaid": "^2.2.1",
+    "bulma": "^1.0.4",
+    "liquid": "^5.1.1",
+    "prismjs": "^1.30.0"
+  },
+  "devDependencies": {
+    "markdown-it-anchor": "^9.2.0",
+    "slugify": "^1.6.6"
+  }
+}
