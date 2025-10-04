@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ description }}">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/css/bulma.min.css">
+  <link rel="stylesheet" href="/css/vulnlog.css">
+  <link rel="stylesheet" href="/css/prism-tomorrow.min.css">
+  <script src="https://kit.fontawesome.com/efe091501b.js" crossorigin="anonymous"></script>
+  <script defer data-domain="vulnlog.dev"
+          src="https://plausible.io/js/script.file-downloads.hash.outbound-links.tagged-events.js"></script>
+  <script>window.plausible = window.plausible || function () {
+      (window.plausible.q = window.plausible.q || []).push(arguments)
+    }</script>
+</head>
+<body>
+{% include 'header.liquid' %}
+{% if page.url == "/" %}
+  {% include 'hero.liquid' %}
+{% endif %}
+<main class="section">
+  <div class="container">
+    <header class="block">
+      {% if page.url != "/" %}
+        {% include 'breadcrumbs.liquid' %}
+      {% endif %}
+    </header>
+    <div class="content is-normal">
+      <article>
+        {{ content }}
+      </article>
+    </div>
+  </div>
+</main>
+{% include 'footer.liquid' %}
+</body>
+</html>

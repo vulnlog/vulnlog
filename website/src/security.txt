@@ -1,0 +1,2 @@
+Contact: mailto:hello@vulnlog.dev
+Expires: 2027-04-30T22:00:00.000Z
