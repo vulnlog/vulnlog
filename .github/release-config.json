@@ -1,30 +1,83 @@
 {
-  "template": "#{{CHANGELOG}}",
+  "template": "# 🎉 Release {{RELEASE_TAG}}\n\n{{#if RELEASE_DESCRIPTION}}{{RELEASE_DESCRIPTION}}\n\n{{/if}}{{#if HIGHLIGHTS}}\n## 🌟 Highlights\n{{#each HIGHLIGHTS}}\n- {{this}}\n{{/each}}\n{{/if}}\n\n{{#if BREAKING}}\n## ⚠️ Breaking Changes\n{{#each BREAKING}}\n- {{this}}\n{{/each}}\n{{/if}}\n\n#{{CHANGELOG}}\n\n---\n\n{{#if CONTRIBUTORS}}\n### 🙏 Thanks to our contributors\n{{#each CONTRIBUTORS}}\n- @{{this}}\n{{/each}}\n{{/if}}\n\n{{#if COMPARE_URL}}\n[Full diff]({{COMPARE_URL}})\n{{/if}}\n",
   "categories": [
     {
-      "title": "## Feature",
+      "title": "## ✨ Features",
       "labels": [
         "feat",
         "feature"
       ]
     },
     {
-      "title": "## Fix",
+      "title": "## 🛠 Improvements",
+      "labels": [
+        "perf",
+        "refactor",
+        "style"
+      ]
+    },
+    {
+      "title": "## 🐛 Bug Fixes",
       "labels": [
         "fix",
         "bug"
       ]
     },
     {
-      "title": "## Other",
-      "labels": []
+      "title": "## 📚 Documentation",
+      "labels": [
+        "docs"
+      ]
+    },
+    {
+      "title": "## 🚦 CI/CD",
+      "labels": [
+        "ci"
+      ]
+    },
+    {
+      "title": "## 🧱 Build",
+      "labels": [
+        "build"
+      ]
+    },
+    {
+      "title": "## ✅ Tests",
+      "labels": [
+        "test"
+      ]
+    },
+    {
+      "title": "## 🔁 Other",
+      "labels": [
+        "chore",
+        "revert"
+      ]
     }
   ],
   "label_extractor": [
     {
-      "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\([\\w\\-\\.]+\\))?(!)?: ([\\w ])+([\\s\\S]*)",
+      "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\(([\\w\\-\\.]+)\\))?(!)?:\\s(.+)$",
       "on_property": "title",
       "target": "$1"
     }
-  ]
+  ],
+  "transformer": {
+    "pr_template": "- {{TITLE}}{{#if SCOPE}} ({{SCOPE}}){{/if}} by @{{AUTHOR}} in {{PULL_REQUEST}}",
+    "issue_template": "- {{TITLE}} in {{ISSUE}}"
+  },
+  "pr_template": "- {{TITLE}} by @{{AUTHOR}} in {{PULL_REQUEST}}",
+  "empty_template": "_No changes in this release._",
+  "sort": {
+    "order": [
+      "Features",
+      "Improvements",
+      "Bug Fixes",
+      "Documentation",
+      "CI/CD",
+      "Build",
+      "Tests",
+      "Other"
+    ]
+  }
 }
