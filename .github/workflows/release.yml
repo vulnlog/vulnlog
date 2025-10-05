@@ -27,14 +27,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
 
       - name: Check the project
-        working-directory: cli-app
         run: ./gradlew check
 
       - name: Set version
         run: echo "${{ github.event.inputs.version }}" > version.txt
 
       - name: Create project ZIP
-        working-directory: cli-app
         run: ./gradlew clean :cli:distZip -PappVersion=$(cat version.txt)
 
       - name: Generate Release Notes

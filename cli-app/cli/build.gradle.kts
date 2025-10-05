@@ -23,7 +23,6 @@ application {
     applicationName = "vl"
     // because of Java 21 warning: JNA loads a native library via System.load, which now requires enabling native access
     applicationDefaultJvmArgs += listOf("--enable-native-access=ALL-UNNAMED")
-
 }
 
 tasks.withType<Jar> {
