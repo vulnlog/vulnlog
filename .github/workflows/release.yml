@@ -68,6 +68,7 @@ jobs:
         with:
           tag_name: v${{ github.event.inputs.version }}
           name: "Vulnlog v${{ github.event.inputs.version }}"
+          prerelease: true
           body: |
             ${{ steps.notes.outputs.changelog }}
 

@@ -49,7 +49,7 @@ trim = true
 # See https://www.conventionalcommits.org
 conventional_commits = true
 # Exclude commits that do not match the conventional commits specification.
-filter_unconventional = false
+filter_unconventional = true
 # An array of regex based parsers for extracting data from the commit message.
 # Assigns commits to groups.
 # Optionally sets the commit's scope and can decide to exclude commits from further processing.
