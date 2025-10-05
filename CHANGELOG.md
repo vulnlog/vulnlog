@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Generate suppression files for various security scanners such as OWASP Dependency Check, Snyk and Trivy. 
+- Generate suppression files for various security scanners such as OWASP Dependency Check, Snyk and Trivy.
 
 ## [0.8.0] - 2025-06-01
 
@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CI: Add Gradle Vulnlog publishing to the CI pipeline.
 
-## [0.5.0] - 2025-03-10
+## 0.5.0 - 2025-03-10
 
 ### Added
 
@@ -99,7 +99,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI: Default output (without subcommand) is now the JSON structure.
 - DSL: Rework execution syntax
 
-## [0.4.0] - 2025-02-21
+## 0.4.0 - 2025-02-21
 
 ### Added
 
@@ -113,27 +113,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Previous DSL versions.
 
-## [0.3.3] - 2024-12-21
+## 0.3.3 - 2024-12-21
 
 ### Added
 
 - Fix CI pipeline.
 - Upload release artifact to webserver.
 
-## [0.3.2] - 2024-12-21
+## 0.3.2 - 2024-12-21
 
 ### Added
 
 - Fix API documentation publishing to webserver.
 - Set CLI binary name to vl.
 
-## [0.3.1] - 2024-12-20
+## 0.3.1 - 2024-12-20
 
 ### Added
 
 - New DSL API documentation releases.
 
-## [0.3.0] - 2024-12-16
+## 0.3.0 - 2024-12-16
 
 ### Added
 
@@ -144,8 +144,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   supported.
 - Add GitHub Action publishing pipeline for CLI application and DSL JAR package.
 
-## [0.2.0] - 2024-11-24
+## 0.2.0 - 2024-11-24
 
 ### Added
 
 - Initial vulnerability DSL.
+
+[unreleased]: https://github.com/vulnlog/vulnlog/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/vulnlog/vulnlog/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/vulnlog/vulnlog/compare/v0.7.2...v0.8.0
+[0.7.2]: https://github.com/vulnlog/vulnlog/compare/v0.7.1...v0.7.2
+[0.7.1]: https://github.com/vulnlog/vulnlog/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/vulnlog/vulnlog/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/vulnlog/vulnlog/compare/v0.5.3...v0.6.0
+[0.5.3]: https://github.com/vulnlog/vulnlog/compare/v0.5.2...v0.5.3
+[0.5.2]: https://github.com/vulnlog/vulnlog/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/vulnlog/vulnlog/releases/tag/v0.5.1
