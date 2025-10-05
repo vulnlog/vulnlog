@@ -57,7 +57,7 @@ class MainCommand : CliktCommand(), KoinComponent {
         .default(emptyList())
 
     private val config by findOrSetObject { SubcommandData("", emptyList(), emptySet()) }
-    private val cliVersion: String = object {}.javaClass.getResource("/version.txt")?.readText()?.lines()?.first() ?: ""
+    private val cliVersion: String = object {}.javaClass.`package`.implementationVersion ?: "dev"
 
     init {
         eagerOption("-v", "--version", help = "Show version number and exit.") {

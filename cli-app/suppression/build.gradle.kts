@@ -9,4 +9,3 @@ dependencies {
 }
 
 group = "dev.vulnlog"
-version = providers.gradleProperty("vlVersion").get()

@@ -1,0 +1,33 @@
+{
+  "categories": [
+    {
+      "title": "🚀 Features",
+      "labels": [
+        "feat",
+        "feature"
+      ]
+    },
+    {
+      "title": "🐛 Fixes",
+      "labels": [
+        "fix",
+        "bugfix"
+      ]
+    },
+    {
+      "title": "🧹 Maintenance",
+      "labels": [
+        "chore",
+        "ci",
+        "refactor"
+      ]
+    },
+    {
+      "title": "📝 Documentation",
+      "labels": [
+        "docs"
+      ]
+    }
+  ],
+  "template": "## Changes\n\n$CHANGES"
+}

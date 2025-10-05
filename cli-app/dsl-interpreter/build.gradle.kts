@@ -5,7 +5,6 @@ plugins {
 description = "The Vulnlog DSL parsing interpreter parses Vulnlog DSL files."
 
 group = "dev.vulnlog"
-version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     api(project(":dsl"))

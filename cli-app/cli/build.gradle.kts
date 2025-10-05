@@ -1,5 +1,3 @@
-import org.apache.tools.ant.filters.ReplaceTokens
-
 plugins {
     id("vulnlog.app-convention")
 }
@@ -7,7 +5,6 @@ plugins {
 description = "CLI application parsing Vulnlog files."
 
 group = "dev.vulnlog"
-version = providers.gradleProperty("vlVersion").get()
 
 dependencies {
     implementation(project(":dsl-interpreter"))
@@ -24,13 +21,13 @@ dependencies {
 application {
     mainClass.set("dev.vulnlog.cli.AppKt")
     applicationName = "vl"
+    // because of Java 21 warning: JNA loads a native library via System.load, which now requires enabling native access
+    applicationDefaultJvmArgs += listOf("--enable-native-access=ALL-UNNAMED")
+
 }
 
-tasks.named<Copy>("processResources") {
-    val vlVersion = providers.gradleProperty("vlVersion")
-    doFirst {
-        filesMatching("version.txt") {
-            filter(ReplaceTokens::class, "tokens" to mapOf("vlVersion" to vlVersion.get()))
-        }
+tasks.withType<Jar> {
+    manifest {
+        attributes["Implementation-Version"] = version
     }
 }
