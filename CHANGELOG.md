@@ -9,12 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update release workflow and configuration
-
-## [0.9.1-test1] - 2025-10-05
-
-### Changed
-
 - Use own webserver instead of github pages
 - Rework version and releaseing
 - Bump cliff Github action to version 4
@@ -22,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use example config for cliff's keep-a-changelog format
 - Add `contents: write` permission to release workflow
 - Update for v0.9.1-test1
+- Update release workflow and configuration
+- Update for v0.9.1-test1
+- Revamp release configuration template and category mapping
 
 ## [0.9.0] - 2025-06-29
 
@@ -54,7 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add resolutions without affected version as simplification
 - Add publication for the vulnlog script language
 
-[0.9.1-test1]: https://github.com/vulnlog/vulnlog/compare/v0.9.1-test1..v0.9.1-test1
 [0.9.1-test1]: https://github.com/vulnlog/vulnlog/compare/v0.9.0..v0.9.1-test1
 [0.9.0]: https://github.com/vulnlog/vulnlog/compare/v0.8.0..v0.9.0
 [0.7.1]: https://github.com/vulnlog/vulnlog/compare/v0.7.0..v0.7.1
