@@ -97,8 +97,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
       - name: Create project ZIP
         run: |
-          VERSION=${{ github.ref_name }}
-          ./gradlew clean :cli:distZip -PappVersion="$VERSION#v"
+          ./gradlew clean :cli:distZip -PappVersion=${{ github.ref_name }}
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
