@@ -1,9 +1,12 @@
-name: PR Validation
+name: Continuous Integration
 
 on:
   pull_request:
+  push:
     branches:
       - main
+  schedule:
+    - cron: "0 0 * * 0"
 
 permissions:
   contents: read
@@ -12,19 +15,15 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Check out project
+      - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
           architecture: x64
-
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v3
-
-      - name: Run Gradle check
+      - name: Check
         run: ./gradlew check
