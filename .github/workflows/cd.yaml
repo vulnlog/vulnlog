@@ -13,7 +13,6 @@ jobs:
     name: Generate changelog
     runs-on: ubuntu-latest
     outputs:
-      changelog_body: ${{ steps.changelog.outputs.content }}
       release_notes_body: ${{ steps.release-notes.outputs.content }}
     steps:
       - name: Checkout
@@ -22,10 +21,18 @@ jobs:
           fetch-depth: 0
       - name: Generate a changelog
         uses: orhun/git-cliff-action@v4
-        id: changelog
         with:
           config: .github/changelog.toml
           args: --tag ${{ github.ref }} --github-repo ${{ github.repository }}
+        env:
+          OUTPUT: CHANGELOG.md
+      - name: Commit CHANGELOG.md
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): update for ${{ github.ref }}"
+          git push
       - name: Generate release notes
         uses: orhun/git-cliff-action@v4
         id: release-notes
@@ -73,12 +80,33 @@ jobs:
       - name: Publish Gradle plugin
         run: ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }}
 
-  test-changelog:
-    name: Test changelog output
-    needs: generate-changelog
+  publish-release:
+    name: Publish release
+    needs: [ generate-changelog, publish-dsl, publish-gradle-plugin ]
     runs-on: ubuntu-latest
     steps:
-      - name: Print changelog
-        run: echo "${{needs.generate-changelog.outputs.changelog_body}}"
-      - name: Print release notes
-        run: echo "${{needs.generate-changelog.outputs.release_notes_body}}"
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Create project ZIP
+        run: |
+          VERSION=${{ github.ref_name }}
+          ./gradlew clean :cli:distZip -PappVersion="$VERSION#v"
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Vulnlog ${{ github.ref_name }}"
+          prerelease: true
+          body: |
+            ${{needs.generate-changelog.outputs.release_notes_body}}
+
+            👉 Full Changelog: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
+          files: cli-app/cli/build/distributions/*.zip
