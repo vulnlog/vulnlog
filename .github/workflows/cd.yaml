@@ -1,0 +1,41 @@
+name: Continuous Deployment
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  generate-changelog:
+    name: Generate changelog
+    runs-on: ubuntu-latest
+    outputs:
+      changelog_body: ${{ steps.changelog.outputs.content }}
+      release_notes_body: ${{ steps.release-notes.outputs.content }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v4
+        id: changelog
+        with:
+          config: .github/changelog.toml
+          args: --tag ${{ github.ref }} --github-repo ${{ github.repository }}
+      - name: Generate release notes
+        uses: orhun/git-cliff-action@v4
+        id: release-notes
+        with:
+          config: .github/release-notes.toml
+          args: --latest --github-repo ${{ github.repository }}
+
+  test-changelog:
+    name: Test changelog output
+    needs: generate-changelog
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print changelog
+        run: echo "${{needs.generate-changelog.outputs.changelog_body}}"
+      - name: Print release notes
+        run: echo "${{needs.generate-changelog.outputs.release_notes_body}}"
