@@ -56,6 +56,23 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: ./gradlew clean publishAndReleaseToMavenCentral --no-configuration-cache
 
+  publish-gradle-plugin:
+    name: Publish Gradle plugin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Publish Gradle plugin
+        run: ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }}
+
   test-changelog:
     name: Test changelog output
     needs: generate-changelog
