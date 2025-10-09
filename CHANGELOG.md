@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Github action workflow to deploy project website to Github pages by @ryru
 
 ### Changed
+- Fix typo in Gradle property flag for app version in CD workflow by @ryru
+- Pass version without "v" prefix to app version parameter in CD workflow by @ryru
+- Update for refs/tags/v0.9.1 by @github-actions[bot]
 - Fix rebase issues in changelog updates during CD workflow by @ryru
 - Allow non-conventional commits in changelog generation by @ryru
 - Strip "v" prefix from version in CD workflow by @ryru
