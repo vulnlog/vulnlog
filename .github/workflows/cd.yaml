@@ -65,7 +65,7 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
-          ./gradlew clean publishAndReleaseToMavenCentral --no-configuration-cache --PappVersion="$VERSION"
+          ./gradlew clean publishAndReleaseToMavenCentral --no-configuration-cache -PappVersion="$VERSION"
 
   publish-gradle-plugin:
     name: Publish Gradle plugin
@@ -85,7 +85,7 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
-          ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }} --PappVersion="$VERSION"
+          ./gradlew :gradle-plugin:publishPlugins -Pgradle.publish.key=${{ secrets.GRADLE_PLUGIN_KEY }} -Pgradle.publish.secret=${{ secrets.GRADLE_PLUGIN_SECRET }} -PappVersion="$VERSION"
 
   publish-release:
     name: Publish release
