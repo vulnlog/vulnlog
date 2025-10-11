@@ -1,9 +1,8 @@
 [![Vulnlog](https://vulnlog.dev/logo/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
 :star: Please star us on [Github](https://github.com/vulnlog/vulnlog) to promote the project!
 
-[![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)](https://github.com/vulnlog/vulnlog/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)](https://github.com/vulnlog/vulnlog/actions/workflows/build.yml)
-[![License](https://img.shields.io/github/license/vulnlog/vulnlog)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog?color=%23f405c5)](https://github.com/vulnlog/vulnlog/releases)
+[![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
 
 Vulnlog is a tool that enables you to track, organise and communicate reported software vulnerabilities all in one
 place.
