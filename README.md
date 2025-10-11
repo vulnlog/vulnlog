@@ -1,9 +1,9 @@
 [![Vulnlog](https://vulnlog.dev/logo/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
+
 :star: Please star us on [Github](https://github.com/vulnlog/vulnlog) to promote the project!
 
-[![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog)](https://github.com/vulnlog/vulnlog/releases)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/vulnlog/vulnlog/build.yml)](https://github.com/vulnlog/vulnlog/actions/workflows/build.yml)
-[![License](https://img.shields.io/github/license/vulnlog/vulnlog)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog?color=%23f405c5)](https://github.com/vulnlog/vulnlog/releases)
+[![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
 
 Vulnlog is a tool that enables you to track, organise and communicate reported software vulnerabilities all in one
 place.
@@ -16,7 +16,7 @@ suppression files.
 **Caution: The project is still in early development, the DSL, CLI commands, the Gradle plugin and the HTML report are
 subject to change.** Any feedback on the tool is very appreciated!
 
-# Features
+## Features
 
 - A simple DSL for documenting reported software vulnerabilities in one place.
 - Supports multiple parallel release branches.
@@ -25,7 +25,7 @@ subject to change.** Any feedback on the tool is very appreciated!
 - A Gradle plugin to easily integrate Vulnlog into existing workflows.
 - A CLI tool for use locally or within your CI pipeline.
 
-# Quick Start
+## Quick Start
 
 The easiest way is to use the [Gradle Vulnlog plugin](https://plugins.gradle.org/plugin/dev.vulnlog.dslplugin). Add the
 Vulnlog DSL plugin to your `build.gradle.kts` file:
@@ -101,7 +101,7 @@ created for demonstration purposes.
 Generate one report per release branch: `vl definitions.vl.kts report --output ./` This should produce
 `./report-branch1.html` and `./report-branch2.html`.
 
-# Documentation and more Information
+## Documentation and more Information
 
 For more information, check out the [project website](https://vulnlog.dev/), the release change logs
 in [CHANGELOG.md](CHANGELOG.md), the DSL troubleshooting guide in [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and
@@ -112,15 +112,21 @@ To see the Vulnlog in action, check out this [demo project](https://github.com/v
 - [Getting Started](https://vulnlog.dev/getting-started/)
 - [DSL Reference](https://vulnlog.dev/documentation/)
 
-# Contributing & Support
+## Contributors
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
+Thanks goes to these wonderful people ✨
 
-If you like the project, please consider giving it a star :star: and follow us on social media:
+<a href="https://github.com/vulnlog/vulnlog/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=vulnlog/vulnlog"  alt="List of all contributors."/>
+</a>
 
-- Bluesky: [@vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
-- Mastodon: [@vulnlog@infosec.exchange](https://infosec.exchange/@vulnlog)
+Made with [contrib.rocks](https://contrib.rocks).
 
-# License
+## Socials
+
+[![Bluesky followers](https://img.shields.io/bluesky/followers/vulnlog.bsky.social?style=flat&logo=bluesky&labelColor=white&color=blue)](https://bsky.app/profile/vulnlog.bsky.social)
+[![Mastodon followers](https://img.shields.io/mastodon/follow/114149693629631038?domain=infosec.exchange&style=flat&logo=mastodon&labelColor=white&color=blue)](https://infosec.exchange/@vulnlog)
+
+## License
 
 Vulnlog is licensed under the [GPL-3.0 License](LICENSE).
