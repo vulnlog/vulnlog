@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.2] - 2025-10-11
+
+### Changed
+- Add step to create GitHub discussion for new releases in CD workflow by @ryru in [#39](https://github.com/vulnlog/vulnlog/pull/39)
+- Improve readme by @ryru in [#38](https://github.com/vulnlog/vulnlog/pull/38)
+- Add release instructions in `Releasing.md` by @ryru
+- Update for refs/tags/v0.9.1 by @github-actions[bot]
+
+### Fixed
+- Fix CLI version resolution in Gradle plugin by @ryru in [#37](https://github.com/vulnlog/vulnlog/pull/37)
+
 ## [0.9.1] - 2025-10-09
 
 ### Added
@@ -371,6 +382,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove all old DSL code by @ryru
 - Remove properties in vuln context block to simplify the DSL by @ryru
 
+[0.9.2]: https://github.com/vulnlog/vulnlog/compare/v0.9.1...v0.9.2
 [0.9.1]: https://github.com/vulnlog/vulnlog/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/vulnlog/vulnlog/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/vulnlog/vulnlog/compare/v0.7.1...v0.8.0
