@@ -118,3 +118,14 @@ jobs:
 
             👉 Full Changelog: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
           files: cli-app/cli/build/distributions/*.zip
+      - name: Create a new GitHub discussion
+        id: create-discussion
+        uses: abirismyname/create-discussion@main
+        with:
+          title: Vulnlog ${{ github.ref_name }} is released
+          body: |
+            Vulnlog ${{ github.ref_name }} is released!
+            
+            For a full description of changes, take a look at our [release notes](https://github.com/vulnlog/vulnlog/releases/tag/${{ github.ref_name }}).
+          category-name: Announcements
+          github-token: ${{ secrets.GITHUB_TOKEN }}
