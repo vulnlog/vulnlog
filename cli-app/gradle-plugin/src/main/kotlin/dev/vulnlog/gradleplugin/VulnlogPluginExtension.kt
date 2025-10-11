@@ -41,5 +41,5 @@ open class VulnlogPluginExtension(objects: ObjectFactory) {
      */
     val suppressionOutput: DirectoryProperty = objects.directoryProperty()
 
-    private fun readVersion() = javaClass.getResource("/version.txt")?.readText()?.lines()?.first().orEmpty()
+    private fun readVersion() = object {}.javaClass.`package`.implementationVersion ?: "dev"
 }
