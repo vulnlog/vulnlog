@@ -1,81 +1,56 @@
-# Contributing to Vulnlog
+# Vulnlog Contributor’s Guide
 
-Thank you for your interest in contributing to Vulnlog! 🚀
+Welcome to the Vulnlog community, and thank you for contributing! This guide explains how to get involved.
 
-We welcome contributions of all kinds, whether it's bug reports, feature requests, documentation improvements, or code
-contributions.
+* [Licensing](#licensing)
+* [Issue Tracking](#issue-tracking)
+* [Pull Requests](#pull-requests)
+* [Maintainers](#maintainers)
 
-## Getting Started
+## Licensing
 
-1. Fork the Repository: Click the Fork button at the top of this repository.
-2. Clone Your Fork:
-   ```sh
-   git clone https://github.com/vulnlog/vulnlog.git
-   cd vulnlog
-   ```
-3. Create a Branch for Your Changes:
-   ```sh
-   git checkout -b feature/your-feature-name
-   ```
+By contributing, you agree that your contributions will be licensed under the same license as this project
+(see [LICENSE](LICENSE)).
 
-4. Make Your Changes: Ensure your code follows the project's coding style and best practices.
-5. Commit and Push:
-   ```sh
-    git add .
-    git commit -m "Describe your changes"
-    git push origin feature/your-feature-name
-   ```
+## Issue Tracking
 
-6. Submit a Pull Request (PR):
+To file a bug or feature request, use [GitHub](https://github.com/vulnlog/vulnlog/issues/new). Be sure to include the
+following information:
 
-- Navigate to your forked repository on GitHub.
-- Click the New Pull Request button.
-- Select the main branch as the base and your feature branch as the compare.
-- Add a clear description of your changes.
-- Submit the PR.
+* Context
+    * What are/were you trying to achieve?
+    * What’s the impact of this bug/feature?
 
-## Code Guidelines
+For bug reports, additionally include the following information:
 
-- Follow the existing code style used in the project.
-- Write clear and concise commit messages.
-- Keep changes focused and small (one feature or fix per PR).
-- If modifying DSL definitions, update the README.md accordingly.
+* The output of vl --version.
+* The complete error message.
+* The simplest possible steps to reproduce.
 
-## Reporting Issues
+## Pull Requests
 
-If you find a bug or want to request a feature:
+When preparing a pull request, follow this checklist:
 
-- Check the existing issues to avoid duplicates.
-- Open a new issue with:
-    - A clear title.
-    - Steps to reproduce (if applicable).
-    - Expected and actual behavior.
-    - Any relevant logs or screenshots.
+* Imitate the conventions of surrounding code.
+* Format code with ./gradlew ktlintFormat (otherwise the build will fail).
+* Verify that the JVM build (./gradlew build) succeeds.
+* Use [conventional commit](https://www.conventionalcommits.org) messages.
+* Follow the seven rules of great Git commit messages:
+    * Separate the subject from the body with a blank line.
+    * Limit the subject line to 50 characters.
+    * Capitalize the subject line.
+    * Do not end the subject line with a period.
+    * Use the imperative mood in the subject line.
+    * Wrap the body at 72 characters.
+    * Use the body to explain what and why vs. how.
 
-## Development Setup
+Important: If you plan to make significant changes or add new features, we encourage you to first discuss them with the
+wider Vulnlog developer community. You can do this by filing
+a [GitHub Issue](https://github.com/vulnlog/vulnlog/issues/new) or by
+starting [GitHub Discussion](https://github.com/vulnlog/vulnlog/discussions). This will save time and increase the
+chance of your pull request being accepted.
 
-### Prerequisites
+## Maintainers
 
-- Java (Version 21)
-
-### Running the Project
-
-```sh
-./gradlew build
-./gradlew test
-```
-
-## Community & Support
-
-- Follow us on Bluesky or Mastodon for updates, discussions, and
-  announcements:
-    - [vulnlog.bsky.social](https://bsky.app/profile/vulnlog.bsky.social)
-    - [infosec.exchange/@vulnlog](https://infosec.exchange/@vulnlog)
-- Contact us via issues or pull requests.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the same license as this project ([GPL-3.0
-License](LICENSE)).
-
-Happy coding! 🎉
+The project’s maintainers (those with write access to the upstream repository) are listed
+in [MAINTAINERS.md](MAINTAINERS.md).
