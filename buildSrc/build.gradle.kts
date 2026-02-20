@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
     implementation(libs.dependencyCheckGradle)
-    implementation(libs.detektGradlePlugin)
+//    implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
     implementation(libs.kotlinxSerializationGradlePlugin)
     implementation(libs.ktlintGradle)
