@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vulnlog.dev/schemas/v1/defs/report.json",
+  "title": "Vulnlog Report Entry",
+  "description": "Records that a specific SCA scanner or other source reported a vulnerability.",
+  "type": "object",
+  "required": [
+    "reporter",
+    "at"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "reporter": {
+      "$ref": "common.json#/$defs/reporterType",
+      "description": "The scanner or source type that reported this vulnerability."
+    },
+    "at": {
+      "$ref": "common.json#/$defs/date",
+      "description": "Date the vulnerability was reported by this scanner or source."
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Description of the report source (e.g., 'Oracle Critical Patch Update April 2022'). Optional for scanner reporters. Required by the CLI for reporter type 'other'."
+    },
+    "vuln_id": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "description": "Scanner-specific vulnerability identifiers (e.g., 'SNYK-JAVA-LOG4J-2314720'). Used when generating scanner-specific suppression files."
+    },
+    "suppress": {
+      "$ref": "#/$defs/suppressEntry"
+    }
+  },
+  "$defs": {
+    "suppressEntry": {
+      "type": "object",
+      "required": [
+        "expires_at"
+      ],
+      "additionalProperties": false,
+      "description": "Controls time-limited suppression for a specific scanner.",
+      "properties": {
+        "expires_at": {
+          "$ref": "common.json#/$defs/date",
+          "description": "Expiration date of the suppression. After this date, the CLI no longer includes this entry in the generated suppression file."
+        }
+      }
+    }
+  }
+}
