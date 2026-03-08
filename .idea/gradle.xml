@@ -28,6 +28,7 @@
             <option value="$PROJECT_DIR$/cli-app/gradle-plugin" />
             <option value="$PROJECT_DIR$/cli-app/report" />
             <option value="$PROJECT_DIR$/cli-app/suppression" />
+            <option value="$PROJECT_DIR$/next/cli-app" />
           </set>
         </option>
       </GradleProjectSettings>

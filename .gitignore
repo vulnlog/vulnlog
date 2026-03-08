@@ -44,3 +44,6 @@ bin/
 
 ### Snyk CLI binary ###
 snyk
+
+### Nodejs
+**/node_modules

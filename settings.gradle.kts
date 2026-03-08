@@ -24,4 +24,6 @@ project(":gradle-plugin").projectDir = file("cli-app/gradle-plugin")
 project(":report").projectDir = file("cli-app/report")
 project(":suppression").projectDir = file("cli-app/suppression")
 
-//includeBuild("cli-app")
+include(":next")
+
+project(":next").projectDir = file("next/cli-app")
