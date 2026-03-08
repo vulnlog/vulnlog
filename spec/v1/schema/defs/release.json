@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vulnlog.dev/schemas/v1/defs/release.json",
+  "title": "Vulnlog Release",
+  "description": "A release tracked in this Vulnlog file. Releases must be listed in chronological order (oldest first).",
+  "type": "object",
+  "required": [
+    "id"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique release identifier (e.g., '8.1.1', '2.0.0-SNAPSHOT')."
+    },
+    "published_at": {
+      "$ref": "common.json#/$defs/date",
+      "description": "Publication date of the release. Absence indicates the release is not yet published."
+    },
+    "purls": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/purlEntry"
+      },
+      "minItems": 1,
+      "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents. Tags on purl entries enable scoped VEX generation."
+    }
+  },
+  "$defs": {
+    "purlEntry": {
+      "type": "object",
+      "required": [
+        "purl"
+      ],
+      "additionalProperties": false,
+      "description": "A release artifact identified by its Package URL, optionally tagged for scoping.",
+      "properties": {
+        "purl": {
+          "$ref": "common.json#/$defs/purl",
+          "description": "The versioned Package URL for this artifact in this release (e.g., 'pkg:docker/demo-project@8.1.1')."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Tags associated with this purl. Used to match vulnerability tags for scoped VEX generation."
+        }
+      }
+    }
+  }
+}
