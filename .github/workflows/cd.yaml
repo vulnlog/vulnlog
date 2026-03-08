@@ -70,7 +70,7 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
-          ./gradlew :next:nativeCompile -PappVersion="$VERSION"
+          ./gradlew :next:nativeCompile --no-configuration-cache -PappVersion="$VERSION"
       - name: Package native image (Unix)
         if: runner.os != 'Windows'
         run: |

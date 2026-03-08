@@ -11,8 +11,32 @@ application {
     applicationName = "vulnlog"
 }
 
-tasks.withType<Jar> {
-    manifest {
-        attributes["Implementation-Version"] = version
+val generateBuildInfo by tasks.registering {
+    val versionValue = project.version.toString()
+    val outputDir = layout.buildDirectory.dir("generated/source/buildInfo")
+
+    inputs.property("version", versionValue)
+    outputs.dir(outputDir)
+
+    doLast {
+        val buildInfoFile = outputDir.get().file("dev/vulnlog/cli/BuildInfo.kt").asFile
+        buildInfoFile.parentFile.mkdirs()
+        buildInfoFile.writeText(
+            """
+            package dev.vulnlog.cli
+
+            internal object BuildInfo {
+                const val VERSION = "$versionValue"
+            }
+            """.trimIndent() + "\n",
+        )
+    }
+}
+
+kotlin {
+    sourceSets {
+        main {
+            kotlin.srcDir(generateBuildInfo)
+        }
     }
 }

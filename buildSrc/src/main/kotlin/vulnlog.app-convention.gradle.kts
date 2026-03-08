@@ -5,13 +5,8 @@ plugins {
 }
 
 // GraalVM Native Build Tools does not yet fully support configuration cache.
-// Mark affected tasks explicitly so cache still works for non-native builds.
-tasks.withType<org.graalvm.buildtools.gradle.tasks.GenerateResourcesConfigFile>().configureEach {
-    notCompatibleWithConfigurationCache("GraalVM Native Build Tools plugin is not yet configuration cache compatible")
-}
-tasks.withType<org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask>().configureEach {
-    notCompatibleWithConfigurationCache("GraalVM Native Build Tools plugin is not yet configuration cache compatible")
-}
+// Always pass --no-configuration-cache when running native tasks locally:
+//   ./gradlew :next:nativeCompile --no-configuration-cache
 
 graalvmNative {
     binaries {
