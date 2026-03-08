@@ -1,5 +1,7 @@
 package dev.vulnlog.cli.shell
 
+import dev.vulnlog.cli.BuildInfo
+
 fun main() {
-    println("Hello, Vulnlog next!")
+    println("Vulnlog ${BuildInfo.VERSION}")
 }
