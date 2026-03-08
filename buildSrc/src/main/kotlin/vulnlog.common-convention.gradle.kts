@@ -1,5 +1,5 @@
 plugins {
-    // disable detekt because of missing support for java 25
+// Disable until fully supported in JDK 25 with Kotlin 2.3.0
 //    id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlin.jvm")
     id("org.jlleitschuh.gradle.ktlint")
@@ -11,12 +11,6 @@ group = "dev.vulnlog"
 repositories {
     mavenLocal()
     mavenCentral()
-}
-
-dependencies {
-    testImplementation("io.mockk:mockk:1.13.10")
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:5.8.1")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:5.8.1")
 }
 
 val languageLevel = 25
@@ -69,6 +63,7 @@ tasks.named("check").configure {
     dependsOn(tasks.named("ktlintCheck"))
 }
 
-//tasks.named("check").configure {
-//    dependsOn(tasks.named("detekt"))
-//}
+// Disable until fully supported in JDK 25 with Kotlin 2.3.0
+// tasks.named("check").configure {
+//     dependsOn(tasks.named("detekt"))
+// }

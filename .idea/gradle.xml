@@ -21,13 +21,6 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/buildSrc" />
-            <option value="$PROJECT_DIR$/cli-app/cli" />
-            <option value="$PROJECT_DIR$/cli-app/common" />
-            <option value="$PROJECT_DIR$/cli-app/dsl" />
-            <option value="$PROJECT_DIR$/cli-app/dsl-interpreter" />
-            <option value="$PROJECT_DIR$/cli-app/gradle-plugin" />
-            <option value="$PROJECT_DIR$/cli-app/report" />
-            <option value="$PROJECT_DIR$/cli-app/suppression" />
             <option value="$PROJECT_DIR$/next/cli-app" />
           </set>
         </option>
