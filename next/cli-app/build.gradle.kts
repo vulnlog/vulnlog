@@ -2,7 +2,7 @@ plugins {
     id("vulnlog.app-convention")
 }
 
-description = "Next generation Vulnlog CLI applicaiton"
+description = "Next generation Vulnlog CLI application"
 
 group = "dev.vulnlog"
 

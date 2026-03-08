@@ -61,7 +61,7 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
-          ./gradlew clean :cli:distZip -PappVersion="$VERSION"
+          ./gradlew clean :next:distZip -PappVersion="$VERSION"
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -72,7 +72,7 @@ jobs:
             ${{needs.generate-changelog.outputs.release_notes_body}}
 
             👉 Full Changelog: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
-          files: cli-app/cli/build/distributions/*.zip
+          files: next/cli-app/build/distributions/*.zip
       - name: Create a new GitHub discussion
         id: create-discussion
         uses: abirismyname/create-discussion@main

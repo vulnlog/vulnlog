@@ -1,5 +1,4 @@
 plugins {
-    // Support convention plugins written in Kotlin. Convention plugins are build scripts in 'src/main' that automatically become available as plugins in the main build.
     `kotlin-dsl`
 }
 
@@ -10,9 +9,9 @@ repositories {
 
 dependencies {
     implementation(libs.dependencyCheckGradle)
+// Disable until fully supported in JDK 25 with Kotlin 2.3.0
 //    implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
-    implementation(libs.kotlinxSerializationGradlePlugin)
     implementation(libs.ktlintGradle)
     implementation(libs.snykGradlePlugin)
 }
