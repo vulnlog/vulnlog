@@ -7,6 +7,29 @@ Welcome to the Vulnlog community, and thank you for contributing! This guide exp
 * [Pull Requests](#pull-requests)
 * [Maintainers](#maintainers)
 
+## Prerequisites
+
+The following tools are required to build and contribute to this project:
+
+- **JDK 21+** — the Gradle toolchain will automatically provision JDK 25 for compilation via
+  [Foojay](https://github.com/gradle/foojay-toolchains), so any JDK 21+ suffices to bootstrap Gradle
+- **Git**
+
+Optional, only needed to build native images locally:
+
+- **GraalVM CE 21** — install via [SDKMAN](https://sdkman.io) (`sdk install java 21.0.x-graal`) or
+  [GraalVM's releases](https://github.com/graalvm/graalvm-ce-builds/releases)
+
+## Local setup
+
+After cloning, install the ktlint pre-commit hook so your code is automatically formatted before each commit:
+
+```terminal
+./gradlew installGitHooks
+```
+
+This uses the project's own ktlint version via Gradle — no separate `ktlint` installation required.
+
 ## Licensing
 
 By contributing, you agree that your contributions will be licensed under the same license as this project
@@ -32,8 +55,9 @@ For bug reports, additionally include the following information:
 When preparing a pull request, follow this checklist:
 
 * Imitate the conventions of surrounding code.
-* Format code with ./gradlew ktlintFormat (otherwise the build will fail).
-* Verify that the JVM build (./gradlew build) succeeds.
+* Format code with `./gradlew ktlintFormat` if not using the pre-commit hook.
+* Verify that `./gradlew check` passes.
+* For native image builds: `./gradlew :next:nativeCompile --no-configuration-cache`.
 * Use [conventional commit](https://www.conventionalcommits.org) messages.
 * Follow the seven rules of great Git commit messages:
     * Separate the subject from the body with a blank line.
