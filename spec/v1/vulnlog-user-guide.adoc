@@ -110,13 +110,21 @@ Vulnlog lives in the repository and generates suppression files, reports, and VE
 
 === How Vulnlog Relates to Other Standards
 
-VEX (Vulnerability Exploitability eXchange):: Vulnlog generates OpenVEX documents. VEX communicates whether vulnerabilities are exploitable in the context of a specific product. Vulnlog is the decision record; VEX is one of its outputs.
+VEX (Vulnerability Exploitability eXchange):: Vulnlog generates OpenVEX documents.
+VEX communicates whether vulnerabilities are exploitable in the context of a specific product.
+Vulnlog is the decision record; VEX is one of its outputs.
 
-SBOM (Software Bill of Materials):: Complementary. SBOMs describe what components are in your software. Vulnlog tracks decisions about vulnerability findings in those components. Together they answer "what do we have?" (SBOM) and "what have we decided about findings?" (Vulnlog).
+SBOM (Software Bill of Materials):: Complementary.
+SBOMs describe what components are in your software.
+Vulnlog tracks decisions about vulnerability findings in those components.
+Together they answer "what do we have?" (SBOM) and "what have we decided about findings?" (Vulnlog).
 
-SARIF (Static Analysis Results Interchange Format):: A future Vulnlog output. SARIF provides a standardized format for findings that integrates with development tools (GitHub Code Scanning, Azure DevOps, VS Code).
+SARIF (Static Analysis Results Interchange Format):: A future Vulnlog output.
+SARIF provides a standardized format for findings that integrates with development tools (GitHub Code Scanning, Azure DevOps, VS Code).
 
-CSAF (Common Security Advisory Framework):: Complementary. CSAF is a broader advisory format. Vulnlog focuses specifically on team-level triage decisions and suppression management.
+CSAF (Common Security Advisory Framework):: Complementary.
+CSAF is a broader advisory format.
+Vulnlog focuses specifically on team-level triage decisions and suppression management.
 
 === Supported Reporters
 
@@ -173,7 +181,14 @@ vulnlog init --project "My App" --organization "Acme Corp" -o my-app.vl.yaml
 ----
 
 This creates a minimal Vulnlog file with only the required sections.
-For simple projects, `vulnlog.yaml` is also a valid file name.
+
+.File Name Convention
+[NOTE]
+====
+For simple projects that only work with one Vulnlog file, `vulnlog.[yaml|yml]` are valid file names.
+
+If you need to work with multiple Vulnlog files, such as when working with multiple release branches or products, use the file name convention `<project-name>.vl.[yaml|yml]`.
+====
 
 === A Minimal Example
 
@@ -184,14 +199,7 @@ include::{examplesdir}/quickstart.vl.yaml[]
 
 === IDE Setup
 
-Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore], which means IDEs with YAML support (VS Code with the Red Hat YAML extension, IntelliJ) can automatically provide validation and autocompletion for `*.vl.yaml` files.
-
-For files named `vulnlog.yaml`, you may need to add a schema reference comment:
-
-[source,yaml]
-----
-# yaml-language-server: $schema=https://vulnlog.dev/schemas/v1/vulnlog.json
-----
+Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore], which means IDEs with YAML support  can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
 
 === CI Pipeline Integration
 
