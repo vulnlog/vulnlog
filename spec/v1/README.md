@@ -1,15 +1,21 @@
 ```shell
-jsonschema metaschema schema/vulnlog.json --resolve schema/defs/
+docker run --interactive --volume "$PWD:/workspace" ghcr.io/sourcemeta/jsonschema:v14.14.2 metaschema schema/vulnlog.json --resolve schema/defs/
 ```
 
+Lint all schema files:
+
 ```shell
-jsonschema lint schema/vulnlog.json --resolve schema/defs/
+docker run --interactive --volume "$PWD:/workspace" ghcr.io/sourcemeta/jsonschema:v14.14.2 lint schema/
 ````
 
-```shell
-jsonschema fmt schema/vulnlog.json --resolve schema/defs/
-```
+Format all schema files:
 
 ```shell
-jsonschema bundle schema/vulnlog.json -w --resolve schema/defs/ > generated/vulnlog-bundled.json
+docker run --interactive --volume "$PWD:/workspace" ghcr.io/sourcemeta/jsonschema:v14.14.2 fmt schema/
+```
+
+Bundle all schema files:
+
+```shell
+docker run --interactive --volume "$PWD:/workspace" ghcr.io/sourcemeta/jsonschema:v14.14.2 bundle -w schema/vulnlog.json --resolve schema/defs/ > generated/vulnlog-bundled.json
 ```

@@ -4,19 +4,17 @@
   "title": "Vulnlog Tag",
   "description": "A tag for categorizing and scoping vulnerability entries. Tags replace the previous deliverables and usage concepts, providing flexible labeling for any team-specific taxonomy.",
   "type": "object",
-  "required": [
-    "id"
-  ],
-  "additionalProperties": false,
+  "required": [ "id" ],
   "properties": {
     "id": {
+      "description": "Unique identifier for the tag. Referenced by vulnerability entries and release purl entries.",
       "type": "string",
-      "minLength": 1,
-      "description": "Unique identifier for the tag. Referenced by vulnerability entries and release purl entries."
+      "minLength": 1
     },
     "description": {
-      "type": "string",
-      "description": "Human-readable description of what this tag represents."
+      "description": "Human-readable description of what this tag represents.",
+      "type": "string"
     }
-  }
+  },
+  "additionalProperties": false
 }

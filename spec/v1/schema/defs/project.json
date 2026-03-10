@@ -4,31 +4,28 @@
   "title": "Vulnlog Project",
   "description": "Project-level metadata. Used in report generation and as author information in VEX documents.",
   "type": "object",
-  "required": [
-    "organization",
-    "name"
-  ],
-  "additionalProperties": false,
+  "required": [ "organization", "name" ],
   "properties": {
     "organization": {
+      "description": "Name of the organization or vendor.",
       "type": "string",
-      "minLength": 1,
-      "description": "Name of the organization or vendor."
+      "minLength": 1
     },
     "name": {
+      "description": "Name of the software project.",
       "type": "string",
-      "minLength": 1,
-      "description": "Name of the software project."
+      "minLength": 1
     },
     "security_team": {
+      "description": "Name of the responsible security team. Used as the author in VEX documents.",
       "type": "string",
-      "minLength": 1,
-      "description": "Name of the responsible security team. Used as the author in VEX documents."
+      "minLength": 1
     },
     "security_team_email": {
+      "description": "Contact email for the security team. Used as the author contact in VEX documents.",
       "type": "string",
-      "format": "email",
-      "description": "Contact email for the security team. Used as the author contact in VEX documents."
+      "format": "email"
     }
-  }
+  },
+  "additionalProperties": false
 }
