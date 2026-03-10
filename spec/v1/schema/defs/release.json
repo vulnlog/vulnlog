@@ -4,52 +4,48 @@
   "title": "Vulnlog Release",
   "description": "A release tracked in this Vulnlog file. Releases must be listed in chronological order (oldest first).",
   "type": "object",
-  "required": [
-    "id"
-  ],
-  "additionalProperties": false,
+  "required": [ "id" ],
   "properties": {
     "id": {
+      "description": "Unique release identifier (e.g., '8.1.1', '2.0.0-SNAPSHOT').",
       "type": "string",
-      "minLength": 1,
-      "description": "Unique release identifier (e.g., '8.1.1', '2.0.0-SNAPSHOT')."
+      "minLength": 1
     },
     "published_at": {
-      "$ref": "common.json#/$defs/date",
-      "description": "Publication date of the release. Absence indicates the release is not yet published."
+      "description": "Publication date of the release. Absence indicates the release is not yet published.",
+      "$ref": "common.json#/$defs/date"
     },
     "purls": {
+      "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents. Tags on purl entries enable scoped VEX generation.",
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "#/$defs/purlEntry"
-      },
-      "minItems": 1,
-      "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents. Tags on purl entries enable scoped VEX generation."
+      }
     }
   },
+  "additionalProperties": false,
   "$defs": {
     "purlEntry": {
-      "type": "object",
-      "required": [
-        "purl"
-      ],
-      "additionalProperties": false,
       "description": "A release artifact identified by its Package URL, optionally tagged for scoping.",
+      "type": "object",
+      "required": [ "purl" ],
       "properties": {
         "purl": {
-          "$ref": "common.json#/$defs/purl",
-          "description": "The versioned Package URL for this artifact in this release (e.g., 'pkg:docker/demo-project@8.1.1')."
+          "description": "The versioned Package URL for this artifact in this release (e.g., 'pkg:docker/demo-project@8.1.1').",
+          "$ref": "common.json#/$defs/purl"
         },
         "tags": {
+          "description": "Tags associated with this purl. Used to match vulnerability tags for scoped VEX generation.",
           "type": "array",
+          "minItems": 1,
           "items": {
             "type": "string",
             "minLength": 1
-          },
-          "minItems": 1,
-          "description": "Tags associated with this purl. Used to match vulnerability tags for scoped VEX generation."
+          }
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }

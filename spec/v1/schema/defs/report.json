@@ -4,52 +4,47 @@
   "title": "Vulnlog Report Entry",
   "description": "Records that a specific SCA scanner or other source reported a vulnerability.",
   "type": "object",
-  "required": [
-    "reporter",
-    "at"
-  ],
-  "additionalProperties": false,
+  "required": [ "reporter", "at" ],
   "properties": {
     "reporter": {
-      "$ref": "common.json#/$defs/reporterType",
-      "description": "The scanner or source type that reported this vulnerability."
+      "description": "The scanner or source type that reported this vulnerability.",
+      "$ref": "common.json#/$defs/reporterType"
     },
     "at": {
-      "$ref": "common.json#/$defs/date",
-      "description": "Date the vulnerability was reported by this scanner or source."
+      "description": "Date the vulnerability was reported by this scanner or source.",
+      "$ref": "common.json#/$defs/date"
     },
     "source": {
+      "description": "Description of the report source (e.g., 'Oracle Critical Patch Update April 2022'). Optional for scanner reporters. Required by the CLI for reporter type 'other'.",
       "type": "string",
-      "minLength": 1,
-      "description": "Description of the report source (e.g., 'Oracle Critical Patch Update April 2022'). Optional for scanner reporters. Required by the CLI for reporter type 'other'."
+      "minLength": 1
     },
     "vuln_id": {
+      "description": "Scanner-specific vulnerability identifiers (e.g., 'SNYK-JAVA-LOG4J-2314720'). Used when generating scanner-specific suppression files.",
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "string",
         "minLength": 1
-      },
-      "minItems": 1,
-      "description": "Scanner-specific vulnerability identifiers (e.g., 'SNYK-JAVA-LOG4J-2314720'). Used when generating scanner-specific suppression files."
+      }
     },
     "suppress": {
       "$ref": "#/$defs/suppressEntry"
     }
   },
+  "additionalProperties": false,
   "$defs": {
     "suppressEntry": {
-      "type": "object",
-      "required": [
-        "expires_at"
-      ],
-      "additionalProperties": false,
       "description": "Controls time-limited suppression for a specific scanner.",
+      "type": "object",
+      "required": [ "expires_at" ],
       "properties": {
         "expires_at": {
-          "$ref": "common.json#/$defs/date",
-          "description": "Expiration date of the suppression. After this date, the CLI no longer includes this entry in the generated suppression file."
+          "description": "Expiration date of the suppression. After this date, the CLI no longer includes this entry in the generated suppression file.",
+          "$ref": "common.json#/$defs/date"
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }

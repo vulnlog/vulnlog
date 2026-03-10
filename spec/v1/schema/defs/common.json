@@ -5,36 +5,27 @@
   "description": "Shared types and formats used across the Vulnlog schema.",
   "$defs": {
     "date": {
+      "description": "Date in ISO 8601 format (YYYY-MM-DD).",
       "type": "string",
-      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-      "description": "Date in ISO 8601 format (YYYY-MM-DD)."
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
     "purl": {
+      "description": "Package URL (purl) as defined by the purl specification (https://github.com/package-url/purl-spec).",
       "type": "string",
-      "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/",
-      "description": "Package URL (purl) as defined by the purl specification (https://github.com/package-url/purl-spec)."
+      "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/"
     },
     "verdict": {
+      "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation.",
       "type": "string",
-      "enum": [
-        "affected",
-        "not_affected",
-        "fixed",
-        "risk_acceptable"
-      ],
-      "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation."
+      "enum": [ "affected", "not_affected", "fixed", "risk_acceptable" ]
     },
     "severity": {
+      "description": "Severity assessment of a vulnerability.",
       "type": "string",
-      "enum": [
-        "critical",
-        "high",
-        "medium",
-        "low"
-      ],
-      "description": "Severity assessment of a vulnerability."
+      "enum": [ "critical", "high", "medium", "low" ]
     },
     "justification": {
+      "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not_affected'.",
       "type": "string",
       "enum": [
         "component_not_present",
@@ -42,10 +33,10 @@
         "vulnerable_code_not_in_execute_path",
         "vulnerable_code_cannot_be_controlled_by_adversary",
         "inline_mitigations_already_exist"
-      ],
-      "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not_affected'."
+      ]
     },
     "reporterType": {
+      "description": "The scanner or source type. Determines the suppression file format for reporters with suppression support.",
       "type": "string",
       "enum": [
         "trivy",
@@ -57,8 +48,7 @@
         "npm_audit",
         "github_advisory",
         "other"
-      ],
-      "description": "The scanner or source type. Determines the suppression file format for reporters with suppression support."
+      ]
     }
   }
 }
