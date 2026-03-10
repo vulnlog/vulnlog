@@ -30,11 +30,11 @@ Git-friendly:: The file is designed for version control.
 Changes are tracked via Git history rather than in-file audit trails.
 Data-oriented:: Entries are plain data records with no behavior. The CLI applies transformations and business logic.
 
-=== File Convention
+=== File Name Convention
 
-Vulnlog files use the naming convention `<project-name>.vl.yaml` (or `.vl.yml`).
+Vulnlog files use the naming convention `<project-name>.vl.[yaml|yml]` .
 The `.vl.` infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use `vulnlog.yaml` (or `vulnlog.yml`).
+Simple projects may use `vulnlog.[yaml|yml}`.
 
 The file location within the repository is not prescribed.
 The CLI requires an explicit file path as a positional argument; it does not search for files automatically.
