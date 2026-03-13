@@ -1,3 +1,5 @@
+Check all schema files:
+
 ```shell
 docker run --interactive --volume "$PWD:/workspace" ghcr.io/sourcemeta/jsonschema:v14.14.2 metaschema schema/vulnlog.json --resolve schema/defs/
 ```

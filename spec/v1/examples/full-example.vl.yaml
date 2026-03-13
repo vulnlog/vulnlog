@@ -1,10 +1,10 @@
-version: "1"
+schemaVersion: "1"
 
 project:
   organization: Demo Project Inc
   name: Demo Project
-  security_team: Demo Security Team
-  security_team_email: security@demo.com
+  author: Demo Security Team
+  contact: security@demo.com
 
 tags:
   - id: binary
@@ -15,8 +15,6 @@ tags:
     description: Demo Project SDK
   - id: build-dep
     description: Internal build dependency
-  - id: pci
-    description: PCI DSS compliance scope
 
 releases:
   - id: 8.1.0
@@ -41,8 +39,7 @@ vulnerabilities:
   - id: CVE-2020-099
     releases: [ 8.1.0 ]
     description: Path traversal vulnerability in random-dependency
-    packages:
-      - "pkg:maven/org.random/random-core@1.33.7"
+    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
     reports:
       - reporter: trivy
         at: 2020-12-28
@@ -60,8 +57,7 @@ vulnerabilities:
   # Stub entry - quick triage, no description, no verdict yet
   - id: CVE-2021-007
     releases: [ 8.1.1 ]
-    packages:
-      - "pkg:maven/com.example/some-lib@4.0.0"
+    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
     reports:
       - reporter: trivy
         at: 2021-03-10
@@ -72,8 +68,7 @@ vulnerabilities:
     aliases: [ GHSA-xxxx-yyyy ]
     releases: [ 8.1.1 ]
     description: Deserialization vulnerability in some-dependency
-    packages:
-      - "pkg:maven/example.org/some-dependency@1.1.2"
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
     reports:
       - reporter: trivy
         at: 2021-03-03
@@ -94,15 +89,13 @@ vulnerabilities:
     aliases: [ GHSA-jfh8-c2jp-5v3q ]
     releases: [ 8.1.1 ]
     description: RCE vulnerability in Log4J via JNDI lookup
-    packages:
-      - "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
     reports:
       - reporter: trivy
         at: 2021-12-10
-    tags: [ binary, pci ]
+    tags: [ binary ]
     analysis: >
-      Demo project utilizes Log4J and a PoC showed that
-      the project is vulnerable to this RCE vulnerability.
+      Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.
     analyzed_at: 2021-12-10
     comment: >
       PoC exploit confirmed by Jane (security team) on 2021-12-10.
@@ -118,16 +111,13 @@ vulnerabilities:
   - id: CVE-2024-5535
     releases: [ 8.1.1 ]
     description: Buffer overread in OpenSSL SSL_select_next_proto
-    packages:
-      - "pkg:apk/alpine/openssl@3.1.4-r0"
+    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
     reports:
       - reporter: trivy
         at: 2024-06-28
     tags: [ container ]
     analysis: >
-      Vulnerable OpenSSL is present in the container base image
-      but the affected NPN/ALPN negotiation code path is never
-      invoked by our application.
+      Vulnerable OpenSSL is present in the container base image but the affected NPN/ALPN negotiation code path is never invoked by our application.
     analyzed_at: 2024-06-29
     verdict: not_affected
     justification: vulnerable_code_not_in_execute_path
@@ -136,8 +126,7 @@ vulnerabilities:
   - id: SNYK-2021-003
     releases: [ 8.1.2 ]
     description: DoS vulnerability in some-other-dependency
-    packages:
-      - "pkg:maven/com.some.other/some-other-dependency@3.11.0"
+    packages: [ "pkg:maven/com.some.other/some-other-dependency@3.11.0" ]
     reports:
       - reporter: snyk
         at: 2022-04-28
@@ -158,16 +147,13 @@ vulnerabilities:
     name: Psychic Signatures
     releases: [ 8.1.2 ]
     description: ECDSA signature verification bypass in Java SE
-    packages:
-      - "pkg:maven/com.oracle/jdk@17.0.2"
+    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
     reports:
       - reporter: other
         at: 2022-04-19
         source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container, pci ]
-    analysis: >
-      The project uses Java 17 and ECDSA signatures for
-      JWT token verification. Confirmed exploitable.
+    tags: [ binary, container ]
+    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
     analyzed_at: 2022-04-20
     severity: critical
     verdict: fixed
