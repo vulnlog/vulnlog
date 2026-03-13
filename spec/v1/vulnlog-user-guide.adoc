@@ -29,13 +29,12 @@ Each verdict type enforces appropriate companion fields (justification, severity
 
 Flexible tagging::
 Tag vulnerability entries with a team-defined taxonomy.
-Tags can represent deliverables (`binary`, `container`), usage contexts (`build-dep`, `test-infra`), compliance scopes (`pci`, `hipaa`), or any other categorization.
+Tags can represent deliverables (`binary`, `container`), usage contexts (`build-dep`, `test-infra`), or any other categorization.
 Use tags to filter CLI output and scope VEX products.
 
 Suppression file generation::
 Generate scanner-specific suppression files (`.trivyignore`, `.snyk`, etc.) from the Vulnlog file.
-Fixed vulnerabilities are never suppressed.
-Time-limited suppressions expire automatically.
+Only suppress what needs to be suppressed: vulnerabilities marked as fixed are excluded from suppression to verify the fix is complete.
 
 HTML report generation::
 Generate self-contained HTML reports for communicating vulnerability status to team members, partners, and customers.
@@ -78,10 +77,10 @@ Vulnlog is most valuable when your team:
 - Maintains multiple release branches and needs to track vulnerability decisions per branch without duplicating work.
 - Needs to communicate vulnerability status to customers, partners, or auditors via HTML reports or VEX statements.
 - Wants to keep vulnerability analysis in the repository, next to the code, rather than in external tools.
-- Has compliance requirements (PCI DSS, SOC 2, ISO 27001) that demand documented triage decisions and response timelines.
 - Wants to prevent stale suppression files that shadow real findings after vulnerabilities have been fixed.
+- Wants to avoid losing vulnerability analysis, suppressions, or VEX statements when moving to another SCA tool.
 
-Vulnlog may be more than you need if you have a single scanner on a single branch with no compliance requirements -- in that case, the scanner's native suppression mechanism may suffice.
+Vulnlog may be more than you need if you have a single scanner on a single branch -- in that case, the scanner's native suppression mechanism may suffice.
 
 === How Vulnlog Compares
 
@@ -97,12 +96,12 @@ Vulnlog never generates suppressions for fixed vulnerabilities, keeping the supp
 
 ==== vs. Scanner vendor UIs
 
-Scanner vendor UIs (Snyk dashboard, GitHub Security tab) provide good visibility into findings for one scanner.
+Scanner vendor UIs (Snyk dashboard, GitHub Security tab, or Semgrep UI) provide good visibility into findings for one scanner.
 But they create vendor lock-in: your triage decisions and analysis live in the vendor's platform.
 Switching scanners means starting over.
 Vulnlog keeps your analysis in a YAML file you own, and generates outputs for any supported scanner.
 
-==== vs. Spreadsheets and Confluence pages
+==== vs. Ticketing systems, spreadsheets, and Confluence pages
 
 Spreadsheets and wiki pages are flexible but disconnected from the code.
 They require manual synchronization, don't support automated output generation, and are easy to forget when the code changes.
@@ -177,7 +176,7 @@ Use the CLI to scaffold a new project:
 
 [source,bash]
 ----
-vulnlog init --project "My App" --organization "Acme Corp" -o my-app.vl.yaml
+vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
 ----
 
 This creates a minimal Vulnlog file with only the required sections.
@@ -199,7 +198,7 @@ include::{examplesdir}/quickstart.vl.yaml[]
 
 === IDE Setup
 
-Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore], which means IDEs with YAML support  can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
+Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore], which means IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
 
 === CI Pipeline Integration
 
@@ -253,11 +252,9 @@ Create a minimal stub entry:
 ----
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: ["pkg:npm/image-lib@3.1.0"]
     reports:
       - reporter: trivy
-        at: 2026-03-01
     tags: [ webapp ]
 ----
 
@@ -268,8 +265,7 @@ Create a minimal stub entry:
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: ["pkg:npm/image-lib@3.1.0"]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -289,8 +285,7 @@ Create a minimal stub entry:
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: ["pkg:npm/image-lib@3.1.0"]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -314,8 +309,7 @@ Create a minimal stub entry:
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: ["pkg:npm/image-lib@3.1.0"]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -341,8 +335,7 @@ Create a minimal stub entry:
   - id: CVE-2026-9999
     releases: [ 2.0.0 ]
     description: Command injection in build-tool
-    packages:
-      - "pkg:npm/build-tool@5.0.0"
+    packages: ["pkg:npm/build-tool@5.0.0"]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -364,8 +357,7 @@ Create a minimal stub entry:
     name: Psychic Signatures
     releases: [ 8.1.2 ]
     description: ECDSA signature verification bypass in Java SE
-    packages:
-      - "pkg:maven/com.oracle/jdk@17.0.2"
+    packages: ["pkg:maven/com.oracle/jdk@17.0.2"]
     reports:
       - reporter: other
         at: 2022-04-19
@@ -393,7 +385,7 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x
 ----
 
 This avoids cherry-picking vulnerability analysis to older branches.
-When a release branch reaches end of life, its Vulnlog file naturally becomes a historical archive.
+When a release branch reaches end of life (EoL), its Vulnlog file naturally becomes a historical archive.
 
 Alternatively, maintain a Vulnlog file directly on each release branch.
 Both approaches can coexist.
@@ -453,7 +445,7 @@ Every command except `init` requires a Vulnlog file as a positional argument.
 
 [source,bash]
 ----
-vulnlog init -o my-app.vl.yaml --project "My App" --organization "Acme Corp"
+vulnlog init -o my-app.vl.yaml --project "My App" --organization "Acme Corp" --author "Security Team"
 ----
 
 ==== `vulnlog validate`
@@ -478,7 +470,6 @@ vulnlog lint my-app.vl.yaml --fix    # Rewrite with corrected ordering
 ----
 vulnlog stats my-app.vl.yaml
 vulnlog stats my-app.vl.yaml --release 8.1.1
-vulnlog stats my-app.vl.yaml --tags pci
 ----
 
 ==== `vulnlog report`
@@ -539,7 +530,7 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json
 | The file has lint violations (without `--fix`).
 
 | `5`
-| Missing required flag
+| Missing a required flag
 | A required flag was not provided.
 
 | `6`

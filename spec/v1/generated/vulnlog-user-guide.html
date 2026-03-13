@@ -565,7 +565,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel3">
 <li><a href="#_vs_scanner_native_suppression_files">1.3.1. vs. Scanner-native suppression files</a></li>
 <li><a href="#_vs_scanner_vendor_uis">1.3.2. vs. Scanner vendor UIs</a></li>
-<li><a href="#_vs_spreadsheets_and_confluence_pages">1.3.3. vs. Spreadsheets and Confluence pages</a></li>
+<li><a href="#_vs_ticketing_system_spreadsheets_and_confluence_pages">1.3.3. vs. Ticketing-System, Spreadsheets and Confluence pages</a></li>
 </ul>
 </li>
 <li><a href="#_how_vulnlog_relates_to_other_standards">1.4. How Vulnlog Relates to Other Standards</a></li>
@@ -646,14 +646,13 @@ Each verdict type enforces appropriate companion fields (justification, severity
 <dt class="hdlist1">Flexible tagging</dt>
 <dd>
 <p>Tag vulnerability entries with a team-defined taxonomy.
-Tags can represent deliverables (<code>binary</code>, <code>container</code>), usage contexts (<code>build-dep</code>, <code>test-infra</code>), compliance scopes (<code>pci</code>, <code>hipaa</code>), or any other categorization.
+Tags can represent deliverables (<code>binary</code>, <code>container</code>), usage contexts (<code>build-dep</code>, <code>test-infra</code>), or any other categorization.
 Use tags to filter CLI output and scope VEX products.</p>
 </dd>
 <dt class="hdlist1">Suppression file generation</dt>
 <dd>
 <p>Generate scanner-specific suppression files (<code>.trivyignore</code>, <code>.snyk</code>, etc.) from the Vulnlog file.
-Fixed vulnerabilities are never suppressed.
-Time-limited suppressions expire automatically.</p>
+Only suppress what needs to be suppressed: Vulnerabilities marked as fixed are not suppressed any longer to assert the fix was successful.</p>
 </dd>
 <dt class="hdlist1">HTML report generation</dt>
 <dd>
@@ -719,15 +718,15 @@ Generate reports and VEX documents as build artifacts.</p>
 <p>Wants to keep vulnerability analysis in the repository, next to the code, rather than in external tools.</p>
 </li>
 <li>
-<p>Has compliance requirements (PCI DSS, SOC 2, ISO 27001) that demand documented triage decisions and response timelines.</p>
+<p>Wants to prevent stale suppression files that shadow real findings after vulnerabilities have been fixed.</p>
 </li>
 <li>
-<p>Wants to prevent stale suppression files that shadow real findings after vulnerabilities have been fixed.</p>
+<p>Do not want to lose vulnerability analysis, suppressions or VEX statements when moving to another SCA tool.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>Vulnlog may be more than you need if you have a single scanner on a single branch with no compliance requirements&#8201;&#8212;&#8201;in that case, the scanner&#8217;s native suppression mechanism may suffice.</p>
+<p>Vulnlog may be more than you need if you have a single scanner on a single branch&#8201;&#8212;&#8201;in that case, the scanner&#8217;s native suppression mechanism may suffice.</p>
 </div>
 </div>
 <div class="sect2">
@@ -748,14 +747,14 @@ Vulnlog never generates suppressions for fixed vulnerabilities, keeping the supp
 <div class="sect3">
 <h4 id="_vs_scanner_vendor_uis">1.3.2. vs. Scanner vendor UIs</h4>
 <div class="paragraph">
-<p>Scanner vendor UIs (Snyk dashboard, GitHub Security tab) provide good visibility into findings for one scanner.
+<p>Scanner vendor UIs (Snyk dashboard, GitHub Security tab or Semgrep UI) provide good visibility into findings for one scanner.
 But they create vendor lock-in: your triage decisions and analysis live in the vendor&#8217;s platform.
 Switching scanners means starting over.
 Vulnlog keeps your analysis in a YAML file you own, and generates outputs for any supported scanner.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vs_spreadsheets_and_confluence_pages">1.3.3. vs. Spreadsheets and Confluence pages</h4>
+<h4 id="_vs_ticketing_system_spreadsheets_and_confluence_pages">1.3.3. vs. Ticketing-System, Spreadsheets and Confluence pages</h4>
 <div class="paragraph">
 <p>Spreadsheets and wiki pages are flexible but disconnected from the code.
 They require manual synchronization, don&#8217;t support automated output generation, and are easy to forget when the code changes.
@@ -769,19 +768,27 @@ Vulnlog lives in the repository and generates suppression files, reports, and VE
 <dl>
 <dt class="hdlist1">VEX (Vulnerability Exploitability eXchange)</dt>
 <dd>
-<p>Vulnlog generates OpenVEX documents. VEX communicates whether vulnerabilities are exploitable in the context of a specific product. Vulnlog is the decision record; VEX is one of its outputs.</p>
+<p>Vulnlog generates OpenVEX documents.
+VEX communicates whether vulnerabilities are exploitable in the context of a specific product.
+Vulnlog is the decision record; VEX is one of its outputs.</p>
 </dd>
 <dt class="hdlist1">SBOM (Software Bill of Materials)</dt>
 <dd>
-<p>Complementary. SBOMs describe what components are in your software. Vulnlog tracks decisions about vulnerability findings in those components. Together they answer "what do we have?" (SBOM) and "what have we decided about findings?" (Vulnlog).</p>
+<p>Complementary.
+SBOMs describe what components are in your software.
+Vulnlog tracks decisions about vulnerability findings in those components.
+Together they answer "what do we have?" (SBOM) and "what have we decided about findings?" (Vulnlog).</p>
 </dd>
 <dt class="hdlist1">SARIF (Static Analysis Results Interchange Format)</dt>
 <dd>
-<p>A future Vulnlog output. SARIF provides a standardized format for findings that integrates with development tools (GitHub Code Scanning, Azure DevOps, VS Code).</p>
+<p>A future Vulnlog output.
+SARIF provides a standardized format for findings that integrates with development tools (GitHub Code Scanning, Azure DevOps, VS Code).</p>
 </dd>
 <dt class="hdlist1">CSAF (Common Security Advisory Framework)</dt>
 <dd>
-<p>Complementary. CSAF is a broader advisory format. Vulnlog focuses specifically on team-level triage decisions and suppression management.</p>
+<p>Complementary.
+CSAF is a broader advisory format.
+Vulnlog focuses specifically on team-level triage decisions and suppression management.</p>
 </dd>
 </dl>
 </div>
@@ -866,19 +873,37 @@ Vulnlog lives in the repository and generates suppression files, reports, and VE
 </div>
 </div>
 <div class="paragraph">
-<p>This creates a minimal Vulnlog file with only the required sections.
-For simple projects, <code>vulnlog.yaml</code> is also a valid file name.</p>
+<p>This creates a minimal Vulnlog file with only the required sections.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+<div class="title">File Name Convention</div>
+<div class="paragraph">
+<p>For simple projects that only work with one Vulnlog file, <code>vulnlog.[yaml|yml]</code> are valid file names.</p>
+</div>
+<div class="paragraph">
+<p>If you need to work with multiple Vulnlog files, such as when working with multiple release branches or products, use the file name convention <code>&lt;project-name&gt;.vl.[yaml|yml]</code>.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_a_minimal_example">2.2. A Minimal Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
 
 project:
   organization: Acme Corp
   name: Acme Web App
+  author:  Acme Corp Security Team
 
 releases:
   - id: 1.0.0
@@ -889,11 +914,9 @@ vulnerabilities:
   - id: CVE-2026-1234
     releases: [ 1.0.0 ]
     description: Remote code execution in example-lib
-    packages:
-      - "pkg:npm/example-lib@2.3.0"
+    packages: [ "pkg:npm/example-lib@2.3.0" ]
     reports:
       - reporter: trivy
-        at: 2026-01-20
     analysis: &gt;
       The vulnerable code path is not reachable in our application
       because we only use the safe subset of the API.
@@ -905,15 +928,7 @@ vulnerabilities:
 <div class="sect2">
 <h3 id="_ide_setup">2.3. IDE Setup</h3>
 <div class="paragraph">
-<p>Vulnlog&#8217;s JSON Schema is published to <a href="https://www.schemastore.org/">SchemaStore</a>, which means IDEs with YAML support (VS Code with the Red Hat YAML extension, IntelliJ) can automatically provide validation and autocompletion for <code>*.vl.yaml</code> files.</p>
-</div>
-<div class="paragraph">
-<p>For files named <code>vulnlog.yaml</code>, you may need to add a schema reference comment:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># yaml-language-server: $schema=https://vulnlog.dev/schemas/v1/vulnlog.json</code></pre>
-</div>
+<p>Vulnlog&#8217;s JSON Schema is published to <a href="https://www.schemastore.org/">SchemaStore</a>, which means IDEs with YAML support can automatically provide validation and autocompletion for <code>.vl.[yaml|yml]</code> and <code>vulnlog.[yaml|yml]</code> files.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1135,7 +1150,7 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x</code></pre>
 </div>
 <div class="paragraph">
 <p>This avoids cherry-picking vulnerability analysis to older branches.
-When a release branch reaches end of life, its Vulnlog file naturally becomes a historical archive.</p>
+When a release branch reaches end of life (EoL), its Vulnlog file naturally becomes a historical archive.</p>
 </div>
 <div class="paragraph">
 <p>Alternatively, maintain a Vulnlog file directly on each release branch.
@@ -1256,8 +1271,7 @@ vulnlog lint my-app.vl.yaml --fix    # Rewrite with corrected ordering</code></p
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog stats my-app.vl.yaml
-vulnlog stats my-app.vl.yaml --release 8.1.1
-vulnlog stats my-app.vl.yaml --tags pci</code></pre>
+vulnlog stats my-app.vl.yaml --release 8.1.1</code></pre>
 </div>
 </div>
 </div>
@@ -1339,7 +1353,7 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>5</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Missing required flag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Missing a required flag</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A required flag was not provided.</p></td>
 </tr>
 <tr>
@@ -1357,13 +1371,13 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
 
 project:
   organization: Demo Project Inc
   name: Demo Project
-  security_team: Demo Security Team
-  security_team_email: security@demo.com
+  author: Demo Security Team
+  contact: security@demo.com
 
 tags:
   - id: binary
@@ -1374,8 +1388,6 @@ tags:
     description: Demo Project SDK
   - id: build-dep
     description: Internal build dependency
-  - id: pci
-    description: PCI DSS compliance scope
 
 releases:
   - id: 8.1.0
@@ -1400,8 +1412,7 @@ vulnerabilities:
   - id: CVE-2020-099
     releases: [ 8.1.0 ]
     description: Path traversal vulnerability in random-dependency
-    packages:
-      - "pkg:maven/org.random/random-core@1.33.7"
+    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
     reports:
       - reporter: trivy
         at: 2020-12-28
@@ -1419,8 +1430,7 @@ vulnerabilities:
   # Stub entry - quick triage, no description, no verdict yet
   - id: CVE-2021-007
     releases: [ 8.1.1 ]
-    packages:
-      - "pkg:maven/com.example/some-lib@4.0.0"
+    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
     reports:
       - reporter: trivy
         at: 2021-03-10
@@ -1431,8 +1441,7 @@ vulnerabilities:
     aliases: [ GHSA-xxxx-yyyy ]
     releases: [ 8.1.1 ]
     description: Deserialization vulnerability in some-dependency
-    packages:
-      - "pkg:maven/example.org/some-dependency@1.1.2"
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
     reports:
       - reporter: trivy
         at: 2021-03-03
@@ -1453,15 +1462,13 @@ vulnerabilities:
     aliases: [ GHSA-jfh8-c2jp-5v3q ]
     releases: [ 8.1.1 ]
     description: RCE vulnerability in Log4J via JNDI lookup
-    packages:
-      - "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
     reports:
       - reporter: trivy
         at: 2021-12-10
-    tags: [ binary, pci ]
+    tags: [ binary ]
     analysis: &gt;
-      Demo project utilizes Log4J and a PoC showed that
-      the project is vulnerable to this RCE vulnerability.
+      Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.
     analyzed_at: 2021-12-10
     comment: &gt;
       PoC exploit confirmed by Jane (security team) on 2021-12-10.
@@ -1477,16 +1484,13 @@ vulnerabilities:
   - id: CVE-2024-5535
     releases: [ 8.1.1 ]
     description: Buffer overread in OpenSSL SSL_select_next_proto
-    packages:
-      - "pkg:apk/alpine/openssl@3.1.4-r0"
+    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
     reports:
       - reporter: trivy
         at: 2024-06-28
     tags: [ container ]
     analysis: &gt;
-      Vulnerable OpenSSL is present in the container base image
-      but the affected NPN/ALPN negotiation code path is never
-      invoked by our application.
+      Vulnerable OpenSSL is present in the container base image but the affected NPN/ALPN negotiation code path is never invoked by our application.
     analyzed_at: 2024-06-29
     verdict: not_affected
     justification: vulnerable_code_not_in_execute_path
@@ -1495,8 +1499,7 @@ vulnerabilities:
   - id: SNYK-2021-003
     releases: [ 8.1.2 ]
     description: DoS vulnerability in some-other-dependency
-    packages:
-      - "pkg:maven/com.some.other/some-other-dependency@3.11.0"
+    packages: [ "pkg:maven/com.some.other/some-other-dependency@3.11.0" ]
     reports:
       - reporter: snyk
         at: 2022-04-28
@@ -1517,16 +1520,13 @@ vulnerabilities:
     name: Psychic Signatures
     releases: [ 8.1.2 ]
     description: ECDSA signature verification bypass in Java SE
-    packages:
-      - "pkg:maven/com.oracle/jdk@17.0.2"
+    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
     reports:
       - reporter: other
         at: 2022-04-19
         source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container, pci ]
-    analysis: &gt;
-      The project uses Java 17 and ECDSA signatures for
-      JWT token verification. Confirmed exploitable.
+    tags: [ binary, container ]
+    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
     analyzed_at: 2022-04-20
     severity: critical
     verdict: fixed
@@ -1542,7 +1542,7 @@ vulnerabilities:
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-08 16:28:06 +0100
+Last updated 2026-03-13 21:42:42 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

@@ -1,8 +1,9 @@
-version: "1"
+schemaVersion: "1"
 
 project:
   organization: Acme Corp
   name: Acme Web App
+  author:  Acme Corp Security Team
 
 releases:
   - id: 1.0.0
@@ -13,11 +14,9 @@ vulnerabilities:
   - id: CVE-2026-1234
     releases: [ 1.0.0 ]
     description: Remote code execution in example-lib
-    packages:
-      - "pkg:npm/example-lib@2.3.0"
+    packages: [ "pkg:npm/example-lib@2.3.0" ]
     reports:
       - reporter: trivy
-        at: 2026-01-20
     analysis: >
       The vulnerable code path is not reachable in our application
       because we only use the safe subset of the API.

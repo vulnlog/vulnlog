@@ -3,9 +3,9 @@
   "title": "Vulnlog",
   "description": "Vulnlog YAML format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners. Each file is scoped to a single release branch. See https://vulnlog.dev for the full specification.",
   "type": "object",
-  "required": [ "version", "project", "releases", "vulnerabilities" ],
+  "required": [ "schemaVersion", "project", "releases", "vulnerabilities" ],
   "properties": {
-    "version": {
+    "schemaVersion": {
       "description": "Schema version of the Vulnlog file.",
       "type": "string",
       "const": "1"
@@ -14,7 +14,7 @@
       "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1project.json"
     },
     "tags": {
-      "description": "Tags for categorizing and scoping vulnerability entries. Provides flexible labeling for deliverables, usage contexts, compliance scopes, or any team-specific taxonomy.",
+      "description": "Tags for categorizing and scoping vulnerability entries. Provides flexible labeling for deliverables, usage contexts, or any team-specific taxonomy.",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -30,7 +30,7 @@
       }
     },
     "vulnerabilities": {
-      "description": "Vulnerability entries. May be empty.",
+      "description": "Vulnerability entries. May be empty. Newest entries first.",
       "type": "array",
       "items": {
         "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1vulnerability.json"
@@ -44,7 +44,7 @@
       "title": "Vulnlog Project",
       "description": "Project-level metadata. Used in report generation and as author information in VEX documents.",
       "type": "object",
-      "required": [ "organization", "name" ],
+      "required": [ "organization", "name", "author" ],
       "properties": {
         "organization": {
           "description": "Name of the organization or vendor.",
@@ -56,13 +56,13 @@
           "type": "string",
           "minLength": 1
         },
-        "security_team": {
-          "description": "Name of the responsible security team. Used as the author in VEX documents.",
+        "author": {
+          "description": "Name of the responsible security team or author. Used as the author in VEX documents.",
           "type": "string",
           "minLength": 1
         },
-        "security_team_email": {
-          "description": "Contact email for the security team. Used as the author contact in VEX documents.",
+        "contact": {
+          "description": "Contact email for the security team. Used as the author contact in VEX documents. Can be the contact from your security.txt.",
           "type": "string",
           "format": "email"
         }
@@ -196,7 +196,7 @@
       "title": "Vulnlog Report Entry",
       "description": "Records that a specific SCA scanner or other source reported a vulnerability.",
       "type": "object",
-      "required": [ "reporter", "at" ],
+      "required": [ "reporter" ],
       "properties": {
         "reporter": {
           "description": "The scanner or source type that reported this vulnerability.",

@@ -91,18 +91,18 @@ The entry is in the under investigation state and will be completed later.
 
 Project::
 The `project` section of a Vulnlog file.
-Contains metadata about the software project (organization name, project name, security team contact).
+Contains metadata about the software project (organization name, project name, author, contact).
 Used as author information in VEX documents and in report headers.
 
 Tag::
 A label defined in the optional `tags` section and referenced by vulnerability entries and release purl entries.
 Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerabilities.
-Common uses include identifying customer-facing deliverables (e.g., `binary`, `container`, `sdk`), internal usage contexts (e.g., `build-dep`, `test-infra`), and compliance scopes (e.g., `pci`, `hipaa`).
+Common uses include identifying customer-facing deliverables (e.g., `binary`, `container`, `sdk`) and internal usage contexts (e.g., `build-dep`, `test-infra`).
 
 Release::
 A software release tracked in the `releases` section.
 Each release has a unique `id` (e.g., `8.1.1`) and an optional `published_at` date.
-Releases must be listed in chronological order.
+Releases must be listed in chronological order (oldest first) because the CLI uses array position for range resolution.
 Vulnerability entries reference releases to indicate which versions are affected.
 
 Release branch::
@@ -130,7 +130,7 @@ Maps to "products" in OpenVEX terminology.
 
 Report (vulnerability report)::
 A record in the `reports` array of a vulnerability entry, indicating that a specific scanner or source reported the finding.
-Each report captures the reporter type, the date, and optionally scanner-specific vulnerability IDs and suppression configuration.
+Each report captures the reporter type and optionally the date, scanner-specific vulnerability IDs, and suppression configuration.
 Not to be confused with HTML report (an output artifact).
 
 Reporter type::
@@ -181,11 +181,10 @@ Invoked via `vulnlog validate`.
 
 Linting::
 The process of checking a Vulnlog file for consistent formatting and field ordering.
-The linter enforces top-level section order, vulnerability field order, and release chronological order.
+The linter enforces top-level section order, vulnerability field order (newest first), and release chronological order (oldest first).
 Invoked via `vulnlog lint`.
 
 Release range::
 A CLI filtering mechanism that selects vulnerabilities based on their affected releases.
-`--release <id>` means "all releases up to and including this release."
+`--release <id>` means "all releases up to and including this release," resolved by array position.
 The `--tags` flag can be combined for further filtering.
-Resolved by the order of entries in the `releases` section.

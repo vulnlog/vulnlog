@@ -33,9 +33,9 @@ The CLI applies transformations and business logic.
 
 === File Name Convention
 
-Vulnlog files use the naming convention `<project-name>.vl.[yaml|yml]` .
+Vulnlog files use the naming convention `<project-name>.vl.[yaml|yml]`.
 The `.vl.` infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use `vulnlog.[yaml|yml}`.
+Simple projects may use `vulnlog.[yaml|yml]`.
 
 The file location within the repository is not prescribed.
 The CLI requires an explicit file path as a positional argument; it does not search for files automatically.
@@ -62,7 +62,7 @@ Both approaches can coexist.
 
 [source,yaml]
 ----
-version: "1"
+schemaVersion: "1"
 
 project:
   # Project metadata
@@ -71,26 +71,32 @@ tags:
   # Tag definitions (optional)
 
 releases:
-  # Release definitions (chronological order)
+  # Release definitions (chronological order, oldest first)
 
 vulnerabilities:
-  # Vulnerability entries
+  # Vulnerability entries (newest first)
 ----
 
-Required top-level sections: `version`, `project`, `releases`, `vulnerabilities`.
+Required top-level sections: `schemaVersion`, `project`, `releases`, `vulnerabilities`.
 Optional top-level sections: `tags`.
 
 `vulnerabilities` may be an empty array.
 
+=== Ordering Rules
+
+Releases:: Must be in chronological order (oldest first). This ordering has functional significance -- the CLI uses array position to resolve `--release` range filtering. A release at position N includes all releases at positions 0 through N.
+
+Vulnerabilities:: Should be in reverse chronological order (newest first). The most recent findings appear at the top of the file for immediate visibility. This is a readability convention enforced by the linter, with no functional impact on CLI output.
+
 == Sections
 
-=== `version`
+=== `schemaVersion`
 
 [cols="1,1,1,3"]
 |===
 | Field | Type | Required | Description
 
-| `version`
+| `schemaVersion`
 | String
 | Yes
 | Schema version of the Vulnlog file. For this specification it is `"1"`.
@@ -115,22 +121,22 @@ Used in report generation and as author information in VEX documents.
 | Yes
 | Name of the software project.
 
-| `security_team`
+| `author`
 | String
-| No
-| Name of the responsible security team. Used as the author in VEX documents.
+| Yes
+| Name of the responsible security team or author. Used as the author in VEX documents.
 
-| `security_team_email`
+| `contact`
 | String (email)
 | No
-| Contact email for the security team. Used as the author contact in VEX documents.
+| Contact email for the security team. Used as the author contact in VEX documents. This can be the contact information of your https://securitytxt.org/[security.txt].
 |===
 
 === `tags`
 
 Optional.
 Defines labels for categorizing and scoping vulnerability entries.
-Tags provide a flexible, team-defined taxonomy that can represent customer-facing deliverables (`binary`, `container`, `sdk`), internal usage contexts (`build-dep`, `test-infra`), compliance scopes (`pci`, `hipaa`, `sox`), or any other categorization.
+Tags provide a flexible, team-defined taxonomy that can represent customer-facing deliverables (`binary`, `container`, `sdk`), internal usage contexts (`build-dep`, `test-infra`), or any other categorization.
 
 [cols="1,1,1,3"]
 |===
@@ -199,7 +205,9 @@ Purls without tags are included in VEX statements regardless of vulnerability ta
 === `vulnerabilities`
 
 Each entry represents a single vulnerability finding and the human verdict about it.
-The verdict reflects the most severe impact across all listed packages.
+
+NOTE: The verdict should reflect the most severe impact across all listed packages.
+If a package appears in multiple contexts, the analysis should focus on the highest-risk context.
 
 [cols="1,1,1,3"]
 |===
@@ -310,8 +318,8 @@ The verdict reflects the most severe impact across all listed packages.
 
 | `at`
 | String (date, `YYYY-MM-DD`)
-| Yes
-| Date the vulnerability was reported.
+| No
+| Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation.
 
 | `source`
 | String
@@ -489,6 +497,7 @@ VEX generation includes all purls as products.
 Omitted `verdict`:: Treated as `under_investigation`.
 The CLI warns about entries without a verdict.
 Omitted `releases[].published_at`:: The release is considered unpublished.
+Omitted `reports[].at`:: The CLI uses the current date and time during output generation.
 Omitted `analyzed_at`:: No analysis date is recorded.
 Omitted `vulnerabilities[].tags`:: The vulnerability is not scoped.
 Included in all unfiltered outputs.
@@ -558,37 +567,37 @@ Vulnlog packages map to OpenVEX subcomponents.
 | Static value: `https://openvex.dev/ns/v0.2.0`
 
 | `@id`
-| A newly generated value of every created document. `https://vulnlog.dev/vex/<UUID>`
+| Generated IRI: `https://vulnlog.dev/vex/<UUID>`
 
 | `author`
-| `project.security_team`
+| `project.author`. When `project.contact` is present: `"<author> (<contact>)"`.
 
 | `timestamp`
-| When the document was issued.
+| Document generation timestamp.
 
 | `version`
-| `1` if no previous OpenVEX document specified otherwise, the version + 1 of the previous OpenVEX document that was generated by Vulnlog.
+| `1` for new documents. Previous version + 1 when updating an existing document (see <<VEX Document Versioning>>).
 
-| `statement.vulnerability.name`
+| `statements[].vulnerability.name`
 | `vulnerabilities[].id`
 
-| `statement.status`
+| `statements[].status`
 | `vulnerabilities[].verdict` (mapped per <<verdict-values>>)
 
-| `statement.justification`
+| `statements[].justification`
 | `vulnerabilities[].justification`
 
-| `statement.impact_statement`
+| `statements[].impact_statement`
 | `vulnerabilities[].analysis` (when verdict is `not_affected`)
 |===
 
-.This is a minimal example of a Vulnlog-generated OpenVEX file that contains only the fields required by the OpenVEX specification.
+.This is a minimal example of a Vulnlog-generated OpenVEX file.
 [source,json]
 ----
 {
   "@context": "https://openvex.dev/ns/v0.2.0",
   "@id": "https://vulnlog.dev/vex/550e8400-e29b-41d4-a716-446655440000",
-  "author": "Vulnlog",
+  "author": "Acme Corp Security Team",
   "timestamp": "2026-03-10T00:00:00.000Z",
   "version": 1,
   "statements": [
@@ -596,46 +605,48 @@ Vulnlog packages map to OpenVEX subcomponents.
       "vulnerability": { "name": "CVE-2026-26996" },
       "status": "not_affected",
       "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
-      "impact_statement": "The minimatch is only used in to generate the static project website. Input is always trusted."
+      "impact_statement": "The minimatch is only used to generate the static project website. Input is always trusted."
     }
   ]
 }
 ----
 
-To generate more advanced OpenVEX Files the following additional fields are necessary.
+To generate more detailed OpenVEX documents, the following additional fields are used.
 
 .Additional fields to enrich the Vulnlog-generated OpenVEX document.
 [cols="2,2"]
 |===
 | OpenVEX Field | Vulnlog Source
 
-| `author`
-| `project.security_team` and `project.security_team_email`
-
 | `role`
-| Static value `Document Creator`
+| Static value: `Document Creator`
 
 | `statements[].vulnerability.@id`
-| Vulnerability ID reference URL prefix + `vulnerabilities[].id`
+| Vulnerability ID reference URL (see <<Vulnerability ID URL Mapping>>)
 
 | `statements[].vulnerability.description`
 | `vulnerabilities[].description`
 
+| `statements[].timestamp`
+| `vulnerabilities[].analyzed_at` when present. Otherwise, the `reports[].at` date. If neither is present, the document generation timestamp.
+
 | `statements[].products[].@id`
-| The PURL of the current latest release `releases[].purls[].purl`
+| PURLs from the target release's `purls` entries, filtered by matching tags
 
-| `statements[].products[].subcomponents.@id`
-| The PURL of the affected dependency `vulnerabilities[0].packages[]`
+| `statements[].products[].subcomponents[].@id`
+| `vulnerabilities[].packages[]`
 
+| `statements[].action_statement`
+| `vulnerabilities[].analysis` (when verdict is `risk_acceptable`)
 |===
 
-.This is a more detailed Vulnlog-generated OpenVEX
+.This is a more detailed Vulnlog-generated OpenVEX document.
 [source,json]
 ----
 {
   "@context": "https://openvex.dev/ns/v0.2.0",
-  "@id": "https://vulnlog.dev/vex/vulnlog/2026-03-10T00:00:00.000Z",
-  "author": "Vulnlog (security@vulnlog.dev)",
+  "@id": "https://vulnlog.dev/vex/550e8400-e29b-41d4-a716-446655440000",
+  "author": "Demo Security Team (security@demo.com)",
   "role": "Document Creator",
   "timestamp": "2026-03-10T00:00:00.000Z",
   "version": 1,
@@ -651,19 +662,20 @@ To generate more advanced OpenVEX Files the following additional fields are nece
         {
           "@id": "pkg:generic/vulnlog/vulnlog@0.10.0",
           "subcomponents": [
-            {
-              "@id": "pkg:npm/minimatch@3.1.2"
-            }
+            { "@id": "pkg:npm/minimatch@3.1.2" }
           ]
         }
       ],
       "status": "not_affected",
       "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
-      "impact_statement": "The minimatch is only used in to generate the static project website. Input is always trusted."
+      "impact_statement": "The minimatch is only used to generate the static project website. Input is always trusted."
     }
   ]
 }
 ----
+
+[[vulnerability-id-url-mapping]]
+=== Vulnerability ID URL Mapping
 
 .Vulnerability ID type to reference URL mapping.
 [cols="2,2"]
@@ -671,17 +683,16 @@ To generate more advanced OpenVEX Files the following additional fields are nece
 | Vulnerability ID Type | URL Prefix
 
 | CVE
-| `https://nvd.nist.gov/vuln/detail/<Vulnerability ID>`
+| `https://nvd.nist.gov/vuln/detail/<ID>`
 
 | SNYK
-| `https://security.snyk.io/vuln/<Vulnerability ID>`
+| `https://security.snyk.io/vuln/<ID>`
 
 | RUSTSEC
-| `https://rustsec.org/advisories/<Vulnerability ID>`
+| `https://rustsec.org/advisories/<ID>`
 
 | GHSA
-| `https://github.com/advisories/<Vulnerability ID>`
-
+| `https://github.com/advisories/<ID>`
 |===
 
 === Product Scoping via Tags
@@ -691,14 +702,17 @@ Only purls with matching tags are included as products.
 Purls without tags are always included.
 Vulnerabilities without tags are associated with all purls.
 
+[[vex-document-versioning]]
 === VEX Document Versioning
 
 The OpenVEX `version` field is an incrementing integer.
-Since the CLI is stateless, the version is determined from the existing output file:
+Since the CLI is stateless, the version is determined by reading the existing output file:
 
-. If the output path points to an existing VEX file, parse the current `version`.
-. New version = previous + 1.
-. If no existing file, start at version 1.
+. The CLI reads the file at the output path (specified by `-o` or the default `vex.json`).
+. If the file exists and is a valid OpenVEX document, the CLI extracts the current `version` and `timestamp`.
+. The new document is generated with `version` = previous version + 1.
+. If no existing file is found, the document starts at version `1`.
+. The CLI writes the new document only if the statements have changed compared to the previous document. If unchanged, the file is not written and the CLI reports "No changes detected."
 
 // tag::dev-notes[]
 ////
@@ -706,7 +720,7 @@ IMPLEMENTATION NOTE:
 
 VEX generation algorithm:
 
-1. Determine target releases via `--release` (up to and including). Required.
+1. Determine target releases via `--release` (up to and including).
 2. If `--tags` specified, filter vulnerabilities.
 3. Look up `purls` for the target release.
 4. For each vulnerability:
@@ -714,12 +728,14 @@ VEX generation algorithm:
    b. Match vulnerability tags against purl tags to select products.
    c. Map `analysis` to `impact_statement` or `action_statement`.
    d. Include `justification` only for `not_affected`.
+   e. Determine statement timestamp: `analyzed_at` -> earliest `reports[].at` -> generation timestamp.
 5. `risk_acceptable` -> VEX status `affected` with `action_statement`.
-6. Read existing output file for version increment.
-7. Populate `author` from project metadata, `timestamp` from generation time.
+6. Read existing output file for version increment and change detection.
+7. Populate `author` from project metadata: format as "<author> (<contact>)" when contact is present.
 8. `aliases` and `comment` are NOT included in VEX output.
 
-Future: `--if-changed` flag to skip writing if statements are identical.
+Change detection: compare statement arrays (ignoring document-level version and timestamp).
+If identical, skip writing.
 ////
 // end::dev-notes[]
 
@@ -776,8 +792,8 @@ Detail pages would include the `comment` field since they target internal audien
 . `source` is required on report entries when `reporter` is `other`.
 . All `id` fields within their respective sections must be unique.
 . `suppress.expires_at` must be a valid future or present date at CLI execution time.
-. `analyzed_at`, when present, must not be before the earliest `at` date across reports.
-. Entries in `releases` must be in chronological order.
+. `analyzed_at`, when present, must not be before the earliest `at` date across reports for that vulnerability.
+. Entries in `releases` must be in chronological order (oldest first).
 . All entries in `packages` must be valid Package URLs.
 
 // tag::dev-notes[]
@@ -855,7 +871,7 @@ Available on `stats`, `report`, `suppress`, and `vex` commands.
 [[vulnlog-init]]
 ==== `vulnlog init`
 
-Scaffolds a minimal Vulnlog file containing only the required sections (`version`, `project`, `releases`, `vulnerabilities`).
+Scaffolds a minimal Vulnlog file containing only the required sections (`schemaVersion`, `project`, `releases`, `vulnerabilities`).
 
 [source]
 ----
@@ -874,6 +890,9 @@ vulnlog init [flags]
 
 | `--organization <n>`
 | Organization name. Prompted if not provided.
+
+| `--author <n>`
+| Author name. Prompted if not provided.
 |===
 
 // tag::dev-notes[]
@@ -882,11 +901,12 @@ IMPLEMENTATION NOTE:
 
 The generated file should contain only required sections:
 
-  version: "1"
+  schemaVersion: "1"
 
   project:
     organization: <value>
     name: <value>
+    author: <value>
 
   releases:
     - id: <prompted or placeholder>
@@ -926,11 +946,13 @@ vulnlog lint <file> [--fix]
 
 Enforces:
 
-Top-level section order:: `version`, `project`, `tags`, `releases`, `vulnerabilities`.
+Top-level section order:: `schemaVersion`, `project`, `tags`, `releases`, `vulnerabilities`.
 
-Vulnerability field order:: `id`, `name`, `aliases`, `releases`, `description`, `packages`, `reports`, `tags`, `analysis`, `analyzed_at`, `comment`, `severity`, `verdict`, `justification`, `fixed_in`, `fixed_at`, `fix_ref`, `fix_note`.
+Vulnerability field order:: `id`, `name`, `aliases`, `releases`, `description`, `packages`, `reports`, `tags`, `analysis`, `analyzed_at`, `severity`, `verdict`, `justification`, `comment`, `fixed_in`, `fixed_at`, `fix_ref`, `fix_note`.
 
 Release chronological order:: Oldest first.
+
+Vulnerability reverse chronological order:: Newest first (based on the earliest `reports[].at` date, entries without dates sorted last).
 
 // tag::dev-notes[]
 ////
@@ -1007,6 +1029,10 @@ vulnlog vex <file> [filter flags] [-o <path>]
 
 Default output: `vex.json`.
 
+The CLI reads the existing file at the output path to determine the VEX document version.
+If the file exists, the version is incremented.
+If the content has not changed, the file is not rewritten.
+See <<VEX Document Versioning>>.
 [[vulnlog-sarif]]
 ==== `vulnlog sarif` (Future)
 
@@ -1085,13 +1111,14 @@ A future version will introduce an `imports` directive for splitting a Vulnlog f
 DESIGN: Multi-file support via imports
 
   # main file (passed to CLI)
-  version: "1"
+  schemaVersion: "1"
   imports:
     - demo-project-vulns.vl.yaml
 
   project:
     organization: Demo Project Inc
     name: Demo Project
+    author: Demo Security Team
   tags:
     - id: binary
   releases:
@@ -1104,7 +1131,7 @@ DESIGN: Multi-file support via imports
 
 Rules:
 1. Imported files can contain: tags, releases, vulnerabilities.
-   `version` and `project` must be in the main file only.
+   `schemaVersion` and `project` must be in the main file only.
 2. Arrays are concatenated across files. Duplicate IDs are errors.
 3. Imports are relative to the importing file. No recursive imports.
 4. CLI: no changes. Positional arg is always the main file.

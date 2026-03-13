@@ -4,7 +4,7 @@
   "title": "Vulnlog Report Entry",
   "description": "Records that a specific SCA scanner or other source reported a vulnerability.",
   "type": "object",
-  "required": [ "reporter", "at" ],
+  "required": [ "reporter" ],
   "properties": {
     "reporter": {
       "description": "The scanner or source type that reported this vulnerability.",

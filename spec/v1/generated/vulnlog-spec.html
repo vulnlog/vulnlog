@@ -561,14 +561,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_scope">1.1. Scope</a></li>
 <li><a href="#_design_principles">1.2. Design Principles</a></li>
-<li><a href="#_file_convention">1.3. File Convention</a></li>
+<li><a href="#_file_name_convention">1.3. File Name Convention</a></li>
 <li><a href="#_multi_branch_workflow">1.4. Multi-Branch Workflow</a></li>
 </ul>
 </li>
 <li><a href="#_file_structure">2. File Structure</a></li>
 <li><a href="#_sections">3. Sections</a>
 <ul class="sectlevel2">
-<li><a href="#_version">3.1. <code>version</code></a></li>
+<li><a href="#_schemaversion">3.1. <code>schemaVersion</code></a></li>
 <li><a href="#_project">3.2. <code>project</code></a></li>
 <li><a href="#_tags">3.3. <code>tags</code></a></li>
 <li><a href="#_releases">3.4. <code>releases</code></a>
@@ -688,17 +688,18 @@ Changes are tracked via Git history rather than in-file audit trails.</p>
 </dd>
 <dt class="hdlist1">Data-oriented</dt>
 <dd>
-<p>Entries are plain data records with no behavior. The CLI applies transformations and business logic.</p>
+<p>Entries are plain data records with no behavior.
+The CLI applies transformations and business logic.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_file_convention">1.3. File Convention</h3>
+<h3 id="_file_name_convention">1.3. File Name Convention</h3>
 <div class="paragraph">
-<p>Vulnlog files use the naming convention <code>&lt;project-name&gt;.vl.yaml</code> (or <code>.vl.yml</code>).
+<p>Vulnlog files use the naming convention <code>&lt;project-name&gt;.vl.[yaml|yml]</code> .
 The <code>.vl.</code> infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use <code>vulnlog.yaml</code> (or <code>vulnlog.yml</code>).</p>
+Simple projects may use <code>vulnlog.[yaml|yml}</code>.</p>
 </div>
 <div class="paragraph">
 <p>The file location within the repository is not prescribed.
@@ -734,7 +735,7 @@ Both approaches can coexist.</p>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
 
 project:
   # Project metadata
@@ -750,7 +751,7 @@ vulnerabilities:
 </div>
 </div>
 <div class="paragraph">
-<p>Required top-level sections: <code>version</code>, <code>project</code>, <code>releases</code>, <code>vulnerabilities</code>.
+<p>Required top-level sections: <code>schemaVersion</code>, <code>project</code>, <code>releases</code>, <code>vulnerabilities</code>.
 Optional top-level sections: <code>tags</code>.</p>
 </div>
 <div class="paragraph">
@@ -762,7 +763,7 @@ Optional top-level sections: <code>tags</code>.</p>
 <h2 id="_sections">3. Sections</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_version">3.1. <code>version</code></h3>
+<h3 id="_schemaversion">3.1. <code>schemaVersion</code></h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -780,7 +781,7 @@ Optional top-level sections: <code>tags</code>.</p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>version</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>schemaVersion</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Schema version of the Vulnlog file. For this specification it is <code>"1"</code>.</p></td>
@@ -823,16 +824,16 @@ Used in report generation and as author information in VEX documents.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Name of the software project.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>security_team</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>author</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Name of the responsible security team. Used as the author in VEX documents.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>security_team_email</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>contact</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String (email)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Contact email for the security team. Used as the author contact in VEX documents.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contact email for the security team. Used as the author contact in VEX documents. This can be the contact information of your <a href="https://securitytxt.org/">Security.txt</a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -842,7 +843,7 @@ Used in report generation and as author information in VEX documents.</p>
 <div class="paragraph">
 <p>Optional.
 Defines labels for categorizing and scoping vulnerability entries.
-Tags provide a flexible, team-defined taxonomy that can represent customer-facing deliverables (<code>binary</code>, <code>container</code>, <code>sdk</code>), internal usage contexts (<code>build-dep</code>, <code>test-infra</code>), compliance scopes (<code>pci</code>, <code>hipaa</code>, <code>sox</code>), or any other categorization.</p>
+Tags provide a flexible, team-defined taxonomy that can represent customer-facing deliverables (<code>binary</code>, <code>container</code>, <code>sdk</code>), internal usage contexts (<code>build-dep</code>, <code>test-infra</code>), or any other categorization.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -1118,7 +1119,7 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>at</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String (date, <code>YYYY-MM-DD</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Date the vulnerability was reported.</p></td>
 </tr>
 <tr>
@@ -1379,11 +1380,14 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <dl>
 <dt class="hdlist1">Omitted <code>tags</code> section</dt>
 <dd>
-<p>The file has no tag definitions. Vulnerability entries cannot use tags. VEX generation includes all purls as products.</p>
+<p>The file has no tag definitions.
+Vulnerability entries cannot use tags.
+VEX generation includes all purls as products.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>verdict</code></dt>
 <dd>
-<p>Treated as <code>under_investigation</code>. The CLI warns about entries without a verdict.</p>
+<p>Treated as <code>under_investigation</code>.
+The CLI warns about entries without a verdict.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>releases[].published_at</code></dt>
 <dd>
@@ -1395,7 +1399,8 @@ The verdict reflects the most severe impact across all listed packages.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>vulnerabilities[].tags</code></dt>
 <dd>
-<p>The vulnerability is not scoped. Included in all unfiltered outputs.</p>
+<p>The vulnerability is not scoped.
+Included in all unfiltered outputs.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>releases[].purls[].tags</code></dt>
 <dd>
@@ -1449,6 +1454,7 @@ Vulnlog packages map to OpenVEX subcomponents.</p>
 <div class="sect2">
 <h3 id="_field_mapping">7.1. Field Mapping</h3>
 <table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 1. Minimal required OpenVEX fields mapped to Vulnlog fields.</caption>
 <colgroup>
 <col style="width: 50%;">
 <col style="width: 50%;">
@@ -1461,20 +1467,28 @@ Vulnlog packages map to OpenVEX subcomponents.</p>
 </thead>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@context</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Static value: <code><a href="https://openvex.dev/ns/v0.2.0" class="bare">https://openvex.dev/ns/v0.2.0</a></code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>@id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A newly generated value of every created document. <code><a href="https://vulnlog.dev/vex/&lt;UUID&gt" class="bare">https://vulnlog.dev/vex/&lt;UUID&gt</a>;</code></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>author</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.security_team</code> and <code>project.security_team_email</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.author</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.vulnerability</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>timestamp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">When the document was issued.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>version</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code> if no previous OpenVEX document specified otherwise, the version + 1 of the previous OpenVEX document that was generated by Vulnlog.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.vulnerability.name</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].id</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.products</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>releases[].purls[].purl</code> for the target release, filtered by matching tags</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.products[].subcomponents</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].packages[]</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.status</code></p></td>
@@ -1488,9 +1502,134 @@ Vulnlog packages map to OpenVEX subcomponents.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.impact_statement</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].analysis</code> (when verdict is <code>not_affected</code>)</p></td>
 </tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="title">This is a minimal example of a Vulnlog-generated OpenVEX file that contains only the fields required by the OpenVEX specification.</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://vulnlog.dev/vex/550e8400-e29b-41d4-a716-446655440000",
+  "author": "Vulnlog",
+  "timestamp": "2026-03-10T00:00:00.000Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": { "name": "CVE-2026-26996" },
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "The minimatch is only used in to generate the static project website. Input is always trusted."
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To generate more advanced OpenVEX Files the following additional fields are necessary.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 2. Additional fields to enrich the Vulnlog-generated OpenVEX document.</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.action_statement</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].analysis</code> (when verdict is <code>risk_acceptable</code>)</p></td>
+<th class="tableblock halign-left valign-top">OpenVEX Field</th>
+<th class="tableblock halign-left valign-top">Vulnlog Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>author</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.author</code> and <code>project.contact</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>role</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Static value <code>Document Creator</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].vulnerability.@id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vulnerability ID reference URL prefix + <code>vulnerabilities[].id</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].vulnerability.description</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].description</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].products[].@id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The PURL of the current latest release <code>releases[].purls[].purl</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].products[].subcomponents.@id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The PURL of the affected dependency <code>vulnerabilities[0].packages[]</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="listingblock">
+<div class="title">This is a more detailed Vulnlog-generated OpenVEX</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://vulnlog.dev/vex/vulnlog/2026-03-10T00:00:00.000Z",
+  "author": "Vulnlog (security@vulnlog.dev)",
+  "role": "Document Creator",
+  "timestamp": "2026-03-10T00:00:00.000Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-26996",
+        "name": "CVE-2026-26996",
+        "description": "DoS vulnerability in minimatch."
+      },
+      "timestamp": "2026-03-10T00:00:00.000Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog/vulnlog@0.10.0",
+          "subcomponents": [
+            {
+              "@id": "pkg:npm/minimatch@3.1.2"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "The minimatch is only used in to generate the static project website. Input is always trusted."
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<caption class="title">Table 3. Vulnerability ID type to reference URL mapping.</caption>
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Vulnerability ID Type</th>
+<th class="tableblock halign-left valign-top">URL Prefix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CVE</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://nvd.nist.gov/vuln/detail/&lt;Vulnerability" class="bare">https://nvd.nist.gov/vuln/detail/&lt;Vulnerability</a> ID&gt;</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">SNYK</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://security.snyk.io/vuln/&lt;Vulnerability" class="bare">https://security.snyk.io/vuln/&lt;Vulnerability</a> ID&gt;</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">RUSTSEC</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://rustsec.org/advisories/&lt;Vulnerability" class="bare">https://rustsec.org/advisories/&lt;Vulnerability</a> ID&gt;</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GHSA</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://github.com/advisories/&lt;Vulnerability" class="bare">https://github.com/advisories/&lt;Vulnerability</a> ID&gt;</code></p></td>
 </tr>
 </tbody>
 </table>
@@ -1754,7 +1893,7 @@ No automatic file detection.</p>
 <dl>
 <dt class="hdlist1">Top-level section order</dt>
 <dd>
-<p><code>version</code>, <code>project</code>, <code>tags</code>, <code>releases</code>, <code>vulnerabilities</code>.</p>
+<p><code>schemaVersion</code>, <code>project</code>, <code>tags</code>, <code>releases</code>, <code>vulnerabilities</code>.</p>
 </dd>
 <dt class="hdlist1">Vulnerability field order</dt>
 <dd>
@@ -1938,11 +2077,12 @@ When omitted, generates for all reporter types found in the vulnerability report
 <h3 id="_quick_start">12.1. Quick Start</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
 
 project:
   organization: Acme Corp
   name: Acme Web App
+  author:  Acme Corp Security Team
 
 releases:
   - id: 1.0.0
@@ -1953,11 +2093,9 @@ vulnerabilities:
   - id: CVE-2026-1234
     releases: [ 1.0.0 ]
     description: Remote code execution in example-lib
-    packages:
-      - "pkg:npm/example-lib@2.3.0"
+    packages: [ "pkg:npm/example-lib@2.3.0" ]
     reports:
       - reporter: trivy
-        at: 2026-01-20
     analysis: &gt;
       The vulnerable code path is not reachable in our application
       because we only use the safe subset of the API.
@@ -1970,13 +2108,13 @@ vulnerabilities:
 <h3 id="_full_example">12.2. Full Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">version: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
 
 project:
   organization: Demo Project Inc
   name: Demo Project
-  security_team: Demo Security Team
-  security_team_email: security@demo.com
+  author: Demo Security Team
+  contact: security@demo.com
 
 tags:
   - id: binary
@@ -1987,8 +2125,6 @@ tags:
     description: Demo Project SDK
   - id: build-dep
     description: Internal build dependency
-  - id: pci
-    description: PCI DSS compliance scope
 
 releases:
   - id: 8.1.0
@@ -2013,8 +2149,7 @@ vulnerabilities:
   - id: CVE-2020-099
     releases: [ 8.1.0 ]
     description: Path traversal vulnerability in random-dependency
-    packages:
-      - "pkg:maven/org.random/random-core@1.33.7"
+    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
     reports:
       - reporter: trivy
         at: 2020-12-28
@@ -2032,8 +2167,7 @@ vulnerabilities:
   # Stub entry - quick triage, no description, no verdict yet
   - id: CVE-2021-007
     releases: [ 8.1.1 ]
-    packages:
-      - "pkg:maven/com.example/some-lib@4.0.0"
+    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
     reports:
       - reporter: trivy
         at: 2021-03-10
@@ -2044,8 +2178,7 @@ vulnerabilities:
     aliases: [ GHSA-xxxx-yyyy ]
     releases: [ 8.1.1 ]
     description: Deserialization vulnerability in some-dependency
-    packages:
-      - "pkg:maven/example.org/some-dependency@1.1.2"
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
     reports:
       - reporter: trivy
         at: 2021-03-03
@@ -2066,15 +2199,13 @@ vulnerabilities:
     aliases: [ GHSA-jfh8-c2jp-5v3q ]
     releases: [ 8.1.1 ]
     description: RCE vulnerability in Log4J via JNDI lookup
-    packages:
-      - "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
     reports:
       - reporter: trivy
         at: 2021-12-10
-    tags: [ binary, pci ]
+    tags: [ binary ]
     analysis: &gt;
-      Demo project utilizes Log4J and a PoC showed that
-      the project is vulnerable to this RCE vulnerability.
+      Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.
     analyzed_at: 2021-12-10
     comment: &gt;
       PoC exploit confirmed by Jane (security team) on 2021-12-10.
@@ -2090,16 +2221,13 @@ vulnerabilities:
   - id: CVE-2024-5535
     releases: [ 8.1.1 ]
     description: Buffer overread in OpenSSL SSL_select_next_proto
-    packages:
-      - "pkg:apk/alpine/openssl@3.1.4-r0"
+    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
     reports:
       - reporter: trivy
         at: 2024-06-28
     tags: [ container ]
     analysis: &gt;
-      Vulnerable OpenSSL is present in the container base image
-      but the affected NPN/ALPN negotiation code path is never
-      invoked by our application.
+      Vulnerable OpenSSL is present in the container base image but the affected NPN/ALPN negotiation code path is never invoked by our application.
     analyzed_at: 2024-06-29
     verdict: not_affected
     justification: vulnerable_code_not_in_execute_path
@@ -2108,8 +2236,7 @@ vulnerabilities:
   - id: SNYK-2021-003
     releases: [ 8.1.2 ]
     description: DoS vulnerability in some-other-dependency
-    packages:
-      - "pkg:maven/com.some.other/some-other-dependency@3.11.0"
+    packages: [ "pkg:maven/com.some.other/some-other-dependency@3.11.0" ]
     reports:
       - reporter: snyk
         at: 2022-04-28
@@ -2130,16 +2257,13 @@ vulnerabilities:
     name: Psychic Signatures
     releases: [ 8.1.2 ]
     description: ECDSA signature verification bypass in Java SE
-    packages:
-      - "pkg:maven/com.oracle/jdk@17.0.2"
+    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
     reports:
       - reporter: other
         at: 2022-04-19
         source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container, pci ]
-    analysis: &gt;
-      The project uses Java 17 and ECDSA signatures for
-      JWT token verification. Confirmed exploitable.
+    tags: [ binary, container ]
+    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
     analyzed_at: 2022-04-20
     severity: critical
     verdict: fixed
@@ -2156,7 +2280,7 @@ vulnerabilities:
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-08 16:28:06 +0100
+Last updated 2026-03-13 21:36:34 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>
