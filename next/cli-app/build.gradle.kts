@@ -11,6 +11,15 @@ application {
     applicationName = "vulnlog"
 }
 
+dependencies {
+    implementation(libs.clikt)
+    implementation(libs.jacksonKotlin)
+    implementation(libs.jacksonYaml)
+
+    testImplementation(libs.kotestAssertionsCoreJvm)
+    testImplementation(libs.kotestRunnerJunit5Jvm)
+}
+
 val generateBuildInfo by tasks.registering {
     val versionValue = project.version.toString()
     val outputDir = layout.buildDirectory.dir("generated/source/buildInfo")
@@ -39,4 +48,8 @@ kotlin {
             kotlin.srcDir(generateBuildInfo)
         }
     }
+}
+
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
 }

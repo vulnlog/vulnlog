@@ -26,11 +26,9 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.dependencyCheckGradle)
     implementation(libs.graalvmNativeGradlePlugin)
 // Disable until fully supported in JDK 25 with Kotlin 2.3.0
 //    implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
     implementation(libs.ktlintGradle)
-    implementation(libs.snykGradlePlugin)
 }
