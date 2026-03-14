@@ -1,6 +1,6 @@
 = Vulnlog User Guide
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-08
+:revdate: 2026-03-13
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -258,6 +258,18 @@ Create a minimal stub entry:
     tags: [ webapp ]
 ----
 
+=== Adding the same finding to multiple branch files
+
+When a CVE affects multiple release branches, use `vulnlog add` to create stub entries across files in one command:
+
+[source,bash]
+----
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+  --vuln-id CVE-2026-5678 --reporter trivy
+----
+
+Then open each file to fill in the package PURLs and analysis.
+
 === Finding does not affect us
 
 [source,yaml]
@@ -387,6 +399,8 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x
 This avoids cherry-picking vulnerability analysis to older branches.
 When a release branch reaches end of life (EoL), its Vulnlog file naturally becomes a historical archive.
 
+Use `vulnlog add` to create stub entries across multiple files at once when a new CVE affects several branches.
+
 Alternatively, maintain a Vulnlog file directly on each release branch.
 Both approaches can coexist.
 
@@ -501,6 +515,18 @@ vulnlog suppress my-app.vl.yaml --reporter trivy -o custom/.trivyignore
 ----
 vulnlog vex my-app.vl.yaml --release 8.1.1
 vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json
+----
+
+==== `vulnlog add`
+
+[source,bash]
+----
+# Add a CVE to multiple branch files
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+  --vuln-id CVE-2026-001 --reporter trivy
+
+# Add to a single file for a specific release
+vulnlog add my-app.vl.yaml --vuln-id CVE-2026-001 --reporter trivy --release 2.0.1
 ----
 
 === Exit Codes

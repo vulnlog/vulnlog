@@ -1,6 +1,6 @@
 = Vulnlog Specification
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-08
+:revdate: 2026-03-13
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -57,6 +57,8 @@ This approach avoids cherry-picking vulnerability analysis to older Git branches
 
 It remains possible to maintain a Vulnlog file directly on each release branch.
 Both approaches can coexist.
+
+See <<vulnlog-add>> for CLI support to add entries across multiple files, and <<Cross-File References>> for the planned `ref` mechanism to share analysis between files.
 
 == File Structure
 
@@ -1033,6 +1035,64 @@ The CLI reads the existing file at the output path to determine the VEX document
 If the file exists, the version is incremented.
 If the content has not changed, the file is not rewritten.
 See <<VEX Document Versioning>>.
+
+[[vulnlog-add]]
+==== `vulnlog add`
+
+Adds a vulnerability stub entry to one or more Vulnlog files.
+Designed for the multi-branch workflow where the same CVE needs to be recorded across multiple files.
+
+[source]
+----
+vulnlog add <file...> --vuln-id <id> --reporter <type> [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--vuln-id <id>`
+| Vulnerability ID to add (required).
+
+| `--reporter <type>`
+| Reporter type for the report entry (required).
+
+| `--release <id>`
+| Release to associate. When omitted, adds to all releases in each file.
+|===
+
+The command adds a minimal stub entry (id, releases, packages placeholder, report) to each specified file.
+If an entry with the same `id` already exists in a file, the command skips that file and reports a warning.
+
+Example:
+
+[source,bash]
+----
+# Add CVE-2026-001 to three branch files at once
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+  --vuln-id CVE-2026-001 --reporter trivy
+----
+
+// tag::dev-notes[]
+////
+IMPLEMENTATION NOTE:
+
+The stub entry added to each file:
+
+  - id: <vuln-id>
+    releases: [<all release IDs in the file, or --release value>]
+    packages: []
+    reports:
+      - reporter: <type>
+
+The entry is inserted at position 0 in the vulnerabilities array (newest first convention).
+packages is an empty array — the engineer fills in the purl after reviewing the scanner report.
+
+If the file already contains an entry with the same id, skip and warn:
+  "Skipping <file>: CVE-2026-001 already exists."
+////
+// end::dev-notes[]
+
 [[vulnlog-sarif]]
 ==== `vulnlog sarif` (Future)
 
@@ -1102,9 +1162,56 @@ SARIF mapping:
 
 == Future Directions
 
-=== Multi-File Support
+=== Cross-File References
 
-A future version will introduce an `imports` directive for splitting a Vulnlog file.
+A future version will introduce a `ref` field on vulnerability entries to reference an entry in another Vulnlog file.
+This addresses the duplication problem in multi-branch setups: the analysis is written once, and branch-specific files reference it with only the per-branch differences.
+
+// tag::dev-notes[]
+////
+DESIGN: Cross-file references via `ref`
+
+A vulnerability entry can use `ref` instead of `id` to reference an entry from another file:
+
+  # branch-8.1.vl.yaml
+  vulnerabilities:
+    - ref: "branch-8.3.vl.yaml#CVE-2026-001"
+      releases: [ 8.1.5 ]
+      reports:
+        - reporter: trivy
+          at: 2026-03-01
+      verdict: not_affected
+      justification: vulnerable_code_not_in_execute_path
+
+The CLI resolves the reference and imports all fields from the target entry.
+Fields defined in the ref entry override the imported values.
+Fields not defined are inherited.
+
+Rules:
+1. `ref` references `id` entries only, never other `ref` entries.
+   This prevents reference chains and keeps resolution simple.
+2. References should point from shorter-lived branches to longer-lived branches.
+   Example: 8.1.x references 8.3.x (the main development branch).
+   This ensures the target file outlives the referencing file,
+   and archiving older branches does not break active references.
+3. The CLI validates references at `validate` time:
+   - The referenced file must exist.
+   - The referenced ID must exist in that file.
+   - The referenced entry must be an `id` entry (not a `ref`).
+4. Required fields in a `ref` entry: `ref`, `releases`, `reports`.
+   Everything else is optional (inherited or overridden).
+5. `ref` and `id` are mutually exclusive on the same entry.
+6. The resolved entry (after merge) must pass all normal validation rules.
+
+Merge semantics: field-level override, not array merge.
+If the ref entry defines `packages`, it completely replaces the referenced `packages`.
+If it omits `packages`, the referenced value is used.
+////
+// end::dev-notes[]
+
+=== Multi-File Imports
+
+A future version will introduce an `imports` directive for splitting a Vulnlog file into static project data and dynamic vulnerability data.
 
 // tag::dev-notes[]
 ////
