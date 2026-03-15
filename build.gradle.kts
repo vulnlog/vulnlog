@@ -1,7 +1,3 @@
-plugins {
-    id("vulnlog.security-convention")
-}
-
 val gitHash: String = try {
     providers.exec {
         commandLine("git", "rev-parse", "--short", "HEAD")
