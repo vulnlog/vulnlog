@@ -1,3 +1,7 @@
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention")
+}
+
 dependencyResolutionManagement {
     // Reuse version catalog from the main build.
     versionCatalogs {

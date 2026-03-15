@@ -11,8 +11,9 @@ Welcome to the Vulnlog community, and thank you for contributing! This guide exp
 
 The following tools are required to build and contribute to this project:
 
-- **JDK 21+** — the Gradle toolchain will automatically provision JDK 25 for compilation via
-  [Foojay](https://github.com/gradle/foojay-toolchains), so any JDK 21+ suffices to bootstrap Gradle
+- **JDK 17+** — the Gradle toolchain will automatically provision JDK 25 for compilation via
+  [Foojay](https://github.com/gradle/foojay-toolchains), so any JDK 17+ suffices to bootstrap Gradle.
+  The project targets JVM 17 bytecode.
 - **Git**
 
 Optional, only needed to build native images locally:
