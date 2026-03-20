@@ -15,6 +15,8 @@ graalvmNative {
             buildArgs.addAll(
                 "--no-fallback",
                 "-H:+ReportExceptionStackTraces",
+                "-Os",
+                "--emit build-report",
             )
         }
     }
