@@ -9,7 +9,7 @@ object YamlWriter {
         file: VulnlogFile,
         mapper: ObjectMapper,
     ): String {
-        val dto = V1Mapper.fromDomain(file)
+        val dto = V1Mapper.toDto(file)
         return mapper.writeValueAsString(dto)
             .replace("\nproject:\n", "\n\nproject:\n")
             .replace("\nreleases:", "\n\nreleases:")

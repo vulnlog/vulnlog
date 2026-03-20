@@ -23,8 +23,8 @@ class InitCommand : CliktCommand(name = "init") {
         help = "Organization name for this Vulnlog project.",
     ).required()
     val project: String by option(
-        "--project",
-        help = "Project name for this Vulnlog project.",
+        "--name",
+        help = "Name for this Vulnlog project.",
     ).required()
     val author: String by option(
         "--author",
@@ -38,8 +38,7 @@ class InitCommand : CliktCommand(name = "init") {
             |Output path for the generated file.
             |If not specified, defaults to vulnlog.yaml in the current directory.
             """.trimMargin(),
-    )
-        .file()
+    ).file()
         .default(Paths.get(System.getProperty("user.dir"), "vulnlog.yaml").toFile())
 
     private val mapper = createYamlMapper()

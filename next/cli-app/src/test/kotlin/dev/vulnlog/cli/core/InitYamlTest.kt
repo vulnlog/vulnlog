@@ -20,7 +20,7 @@ class InitYamlTest : FunSpec({
             |
             |project:
             |  organization: "acme"
-            |  project: "widget"
+            |  name: "widget"
             |  author: "alice"
             |
             |releases: []
