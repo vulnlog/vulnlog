@@ -1,0 +1,44 @@
+[
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.VulnlogFileV1Dto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.ProjectDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.ReleaseEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.ReleasePurlEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.TagEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.VulnerabilityEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.v1.dto.ReportEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  }
+]

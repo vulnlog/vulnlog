@@ -1,11 +1,12 @@
 package dev.vulnlog.cli.parse.v1.dto
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 data class VulnlogFileV1Dto(
     val schemaVersion: String,
     val project: ProjectDto,
+    @param:JsonInclude(JsonInclude.Include.NON_NULL)
+    val tags: List<TagEntryDto>? = null,
     val releases: List<ReleaseEntryDto>,
     val vulnerabilities: List<VulnerabilityEntryDto>,
 )

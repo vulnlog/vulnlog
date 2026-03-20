@@ -9,6 +9,7 @@ import dev.vulnlog.cli.BuildInfo
 fun main(args: Array<String>) =
     VulnlogCli()
         .subcommands(InitCommand())
+        .subcommands(ValidateCommand())
         .main(args)
 
 class VulnlogCli : CliktCommand(name = "vulnlog") {
