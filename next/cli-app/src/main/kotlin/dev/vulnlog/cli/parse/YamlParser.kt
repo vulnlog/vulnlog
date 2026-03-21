@@ -7,7 +7,6 @@ import dev.vulnlog.cli.parse.v1.dto.VulnlogFileV1Dto
 import dev.vulnlog.cli.result.ParseResult
 import tools.jackson.databind.DatabindException
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.readValue
 
 class YamlParser(private val mapper: ObjectMapper) {
     fun parse(yaml: String): ParseResult {
@@ -41,7 +40,7 @@ class YamlParser(private val mapper: ObjectMapper) {
     ): ParseResult {
         val dto: VulnlogFileV1Dto =
             try {
-                mapper.readValue<VulnlogFileV1Dto>(yaml)
+                mapper.readValue(yaml, VulnlogFileV1Dto::class.java)
             } catch (e: DatabindException) {
                 return ParseResult.Error(listOf("YAML parse error: ${e.originalMessage}"))
             }

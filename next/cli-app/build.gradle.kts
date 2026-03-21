@@ -13,7 +13,6 @@ application {
 
 dependencies {
     implementation(libs.clikt)
-    implementation(libs.jacksonKotlin)
     implementation(libs.jacksonYaml)
 
     testImplementation(libs.kotestAssertionsCoreJvm)
