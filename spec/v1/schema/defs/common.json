@@ -17,7 +17,7 @@
     "verdict": {
       "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation.",
       "type": "string",
-      "enum": [ "affected", "not_affected", "fixed", "risk_acceptable" ]
+      "enum": [ "affected", "not_affected", "risk_acceptable" ]
     },
     "severity": {
       "description": "Severity assessment of a vulnerability.",

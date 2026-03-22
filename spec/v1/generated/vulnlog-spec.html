@@ -552,7 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Vulnlog Specification</h1>
 <div class="details">
 <span id="revnumber">version 1.0.0-draft,</span>
-<span id="revdate">2026-03-08</span>
+<span id="revdate">2026-03-15</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -562,10 +562,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_scope">1.1. Scope</a></li>
 <li><a href="#_design_principles">1.2. Design Principles</a></li>
 <li><a href="#_file_name_convention">1.3. File Name Convention</a></li>
-<li><a href="#_multi_branch_workflow">1.4. Multi-Branch Workflow</a></li>
+<li><a href="#_schema_reference">1.4. Schema Reference</a></li>
+<li><a href="#_multi_branch_workflow">1.5. Multi-Branch Workflow</a></li>
 </ul>
 </li>
-<li><a href="#_file_structure">2. File Structure</a></li>
+<li><a href="#_file_structure">2. File Structure</a>
+<ul class="sectlevel2">
+<li><a href="#_ordering_rules">2.1. Ordering Rules</a></li>
+<li><a href="#_unique_identifiers">2.2. Unique Identifiers</a></li>
+</ul>
+</li>
 <li><a href="#_sections">3. Sections</a>
 <ul class="sectlevel2">
 <li><a href="#_schemaversion">3.1. <code>schemaVersion</code></a></li>
@@ -578,8 +584,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_vulnerabilities">3.5. <code>vulnerabilities</code></a>
 <ul class="sectlevel3">
-<li><a href="#report-entry">3.5.1. Report Entry</a></li>
-<li><a href="#suppress-entry">3.5.2. Suppress Entry</a></li>
+<li><a href="#resolution-entry">3.5.1. Resolution Entry</a></li>
+<li><a href="#report-entry">3.5.2. Report Entry</a></li>
+<li><a href="#suppress-entry">3.5.3. Suppress Entry</a></li>
 </ul>
 </li>
 </ul>
@@ -602,8 +609,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_vex_generation">7. VEX Generation</a>
 <ul class="sectlevel2">
 <li><a href="#_field_mapping">7.1. Field Mapping</a></li>
-<li><a href="#_product_scoping_via_tags">7.2. Product Scoping via Tags</a></li>
-<li><a href="#_vex_document_versioning">7.3. VEX Document Versioning</a></li>
+<li><a href="#vex-status-mapping">7.2. VEX Status Mapping</a></li>
+<li><a href="#vulnerability-id-url-mapping">7.3. Vulnerability ID URL Mapping</a></li>
+<li><a href="#_product_scoping_via_tags">7.4. Product Scoping via Tags</a></li>
+<li><a href="#vex-document-versioning">7.5. VEX Document Versioning</a></li>
 </ul>
 </li>
 <li><a href="#_html_report_generation">8. HTML Report Generation</a>
@@ -626,7 +635,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#vulnlog-report">10.4.5. <code>vulnlog report</code></a></li>
 <li><a href="#vulnlog-suppress">10.4.6. <code>vulnlog suppress</code></a></li>
 <li><a href="#vulnlog-vex">10.4.7. <code>vulnlog vex</code></a></li>
-<li><a href="#vulnlog-sarif">10.4.8. <code>vulnlog sarif</code> (Future)</a></li>
+<li><a href="#vulnlog-add">10.4.8. <code>vulnlog add</code></a></li>
+<li><a href="#vulnlog-sarif">10.4.9. <code>vulnlog sarif</code> (Future)</a></li>
 </ul>
 </li>
 <li><a href="#_exit_codes">10.5. Exit Codes</a></li>
@@ -634,9 +644,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_future_directions">11. Future Directions</a>
 <ul class="sectlevel2">
-<li><a href="#_multi_file_support">11.1. Multi-File Support</a></li>
-<li><a href="#_sarif_export">11.2. SARIF Export</a></li>
-<li><a href="#_per_vulnerability_html_detail_pages">11.3. Per-Vulnerability HTML Detail Pages</a></li>
+<li><a href="#_cross_file_references">11.1. Cross-File References</a></li>
+<li><a href="#_multi_file_imports">11.2. Multi-File Imports</a></li>
+<li><a href="#_sarif_export">11.3. SARIF Export</a></li>
+<li><a href="#_per_vulnerability_html_detail_pages">11.4. Per-Vulnerability HTML Detail Pages</a></li>
 </ul>
 </li>
 <li><a href="#_examples">12. Examples</a>
@@ -697,9 +708,9 @@ The CLI applies transformations and business logic.</p>
 <div class="sect2">
 <h3 id="_file_name_convention">1.3. File Name Convention</h3>
 <div class="paragraph">
-<p>Vulnlog files use the naming convention <code>&lt;project-name&gt;.vl.[yaml|yml]</code> .
+<p>Vulnlog files use the naming convention <code>&lt;project-name&gt;.vl.[yaml|yml]</code>.
 The <code>.vl.</code> infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use <code>vulnlog.[yaml|yml}</code>.</p>
+Simple projects may use <code>vulnlog.[yaml|yml]</code>.</p>
 </div>
 <div class="paragraph">
 <p>The file location within the repository is not prescribed.
@@ -707,7 +718,21 @@ The CLI requires an explicit file path as a positional argument; it does not sea
 </div>
 </div>
 <div class="sect2">
-<h3 id="_multi_branch_workflow">1.4. Multi-Branch Workflow</h3>
+<h3 id="_schema_reference">1.4. Schema Reference</h3>
+<div class="paragraph">
+<p>To enable IDE validation and autocompletion, add a schema reference comment as the first line of the Vulnlog file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The path can point to a local bundled schema file or to the published SchemaStore URL.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multi_branch_workflow">1.5. Multi-Branch Workflow</h3>
 <div class="paragraph">
 <p>The recommended approach for teams managing multiple release branches is to maintain multiple Vulnlog files on the main branch, one per release branch:</p>
 </div>
@@ -727,6 +752,9 @@ This approach avoids cherry-picking vulnerability analysis to older Git branches
 <p>It remains possible to maintain a Vulnlog file directly on each release branch.
 Both approaches can coexist.</p>
 </div>
+<div class="paragraph">
+<p>See <a href="#vulnlog-add"><code>vulnlog add</code></a> for CLI support to add entries across multiple files, and <a href="#_cross_file_references">Cross-File References</a> for the planned <code>ref</code> mechanism to share analysis between files.</p>
+</div>
 </div>
 </div>
 </div>
@@ -735,7 +763,8 @@ Both approaches can coexist.</p>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+schemaVersion: "1"
 
 project:
   # Project metadata
@@ -744,10 +773,10 @@ tags:
   # Tag definitions (optional)
 
 releases:
-  # Release definitions (chronological order)
+  # Release definitions (chronological order, oldest first)
 
 vulnerabilities:
-  # Vulnerability entries</code></pre>
+  # Vulnerability entries (newest first)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -756,6 +785,30 @@ Optional top-level sections: <code>tags</code>.</p>
 </div>
 <div class="paragraph">
 <p><code>vulnerabilities</code> may be an empty array.</p>
+</div>
+<div class="sect2">
+<h3 id="_ordering_rules">2.1. Ordering Rules</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Releases</dt>
+<dd>
+<p>Must be in chronological order (oldest first). This ordering has functional significance&#8201;&#8212;&#8201;the CLI uses array position to resolve <code>--release</code> range filtering. A release at position N includes all releases at positions 0 through N.</p>
+</dd>
+<dt class="hdlist1">Vulnerabilities</dt>
+<dd>
+<p>Should be in reverse chronological order (newest first). The most recent findings appear at the top of the file for immediate visibility. This is a readability convention enforced by the linter, with no functional impact on CLI output.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_unique_identifiers">2.2. Unique Identifiers</h3>
+<div class="paragraph">
+<p>All vulnerability identifiers must be unique within a Vulnlog file.
+No two vulnerability entries may share the same <code>id</code>.
+An <code>id</code> of one entry must not appear in the <code>aliases</code> of another entry, and vice versa.
+This ensures unambiguous lookup by any identifier.</p>
+</div>
 </div>
 </div>
 </div>
@@ -827,13 +880,13 @@ Used in report generation and as author information in VEX documents.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>author</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the responsible security team. Used as the author in VEX documents.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Name of the responsible security team or author. Used as the author in VEX documents.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>contact</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String (email)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Contact email for the security team. Used as the author contact in VEX documents. This can be the contact information of your <a href="https://securitytxt.org/">Security.txt</a>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contact email for the security team. Used as the author contact in VEX documents. This can be the contact information of your <a href="https://securitytxt.org/">security.txt</a>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -963,8 +1016,20 @@ Purls without tags are included in VEX statements regardless of vulnerability ta
 <div class="sect2">
 <h3 id="_vulnerabilities">3.5. <code>vulnerabilities</code></h3>
 <div class="paragraph">
-<p>Each entry represents a single vulnerability finding and the human verdict about it.
-The verdict reflects the most severe impact across all listed packages.</p>
+<p>Each entry represents a single vulnerability finding and the human verdict about it.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The verdict should reflect the most severe impact across all listed packages.
+If a package appears in multiple contexts, the analysis should focus on the highest-risk context.
+</td>
+</tr>
+</table>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -986,7 +1051,7 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>id</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Primary identifier. Preferably a CVE ID. May be a scanner-specific ID if no CVE exists.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Primary identifier. Preferably a CVE ID. May be a scanner-specific ID if no CVE exists. Must be unique across all entries and aliases.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>name</code></p></td>
@@ -998,7 +1063,7 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>aliases</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Array of String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Alternative identifiers (e.g., GHSA IDs, scanner-specific IDs). Used for cross-referencing in reports.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Alternative identifiers (e.g., GHSA IDs, scanner-specific IDs). Must not overlap with any <code>id</code> or <code>aliases</code> in other entries.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>releases</code></p></td>
@@ -1046,7 +1111,7 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>comment</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Additional information not related to the analysis itself. May include evidence references, methodology notes, decision-making context, or reminders for future review. Not used in any output generation.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Additional information not related to the analysis itself. May include evidence references, methodology notes, or reminders. Not used in any output generation.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>severity</code></p></td>
@@ -1067,33 +1132,65 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Required when <code>verdict</code> is <code>not_affected</code>. See <a href="#justification-values">Justification Values (OpenVEX)</a>.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fixed_in</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Conditional</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Required when <code>verdict</code> is <code>fixed</code>. References the release with the fix.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fixed_at</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String (date, <code>YYYY-MM-DD</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>resolution</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#resolution-entry">Resolution Entry</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Date the fix was applied. Only meaningful when <code>verdict</code> is <code>fixed</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fix_ref</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String (URI)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Reference to the issue or ticket tracking the fix.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fix_note</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Brief description of how the vulnerability was fixed.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict. See <a href="#resolution-entry">Resolution Entry</a>.</p></td>
 </tr>
 </tbody>
 </table>
 <div class="sect3">
-<h4 id="report-entry">3.5.1. Report Entry</h4>
+<h4 id="resolution-entry">3.5.1. Resolution Entry</h4>
+<div class="paragraph">
+<p>Records that a dependency update or other corrective action was taken, independent of the verdict.
+A vulnerability may be <code>not_affected</code> (the verdict) yet still have a <code>resolution</code> (the dependency was updated defensively).
+A vulnerability may be <code>affected</code> with a <code>resolution</code> indicating it was fixed in a subsequent release.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0002%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Field</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Required</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>in</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release in which the resolution was applied. Must reference a release ID from the <code>releases</code> section.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>at</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String (date, <code>YYYY-MM-DD</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date the resolution was applied.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ref</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String (URI)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reference to the issue or ticket tracking the resolution.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>note</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Brief description of how the vulnerability was resolved.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="report-entry">3.5.2. Report Entry</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -1120,7 +1217,7 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>at</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String (date, <code>YYYY-MM-DD</code>)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Date the vulnerability was reported.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>source</code></p></td>
@@ -1138,13 +1235,13 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>suppress</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#suppress-entry">Suppress Entry</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Scanner-specific suppression configuration.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scanner-specific suppression configuration. When present without <code>expires_at</code>, the suppression is permanent.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sect3">
-<h4 id="suppress-entry">3.5.2. Suppress Entry</h4>
+<h4 id="suppress-entry">3.5.3. Suppress Entry</h4>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -1164,8 +1261,8 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>expires_at</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String (date, <code>YYYY-MM-DD</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Yes</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Expiration date. After this date, the entry is excluded from the generated suppression file.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Expiration date. After this date, the entry is excluded from the generated suppression file. When omitted, the suppression is permanent.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1179,7 +1276,7 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <div class="sect2">
 <h3 id="verdict-values">4.1. Verdict Values</h3>
 <div class="paragraph">
-<p>The term "verdict" is used deliberately to distinguish from automated scanner statuses&#8201;&#8212;&#8201;it reflects a deliberate human judgment.</p>
+<p>The term "verdict" is used deliberately to distinguish from automated scanner statuses&#8201;&#8212;&#8201;it reflects a deliberate human judgment about the impact of a vulnerability.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -1197,8 +1294,8 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The vulnerability affects this release and action is required.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The vulnerability affects this release. Requires <code>severity</code>. When a <code>resolution</code> is present, maps to VEX <code>fixed</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code> (without resolution) or <code>fixed</code> (with resolution)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>not_affected</code></p></td>
@@ -1206,13 +1303,8 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>not_affected</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fixed</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The vulnerability has been resolved. Requires <code>fixed_in</code>.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fixed</code></p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>risk_acceptable</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The vulnerability affects this release but the risk has been assessed and accepted.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The vulnerability affects this release but the risk has been assessed and accepted. Requires <code>severity</code>.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code> (with <code>action_statement</code> from <code>analysis</code>)</p></td>
 </tr>
 <tr>
@@ -1222,9 +1314,24 @@ The verdict reflects the most severe impact across all listed packages.</p>
 </tr>
 </tbody>
 </table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+"Fixed" is not a verdict. Fixing a vulnerability is a resolution action, not a judgment about impact. Use <code>verdict: affected</code> with a <code>resolution</code> block to record that a vulnerability was real and subsequently fixed. Use <code>verdict: not_affected</code> with an optional <code>resolution</code> to record that a vulnerability was not relevant but the dependency was updated anyway.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="severity-values">4.2. Severity Values</h3>
+<div class="paragraph">
+<p>Required when <code>verdict</code> is <code>affected</code> or <code>risk_acceptable</code>.</p>
+</div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -1380,18 +1487,19 @@ The verdict reflects the most severe impact across all listed packages.</p>
 <dl>
 <dt class="hdlist1">Omitted <code>tags</code> section</dt>
 <dd>
-<p>The file has no tag definitions.
-Vulnerability entries cannot use tags.
-VEX generation includes all purls as products.</p>
+<p>The file has no tag definitions. VEX generation includes all purls as products.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>verdict</code></dt>
 <dd>
-<p>Treated as <code>under_investigation</code>.
-The CLI warns about entries without a verdict.</p>
+<p>Treated as <code>under_investigation</code>. The CLI warns about entries without a verdict.</p>
 </dd>
-<dt class="hdlist1">Omitted <code>releases[].published_at</code></dt>
+<dt class="hdlist1">Omitted <code>reports[].at</code></dt>
 <dd>
-<p>The release is considered unpublished.</p>
+<p>The CLI uses the current date and time during output generation.</p>
+</dd>
+<dt class="hdlist1">Omitted <code>suppress.expires_at</code></dt>
+<dd>
+<p>The suppression is permanent (never expires).</p>
 </dd>
 <dt class="hdlist1">Omitted <code>analyzed_at</code></dt>
 <dd>
@@ -1399,8 +1507,7 @@ The CLI warns about entries without a verdict.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>vulnerabilities[].tags</code></dt>
 <dd>
-<p>The vulnerability is not scoped.
-Included in all unfiltered outputs.</p>
+<p>The vulnerability is not scoped. Included in all unfiltered outputs.</p>
 </dd>
 <dt class="hdlist1">Omitted <code>releases[].purls[].tags</code></dt>
 <dd>
@@ -1416,13 +1523,17 @@ Included in all unfiltered outputs.</p>
 <div class="sect2">
 <h3 id="_suppression_rules">6.1. Suppression Rules</h3>
 <div class="paragraph">
-<p>Entries where <code>verdict</code> is <code>fixed</code> are <strong>never</strong> included in suppression files.</p>
+<p>Entries where <code>verdict</code> is <code>not_affected</code> are always included in suppression files.</p>
 </div>
 <div class="paragraph">
-<p>Entries where <code>verdict</code> is <code>not_affected</code> are always included.</p>
+<p>Entries where <code>verdict</code> is <code>affected</code> with a <code>resolution</code> are <strong>not</strong> included in suppression files.
+The vulnerable dependency version should no longer be present after the resolution.
+If the scanner still reports the finding, the resolution is incomplete.</p>
 </div>
 <div class="paragraph">
-<p>For all other verdicts (<code>affected</code>, <code>risk_acceptable</code>, absent), suppression requires an explicit, non-expired <code>suppress</code> block on the report entry.</p>
+<p>For all other cases (<code>affected</code> without resolution, <code>risk_acceptable</code>, absent), suppression requires an explicit <code>suppress</code> block on the report entry.
+If the <code>suppress</code> block includes <code>expires_at</code>, the suppression is temporary.
+If <code>expires_at</code> is omitted, the suppression is permanent.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1472,61 +1583,82 @@ Vulnlog packages map to OpenVEX subcomponents.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>@id</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">A newly generated value of every created document. <code><a href="https://vulnlog.dev/vex/&lt;UUID&gt" class="bare">https://vulnlog.dev/vex/&lt;UUID&gt</a>;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Generated IRI: <code><a href="https://vulnlog.dev/vex/&lt;UUID&gt" class="bare">https://vulnlog.dev/vex/&lt;UUID&gt</a>;</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>author</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.author</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.author</code>. When <code>project.contact</code> is present: <code>"&lt;author&gt; (&lt;contact&gt;)"</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>timestamp</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">When the document was issued.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Document generation timestamp.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>version</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code> if no previous OpenVEX document specified otherwise, the version + 1 of the previous OpenVEX document that was generated by Vulnlog.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>1</code> for new documents. Previous version + 1 when updating an existing document (see <a href="#vex-document-versioning">VEX Document Versioning</a>).</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.vulnerability.name</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].vulnerability.name</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].id</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.status</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].verdict</code> (mapped per <a href="#verdict-values">Verdict Values</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Derived from <code>verdict</code> and <code>resolution</code> (see <a href="#vex-status-mapping">VEX Status Mapping</a>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.justification</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].justification</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].justification</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statement.impact_statement</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].impact_statement</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].analysis</code> (when verdict is <code>not_affected</code>)</p></td>
 </tr>
 </tbody>
 </table>
-<div class="listingblock">
-<div class="title">This is a minimal example of a Vulnlog-generated OpenVEX file that contains only the fields required by the OpenVEX specification.</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-  "@context": "https://openvex.dev/ns/v0.2.0",
-  "@id": "https://vulnlog.dev/vex/550e8400-e29b-41d4-a716-446655440000",
-  "author": "Vulnlog",
-  "timestamp": "2026-03-10T00:00:00.000Z",
-  "version": 1,
-  "statements": [
-    {
-      "vulnerability": { "name": "CVE-2026-26996" },
-      "status": "not_affected",
-      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
-      "impact_statement": "The minimatch is only used in to generate the static project website. Input is always trusted."
-    }
-  ]
-}</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>To generate more advanced OpenVEX Files the following additional fields are necessary.</p>
-</div>
+<div class="sect2">
+<h3 id="vex-status-mapping">7.2. VEX Status Mapping</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Verdict</th>
+<th class="tableblock halign-left valign-top">Resolution</th>
+<th class="tableblock halign-left valign-top">OpenVEX Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">absent</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">present</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>fixed</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>not_affected</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>not_affected</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>risk_acceptable</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>affected</code> (with <code>action_statement</code> from <code>analysis</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>(absent)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">any</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>under_investigation</code></p></td>
+</tr>
+</tbody>
+</table>
 <table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 2. Additional fields to enrich the Vulnlog-generated OpenVEX document.</caption>
 <colgroup>
@@ -1541,67 +1673,102 @@ Vulnlog packages map to OpenVEX subcomponents.</p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>author</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>project.author</code> and <code>project.contact</code></p></td>
-</tr>
-<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>role</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Static value <code>Document Creator</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Static value: <code>Document Creator</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].vulnerability.@id</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Vulnerability ID reference URL prefix + <code>vulnerabilities[].id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vulnerability ID reference URL (see <a href="#vulnerability-id-url-mapping">Vulnerability ID URL Mapping</a>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].vulnerability.description</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].description</code></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].products[].@id</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The PURL of the current latest release <code>releases[].purls[].purl</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].timestamp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].analyzed_at</code> when present, otherwise earliest <code>reports[].at</code>, otherwise document generation timestamp.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].products[].subcomponents.@id</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The PURL of the affected dependency <code>vulnerabilities[0].packages[]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].products[].@id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">PURLs from the target release&#8217;s <code>purls</code> entries, filtered by matching tags</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].products[].subcomponents[].@id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].packages[]</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>statements[].action_statement</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>vulnerabilities[].analysis</code> (when verdict is <code>risk_acceptable</code>)</p></td>
 </tr>
 </tbody>
 </table>
 <div class="listingblock">
-<div class="title">This is a more detailed Vulnlog-generated OpenVEX</div>
+<div class="title">Minimal Vulnlog-generated OpenVEX example.</div>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
   "@context": "https://openvex.dev/ns/v0.2.0",
-  "@id": "https://vulnlog.dev/vex/vulnlog/2026-03-10T00:00:00.000Z",
-  "author": "Vulnlog (security@vulnlog.dev)",
+  "@id": "https://vulnlog.dev/vex/550e8400-e29b-41d4-a716-446655440000",
+  "author": "Acme Corp Security Team",
+  "timestamp": "2026-03-10T00:00:00.000Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": { "name": "CVE-2026-26996" },
+      "status": "not_affected",
+      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
+      "impact_statement": "The minimatch is only used to generate the static project website. Input is always trusted."
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Enriched Vulnlog-generated OpenVEX example.</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://vulnlog.dev/vex/550e8400-e29b-41d4-a716-446655440000",
+  "author": "Demo Security Team (security@demo.com)",
   "role": "Document Creator",
   "timestamp": "2026-03-10T00:00:00.000Z",
   "version": 1,
   "statements": [
     {
       "vulnerability": {
-        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-26996",
-        "name": "CVE-2026-26996",
-        "description": "DoS vulnerability in minimatch."
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+        "name": "CVE-2021-44228",
+        "description": "RCE vulnerability in Log4J via JNDI lookup"
       },
-      "timestamp": "2026-03-10T00:00:00.000Z",
+      "timestamp": "2021-12-10T00:00:00.000Z",
       "products": [
         {
-          "@id": "pkg:generic/vulnlog/vulnlog@0.10.0",
+          "@id": "pkg:generic/demo-project@8.1.1",
           "subcomponents": [
-            {
-              "@id": "pkg:npm/minimatch@3.1.2"
-            }
+            { "@id": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" }
           ]
         }
       ],
-      "status": "not_affected",
-      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
-      "impact_statement": "The minimatch is only used in to generate the static project website. Input is always trusted."
+      "status": "fixed"
     }
   ]
 }</code></pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+The second example shows <code>verdict: affected</code> with a <code>resolution</code> mapping to VEX status <code>fixed</code>. The Vulnlog verdict records the impact judgment; the VEX status reflects the current state.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="vulnerability-id-url-mapping">7.3. Vulnerability ID URL Mapping</h3>
 <table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 3. Vulnerability ID type to reference URL mapping.</caption>
 <colgroup>
@@ -1617,25 +1784,25 @@ Vulnlog packages map to OpenVEX subcomponents.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">CVE</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://nvd.nist.gov/vuln/detail/&lt;Vulnerability" class="bare">https://nvd.nist.gov/vuln/detail/&lt;Vulnerability</a> ID&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://nvd.nist.gov/vuln/detail/&lt;ID&gt" class="bare">https://nvd.nist.gov/vuln/detail/&lt;ID&gt</a>;</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">SNYK</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://security.snyk.io/vuln/&lt;Vulnerability" class="bare">https://security.snyk.io/vuln/&lt;Vulnerability</a> ID&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://security.snyk.io/vuln/&lt;ID&gt" class="bare">https://security.snyk.io/vuln/&lt;ID&gt</a>;</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">RUSTSEC</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://rustsec.org/advisories/&lt;Vulnerability" class="bare">https://rustsec.org/advisories/&lt;Vulnerability</a> ID&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://rustsec.org/advisories/&lt;ID&gt" class="bare">https://rustsec.org/advisories/&lt;ID&gt</a>;</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">GHSA</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://github.com/advisories/&lt;Vulnerability" class="bare">https://github.com/advisories/&lt;Vulnerability</a> ID&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><a href="https://github.com/advisories/&lt;ID&gt" class="bare">https://github.com/advisories/&lt;ID&gt</a>;</code></p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sect2">
-<h3 id="_product_scoping_via_tags">7.2. Product Scoping via Tags</h3>
+<h3 id="_product_scoping_via_tags">7.4. Product Scoping via Tags</h3>
 <div class="paragraph">
 <p>When a vulnerability has tags, the VEX generator matches those tags against purl entries on the target release.
 Only purls with matching tags are included as products.
@@ -1644,21 +1811,27 @@ Vulnerabilities without tags are associated with all purls.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_vex_document_versioning">7.3. VEX Document Versioning</h3>
+<h3 id="vex-document-versioning">7.5. VEX Document Versioning</h3>
 <div class="paragraph">
 <p>The OpenVEX <code>version</code> field is an incrementing integer.
-Since the CLI is stateless, the version is determined from the existing output file:</p>
+Since the CLI is stateless, the version is determined by reading the existing output file:</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>If the output path points to an existing VEX file, parse the current <code>version</code>.</p>
+<p>The CLI reads the file at the output path (specified by <code>-o</code> or the default <code>vex.json</code>).</p>
 </li>
 <li>
-<p>New version = previous + 1.</p>
+<p>If the file exists and is a valid OpenVEX document, the CLI extracts the current <code>version</code>.</p>
 </li>
 <li>
-<p>If no existing file, start at version 1.</p>
+<p>The new document is generated with <code>version</code> = previous version + 1.</p>
+</li>
+<li>
+<p>If no existing file is found, the document starts at version <code>1</code>.</p>
+</li>
+<li>
+<p>The CLI writes the new document only if the statements have changed compared to the previous document. If unchanged, the file is not written and the CLI reports "No changes detected."</p>
 </li>
 </ol>
 </div>
@@ -1709,7 +1882,7 @@ Tags are displayed for filtering context.
 <p><code>tags</code> in release purl entries must reference IDs defined in <code>tags</code>.</p>
 </li>
 <li>
-<p><code>fixed_in</code> must reference a release ID defined in <code>releases</code>.</p>
+<p><code>resolution.in</code> must reference a release ID defined in <code>releases</code>.</p>
 </li>
 <li>
 <p><code>reporter</code> must be a valid reporter type enum value.</p>
@@ -1721,22 +1894,22 @@ Tags are displayed for filtering context.
 <p><code>severity</code> is required when <code>verdict</code> is <code>affected</code> or <code>risk_acceptable</code>.</p>
 </li>
 <li>
-<p><code>fixed_in</code> is required when <code>verdict</code> is <code>fixed</code> and forbidden otherwise.</p>
-</li>
-<li>
 <p><code>source</code> is required on report entries when <code>reporter</code> is <code>other</code>.</p>
 </li>
 <li>
-<p>All <code>id</code> fields within their respective sections must be unique.</p>
+<p>All vulnerability <code>id</code> values must be unique.</p>
 </li>
 <li>
-<p><code>suppress.expires_at</code> must be a valid future or present date at CLI execution time.</p>
+<p>No <code>id</code> may appear in any other entry&#8217;s <code>aliases</code>, and no two entries may share an alias.</p>
 </li>
 <li>
-<p><code>analyzed_at</code>, when present, must not be before the earliest <code>at</code> date across reports.</p>
+<p><code>suppress.expires_at</code>, when present, must be a valid future or present date at CLI execution time.</p>
 </li>
 <li>
-<p>Entries in <code>releases</code> must be in chronological order.</p>
+<p><code>analyzed_at</code>, when present, must not be before the earliest <code>at</code> date across reports for that vulnerability.</p>
+</li>
+<li>
+<p>Entries in <code>releases</code> must be in chronological order (oldest first).</p>
 </li>
 <li>
 <p>All entries in <code>packages</code> must be valid Package URLs.</p>
@@ -1834,7 +2007,7 @@ No automatic file detection.</p>
 <div class="sect3">
 <h4 id="vulnlog-init">10.4.1. <code>vulnlog init</code></h4>
 <div class="paragraph">
-<p>Scaffolds a minimal Vulnlog file containing only the required sections (<code>version</code>, <code>project</code>, <code>releases</code>, <code>vulnerabilities</code>).</p>
+<p>Scaffolds a minimal Vulnlog file containing only the required sections (<code>schemaVersion</code>, <code>project</code>, <code>releases</code>, <code>vulnerabilities</code>).</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1864,6 +2037,10 @@ No automatic file detection.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>--organization &lt;n&gt;</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Organization name. Prompted if not provided.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--author &lt;n&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Author name. Prompted if not provided.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1897,11 +2074,15 @@ No automatic file detection.</p>
 </dd>
 <dt class="hdlist1">Vulnerability field order</dt>
 <dd>
-<p><code>id</code>, <code>name</code>, <code>aliases</code>, <code>releases</code>, <code>description</code>, <code>packages</code>, <code>reports</code>, <code>tags</code>, <code>analysis</code>, <code>analyzed_at</code>, <code>comment</code>, <code>severity</code>, <code>verdict</code>, <code>justification</code>, <code>fixed_in</code>, <code>fixed_at</code>, <code>fix_ref</code>, <code>fix_note</code>.</p>
+<p><code>id</code>, <code>name</code>, <code>aliases</code>, <code>releases</code>, <code>description</code>, <code>packages</code>, <code>reports</code>, <code>tags</code>, <code>analysis</code>, <code>analyzed_at</code>, <code>comment</code>, <code>severity</code>, <code>verdict</code>, <code>justification</code>, <code>resolution</code>.</p>
 </dd>
 <dt class="hdlist1">Release chronological order</dt>
 <dd>
 <p>Oldest first.</p>
+</dd>
+<dt class="hdlist1">Vulnerability reverse chronological order</dt>
+<dd>
+<p>Newest first (based on the earliest <code>reports[].at</code> date, entries without dates sorted last).</p>
 </dd>
 </dl>
 </div>
@@ -1921,11 +2102,13 @@ No automatic file detection.</p>
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">project: Demo Project
 total: 7
 by_verdict:
-  affected: 0
+  affected: 2
   not_affected: 2
-  fixed: 2
   risk_acceptable: 1
   under_investigation: 2
+by_resolution:
+  resolved: 3
+  unresolved: 4
 by_severity:
   critical: 2
   high: 0
@@ -1975,9 +2158,65 @@ When omitted, generates for all reporter types found in the vulnerability report
 <div class="paragraph">
 <p>Default output: <code>vex.json</code>.</p>
 </div>
+<div class="paragraph">
+<p>The CLI reads the existing file at the output path to determine the VEX document version.
+If the file exists, the version is incremented.
+If the content has not changed, the file is not rewritten.
+See <a href="#vex-document-versioning">VEX Document Versioning</a>.</p>
+</div>
 </div>
 <div class="sect3">
-<h4 id="vulnlog-sarif">10.4.8. <code>vulnlog sarif</code> (Future)</h4>
+<h4 id="vulnlog-add">10.4.8. <code>vulnlog add</code></h4>
+<div class="paragraph">
+<p>Adds a vulnerability stub entry to one or more Vulnlog files.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog add &lt;file...&gt; --vuln-id &lt;id&gt; --reporter &lt;type&gt; [flags]</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Flag</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--vuln-id &lt;id&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vulnerability ID to add (required).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--reporter &lt;type&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Reporter type for the report entry (required).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--release &lt;id&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Release to associate. When omitted, adds to all releases in each file.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The command inserts a minimal stub entry at the top of the vulnerabilities array in each file.
+If an entry with the same <code>id</code> already exists in a file, the command skips that file and reports a warning.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+  --vuln-id CVE-2026-001 --reporter trivy</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vulnlog-sarif">10.4.9. <code>vulnlog sarif</code> (Future)</h4>
 <div class="paragraph">
 <p>Generates a SARIF document from Vulnlog data.</p>
 </div>
@@ -2051,19 +2290,26 @@ When omitted, generates for all reporter types found in the vulnerability report
 <h2 id="_future_directions">11. Future Directions</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_multi_file_support">11.1. Multi-File Support</h3>
+<h3 id="_cross_file_references">11.1. Cross-File References</h3>
 <div class="paragraph">
-<p>A future version will introduce an <code>imports</code> directive for splitting a Vulnlog file.</p>
+<p>A future version will introduce a <code>ref</code> field on vulnerability entries to reference an entry in another Vulnlog file.
+This addresses the duplication problem in multi-branch setups.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sarif_export">11.2. SARIF Export</h3>
+<h3 id="_multi_file_imports">11.2. Multi-File Imports</h3>
+<div class="paragraph">
+<p>A future version will introduce an <code>imports</code> directive for splitting a Vulnlog file into static project data and dynamic vulnerability data.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_sarif_export">11.3. SARIF Export</h3>
 <div class="paragraph">
 <p>See <a href="#vulnlog-sarif"><code>vulnlog sarif</code> (Future)</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_per_vulnerability_html_detail_pages">11.3. Per-Vulnerability HTML Detail Pages</h3>
+<h3 id="_per_vulnerability_html_detail_pages">11.4. Per-Vulnerability HTML Detail Pages</h3>
 <div class="paragraph">
 <p>See <a href="#_html_report_generation">HTML Report Generation</a>.</p>
 </div>
@@ -2077,12 +2323,13 @@ When omitted, generates for all reporter types found in the vulnerability report
 <h3 id="_quick_start">12.1. Quick Start</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+schemaVersion: "1"
 
 project:
   organization: Acme Corp
   name: Acme Web App
-  author:  Acme Corp Security Team
+  author: Acme Corp Security Team
 
 releases:
   - id: 1.0.0
@@ -2108,7 +2355,8 @@ vulnerabilities:
 <h3 id="_full_example">12.2. Full Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+schemaVersion: "1"
 
 project:
   organization: Demo Project Inc
@@ -2145,92 +2393,26 @@ releases:
 
 vulnerabilities:
 
-  # No verdict - under investigation, with temporary suppression
-  - id: CVE-2020-099
-    releases: [ 8.1.0 ]
-    description: Path traversal vulnerability in random-dependency
-    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
+  # Report from a non-scanner source (Oracle CPU)
+  - id: CVE-2022-21449
+    name: Psychic Signatures
+    releases: [ 8.1.2 ]
+    description: ECDSA signature verification bypass in Java SE
+    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
     reports:
-      - reporter: trivy
-        at: 2020-12-28
-        suppress:
-          expires_at: 2021-01-02
-    tags: [ build-dep ]
-    analysis: &gt;
-      Vulnerability in internal build dependency.
-      No fixed library available at the moment. Re-check later.
-    comment: &gt;
-      Checked upstream issue tracker - fix expected in random-core 1.33.8.
-      Monitor https://github.com/random/random-core/issues/421
-    severity: low
-
-  # Stub entry - quick triage, no description, no verdict yet
-  - id: CVE-2021-007
-    releases: [ 8.1.1 ]
-    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
-    reports:
-      - reporter: trivy
-        at: 2021-03-10
-    tags: [ binary ]
-
-  # Verdict: not_affected - vulnerability does not impact this project
-  - id: CVE-2021-002
-    aliases: [ GHSA-xxxx-yyyy ]
-    releases: [ 8.1.1 ]
-    description: Deserialization vulnerability in some-dependency
-    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
-    reports:
-      - reporter: trivy
-        at: 2021-03-03
-      - reporter: snyk
-        at: 2021-03-03
-        vuln_id: [ SNYK-2021-002 ]
+      - reporter: other
+        at: 2022-04-19
+        source: "Oracle Critical Patch Update April 2022"
     tags: [ binary, container ]
-    analysis: &gt;
-      Demo project does not utilize some-dependency
-      and therefore is not affected.
-    analyzed_at: 2021-03-03
-    verdict: not_affected
-    justification: vulnerable_code_not_present
-
-  # Verdict: fixed - resolved in a subsequent release (named vulnerability)
-  - id: CVE-2021-44228
-    name: Log4Shell
-    aliases: [ GHSA-jfh8-c2jp-5v3q ]
-    releases: [ 8.1.1 ]
-    description: RCE vulnerability in Log4J via JNDI lookup
-    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
-    reports:
-      - reporter: trivy
-        at: 2021-12-10
-    tags: [ binary ]
-    analysis: &gt;
-      Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.
-    analyzed_at: 2021-12-10
-    comment: &gt;
-      PoC exploit confirmed by Jane (security team) on 2021-12-10.
-      See internal report attached to SEC-42.
+    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
+    analyzed_at: 2022-04-20
     severity: critical
-    verdict: fixed
-    fixed_in: 8.1.2
-    fixed_at: 2021-12-12
-    fix_ref: "https://jira.example.com/browse/SEC-42"
-    fix_note: "Updated Log4J from 2.14.1 to 2.17.1"
-
-  # Verdict: not_affected - OS-level vulnerability in container base image
-  - id: CVE-2024-5535
-    releases: [ 8.1.1 ]
-    description: Buffer overread in OpenSSL SSL_select_next_proto
-    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
-    reports:
-      - reporter: trivy
-        at: 2024-06-28
-    tags: [ container ]
-    analysis: &gt;
-      Vulnerable OpenSSL is present in the container base image but the affected NPN/ALPN negotiation code path is never invoked by our application.
-    analyzed_at: 2024-06-29
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: affected
+    resolution:
+      in: 8.1.2
+      at: 2022-04-22
+      ref: "https://jira.example.com/browse/SEC-55"
+      note: "Updated JDK from 17.0.2 to 17.0.3"
 
   # Verdict: risk_acceptable - vulnerability present but risk accepted
   - id: SNYK-2021-003
@@ -2252,25 +2434,98 @@ vulnerabilities:
     severity: low
     verdict: risk_acceptable
 
-  # Report from a non-scanner source (Oracle CPU)
-  - id: CVE-2022-21449
-    name: Psychic Signatures
-    releases: [ 8.1.2 ]
-    description: ECDSA signature verification bypass in Java SE
-    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
+  # Verdict: not_affected - OS-level vulnerability in container base image
+  - id: CVE-2024-5535
+    releases: [ 8.1.1 ]
+    description: Buffer overread in OpenSSL SSL_select_next_proto
+    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
     reports:
-      - reporter: other
-        at: 2022-04-19
-        source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container ]
-    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
-    analyzed_at: 2022-04-20
+      - reporter: trivy
+        at: 2024-06-28
+    tags: [ container ]
+    analysis: &gt;
+      Vulnerable OpenSSL is present in the container base image but the affected
+      NPN/ALPN negotiation code path is never invoked by our application.
+    analyzed_at: 2024-06-29
+    verdict: not_affected
+    justification: vulnerable_code_not_in_execute_path
+
+  # Verdict: affected - resolved in a subsequent release (named vulnerability)
+  - id: CVE-2021-44228
+    name: Log4Shell
+    aliases: [ GHSA-jfh8-c2jp-5v3q ]
+    releases: [ 8.1.1 ]
+    description: RCE vulnerability in Log4J via JNDI lookup
+    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
+    reports:
+      - reporter: trivy
+        at: 2021-12-10
+    tags: [ binary ]
+    analysis: &gt;
+      Demo project utilizes Log4J and a PoC showed that the project
+      is vulnerable to this RCE vulnerability.
+    analyzed_at: 2021-12-10
+    comment: &gt;
+      PoC exploit confirmed by Jane (security team) on 2021-12-10.
+      See internal report attached to SEC-42.
     severity: critical
-    verdict: fixed
-    fixed_in: 8.1.2
-    fixed_at: 2022-04-22
-    fix_ref: "https://jira.example.com/browse/SEC-55"
-    fix_note: "Updated JDK from 17.0.2 to 17.0.3"</code></pre>
+    verdict: affected
+    resolution:
+      in: 8.1.2
+      at: 2021-12-12
+      ref: "https://jira.example.com/browse/SEC-42"
+      note: "Updated Log4J from 2.14.1 to 2.17.1"
+
+  # Verdict: not_affected - with defensive resolution
+  - id: CVE-2021-002
+    aliases: [ GHSA-xxxx-yyyy ]
+    releases: [ 8.1.1 ]
+    description: Deserialization vulnerability in some-dependency
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-03
+      - reporter: snyk
+        at: 2021-03-03
+        vuln_id: [ SNYK-2021-002 ]
+    tags: [ binary, container ]
+    analysis: &gt;
+      Demo project does not utilize some-dependency
+      and therefore is not affected.
+    analyzed_at: 2021-03-03
+    verdict: not_affected
+    justification: vulnerable_code_not_present
+    resolution:
+      in: 8.1.2
+      note: "Removed unused dependency some-dependency"
+
+  # Stub entry - quick triage, no description, no verdict yet
+  - id: CVE-2021-007
+    releases: [ 8.1.1 ]
+    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-10
+    tags: [ binary ]
+
+  # No verdict - under investigation, with temporary suppression
+  - id: CVE-2020-099
+    releases: [ 8.1.0 ]
+    description: Path traversal vulnerability in random-dependency
+    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
+    reports:
+      - reporter: trivy
+        at: 2020-12-28
+        suppress:
+          expires_at: 2021-01-02
+    tags: [ build-dep ]
+    analysis: &gt;
+      Vulnerability in internal build dependency.
+      No fixed library available at the moment. Re-check later.
+    comment: &gt;
+      Checked upstream issue tracker - fix expected in random-core 1.33.8.
+      Monitor https://github.com/random/random-core/issues/421
+    severity: low</code></pre>
 </div>
 </div>
 </div>
@@ -2280,7 +2535,7 @@ vulnerabilities:
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-13 21:36:34 +0100
+Last updated 2026-03-22 17:13:42 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

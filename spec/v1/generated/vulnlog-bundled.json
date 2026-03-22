@@ -14,7 +14,7 @@
       "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1project.json"
     },
     "tags": {
-      "description": "Tags for categorizing and scoping vulnerability entries. Provides flexible labeling for deliverables, usage contexts, or any team-specific taxonomy.",
+      "description": "Tags for categorizing and scoping vulnerability entries.",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -62,7 +62,7 @@
           "minLength": 1
         },
         "contact": {
-          "description": "Contact email for the security team. Used as the author contact in VEX documents. Can be the contact from your security.txt.",
+          "description": "Contact email for the security team. Used as the author contact in VEX documents.",
           "type": "string",
           "format": "email"
         }
@@ -87,7 +87,7 @@
         "verdict": {
           "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation.",
           "type": "string",
-          "enum": [ "affected", "not_affected", "fixed", "risk_acceptable" ]
+          "enum": [ "affected", "not_affected", "risk_acceptable" ]
         },
         "severity": {
           "description": "Severity assessment of a vulnerability.",
@@ -139,7 +139,7 @@
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
         },
         "purls": {
-          "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents. Tags on purl entries enable scoped VEX generation.",
+          "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -155,7 +155,7 @@
           "required": [ "purl" ],
           "properties": {
             "purl": {
-              "description": "The versioned Package URL for this artifact in this release (e.g., 'pkg:docker/demo-project@8.1.1').",
+              "description": "The versioned Package URL for this artifact in this release.",
               "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/purl"
             },
             "tags": {
@@ -175,7 +175,7 @@
     "https://vulnlog.dev/schemas/v1/defs/tag.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Tag",
-      "description": "A tag for categorizing and scoping vulnerability entries. Tags replace the previous deliverables and usage concepts, providing flexible labeling for any team-specific taxonomy.",
+      "description": "A tag for categorizing and scoping vulnerability entries.",
       "type": "object",
       "required": [ "id" ],
       "properties": {
@@ -203,16 +203,16 @@
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/reporterType"
         },
         "at": {
-          "description": "Date the vulnerability was reported by this scanner or source.",
+          "description": "Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation.",
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
         },
         "source": {
-          "description": "Description of the report source (e.g., 'Oracle Critical Patch Update April 2022'). Optional for scanner reporters. Required by the CLI for reporter type 'other'.",
+          "description": "Description of the report source. Optional for scanner reporters. Required by the CLI for reporter type 'other'.",
           "type": "string",
           "minLength": 1
         },
         "vuln_id": {
-          "description": "Scanner-specific vulnerability identifiers (e.g., 'SNYK-JAVA-LOG4J-2314720'). Used when generating scanner-specific suppression files.",
+          "description": "Scanner-specific vulnerability identifiers. Used when generating scanner-specific suppression files.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -227,12 +227,11 @@
       "additionalProperties": false,
       "$defs": {
         "suppressEntry": {
-          "description": "Controls time-limited suppression for a specific scanner.",
+          "description": "Suppression configuration for a specific scanner. When present without expires_at, the suppression is permanent.",
           "type": "object",
-          "required": [ "expires_at" ],
           "properties": {
             "expires_at": {
-              "description": "Expiration date of the suppression. After this date, the CLI no longer includes this entry in the generated suppression file.",
+              "description": "Expiration date of the suppression. When omitted, the suppression is permanent.",
               "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
             }
           },
@@ -243,7 +242,7 @@
     "https://vulnlog.dev/schemas/v1/defs/vulnerability.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Vulnerability Entry",
-      "description": "A single vulnerability finding and the human verdict about it. The verdict reflects the most severe impact across all listed packages.",
+      "description": "A single vulnerability finding and the human verdict about it. Each vulnerability ID must be unique across all entries, including aliases.",
       "type": "object",
       "allOf": [
         {
@@ -288,42 +287,12 @@
           "then": {
             "required": [ "severity" ]
           }
-        },
-        {
-          "if": {
-            "required": [ "verdict" ],
-            "properties": {
-              "verdict": {
-                "const": "fixed"
-              }
-            }
-          },
-          "then": {
-            "required": [ "fixed_in" ]
-          }
-        },
-        {
-          "if": {
-            "not": {
-              "required": [ "verdict" ],
-              "properties": {
-                "verdict": {
-                  "const": "fixed"
-                }
-              }
-            }
-          },
-          "then": {
-            "not": {
-              "required": [ "fixed_in" ]
-            }
-          }
         }
       ],
       "required": [ "id", "releases", "packages", "reports" ],
       "properties": {
         "id": {
-          "description": "Primary identifier of the vulnerability. Preferably a CVE ID. May be a scanner-specific ID if no CVE exists.",
+          "description": "Primary identifier of the vulnerability. Must be unique across all vulnerability entries and aliases in the file.",
           "type": "string",
           "minLength": 1
         },
@@ -333,7 +302,7 @@
           "minLength": 1
         },
         "aliases": {
-          "description": "Alternative identifiers for the same vulnerability (e.g., GHSA IDs, scanner-specific IDs). Used for cross-referencing in reports.",
+          "description": "Alternative identifiers for the same vulnerability. Must not overlap with any id or alias in other entries.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -342,7 +311,7 @@
           }
         },
         "releases": {
-          "description": "Release identifiers affected by this vulnerability. Must reference releases defined in the releases section.",
+          "description": "Release identifiers affected by this vulnerability.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -351,7 +320,7 @@
           }
         },
         "description": {
-          "description": "Brief human-readable description of the vulnerability. Optional to allow quick stub entries during triage.",
+          "description": "Brief human-readable description of the vulnerability.",
           "type": "string",
           "minLength": 1
         },
@@ -372,7 +341,7 @@
           }
         },
         "tags": {
-          "description": "Tags for categorizing and scoping this vulnerability. Must reference tags defined in the tags section. Used for filtering CLI output and scoping VEX products.",
+          "description": "Tags for categorizing and scoping this vulnerability.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -385,11 +354,11 @@
           "type": "string"
         },
         "analyzed_at": {
-          "description": "Date the analysis was performed. Must not be before the earliest report date.",
+          "description": "Date the analysis was performed.",
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
         },
         "comment": {
-          "description": "Additional information not related to the analysis itself. May include evidence references, methodology notes, decision-making context, or reminders for future review. Not used in any output generation.",
+          "description": "Additional information not related to the analysis itself. Not used in any output generation.",
           "type": "string"
         },
         "severity": {
@@ -401,26 +370,39 @@
         "justification": {
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/justification"
         },
-        "fixed_in": {
-          "description": "Release in which the vulnerability was resolved. Required when verdict is 'fixed'.",
-          "type": "string",
-          "minLength": 1
-        },
-        "fixed_at": {
-          "description": "Date the fix was applied. Only meaningful when verdict is 'fixed'.",
-          "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
-        },
-        "fix_ref": {
-          "description": "Reference to the issue or ticket tracking the fix (e.g., a Jira issue URL).",
-          "type": "string",
-          "format": "uri"
-        },
-        "fix_note": {
-          "description": "Brief description of how the vulnerability was fixed.",
-          "type": "string"
+        "resolution": {
+          "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1vulnerability.json/$defs/resolutionEntry"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "$defs": {
+        "resolutionEntry": {
+          "description": "Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict.",
+          "type": "object",
+          "required": [ "in" ],
+          "properties": {
+            "in": {
+              "description": "Release in which the resolution was applied.",
+              "type": "string",
+              "minLength": 1
+            },
+            "at": {
+              "description": "Date the resolution was applied.",
+              "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
+            },
+            "ref": {
+              "description": "Reference to the issue or ticket tracking the resolution.",
+              "type": "string",
+              "format": "uri"
+            },
+            "note": {
+              "description": "Brief description of how the vulnerability was resolved.",
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
     }
   }
 }

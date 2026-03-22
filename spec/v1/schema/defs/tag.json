@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vulnlog.dev/schemas/v1/defs/tag.json",
   "title": "Vulnlog Tag",
-  "description": "A tag for categorizing and scoping vulnerability entries. Tags replace the previous deliverables and usage concepts, providing flexible labeling for any team-specific taxonomy.",
+  "description": "A tag for categorizing and scoping vulnerability entries.",
   "type": "object",
   "required": [ "id" ],
   "properties": {

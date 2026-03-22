@@ -551,7 +551,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Vulnlog Glossary</h1>
 <div class="details">
 <span id="revnumber">version 1.0.0-draft,</span>
-<span id="revdate">2026-03-08</span>
+<span id="revdate">2026-03-15</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -575,9 +575,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>This glossary defines the domain language of Vulnlog.
 It is intended for developers, contributors, and users who want to understand the specific terms used in the Vulnlog project, its specification, documentation, and CLI.</p>
 </div>
-<div class="paragraph">
-<p>Using consistent terminology prevents misunderstandings in communication and ensures that contributors, users, and consumers of Vulnlog artifacts share the same understanding.</p>
-</div>
 </div>
 </div>
 <div class="sect1">
@@ -588,20 +585,19 @@ It is intended for developers, contributors, and users who want to understand th
 <dt class="hdlist1">Vulnlog</dt>
 <dd>
 <p>An open-source tool and format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners.
-The name combines "vulnerability" and "log"&#8201;&#8212;&#8201;Vulnlog is a persistent, version-controlled vulnerability log.
+The name combines "vulnerability" and "log."
 The term refers to both the YAML file format and the CLI tool collectively.</p>
 </dd>
 <dt class="hdlist1">Vulnlog file</dt>
 <dd>
 <p>A YAML file following the Vulnlog specification, identified by the <code>.vl.yaml</code> (or <code>.vl.yml</code>) file extension.
 Simple projects may use <code>vulnlog.yaml</code> (or <code>vulnlog.yml</code>).
-Each Vulnlog file is scoped to a single release branch and contains project metadata, optional tag definitions, release definitions, and vulnerability entries for that branch.
+Each Vulnlog file is scoped to a single release branch.
 Example: <code>demo-project-8.1.vl.yaml</code>.</p>
 </dd>
 <dt class="hdlist1">Vulnlog CLI</dt>
 <dd>
-<p>The command-line interface tool that reads Vulnlog files and generates output artifacts (suppression files, HTML reports, VEX documents).
-It also provides validation, linting, and statistics functionality.</p>
+<p>The command-line interface tool that reads Vulnlog files and generates output artifacts (suppression files, HTML reports, VEX documents).</p>
 </dd>
 </dl>
 </div>
@@ -615,56 +611,59 @@ It also provides validation, linting, and statistics functionality.</p>
 <dt class="hdlist1">Vulnerability entry</dt>
 <dd>
 <p>A single record in the <code>vulnerabilities</code> section of a Vulnlog file.
-It represents one vulnerability finding (identified by a CVE or scanner-specific ID) and captures the facts (what was found, where, by whom) and the human decision about it (the verdict).
-One vulnerability entry may affect multiple releases and packages.</p>
+Captures a finding (what was found, where, by whom) and the human verdict about it.
+Vulnerability entries are ordered newest first.</p>
 </dd>
 <dt class="hdlist1">Vulnerability ID</dt>
 <dd>
 <p>The primary identifier of a vulnerability entry, stored in the <code>id</code> field.
-Preferably a CVE identifier (e.g., <code>CVE-2021-44228</code>).
-May be a scanner-specific identifier when no CVE has been assigned.</p>
+Must be unique across all entries and aliases within the file.
+Preferably a CVE identifier (e.g., <code>CVE-2021-44228</code>).</p>
 </dd>
 <dt class="hdlist1">Vulnerability name</dt>
 <dd>
 <p>An optional common name for a well-known vulnerability (e.g., "Log4Shell", "Heartbleed").
-Stored in the <code>name</code> field.
-Used for human recognition in reports and searches.</p>
+Stored in the <code>name</code> field.</p>
 </dd>
 <dt class="hdlist1">Alias</dt>
 <dd>
 <p>An alternative identifier for the same vulnerability, stored in the <code>aliases</code> array.
-Examples include GHSA identifiers, scanner-specific IDs, or a CVE that was assigned after the initial entry was created.
-Aliases are used for cross-referencing in reports but not for suppression file generation.</p>
+Must not overlap with any <code>id</code> or <code>aliases</code> in other entries within the same file.
+Used for cross-referencing in reports but not for suppression file generation.</p>
 </dd>
 <dt class="hdlist1">Verdict</dt>
 <dd>
 <p>The human triage decision recorded for a vulnerability entry, stored in the <code>verdict</code> field.
-The term "verdict" is used deliberately to distinguish it from automated scanner statuses&#8201;&#8212;&#8201;it represents a deliberate judgment by an engineer who has reviewed the evidence.
-Possible values: <code>affected</code>, <code>not_affected</code>, <code>fixed</code>, <code>risk_acceptable</code>.
-When absent, the vulnerability is considered under investigation.</p>
+The term "verdict" reflects a deliberate judgment by an engineer, distinct from automated scanner statuses.
+Possible values: <code>affected</code>, <code>not_affected</code>, <code>risk_acceptable</code>.
+When absent, the vulnerability is considered under investigation.
+"Fixed" is not a verdict&#8201;&#8212;&#8201;it is a resolution action recorded separately.</p>
 </dd>
 <dt class="hdlist1">Under investigation</dt>
 <dd>
 <p>The implicit state of a vulnerability entry when no <code>verdict</code> has been set.
-Indicates the finding has been recorded but not yet triaged.
 Maps to <code>under_investigation</code> in OpenVEX output.</p>
 </dd>
 <dt class="hdlist1">Analysis</dt>
 <dd>
 <p>The free-text rationale for the triage decision, stored in the <code>analysis</code> field.
-This is the most valuable part of a vulnerability entry&#8201;&#8212;&#8201;it records <strong>why</strong> the team reached their verdict.
+Records <strong>why</strong> the team reached their verdict.
 Used as <code>impact_statement</code> in VEX output for <code>not_affected</code> entries and as <code>action_statement</code> for <code>risk_acceptable</code> entries.</p>
 </dd>
 <dt class="hdlist1">Comment</dt>
 <dd>
 <p>Additional information not related to the analysis itself, stored in the <code>comment</code> field.
-May include evidence references, methodology notes, decision-making context, links to internal documents, or reminders for future review.
-Unlike <code>analysis</code>, the <code>comment</code> field is not used in any output generation (not in VEX, not in HTML reports).
-It serves as internal metadata for the team maintaining the Vulnlog file.</p>
+Not used in any output generation.</p>
+</dd>
+<dt class="hdlist1">Resolution</dt>
+<dd>
+<p>A structured record that a dependency update or other corrective action was taken, stored in the <code>resolution</code> block.
+Independent of the verdict&#8201;&#8212;&#8201;a vulnerability may be <code>not_affected</code> (verdict) yet still have a resolution (the dependency was updated defensively).
+When <code>verdict</code> is <code>affected</code> and a <code>resolution</code> is present, the combination maps to VEX status <code>fixed</code>.</p>
 </dd>
 <dt class="hdlist1">Severity</dt>
 <dd>
-<p>The assessed severity of a vulnerability, stored in the <code>severity</code> field.
+<p>The assessed severity of a vulnerability.
 Values: <code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>.
 Required when the verdict is <code>affected</code> or <code>risk_acceptable</code>.</p>
 </dd>
@@ -672,12 +671,12 @@ Required when the verdict is <code>affected</code> or <code>risk_acceptable</cod
 <dd>
 <p>The reason why a vulnerability does not affect the project, stored in the <code>justification</code> field.
 Required when the verdict is <code>not_affected</code>.
-Values align with the OpenVEX justification vocabulary (e.g., <code>vulnerable_code_not_present</code>, <code>vulnerable_code_not_in_execute_path</code>).</p>
+Values align with the OpenVEX justification vocabulary.</p>
 </dd>
 <dt class="hdlist1">Stub entry</dt>
 <dd>
-<p>A minimal vulnerability entry created during quick triage, containing only the required fields (<code>id</code>, <code>releases</code>, <code>packages</code>, <code>reports</code>) without a description, analysis, or verdict.
-The entry is in the under investigation state and will be completed later.</p>
+<p>A minimal vulnerability entry containing only required fields (<code>id</code>, <code>releases</code>, <code>packages</code>, <code>reports</code>).
+Created during quick triage using the <code>vulnlog add</code> command.</p>
 </dd>
 </dl>
 </div>
@@ -691,27 +690,22 @@ The entry is in the under investigation state and will be completed later.</p>
 <dt class="hdlist1">Project</dt>
 <dd>
 <p>The <code>project</code> section of a Vulnlog file.
-Contains metadata about the software project (organization name, project name, security team contact).
-Used as author information in VEX documents and in report headers.</p>
+Contains metadata: organization, project name, author, and optional contact.</p>
 </dd>
 <dt class="hdlist1">Tag</dt>
 <dd>
-<p>A label defined in the optional <code>tags</code> section and referenced by vulnerability entries and release purl entries.
-Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerabilities.
-Common uses include identifying customer-facing deliverables (e.g., <code>binary</code>, <code>container</code>, <code>sdk</code>), internal usage contexts (e.g., <code>build-dep</code>, <code>test-infra</code>), and compliance scopes (e.g., <code>pci</code>, <code>hipaa</code>).</p>
+<p>A label defined in the optional <code>tags</code> section.
+Provides flexible categorization for deliverables, usage contexts, or any team-specific taxonomy.</p>
 </dd>
 <dt class="hdlist1">Release</dt>
 <dd>
 <p>A software release tracked in the <code>releases</code> section.
-Each release has a unique <code>id</code> (e.g., <code>8.1.1</code>) and an optional <code>published_at</code> date.
-Releases must be listed in chronological order.
-Vulnerability entries reference releases to indicate which versions are affected.</p>
+Releases must be listed in chronological order (oldest first) because the CLI uses array position for range resolution.</p>
 </dd>
 <dt class="hdlist1">Release branch</dt>
 <dd>
-<p>A line of releases sharing a common major/minor version (e.g., the 8.1.x branch).
-Each Vulnlog file is scoped to a single release branch.
-When the release branch reaches end of life, its Vulnlog file becomes a historical archive.</p>
+<p>A line of releases sharing a common major/minor version.
+Each Vulnlog file is scoped to a single release branch.</p>
 </dd>
 </dl>
 </div>
@@ -724,20 +718,18 @@ When the release branch reaches end of life, its Vulnlog file becomes a historic
 <dl>
 <dt class="hdlist1">Package</dt>
 <dd>
-<p>An affected dependency listed in the <code>packages</code> array of a vulnerability entry.
-Represented as a Package URL (purl) string.</p>
+<p>An affected dependency listed in the <code>packages</code> array as a Package URL string.</p>
 </dd>
 <dt class="hdlist1">Package URL (purl)</dt>
 <dd>
-<p>A standardized format for identifying software packages, as defined by the <a href="https://github.com/package-url/purl-spec">purl specification</a>.
-Examples: <code>pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1</code>, <code>pkg:docker/demo-project@8.1.1</code>, <code>pkg:apk/alpine/openssl@3.1.4-r0</code>.
-Used in Vulnlog for dependency identification (in vulnerability packages) and release artifact identification (in release purls).</p>
+<p>A standardized format for identifying software packages.
+Examples: <code>pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1</code>, <code>pkg:docker/demo-project@8.1.1</code>.</p>
 </dd>
 <dt class="hdlist1">Release purl</dt>
 <dd>
-<p>A versioned Package URL defined in the <code>purls</code> section of a release entry.
-Identifies a specific release artifact (e.g., a Docker image, a binary distribution) and optionally carries tags for scoped VEX generation.
-Maps to "products" in OpenVEX terminology.</p>
+<p>A versioned Package URL in a release&#8217;s <code>purls</code> section.
+Identifies a release artifact and optionally carries tags for scoped VEX generation.
+Maps to "products" in OpenVEX.</p>
 </dd>
 </dl>
 </div>
@@ -750,28 +742,25 @@ Maps to "products" in OpenVEX terminology.</p>
 <dl>
 <dt class="hdlist1">Report (vulnerability report)</dt>
 <dd>
-<p>A record in the <code>reports</code> array of a vulnerability entry, indicating that a specific scanner or source reported the finding.
-Each report captures the reporter type, the date, and optionally scanner-specific vulnerability IDs and suppression configuration.
+<p>A record in the <code>reports</code> array indicating that a specific scanner or source reported the finding.
 Not to be confused with HTML report (an output artifact).</p>
 </dd>
 <dt class="hdlist1">Reporter type</dt>
 <dd>
-<p>The <code>reporter</code> field on a report entry, identifying the scanner or source technology.
-A fixed enum of supported values (e.g., <code>trivy</code>, <code>snyk</code>, <code>grype</code>, <code>dependency_check</code>, <code>other</code>).
-Determines which suppression file format the CLI generates.
-Not all reporter types have suppression support.</p>
+<p>The <code>reporter</code> field on a report entry, identifying the scanner or source.
+A fixed enum (e.g., <code>trivy</code>, <code>snyk</code>, <code>dependency_check</code>, <code>other</code>).
+Determines the suppression file format.</p>
 </dd>
 <dt class="hdlist1">Source</dt>
 <dd>
-<p>The <code>source</code> field on a report entry, describing where a non-scanner report came from.
-Examples: "Oracle Critical Patch Update April 2022", "Annual penetration test by SecureCo".
-Required by the CLI for reports with reporter type <code>other</code>.</p>
+<p>The <code>source</code> field on a report entry for non-scanner reports.
+Required for reporter type <code>other</code>.</p>
 </dd>
-<dt class="hdlist1">Scanner-specific ID</dt>
+<dt class="hdlist1">Suppression</dt>
 <dd>
-<p>A vulnerability identifier assigned by a specific scanner, stored in the <code>vuln_id</code> array of a report entry.
-Examples: <code>SNYK-JAVA-LOG4J-2314720</code>, <code>GHSA-jfh8-c2jp-5v3q</code>.
-Used by the CLI to generate scanner-specific suppression files.</p>
+<p>A directive to exclude a vulnerability from a scanner&#8217;s findings.
+Can be temporary (with <code>expires_at</code>) or permanent (without <code>expires_at</code>).
+Stored in the <code>suppress</code> block on a report entry.</p>
 </dd>
 </dl>
 </div>
@@ -785,27 +774,23 @@ Used by the CLI to generate scanner-specific suppression files.</p>
 <dt class="hdlist1">Suppression file</dt>
 <dd>
 <p>A file generated by the Vulnlog CLI that instructs an SCA scanner to suppress specific findings.
-Each scanner has its own suppression format (e.g., <code>.trivyignore</code> for Trivy, <code>.snyk</code> for Snyk, <code>dependency-check-suppressions.xml</code> for OWASP Dependency Check).
-The format is determined by the reporter type.
-Suppression files are generated per reporter type and contain only relevant entries&#8201;&#8212;&#8201;fixed vulnerabilities are never included.</p>
+Each scanner has its own format.
+Vulnerabilities with <code>verdict: affected</code> and a <code>resolution</code> are never suppressed.</p>
 </dd>
 <dt class="hdlist1">HTML report</dt>
 <dd>
-<p>An HTML file generated by the Vulnlog CLI for communicating vulnerability analysis to team members, partners, and customers.
-Contains a summary table of all vulnerability entries with filtering, sorting, and search capabilities.
-Each vulnerability entry corresponds to a single row in the report.</p>
+<p>An HTML file for communicating vulnerability analysis to stakeholders.
+Each vulnerability entry corresponds to a single row.</p>
 </dd>
 <dt class="hdlist1">VEX document</dt>
 <dd>
-<p>A Vulnerability Exploitability eXchange document generated by the Vulnlog CLI.
-Communicates whether vulnerabilities in a product are exploitable in the specific context of that product.
-Vulnlog generates OpenVEX format documents.</p>
+<p>An OpenVEX document communicating whether vulnerabilities are exploitable.
+The CLI manages document versioning by reading the previous output and incrementing the version counter.</p>
 </dd>
 <dt class="hdlist1">OpenVEX</dt>
 <dd>
-<p>An open standard for VEX documents (<a href="https://openvex.dev" class="bare">https://openvex.dev</a>).
-Vulnlog uses OpenVEX as its VEX output format.
-Key mappings: Vulnlog tags + release purls become OpenVEX products, Vulnlog packages become OpenVEX subcomponents, Vulnlog verdicts map to OpenVEX statuses.</p>
+<p>The VEX output format used by Vulnlog.
+Key mapping: <code>affected</code> + <code>resolution</code> = VEX <code>fixed</code>. <code>not_affected</code> = VEX <code>not_affected</code>. <code>risk_acceptable</code> = VEX <code>affected</code> with action statement.</p>
 </dd>
 </dl>
 </div>
@@ -818,22 +803,16 @@ Key mappings: Vulnlog tags + release purls become OpenVEX products, Vulnlog pack
 <dl>
 <dt class="hdlist1">Validation</dt>
 <dd>
-<p>The process of checking a Vulnlog file for correctness.
-Covers structural validation (field types, required fields, conditional rules) and semantic validation (cross-references, date logic, uniqueness, ordering).
-Invoked via <code>vulnlog validate</code>.</p>
+<p>Checking a Vulnlog file for structural correctness and semantic integrity, including unique ID enforcement.</p>
 </dd>
 <dt class="hdlist1">Linting</dt>
 <dd>
-<p>The process of checking a Vulnlog file for consistent formatting and field ordering.
-The linter enforces top-level section order, vulnerability field order, and release chronological order.
-Invoked via <code>vulnlog lint</code>.</p>
+<p>Checking for consistent formatting and field ordering.
+Releases: oldest first. Vulnerabilities: newest first.</p>
 </dd>
 <dt class="hdlist1">Release range</dt>
 <dd>
-<p>A CLI filtering mechanism that selects vulnerabilities based on their affected releases.
-<code>--release &lt;id&gt;</code> means "all releases up to and including this release."
-The <code>--tags</code> flag can be combined for further filtering.
-Resolved by the order of entries in the <code>releases</code> section.</p>
+<p><code>--release &lt;id&gt;</code> means "all releases up to and including this release," resolved by array position.</p>
 </dd>
 </dl>
 </div>
@@ -843,7 +822,7 @@ Resolved by the order of entries in the <code>releases</code> section.</p>
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-08 16:28:06 +0100
+Last updated 2026-03-22 17:13:42 +0100
 </div>
 </div>
 <script>

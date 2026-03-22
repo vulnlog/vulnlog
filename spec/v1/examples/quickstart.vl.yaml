@@ -1,9 +1,11 @@
+# $schema: ../generated/vulnlog-bundled.json
+---
 schemaVersion: "1"
 
 project:
   organization: Acme Corp
   name: Acme Web App
-  author:  Acme Corp Security Team
+  author: Acme Corp Security Team
 
 releases:
   - id: 1.0.0

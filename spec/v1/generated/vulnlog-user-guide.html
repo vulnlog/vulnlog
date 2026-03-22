@@ -552,7 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Vulnlog User Guide</h1>
 <div class="details">
 <span id="revnumber">version 1.0.0-draft,</span>
-<span id="revdate">2026-03-08</span>
+<span id="revdate">2026-03-15</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -565,7 +565,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel3">
 <li><a href="#_vs_scanner_native_suppression_files">1.3.1. vs. Scanner-native suppression files</a></li>
 <li><a href="#_vs_scanner_vendor_uis">1.3.2. vs. Scanner vendor UIs</a></li>
-<li><a href="#_vs_ticketing_system_spreadsheets_and_confluence_pages">1.3.3. vs. Ticketing-System, Spreadsheets and Confluence pages</a></li>
+<li><a href="#_vs_ticketing_systems_spreadsheets_and_confluence_pages">1.3.3. vs. Ticketing systems, spreadsheets, and Confluence pages</a></li>
 </ul>
 </li>
 <li><a href="#_how_vulnlog_relates_to_other_standards">1.4. How Vulnlog Relates to Other Standards</a></li>
@@ -583,31 +583,32 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_common_workflows">3. Common Workflows</a>
 <ul class="sectlevel2">
 <li><a href="#_new_findingtriage_later">3.1. New finding&#8201;&#8212;&#8201;triage later</a></li>
-<li><a href="#_finding_does_not_affect_us">3.2. Finding does not affect us</a></li>
-<li><a href="#_fixed_in_the_next_release">3.3. Fixed in the next release</a></li>
-<li><a href="#_risk_accepted_with_temporary_suppression">3.4. Risk accepted with temporary suppression</a></li>
-<li><a href="#_internal_dependency_no_customer_impact">3.5. Internal dependency, no customer impact</a></li>
-<li><a href="#_non_scanner_source">3.6. Non-scanner source</a></li>
+<li><a href="#_adding_the_same_finding_to_multiple_branch_files">3.2. Adding the same finding to multiple branch files</a></li>
+<li><a href="#_finding_does_not_affect_us">3.3. Finding does not affect us</a></li>
+<li><a href="#_not_affected_but_dependency_updated_anyway">3.4. Not affected, but dependency updated anyway</a></li>
+<li><a href="#_affected_and_fixed_in_the_next_release">3.5. Affected and fixed in the next release</a></li>
+<li><a href="#_risk_accepted_with_permanent_suppression">3.6. Risk accepted with permanent suppression</a></li>
+<li><a href="#_internal_dependency_no_customer_impact">3.7. Internal dependency, no customer impact</a></li>
 </ul>
 </li>
 <li><a href="#_managing_multiple_release_branches">4. Managing Multiple Release Branches</a></li>
 <li><a href="#_cli_reference">5. CLI Reference</a>
 <ul class="sectlevel2">
 <li><a href="#_usage">5.1. Usage</a></li>
-<li><a href="#_global_flags">5.2. Global Flags</a></li>
-<li><a href="#_filtering">5.3. Filtering</a></li>
-<li><a href="#_commands">5.4. Commands</a>
+<li><a href="#_filtering">5.2. Filtering</a></li>
+<li><a href="#_commands">5.3. Commands</a>
 <ul class="sectlevel3">
-<li><a href="#_vulnlog_init">5.4.1. <code>vulnlog init</code></a></li>
-<li><a href="#_vulnlog_validate">5.4.2. <code>vulnlog validate</code></a></li>
-<li><a href="#_vulnlog_lint">5.4.3. <code>vulnlog lint</code></a></li>
-<li><a href="#_vulnlog_stats">5.4.4. <code>vulnlog stats</code></a></li>
-<li><a href="#_vulnlog_report">5.4.5. <code>vulnlog report</code></a></li>
-<li><a href="#_vulnlog_suppress">5.4.6. <code>vulnlog suppress</code></a></li>
-<li><a href="#_vulnlog_vex">5.4.7. <code>vulnlog vex</code></a></li>
+<li><a href="#_vulnlog_init">5.3.1. <code>vulnlog init</code></a></li>
+<li><a href="#_vulnlog_validate">5.3.2. <code>vulnlog validate</code></a></li>
+<li><a href="#_vulnlog_lint">5.3.3. <code>vulnlog lint</code></a></li>
+<li><a href="#_vulnlog_stats">5.3.4. <code>vulnlog stats</code></a></li>
+<li><a href="#_vulnlog_report">5.3.5. <code>vulnlog report</code></a></li>
+<li><a href="#_vulnlog_suppress">5.3.6. <code>vulnlog suppress</code></a></li>
+<li><a href="#_vulnlog_vex">5.3.7. <code>vulnlog vex</code></a></li>
+<li><a href="#_vulnlog_add">5.3.8. <code>vulnlog add</code></a></li>
 </ul>
 </li>
-<li><a href="#_exit_codes">5.5. Exit Codes</a></li>
+<li><a href="#_exit_codes">5.4. Exit Codes</a></li>
 </ul>
 </li>
 <li><a href="#_full_example">6. Full Example</a></li>
@@ -639,31 +640,28 @@ Each finding captures the scanner report, affected packages, and the team&#8217;
 </dd>
 <dt class="hdlist1">Verdict-driven workflow</dt>
 <dd>
-<p>Classify vulnerabilities with a clear verdict: <code>affected</code>, <code>not_affected</code>, <code>fixed</code>, or <code>risk_acceptable</code>.
+<p>Classify vulnerabilities with a clear verdict: <code>affected</code>, <code>not_affected</code>, or <code>risk_acceptable</code>.
 Entries without a verdict are tracked as under investigation.
-Each verdict type enforces appropriate companion fields (justification, severity, fix reference).</p>
+Resolutions (dependency updates, patches) are recorded independently of the verdict.</p>
 </dd>
 <dt class="hdlist1">Flexible tagging</dt>
 <dd>
 <p>Tag vulnerability entries with a team-defined taxonomy.
-Tags can represent deliverables (<code>binary</code>, <code>container</code>), usage contexts (<code>build-dep</code>, <code>test-infra</code>), or any other categorization.
-Use tags to filter CLI output and scope VEX products.</p>
+Tags can represent deliverables (<code>binary</code>, <code>container</code>), usage contexts (<code>build-dep</code>, <code>test-infra</code>), or any other categorization.</p>
 </dd>
 <dt class="hdlist1">Suppression file generation</dt>
 <dd>
 <p>Generate scanner-specific suppression files (<code>.trivyignore</code>, <code>.snyk</code>, etc.) from the Vulnlog file.
-Only suppress what needs to be suppressed: Vulnerabilities marked as fixed are not suppressed any longer to assert the fix was successful.</p>
+Vulnerabilities with a resolution are excluded from suppression to verify the fix is complete.</p>
 </dd>
 <dt class="hdlist1">HTML report generation</dt>
 <dd>
-<p>Generate self-contained HTML reports for communicating vulnerability status to team members, partners, and customers.
-Reports include summary statistics, filtering, sorting, and search by any identifier.</p>
+<p>Generate self-contained HTML reports for communicating vulnerability status to team members, partners, and customers.</p>
 </dd>
 <dt class="hdlist1">OpenVEX statement generation</dt>
 <dd>
 <p>Generate OpenVEX documents per release for standards-compliant vulnerability communication.
-Verdicts map directly to OpenVEX statuses.
-Tags scope VEX products to specific deliverables.</p>
+Verdicts and resolutions map directly to OpenVEX statuses.</p>
 </dd>
 <dt class="hdlist1">Multi-scanner support</dt>
 <dd>
@@ -692,8 +690,7 @@ Lint for consistent field ordering and formatting.</p>
 <dt class="hdlist1">CI/CD integration</dt>
 <dd>
 <p>The CLI runs on developer machines and in CI pipelines.
-Generate suppression files in CI to keep scanner pipelines green for triaged findings.
-Generate reports and VEX documents as build artifacts.</p>
+Generate suppression files in CI to keep scanner pipelines green for triaged findings.</p>
 </dd>
 </dl>
 </div>
@@ -706,22 +703,22 @@ Generate reports and VEX documents as build artifacts.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Uses multiple SCA scanners (Trivy, Snyk, Grype, OWASP Dependency Check, etc.) and needs a unified view of findings across scanners.</p>
+<p>Uses multiple SCA scanners and needs a unified view of findings.</p>
 </li>
 <li>
-<p>Maintains multiple release branches and needs to track vulnerability decisions per branch without duplicating work.</p>
+<p>Maintains multiple release branches and needs to track vulnerability decisions per branch.</p>
 </li>
 <li>
-<p>Needs to communicate vulnerability status to customers, partners, or auditors via HTML reports or VEX statements.</p>
+<p>Needs to communicate vulnerability status via HTML reports or VEX statements.</p>
 </li>
 <li>
-<p>Wants to keep vulnerability analysis in the repository, next to the code, rather than in external tools.</p>
+<p>Wants to keep vulnerability analysis in the repository, next to the code.</p>
 </li>
 <li>
-<p>Wants to prevent stale suppression files that shadow real findings after vulnerabilities have been fixed.</p>
+<p>Wants to prevent stale suppression files that shadow real findings.</p>
 </li>
 <li>
-<p>Do not want to lose vulnerability analysis, suppressions or VEX statements when moving to another SCA tool.</p>
+<p>Wants to avoid losing vulnerability analysis when moving to another SCA tool.</p>
 </li>
 </ul>
 </div>
@@ -735,29 +732,20 @@ Generate reports and VEX documents as build artifacts.</p>
 <h4 id="_vs_scanner_native_suppression_files">1.3.1. vs. Scanner-native suppression files</h4>
 <div class="paragraph">
 <p>Scanner-native suppression files (<code>.trivyignore</code>, <code>.snyk</code>) track <strong>what to suppress</strong> but not <strong>why</strong>.
-They don&#8217;t record the analysis, the verdict reasoning, or who made the decision.
-When team members rotate, the reasoning is lost.
 Vulnlog generates these files from a richer decision record, keeping the <strong>why</strong> alongside the <strong>what</strong>.</p>
-</div>
-<div class="paragraph">
-<p>Suppression files also tend to accumulate stale entries for vulnerabilities that were fixed long ago.
-Vulnlog never generates suppressions for fixed vulnerabilities, keeping the suppression file accurate.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_vs_scanner_vendor_uis">1.3.2. vs. Scanner vendor UIs</h4>
 <div class="paragraph">
-<p>Scanner vendor UIs (Snyk dashboard, GitHub Security tab or Semgrep UI) provide good visibility into findings for one scanner.
-But they create vendor lock-in: your triage decisions and analysis live in the vendor&#8217;s platform.
-Switching scanners means starting over.
-Vulnlog keeps your analysis in a YAML file you own, and generates outputs for any supported scanner.</p>
+<p>Scanner vendor UIs (Snyk dashboard, GitHub Security tab, or Semgrep UI) create vendor lock-in: your triage decisions live in the vendor&#8217;s platform.
+Vulnlog keeps your analysis in a YAML file you own.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vs_ticketing_system_spreadsheets_and_confluence_pages">1.3.3. vs. Ticketing-System, Spreadsheets and Confluence pages</h4>
+<h4 id="_vs_ticketing_systems_spreadsheets_and_confluence_pages">1.3.3. vs. Ticketing systems, spreadsheets, and Confluence pages</h4>
 <div class="paragraph">
-<p>Spreadsheets and wiki pages are flexible but disconnected from the code.
-They require manual synchronization, don&#8217;t support automated output generation, and are easy to forget when the code changes.
+<p>Spreadsheets and wiki pages are disconnected from the code.
 Vulnlog lives in the repository and generates suppression files, reports, and VEX documents directly from the data.</p>
 </div>
 </div>
@@ -768,27 +756,15 @@ Vulnlog lives in the repository and generates suppression files, reports, and VE
 <dl>
 <dt class="hdlist1">VEX (Vulnerability Exploitability eXchange)</dt>
 <dd>
-<p>Vulnlog generates OpenVEX documents.
-VEX communicates whether vulnerabilities are exploitable in the context of a specific product.
-Vulnlog is the decision record; VEX is one of its outputs.</p>
+<p>Vulnlog generates OpenVEX documents. Vulnlog is the decision record; VEX is one of its outputs.</p>
 </dd>
 <dt class="hdlist1">SBOM (Software Bill of Materials)</dt>
 <dd>
-<p>Complementary.
-SBOMs describe what components are in your software.
-Vulnlog tracks decisions about vulnerability findings in those components.
-Together they answer "what do we have?" (SBOM) and "what have we decided about findings?" (Vulnlog).</p>
+<p>Complementary. SBOMs describe what components are in your software. Vulnlog tracks decisions about vulnerability findings in those components.</p>
 </dd>
 <dt class="hdlist1">SARIF (Static Analysis Results Interchange Format)</dt>
 <dd>
-<p>A future Vulnlog output.
-SARIF provides a standardized format for findings that integrates with development tools (GitHub Code Scanning, Azure DevOps, VS Code).</p>
-</dd>
-<dt class="hdlist1">CSAF (Common Security Advisory Framework)</dt>
-<dd>
-<p>Complementary.
-CSAF is a broader advisory format.
-Vulnlog focuses specifically on team-level triage decisions and suppression management.</p>
+<p>A future Vulnlog output for integration with development tools.</p>
 </dd>
 </dl>
 </div>
@@ -864,16 +840,10 @@ Vulnlog focuses specifically on team-level triage decisions and suppression mana
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_creating_a_vulnlog_file">2.1. Creating a Vulnlog File</h3>
-<div class="paragraph">
-<p>Use the CLI to scaffold a new project:</p>
-</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog init --project "My App" --organization "Acme Corp" -o my-app.vl.yaml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>This creates a minimal Vulnlog file with only the required sections.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -884,10 +854,8 @@ Vulnlog focuses specifically on team-level triage decisions and suppression mana
 <td class="content">
 <div class="title">File Name Convention</div>
 <div class="paragraph">
-<p>For simple projects that only work with one Vulnlog file, <code>vulnlog.[yaml|yml]</code> are valid file names.</p>
-</div>
-<div class="paragraph">
-<p>If you need to work with multiple Vulnlog files, such as when working with multiple release branches or products, use the file name convention <code>&lt;project-name&gt;.vl.[yaml|yml]</code>.</p>
+<p>For simple projects, <code>vulnlog.[yaml|yml]</code> are valid file names.
+For multiple Vulnlog files, use <code>&lt;project-name&gt;.vl.[yaml|yml]</code>.</p>
 </div>
 </td>
 </tr>
@@ -898,12 +866,13 @@ Vulnlog focuses specifically on team-level triage decisions and suppression mana
 <h3 id="_a_minimal_example">2.2. A Minimal Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+schemaVersion: "1"
 
 project:
   organization: Acme Corp
   name: Acme Web App
-  author:  Acme Corp Security Team
+  author: Acme Corp Security Team
 
 releases:
   - id: 1.0.0
@@ -928,27 +897,20 @@ vulnerabilities:
 <div class="sect2">
 <h3 id="_ide_setup">2.3. IDE Setup</h3>
 <div class="paragraph">
-<p>Vulnlog&#8217;s JSON Schema is published to <a href="https://www.schemastore.org/">SchemaStore</a>, which means IDEs with YAML support can automatically provide validation and autocompletion for <code>.vl.[yaml|yml]</code> and <code>vulnlog.[yaml|yml]</code> files.</p>
+<p>Vulnlog&#8217;s JSON Schema is published to <a href="https://www.schemastore.org/">SchemaStore</a>.
+IDEs with YAML support can automatically provide validation and autocompletion for <code>.vl.[yaml|yml]</code> and <code>vulnlog.[yaml|yml]</code> files.</p>
+</div>
+<div class="paragraph">
+<p>To reference a local schema, add this as the first line of your Vulnlog file:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json</code></pre>
+</div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_ci_pipeline_integration">2.4. CI Pipeline Integration</h3>
-<div class="paragraph">
-<p>A typical CI workflow with Vulnlog:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>The SCA scanner runs and finds vulnerabilities.</p>
-</li>
-<li>
-<p>Without Vulnlog, the pipeline fails on known, already-triaged findings.</p>
-</li>
-<li>
-<p>With Vulnlog, the pipeline runs <code>vulnlog suppress</code> before the scanner to generate up-to-date suppression files. The scanner skips triaged findings and only fails on genuinely new ones.</p>
-</li>
-</ol>
-</div>
 <div class="paragraph">
 <p>Example GitHub Actions workflow:</p>
 </div>
@@ -992,31 +954,34 @@ vulnerabilities:
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_new_findingtriage_later">3.1. New finding&#8201;&#8212;&#8201;triage later</h3>
-<div class="paragraph">
-<p>Create a minimal stub entry:</p>
-</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2026-5678
     releases: [ 2.0.0 ]
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
-        at: 2026-03-01
     tags: [ webapp ]</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_finding_does_not_affect_us">3.2. Finding does not affect us</h3>
+<h3 id="_adding_the_same_finding_to_multiple_branch_files">3.2. Adding the same finding to multiple branch files</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+  --vuln-id CVE-2026-5678 --reporter trivy</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_finding_does_not_affect_us">3.3. Finding does not affect us</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -1031,51 +996,68 @@ vulnerabilities:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_fixed_in_the_next_release">3.3. Fixed in the next release</h3>
+<h3 id="_not_affected_but_dependency_updated_anyway">3.4. Not affected, but dependency updated anyway</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
+    reports:
+      - reporter: trivy
+        at: 2026-03-01
+    tags: [ webapp ]
+    analysis: &gt;
+      The vulnerable code path requires SVG input processing.
+      Our application only accepts PNG and JPEG formats.
+    verdict: not_affected
+    justification: vulnerable_code_not_in_execute_path
+    resolution:
+      in: 2.0.1
+      note: "Updated image-lib from 3.1.0 to 3.2.0 during routine upgrade"</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_affected_and_fixed_in_the_next_release">3.5. Affected and fixed in the next release</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2026-5678
+    releases: [ 2.0.0 ]
+    description: Memory corruption in image-lib
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
         at: 2026-03-01
     tags: [ webapp ]
     analysis: &gt;
       Confirmed exploitable via crafted PNG uploads.
-      Updated image-lib to 3.2.0 which contains the fix.
     analyzed_at: 2026-03-02
     severity: high
-    verdict: fixed
-    fixed_in: 2.0.1
-    fixed_at: 2026-03-03
-    fix_ref: "https://jira.example.com/browse/SEC-99"
-    fix_note: "Updated image-lib from 3.1.0 to 3.2.0"</code></pre>
+    verdict: affected
+    resolution:
+      in: 2.0.1
+      at: 2026-03-03
+      ref: "https://jira.example.com/browse/SEC-99"
+      note: "Updated image-lib from 3.1.0 to 3.2.0"</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_risk_accepted_with_temporary_suppression">3.4. Risk accepted with temporary suppression</h3>
+<h3 id="_risk_accepted_with_permanent_suppression">3.6. Risk accepted with permanent suppression</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages:
-      - "pkg:npm/image-lib@3.1.0"
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
-        at: 2026-03-01
-        suppress:
-          expires_at: 2026-03-08
+        suppress: {}
     tags: [ webapp ]
     analysis: &gt;
       Vulnerability confirmed but only exploitable with
       specially crafted input that our validation layer rejects.
-      Accepting risk until upstream releases a stable fix.
-    analyzed_at: 2026-03-02
     severity: medium
     verdict: risk_acceptable
     comment: &gt;
@@ -1085,14 +1067,13 @@ vulnerabilities:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_internal_dependency_no_customer_impact">3.5. Internal dependency, no customer impact</h3>
+<h3 id="_internal_dependency_no_customer_impact">3.7. Internal dependency, no customer impact</h3>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2026-9999
     releases: [ 2.0.0 ]
     description: Command injection in build-tool
-    packages:
-      - "pkg:npm/build-tool@5.0.0"
+    packages: [ "pkg:npm/build-tool@5.0.0" ]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -1101,35 +1082,8 @@ vulnerabilities:
       Affects the build pipeline only. The vulnerable command
       injection requires untrusted input which the CI environment
       does not expose.
-    analyzed_at: 2026-03-01
     verdict: not_affected
     justification: vulnerable_code_cannot_be_controlled_by_adversary</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_non_scanner_source">3.6. Non-scanner source</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">  - id: CVE-2022-21449
-    name: Psychic Signatures
-    releases: [ 8.1.2 ]
-    description: ECDSA signature verification bypass in Java SE
-    packages:
-      - "pkg:maven/com.oracle/jdk@17.0.2"
-    reports:
-      - reporter: other
-        at: 2022-04-19
-        source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container ]
-    analysis: &gt;
-      The project uses Java 17 and ECDSA signatures for
-      JWT token verification. Confirmed exploitable.
-    analyzed_at: 2022-04-20
-    severity: critical
-    verdict: fixed
-    fixed_in: 8.1.2
-    fixed_at: 2022-04-22</code></pre>
 </div>
 </div>
 </div>
@@ -1149,12 +1103,7 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This avoids cherry-picking vulnerability analysis to older branches.
-When a release branch reaches end of life (EoL), its Vulnlog file naturally becomes a historical archive.</p>
-</div>
-<div class="paragraph">
-<p>Alternatively, maintain a Vulnlog file directly on each release branch.
-Both approaches can coexist.</p>
+<p>Use <code>vulnlog add</code> to create stub entries across multiple files at once.</p>
 </div>
 </div>
 </div>
@@ -1173,48 +1122,7 @@ Both approaches can coexist.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_global_flags">5.2. Global Flags</h3>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 40%;">
-<col style="width: 60%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Flag</th>
-<th class="tableblock halign-left valign-top">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>-q, --quiet</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Suppress non-essential output.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>-v, --verbose</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Verbose output.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--no-color</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Disable colored output.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--format &lt;f&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Output format: <code>yaml</code> (default). Future: <code>json</code>, <code>text</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--version</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Print version.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--help</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Print help.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="_filtering">5.3. Filtering</h3>
+<h3 id="_filtering">5.2. Filtering</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 40%;">
@@ -1233,23 +1141,23 @@ Both approaches can coexist.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>--tags &lt;id&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Filter by tag (repeatable for multiple tags).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Filter by tag (repeatable).</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sect2">
-<h3 id="_commands">5.4. Commands</h3>
+<h3 id="_commands">5.3. Commands</h3>
 <div class="sect3">
-<h4 id="_vulnlog_init">5.4.1. <code>vulnlog init</code></h4>
+<h4 id="_vulnlog_init">5.3.1. <code>vulnlog init</code></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog init -o my-app.vl.yaml --project "My App" --organization "Acme Corp"</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog init -o my-app.vl.yaml --project "My App" --organization "Acme Corp" --author "Security Team"</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vulnlog_validate">5.4.2. <code>vulnlog validate</code></h4>
+<h4 id="_vulnlog_validate">5.3.2. <code>vulnlog validate</code></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog validate my-app.vl.yaml
@@ -1258,7 +1166,7 @@ vulnlog validate my-app.vl.yaml --strict</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vulnlog_lint">5.4.3. <code>vulnlog lint</code></h4>
+<h4 id="_vulnlog_lint">5.3.3. <code>vulnlog lint</code></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog lint my-app.vl.yaml          # Check only
@@ -1267,7 +1175,7 @@ vulnlog lint my-app.vl.yaml --fix    # Rewrite with corrected ordering</code></p
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vulnlog_stats">5.4.4. <code>vulnlog stats</code></h4>
+<h4 id="_vulnlog_stats">5.3.4. <code>vulnlog stats</code></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog stats my-app.vl.yaml
@@ -1276,32 +1184,26 @@ vulnlog stats my-app.vl.yaml --release 8.1.1</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vulnlog_report">5.4.5. <code>vulnlog report</code></h4>
+<h4 id="_vulnlog_report">5.3.5. <code>vulnlog report</code></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog report my-app.vl.yaml
-vulnlog report my-app.vl.yaml --release 8.1.1 -o report.html
-vulnlog report my-app.vl.yaml --tags container --release 8.1.1</code></pre>
+vulnlog report my-app.vl.yaml --release 8.1.1 -o report.html</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vulnlog_suppress">5.4.6. <code>vulnlog suppress</code></h4>
+<h4 id="_vulnlog_suppress">5.3.6. <code>vulnlog suppress</code></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Suppression for a specific reporter
-vulnlog suppress my-app.vl.yaml --reporter trivy --release 8.1.1
-
-# All reporters, all releases
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog suppress my-app.vl.yaml --reporter trivy --release 8.1.1
 vulnlog suppress my-app.vl.yaml
-
-# Custom output path
 vulnlog suppress my-app.vl.yaml --reporter trivy -o custom/.trivyignore</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_vulnlog_vex">5.4.7. <code>vulnlog vex</code></h4>
+<h4 id="_vulnlog_vex">5.3.7. <code>vulnlog vex</code></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog vex my-app.vl.yaml --release 8.1.1
@@ -1309,9 +1211,18 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="_vulnlog_add">5.3.8. <code>vulnlog add</code></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+  --vuln-id CVE-2026-001 --reporter trivy</code></pre>
+</div>
+</div>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_exit_codes">5.5. Exit Codes</h3>
+<h3 id="_exit_codes">5.4. Exit Codes</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 20%;">
@@ -1353,7 +1264,7 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>5</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Missing a required flag</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Missing required flag</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">A required flag was not provided.</p></td>
 </tr>
 <tr>
@@ -1371,7 +1282,8 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">schemaVersion: "1"
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+schemaVersion: "1"
 
 project:
   organization: Demo Project Inc
@@ -1408,92 +1320,26 @@ releases:
 
 vulnerabilities:
 
-  # No verdict - under investigation, with temporary suppression
-  - id: CVE-2020-099
-    releases: [ 8.1.0 ]
-    description: Path traversal vulnerability in random-dependency
-    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
+  # Report from a non-scanner source (Oracle CPU)
+  - id: CVE-2022-21449
+    name: Psychic Signatures
+    releases: [ 8.1.2 ]
+    description: ECDSA signature verification bypass in Java SE
+    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
     reports:
-      - reporter: trivy
-        at: 2020-12-28
-        suppress:
-          expires_at: 2021-01-02
-    tags: [ build-dep ]
-    analysis: &gt;
-      Vulnerability in internal build dependency.
-      No fixed library available at the moment. Re-check later.
-    comment: &gt;
-      Checked upstream issue tracker - fix expected in random-core 1.33.8.
-      Monitor https://github.com/random/random-core/issues/421
-    severity: low
-
-  # Stub entry - quick triage, no description, no verdict yet
-  - id: CVE-2021-007
-    releases: [ 8.1.1 ]
-    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
-    reports:
-      - reporter: trivy
-        at: 2021-03-10
-    tags: [ binary ]
-
-  # Verdict: not_affected - vulnerability does not impact this project
-  - id: CVE-2021-002
-    aliases: [ GHSA-xxxx-yyyy ]
-    releases: [ 8.1.1 ]
-    description: Deserialization vulnerability in some-dependency
-    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
-    reports:
-      - reporter: trivy
-        at: 2021-03-03
-      - reporter: snyk
-        at: 2021-03-03
-        vuln_id: [ SNYK-2021-002 ]
+      - reporter: other
+        at: 2022-04-19
+        source: "Oracle Critical Patch Update April 2022"
     tags: [ binary, container ]
-    analysis: &gt;
-      Demo project does not utilize some-dependency
-      and therefore is not affected.
-    analyzed_at: 2021-03-03
-    verdict: not_affected
-    justification: vulnerable_code_not_present
-
-  # Verdict: fixed - resolved in a subsequent release (named vulnerability)
-  - id: CVE-2021-44228
-    name: Log4Shell
-    aliases: [ GHSA-jfh8-c2jp-5v3q ]
-    releases: [ 8.1.1 ]
-    description: RCE vulnerability in Log4J via JNDI lookup
-    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
-    reports:
-      - reporter: trivy
-        at: 2021-12-10
-    tags: [ binary ]
-    analysis: &gt;
-      Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.
-    analyzed_at: 2021-12-10
-    comment: &gt;
-      PoC exploit confirmed by Jane (security team) on 2021-12-10.
-      See internal report attached to SEC-42.
+    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
+    analyzed_at: 2022-04-20
     severity: critical
-    verdict: fixed
-    fixed_in: 8.1.2
-    fixed_at: 2021-12-12
-    fix_ref: "https://jira.example.com/browse/SEC-42"
-    fix_note: "Updated Log4J from 2.14.1 to 2.17.1"
-
-  # Verdict: not_affected - OS-level vulnerability in container base image
-  - id: CVE-2024-5535
-    releases: [ 8.1.1 ]
-    description: Buffer overread in OpenSSL SSL_select_next_proto
-    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
-    reports:
-      - reporter: trivy
-        at: 2024-06-28
-    tags: [ container ]
-    analysis: &gt;
-      Vulnerable OpenSSL is present in the container base image but the affected NPN/ALPN negotiation code path is never invoked by our application.
-    analyzed_at: 2024-06-29
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: affected
+    resolution:
+      in: 8.1.2
+      at: 2022-04-22
+      ref: "https://jira.example.com/browse/SEC-55"
+      note: "Updated JDK from 17.0.2 to 17.0.3"
 
   # Verdict: risk_acceptable - vulnerability present but risk accepted
   - id: SNYK-2021-003
@@ -1515,25 +1361,98 @@ vulnerabilities:
     severity: low
     verdict: risk_acceptable
 
-  # Report from a non-scanner source (Oracle CPU)
-  - id: CVE-2022-21449
-    name: Psychic Signatures
-    releases: [ 8.1.2 ]
-    description: ECDSA signature verification bypass in Java SE
-    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
+  # Verdict: not_affected - OS-level vulnerability in container base image
+  - id: CVE-2024-5535
+    releases: [ 8.1.1 ]
+    description: Buffer overread in OpenSSL SSL_select_next_proto
+    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
     reports:
-      - reporter: other
-        at: 2022-04-19
-        source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container ]
-    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
-    analyzed_at: 2022-04-20
+      - reporter: trivy
+        at: 2024-06-28
+    tags: [ container ]
+    analysis: &gt;
+      Vulnerable OpenSSL is present in the container base image but the affected
+      NPN/ALPN negotiation code path is never invoked by our application.
+    analyzed_at: 2024-06-29
+    verdict: not_affected
+    justification: vulnerable_code_not_in_execute_path
+
+  # Verdict: affected - resolved in a subsequent release (named vulnerability)
+  - id: CVE-2021-44228
+    name: Log4Shell
+    aliases: [ GHSA-jfh8-c2jp-5v3q ]
+    releases: [ 8.1.1 ]
+    description: RCE vulnerability in Log4J via JNDI lookup
+    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
+    reports:
+      - reporter: trivy
+        at: 2021-12-10
+    tags: [ binary ]
+    analysis: &gt;
+      Demo project utilizes Log4J and a PoC showed that the project
+      is vulnerable to this RCE vulnerability.
+    analyzed_at: 2021-12-10
+    comment: &gt;
+      PoC exploit confirmed by Jane (security team) on 2021-12-10.
+      See internal report attached to SEC-42.
     severity: critical
-    verdict: fixed
-    fixed_in: 8.1.2
-    fixed_at: 2022-04-22
-    fix_ref: "https://jira.example.com/browse/SEC-55"
-    fix_note: "Updated JDK from 17.0.2 to 17.0.3"</code></pre>
+    verdict: affected
+    resolution:
+      in: 8.1.2
+      at: 2021-12-12
+      ref: "https://jira.example.com/browse/SEC-42"
+      note: "Updated Log4J from 2.14.1 to 2.17.1"
+
+  # Verdict: not_affected - with defensive resolution
+  - id: CVE-2021-002
+    aliases: [ GHSA-xxxx-yyyy ]
+    releases: [ 8.1.1 ]
+    description: Deserialization vulnerability in some-dependency
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-03
+      - reporter: snyk
+        at: 2021-03-03
+        vuln_id: [ SNYK-2021-002 ]
+    tags: [ binary, container ]
+    analysis: &gt;
+      Demo project does not utilize some-dependency
+      and therefore is not affected.
+    analyzed_at: 2021-03-03
+    verdict: not_affected
+    justification: vulnerable_code_not_present
+    resolution:
+      in: 8.1.2
+      note: "Removed unused dependency some-dependency"
+
+  # Stub entry - quick triage, no description, no verdict yet
+  - id: CVE-2021-007
+    releases: [ 8.1.1 ]
+    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-10
+    tags: [ binary ]
+
+  # No verdict - under investigation, with temporary suppression
+  - id: CVE-2020-099
+    releases: [ 8.1.0 ]
+    description: Path traversal vulnerability in random-dependency
+    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
+    reports:
+      - reporter: trivy
+        at: 2020-12-28
+        suppress:
+          expires_at: 2021-01-02
+    tags: [ build-dep ]
+    analysis: &gt;
+      Vulnerability in internal build dependency.
+      No fixed library available at the moment. Re-check later.
+    comment: &gt;
+      Checked upstream issue tracker - fix expected in random-core 1.33.8.
+      Monitor https://github.com/random/random-core/issues/421
+    severity: low</code></pre>
 </div>
 </div>
 </div>
@@ -1542,7 +1461,7 @@ vulnerabilities:
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-13 21:42:42 +0100
+Last updated 2026-03-22 17:13:42 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

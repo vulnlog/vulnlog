@@ -1,6 +1,6 @@
 = Vulnlog Glossary
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-13
+:revdate: 2026-03-15
 :toc: left
 :toclevels: 2
 :sectnums:
@@ -10,188 +10,161 @@
 This glossary defines the domain language of Vulnlog.
 It is intended for developers, contributors, and users who want to understand the specific terms used in the Vulnlog project, its specification, documentation, and CLI.
 
-Using consistent terminology prevents misunderstandings in communication and ensures that contributors, users, and consumers of Vulnlog artifacts share the same understanding.
-
 == Core Concepts
 
 Vulnlog::
 An open-source tool and format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners.
-The name combines "vulnerability" and "log" -- Vulnlog is a persistent, version-controlled vulnerability log.
+The name combines "vulnerability" and "log."
 The term refers to both the YAML file format and the CLI tool collectively.
 
 Vulnlog file::
 A YAML file following the Vulnlog specification, identified by the `.vl.yaml` (or `.vl.yml`) file extension.
 Simple projects may use `vulnlog.yaml` (or `vulnlog.yml`).
-Each Vulnlog file is scoped to a single release branch and contains project metadata, optional tag definitions, release definitions, and vulnerability entries for that branch.
+Each Vulnlog file is scoped to a single release branch.
 Example: `demo-project-8.1.vl.yaml`.
 
 Vulnlog CLI::
 The command-line interface tool that reads Vulnlog files and generates output artifacts (suppression files, HTML reports, VEX documents).
-It also provides validation, linting, statistics, and multi-file entry creation.
 
 == Vulnerability Tracking
 
 Vulnerability entry::
 A single record in the `vulnerabilities` section of a Vulnlog file.
-It represents one vulnerability finding (identified by a CVE or scanner-specific ID) and captures the facts (what was found, where, by whom) and the human decision about it (the verdict).
-One vulnerability entry may affect multiple releases and packages.
+Captures a finding (what was found, where, by whom) and the human verdict about it.
+Vulnerability entries are ordered newest first.
 
 Vulnerability ID::
 The primary identifier of a vulnerability entry, stored in the `id` field.
+Must be unique across all entries and aliases within the file.
 Preferably a CVE identifier (e.g., `CVE-2021-44228`).
-May be a scanner-specific identifier when no CVE has been assigned.
 
 Vulnerability name::
 An optional common name for a well-known vulnerability (e.g., "Log4Shell", "Heartbleed").
 Stored in the `name` field.
-Used for human recognition in reports and searches.
 
 Alias::
 An alternative identifier for the same vulnerability, stored in the `aliases` array.
-Examples include GHSA identifiers, scanner-specific IDs, or a CVE that was assigned after the initial entry was created.
-Aliases are used for cross-referencing in reports but not for suppression file generation.
+Must not overlap with any `id` or `aliases` in other entries within the same file.
+Used for cross-referencing in reports but not for suppression file generation.
 
 Verdict::
 The human triage decision recorded for a vulnerability entry, stored in the `verdict` field.
-The term "verdict" is used deliberately to distinguish it from automated scanner statuses -- it represents a deliberate judgment by an engineer who has reviewed the evidence.
-Possible values: `affected`, `not_affected`, `fixed`, `risk_acceptable`.
+The term "verdict" reflects a deliberate judgment by an engineer, distinct from automated scanner statuses.
+Possible values: `affected`, `not_affected`, `risk_acceptable`.
 When absent, the vulnerability is considered under investigation.
+"Fixed" is not a verdict -- it is a resolution action recorded separately.
 
 Under investigation::
 The implicit state of a vulnerability entry when no `verdict` has been set.
-Indicates the finding has been recorded but not yet triaged.
 Maps to `under_investigation` in OpenVEX output.
 
 Analysis::
 The free-text rationale for the triage decision, stored in the `analysis` field.
-This is the most valuable part of a vulnerability entry -- it records *why* the team reached their verdict.
+Records *why* the team reached their verdict.
 Used as `impact_statement` in VEX output for `not_affected` entries and as `action_statement` for `risk_acceptable` entries.
 
 Comment::
 Additional information not related to the analysis itself, stored in the `comment` field.
-May include evidence references, methodology notes, decision-making context, links to internal documents, or reminders for future review.
-Unlike `analysis`, the `comment` field is not used in any output generation (not in VEX, not in HTML reports).
-It serves as internal metadata for the team maintaining the Vulnlog file.
+Not used in any output generation.
+
+Resolution::
+A structured record that a dependency update or other corrective action was taken, stored in the `resolution` block.
+Independent of the verdict -- a vulnerability may be `not_affected` (verdict) yet still have a resolution (the dependency was updated defensively).
+When `verdict` is `affected` and a `resolution` is present, the combination maps to VEX status `fixed`.
 
 Severity::
-The assessed severity of a vulnerability, stored in the `severity` field.
+The assessed severity of a vulnerability.
 Values: `critical`, `high`, `medium`, `low`.
 Required when the verdict is `affected` or `risk_acceptable`.
 
 Justification::
 The reason why a vulnerability does not affect the project, stored in the `justification` field.
 Required when the verdict is `not_affected`.
-Values align with the OpenVEX justification vocabulary (e.g., `vulnerable_code_not_present`, `vulnerable_code_not_in_execute_path`).
+Values align with the OpenVEX justification vocabulary.
 
 Stub entry::
-A minimal vulnerability entry created during quick triage, containing only the required fields (`id`, `releases`, `packages`, `reports`) without a description, analysis, or verdict.
-The entry is in the under investigation state and will be completed later.
-Can be created across multiple files at once using the `vulnlog add` command.
-
-Cross-file reference (future)::
-A planned mechanism allowing a vulnerability entry to reference an entry in another Vulnlog file via the `ref` field, instead of duplicating the full entry.
-The referenced entry's fields are inherited, and the referencing entry can override specific fields (e.g., `releases`, `verdict`).
-Designed to reduce duplication in multi-branch setups.
+A minimal vulnerability entry containing only required fields (`id`, `releases`, `packages`, `reports`).
+Created during quick triage using the `vulnlog add` command.
 
 == Project Structure
 
 Project::
 The `project` section of a Vulnlog file.
-Contains metadata about the software project (organization name, project name, author, contact).
-Used as author information in VEX documents and in report headers.
+Contains metadata: organization, project name, author, and optional contact.
 
 Tag::
-A label defined in the optional `tags` section and referenced by vulnerability entries and release purl entries.
-Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerabilities.
-Common uses include identifying customer-facing deliverables (e.g., `binary`, `container`, `sdk`) and internal usage contexts (e.g., `build-dep`, `test-infra`).
+A label defined in the optional `tags` section.
+Provides flexible categorization for deliverables, usage contexts, or any team-specific taxonomy.
 
 Release::
 A software release tracked in the `releases` section.
-Each release has a unique `id` (e.g., `8.1.1`) and an optional `published_at` date.
 Releases must be listed in chronological order (oldest first) because the CLI uses array position for range resolution.
-Vulnerability entries reference releases to indicate which versions are affected.
 
 Release branch::
-A line of releases sharing a common major/minor version (e.g., the 8.1.x branch).
+A line of releases sharing a common major/minor version.
 Each Vulnlog file is scoped to a single release branch.
-When the release branch reaches end of life, its Vulnlog file becomes a historical archive.
 
 == Package and Dependency Concepts
 
 Package::
-An affected dependency listed in the `packages` array of a vulnerability entry.
-Represented as a Package URL (purl) string.
+An affected dependency listed in the `packages` array as a Package URL string.
 
 Package URL (purl)::
-A standardized format for identifying software packages, as defined by the https://github.com/package-url/purl-spec[purl specification].
-Examples: `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`, `pkg:docker/demo-project@8.1.1`, `pkg:apk/alpine/openssl@3.1.4-r0`.
-Used in Vulnlog for dependency identification (in vulnerability packages) and release artifact identification (in release purls).
+A standardized format for identifying software packages.
+Examples: `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`, `pkg:docker/demo-project@8.1.1`.
 
 Release purl::
-A versioned Package URL defined in the `purls` section of a release entry.
-Identifies a specific release artifact (e.g., a Docker image, a binary distribution) and optionally carries tags for scoped VEX generation.
-Maps to "products" in OpenVEX terminology.
+A versioned Package URL in a release's `purls` section.
+Identifies a release artifact and optionally carries tags for scoped VEX generation.
+Maps to "products" in OpenVEX.
 
 == Report and Triage Concepts
 
 Report (vulnerability report)::
-A record in the `reports` array of a vulnerability entry, indicating that a specific scanner or source reported the finding.
-Each report captures the reporter type and optionally the date, scanner-specific vulnerability IDs, and suppression configuration.
+A record in the `reports` array indicating that a specific scanner or source reported the finding.
 Not to be confused with HTML report (an output artifact).
 
 Reporter type::
-The `reporter` field on a report entry, identifying the scanner or source technology.
-A fixed enum of supported values (e.g., `trivy`, `snyk`, `grype`, `dependency_check`, `other`).
-Determines which suppression file format the CLI generates.
-Not all reporter types have suppression support.
+The `reporter` field on a report entry, identifying the scanner or source.
+A fixed enum (e.g., `trivy`, `snyk`, `dependency_check`, `other`).
+Determines the suppression file format.
 
 Source::
-The `source` field on a report entry, describing where a non-scanner report came from.
-Examples: "Oracle Critical Patch Update April 2022", "Annual penetration test by SecureCo".
-Required by the CLI for reports with reporter type `other`.
+The `source` field on a report entry for non-scanner reports.
+Required for reporter type `other`.
 
-Scanner-specific ID::
-A vulnerability identifier assigned by a specific scanner, stored in the `vuln_id` array of a report entry.
-Examples: `SNYK-JAVA-LOG4J-2314720`, `GHSA-jfh8-c2jp-5v3q`.
-Used by the CLI to generate scanner-specific suppression files.
+Suppression::
+A directive to exclude a vulnerability from a scanner's findings.
+Can be temporary (with `expires_at`) or permanent (without `expires_at`).
+Stored in the `suppress` block on a report entry.
 
 == Output Artifacts
 
 Suppression file::
 A file generated by the Vulnlog CLI that instructs an SCA scanner to suppress specific findings.
-Each scanner has its own suppression format (e.g., `.trivyignore` for Trivy, `.snyk` for Snyk, `dependency-check-suppressions.xml` for OWASP Dependency Check).
-The format is determined by the reporter type.
-Suppression files are generated per reporter type and contain only relevant entries -- fixed vulnerabilities are never included.
+Each scanner has its own format.
+Vulnerabilities with `verdict: affected` and a `resolution` are never suppressed.
 
 HTML report::
-An HTML file generated by the Vulnlog CLI for communicating vulnerability analysis to team members, partners, and customers.
-Contains a summary table of all vulnerability entries with filtering, sorting, and search capabilities.
-Each vulnerability entry corresponds to a single row in the report.
+An HTML file for communicating vulnerability analysis to stakeholders.
+Each vulnerability entry corresponds to a single row.
 
 VEX document::
-A Vulnerability Exploitability eXchange document generated by the Vulnlog CLI.
-Communicates whether vulnerabilities in a product are exploitable in the specific context of that product.
-Vulnlog generates OpenVEX format documents.
-The CLI manages document versioning by reading the previous output file and incrementing the version counter.
+An OpenVEX document communicating whether vulnerabilities are exploitable.
+The CLI manages document versioning by reading the previous output and incrementing the version counter.
 
 OpenVEX::
-An open standard for VEX documents (https://openvex.dev).
-Vulnlog uses OpenVEX as its VEX output format.
-Key mappings: Vulnlog tags + release purls become OpenVEX products, Vulnlog packages become OpenVEX subcomponents, Vulnlog verdicts map to OpenVEX statuses.
+The VEX output format used by Vulnlog.
+Key mapping: `affected` + `resolution` = VEX `fixed`. `not_affected` = VEX `not_affected`. `risk_acceptable` = VEX `affected` with action statement.
 
 == Validation and Linting
 
 Validation::
-The process of checking a Vulnlog file for correctness.
-Covers structural validation (field types, required fields, conditional rules) and semantic validation (cross-references, date logic, uniqueness, ordering).
-Invoked via `vulnlog validate`.
+Checking a Vulnlog file for structural correctness and semantic integrity, including unique ID enforcement.
 
 Linting::
-The process of checking a Vulnlog file for consistent formatting and field ordering.
-The linter enforces top-level section order, vulnerability field order (newest first), and release chronological order (oldest first).
-Invoked via `vulnlog lint`.
+Checking for consistent formatting and field ordering.
+Releases: oldest first. Vulnerabilities: newest first.
 
 Release range::
-A CLI filtering mechanism that selects vulnerabilities based on their affected releases.
 `--release <id>` means "all releases up to and including this release," resolved by array position.
-The `--tags` flag can be combined for further filtering.

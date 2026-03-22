@@ -22,7 +22,7 @@
       "minLength": 1
     },
     "contact": {
-      "description": "Contact email for the security team. Used as the author contact in VEX documents. Can be the contact from your security.txt.",
+      "description": "Contact email for the security team. Used as the author contact in VEX documents.",
       "type": "string",
       "format": "email"
     }

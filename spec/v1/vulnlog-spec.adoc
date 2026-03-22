@@ -1,6 +1,6 @@
 = Vulnlog Specification
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-13
+:revdate: 2026-03-15
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -40,6 +40,17 @@ Simple projects may use `vulnlog.[yaml|yml]`.
 The file location within the repository is not prescribed.
 The CLI requires an explicit file path as a positional argument; it does not search for files automatically.
 
+=== Schema Reference
+
+To enable IDE validation and autocompletion, add a schema reference comment as the first line of the Vulnlog file:
+
+[source,yaml]
+----
+# $schema: .vulnlog/vulnlog-schema.json
+----
+
+The path can point to a local bundled schema file or to the published SchemaStore URL.
+
 === Multi-Branch Workflow
 
 The recommended approach for teams managing multiple release branches is to maintain multiple Vulnlog files on the main branch, one per release branch:
@@ -64,6 +75,7 @@ See <<vulnlog-add>> for CLI support to add entries across multiple files, and <<
 
 [source,yaml]
 ----
+# $schema: .vulnlog/vulnlog-schema.json
 schemaVersion: "1"
 
 project:
@@ -89,6 +101,13 @@ Optional top-level sections: `tags`.
 Releases:: Must be in chronological order (oldest first). This ordering has functional significance -- the CLI uses array position to resolve `--release` range filtering. A release at position N includes all releases at positions 0 through N.
 
 Vulnerabilities:: Should be in reverse chronological order (newest first). The most recent findings appear at the top of the file for immediate visibility. This is a readability convention enforced by the linter, with no functional impact on CLI output.
+
+=== Unique Identifiers
+
+All vulnerability identifiers must be unique within a Vulnlog file.
+No two vulnerability entries may share the same `id`.
+An `id` of one entry must not appear in the `aliases` of another entry, and vice versa.
+This ensures unambiguous lookup by any identifier.
 
 == Sections
 
@@ -218,7 +237,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `id`
 | String
 | Yes
-| Primary identifier. Preferably a CVE ID. May be a scanner-specific ID if no CVE exists.
+| Primary identifier. Preferably a CVE ID. May be a scanner-specific ID if no CVE exists. Must be unique across all entries and aliases.
 
 | `name`
 | String
@@ -228,7 +247,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `aliases`
 | Array of String
 | No
-| Alternative identifiers (e.g., GHSA IDs, scanner-specific IDs). Used for cross-referencing in reports.
+| Alternative identifiers (e.g., GHSA IDs, scanner-specific IDs). Must not overlap with any `id` or `aliases` in other entries.
 
 | `releases`
 | Array of String
@@ -285,25 +304,42 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | Conditional
 | Required when `verdict` is `not_affected`. See <<justification-values>>.
 
-| `fixed_in`
-| String
-| Conditional
-| Required when `verdict` is `fixed`. References the release with the fix.
+| `resolution`
+| <<resolution-entry>>
+| No
+| Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict. See <<resolution-entry>>.
+|===
 
-| `fixed_at`
+[[resolution-entry]]
+==== Resolution Entry
+
+Records that a dependency update or other corrective action was taken, independent of the verdict.
+A vulnerability may be `not_affected` (the verdict) yet still have a `resolution` (the dependency was updated defensively).
+A vulnerability may be `affected` with a `resolution` indicating it was fixed in a subsequent release.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `in`
+| String
+| Yes
+| Release in which the resolution was applied. Must reference a release ID from the `releases` section.
+
+| `at`
 | String (date, `YYYY-MM-DD`)
 | No
-| Date the fix was applied. Only meaningful when `verdict` is `fixed`.
+| Date the resolution was applied.
 
-| `fix_ref`
+| `ref`
 | String (URI)
 | No
-| Reference to the issue or ticket tracking the fix.
+| Reference to the issue or ticket tracking the resolution.
 
-| `fix_note`
+| `note`
 | String
 | No
-| Brief description of how the vulnerability was fixed.
+| Brief description of how the vulnerability was resolved.
 |===
 
 [[report-entry]]
@@ -336,7 +372,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `suppress`
 | <<suppress-entry>>
 | No
-| Scanner-specific suppression configuration.
+| Scanner-specific suppression configuration. When present without `expires_at`, the suppression is permanent.
 |===
 
 [[suppress-entry]]
@@ -348,8 +384,8 @@ If a package appears in multiple contexts, the analysis should focus on the high
 
 | `expires_at`
 | String (date, `YYYY-MM-DD`)
-| Yes
-| Expiration date. After this date, the entry is excluded from the generated suppression file.
+| No
+| Expiration date. After this date, the entry is excluded from the generated suppression file. When omitted, the suppression is permanent.
 |===
 
 == Enumerations
@@ -357,26 +393,22 @@ If a package appears in multiple contexts, the analysis should focus on the high
 [[verdict-values]]
 === Verdict Values
 
-The term "verdict" is used deliberately to distinguish from automated scanner statuses -- it reflects a deliberate human judgment.
+The term "verdict" is used deliberately to distinguish from automated scanner statuses -- it reflects a deliberate human judgment about the impact of a vulnerability.
 
 [cols="1,3,2"]
 |===
 | Value | Description | OpenVEX Mapping
 
 | `affected`
-| The vulnerability affects this release and action is required.
-| `affected`
+| The vulnerability affects this release. Requires `severity`. When a `resolution` is present, maps to VEX `fixed`.
+| `affected` (without resolution) or `fixed` (with resolution)
 
 | `not_affected`
 | The vulnerability does not affect this release. Requires `justification`.
 | `not_affected`
 
-| `fixed`
-| The vulnerability has been resolved. Requires `fixed_in`.
-| `fixed`
-
 | `risk_acceptable`
-| The vulnerability affects this release but the risk has been assessed and accepted.
+| The vulnerability affects this release but the risk has been assessed and accepted. Requires `severity`.
 | `affected` (with `action_statement` from `analysis`)
 
 | _(absent)_
@@ -384,8 +416,12 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 | `under_investigation`
 |===
 
+NOTE: "Fixed" is not a verdict. Fixing a vulnerability is a resolution action, not a judgment about impact. Use `verdict: affected` with a `resolution` block to record that a vulnerability was real and subsequently fixed. Use `verdict: not_affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
+
 [[severity-values]]
 === Severity Values
+
+Required when `verdict` is `affected` or `risk_acceptable`.
 
 [cols="1,3"]
 |===
@@ -482,38 +518,29 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 
 For reporters of type `other`, the `source` field on report entries is required by the CLI.
 
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-When `vulnlog suppress` is invoked for a reporter type without suppression support,
-exit with code 6: "Suppression generation not supported for reporter type '<type>'."
-////
-// end::dev-notes[]
-
 == Defaults and Implicit Behavior
 
-Omitted `tags` section:: The file has no tag definitions.
-Vulnerability entries cannot use tags.
-VEX generation includes all purls as products.
-Omitted `verdict`:: Treated as `under_investigation`.
-The CLI warns about entries without a verdict.
-Omitted `releases[].published_at`:: The release is considered unpublished.
+Omitted `tags` section:: The file has no tag definitions. VEX generation includes all purls as products.
+Omitted `verdict`:: Treated as `under_investigation`. The CLI warns about entries without a verdict.
 Omitted `reports[].at`:: The CLI uses the current date and time during output generation.
+Omitted `suppress.expires_at`:: The suppression is permanent (never expires).
 Omitted `analyzed_at`:: No analysis date is recorded.
-Omitted `vulnerabilities[].tags`:: The vulnerability is not scoped.
-Included in all unfiltered outputs.
+Omitted `vulnerabilities[].tags`:: The vulnerability is not scoped. Included in all unfiltered outputs.
 Omitted `releases[].purls[].tags`:: The purl is included in VEX statements regardless of vulnerability tags.
 
 == Suppression Behavior
 
 === Suppression Rules
 
-Entries where `verdict` is `fixed` are *never* included in suppression files.
+Entries where `verdict` is `not_affected` are always included in suppression files.
 
-Entries where `verdict` is `not_affected` are always included.
+Entries where `verdict` is `affected` with a `resolution` are *not* included in suppression files.
+The vulnerable dependency version should no longer be present after the resolution.
+If the scanner still reports the finding, the resolution is incomplete.
 
-For all other verdicts (`affected`, `risk_acceptable`, absent), suppression requires an explicit, non-expired `suppress` block on the report entry.
+For all other cases (`affected` without resolution, `risk_acceptable`, absent), suppression requires an explicit `suppress` block on the report entry.
+If the `suppress` block includes `expires_at`, the suppression is temporary.
+If `expires_at` is omitted, the suppression is permanent.
 
 // tag::dev-notes[]
 ////
@@ -532,9 +559,10 @@ Suppression generation algorithm:
 5. For each target reporter type:
    a. Collect vulnerability entries with a report for that type.
    b. Evaluate suppression eligibility:
-      - `verdict` is `fixed` -> EXCLUDE.
       - `verdict` is `not_affected` -> INCLUDE.
-      - Otherwise: INCLUDE only if `suppress` block exists and `expires_at` >= today.
+      - `verdict` is `affected` AND `resolution` present -> EXCLUDE.
+      - Otherwise: INCLUDE only if `suppress` block exists AND
+        (`expires_at` is absent OR `expires_at` >= today).
    c. Determine suppression identifier:
       - `reports[].vuln_id` if present -> use those IDs.
       - Otherwise -> `vulnerabilities[].id`.
@@ -584,7 +612,7 @@ Vulnlog packages map to OpenVEX subcomponents.
 | `vulnerabilities[].id`
 
 | `statements[].status`
-| `vulnerabilities[].verdict` (mapped per <<verdict-values>>)
+| Derived from `verdict` and `resolution` (see <<VEX Status Mapping>>)
 
 | `statements[].justification`
 | `vulnerabilities[].justification`
@@ -593,7 +621,62 @@ Vulnlog packages map to OpenVEX subcomponents.
 | `vulnerabilities[].analysis` (when verdict is `not_affected`)
 |===
 
-.This is a minimal example of a Vulnlog-generated OpenVEX file.
+[[vex-status-mapping]]
+=== VEX Status Mapping
+
+[cols="2,2,2"]
+|===
+| Verdict | Resolution | OpenVEX Status
+
+| `affected`
+| absent
+| `affected`
+
+| `affected`
+| present
+| `fixed`
+
+| `not_affected`
+| any
+| `not_affected`
+
+| `risk_acceptable`
+| any
+| `affected` (with `action_statement` from `analysis`)
+
+| _(absent)_
+| any
+| `under_investigation`
+|===
+
+.Additional fields to enrich the Vulnlog-generated OpenVEX document.
+[cols="2,2"]
+|===
+| OpenVEX Field | Vulnlog Source
+
+| `role`
+| Static value: `Document Creator`
+
+| `statements[].vulnerability.@id`
+| Vulnerability ID reference URL (see <<Vulnerability ID URL Mapping>>)
+
+| `statements[].vulnerability.description`
+| `vulnerabilities[].description`
+
+| `statements[].timestamp`
+| `vulnerabilities[].analyzed_at` when present, otherwise earliest `reports[].at`, otherwise document generation timestamp.
+
+| `statements[].products[].@id`
+| PURLs from the target release's `purls` entries, filtered by matching tags
+
+| `statements[].products[].subcomponents[].@id`
+| `vulnerabilities[].packages[]`
+
+| `statements[].action_statement`
+| `vulnerabilities[].analysis` (when verdict is `risk_acceptable`)
+|===
+
+.Minimal Vulnlog-generated OpenVEX example.
 [source,json]
 ----
 {
@@ -613,36 +696,7 @@ Vulnlog packages map to OpenVEX subcomponents.
 }
 ----
 
-To generate more detailed OpenVEX documents, the following additional fields are used.
-
-.Additional fields to enrich the Vulnlog-generated OpenVEX document.
-[cols="2,2"]
-|===
-| OpenVEX Field | Vulnlog Source
-
-| `role`
-| Static value: `Document Creator`
-
-| `statements[].vulnerability.@id`
-| Vulnerability ID reference URL (see <<Vulnerability ID URL Mapping>>)
-
-| `statements[].vulnerability.description`
-| `vulnerabilities[].description`
-
-| `statements[].timestamp`
-| `vulnerabilities[].analyzed_at` when present. Otherwise, the `reports[].at` date. If neither is present, the document generation timestamp.
-
-| `statements[].products[].@id`
-| PURLs from the target release's `purls` entries, filtered by matching tags
-
-| `statements[].products[].subcomponents[].@id`
-| `vulnerabilities[].packages[]`
-
-| `statements[].action_statement`
-| `vulnerabilities[].analysis` (when verdict is `risk_acceptable`)
-|===
-
-.This is a more detailed Vulnlog-generated OpenVEX document.
+.Enriched Vulnlog-generated OpenVEX example.
 [source,json]
 ----
 {
@@ -655,26 +709,26 @@ To generate more detailed OpenVEX documents, the following additional fields are
   "statements": [
     {
       "vulnerability": {
-        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-26996",
-        "name": "CVE-2026-26996",
-        "description": "DoS vulnerability in minimatch."
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+        "name": "CVE-2021-44228",
+        "description": "RCE vulnerability in Log4J via JNDI lookup"
       },
-      "timestamp": "2026-03-10T00:00:00.000Z",
+      "timestamp": "2021-12-10T00:00:00.000Z",
       "products": [
         {
-          "@id": "pkg:generic/vulnlog/vulnlog@0.10.0",
+          "@id": "pkg:generic/demo-project@8.1.1",
           "subcomponents": [
-            { "@id": "pkg:npm/minimatch@3.1.2" }
+            { "@id": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" }
           ]
         }
       ],
-      "status": "not_affected",
-      "justification": "vulnerable_code_cannot_be_controlled_by_adversary",
-      "impact_statement": "The minimatch is only used to generate the static project website. Input is always trusted."
+      "status": "fixed"
     }
   ]
 }
 ----
+
+NOTE: The second example shows `verdict: affected` with a `resolution` mapping to VEX status `fixed`. The Vulnlog verdict records the impact judgment; the VEX status reflects the current state.
 
 [[vulnerability-id-url-mapping]]
 === Vulnerability ID URL Mapping
@@ -711,35 +765,10 @@ The OpenVEX `version` field is an incrementing integer.
 Since the CLI is stateless, the version is determined by reading the existing output file:
 
 . The CLI reads the file at the output path (specified by `-o` or the default `vex.json`).
-. If the file exists and is a valid OpenVEX document, the CLI extracts the current `version` and `timestamp`.
+. If the file exists and is a valid OpenVEX document, the CLI extracts the current `version`.
 . The new document is generated with `version` = previous version + 1.
 . If no existing file is found, the document starts at version `1`.
 . The CLI writes the new document only if the statements have changed compared to the previous document. If unchanged, the file is not written and the CLI reports "No changes detected."
-
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-VEX generation algorithm:
-
-1. Determine target releases via `--release` (up to and including).
-2. If `--tags` specified, filter vulnerabilities.
-3. Look up `purls` for the target release.
-4. For each vulnerability:
-   a. Map `verdict` to OpenVEX status.
-   b. Match vulnerability tags against purl tags to select products.
-   c. Map `analysis` to `impact_statement` or `action_statement`.
-   d. Include `justification` only for `not_affected`.
-   e. Determine statement timestamp: `analyzed_at` -> earliest `reports[].at` -> generation timestamp.
-5. `risk_acceptable` -> VEX status `affected` with `action_statement`.
-6. Read existing output file for version increment and change detection.
-7. Populate `author` from project metadata: format as "<author> (<contact>)" when contact is present.
-8. `aliases` and `comment` are NOT included in VEX output.
-
-Change detection: compare statement arrays (ignoring document-level version and timestamp).
-If identical, skip writing.
-////
-// end::dev-notes[]
 
 == HTML Report Generation
 
@@ -763,37 +792,19 @@ vulnlog-report/
   ...
 ----
 
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-Initial: single self-contained HTML file.
-- Embedded CSS and JavaScript.
-- Filtering by verdict, severity, release, tag.
-- Search by id, name, aliases, vuln_id.
-- Sorting by severity, date, verdict.
-- Visual distinction for under_investigation entries.
-- Summary statistics.
-- fix_ref as clickable link.
-
-Future: `--detailed` flag for per-vulnerability pages.
-Detail pages would include the `comment` field since they target internal audiences.
-////
-// end::dev-notes[]
-
 == Validation Rules
 
 . `releases` in vulnerability entries must reference IDs defined in `releases`.
 . `tags` in vulnerability entries must reference IDs defined in `tags` (when `tags` section exists).
 . `tags` in release purl entries must reference IDs defined in `tags`.
-. `fixed_in` must reference a release ID defined in `releases`.
+. `resolution.in` must reference a release ID defined in `releases`.
 . `reporter` must be a valid reporter type enum value.
 . `justification` is required when `verdict` is `not_affected` and forbidden otherwise.
 . `severity` is required when `verdict` is `affected` or `risk_acceptable`.
-. `fixed_in` is required when `verdict` is `fixed` and forbidden otherwise.
 . `source` is required on report entries when `reporter` is `other`.
-. All `id` fields within their respective sections must be unique.
-. `suppress.expires_at` must be a valid future or present date at CLI execution time.
+. All vulnerability `id` values must be unique.
+. No `id` may appear in any other entry's `aliases`, and no two entries may share an alias.
+. `suppress.expires_at`, when present, must be a valid future or present date at CLI execution time.
 . `analyzed_at`, when present, must not be before the earliest `at` date across reports for that vulnerability.
 . Entries in `releases` must be in chronological order (oldest first).
 . All entries in `packages` must be valid Package URLs.
@@ -805,14 +816,19 @@ IMPLEMENTATION NOTE:
 Validation enforcement:
 
 Rules 1-4: CLI runtime (cross-reference checks).
-Rules 5-8: JSON Schema (enum validation, conditional `if`/`then`/`else`).
-Rules 9-14: CLI runtime.
+Rules 5-7: JSON Schema (enum validation, conditional `if`/`then`/`else`).
+Rules 8-14: CLI runtime.
 
 Two-phase validation:
   Phase 1: JSON Schema (structural, fast, IDE-compatible).
   Phase 2: CLI (cross-references, dates, uniqueness, ordering).
 
 Report all errors at once. Group by vulnerability entry.
+
+Unique ID check algorithm:
+  Collect all `id` values and all `aliases` values into a single set.
+  If any value appears more than once, report a validation error
+  identifying both entries that share the identifier.
 ////
 // end::dev-notes[]
 
@@ -897,28 +913,6 @@ vulnlog init [flags]
 | Author name. Prompted if not provided.
 |===
 
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-The generated file should contain only required sections:
-
-  schemaVersion: "1"
-
-  project:
-    organization: <value>
-    name: <value>
-    author: <value>
-
-  releases:
-    - id: <prompted or placeholder>
-
-  vulnerabilities: []
-
-Do NOT include `tags` in the init output. Teams add it when needed.
-////
-// end::dev-notes[]
-
 [[vulnlog-validate]]
 ==== `vulnlog validate`
 
@@ -928,15 +922,6 @@ vulnlog validate <file> [--strict]
 ----
 
 `--strict` treats warnings as errors (e.g., missing verdict, missing description).
-
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-Two-phase validation. Report all errors at once.
-Group errors by vulnerability entry.
-////
-// end::dev-notes[]
 
 [[vulnlog-lint]]
 ==== `vulnlog lint`
@@ -950,21 +935,11 @@ Enforces:
 
 Top-level section order:: `schemaVersion`, `project`, `tags`, `releases`, `vulnerabilities`.
 
-Vulnerability field order:: `id`, `name`, `aliases`, `releases`, `description`, `packages`, `reports`, `tags`, `analysis`, `analyzed_at`, `severity`, `verdict`, `justification`, `comment`, `fixed_in`, `fixed_at`, `fix_ref`, `fix_note`.
+Vulnerability field order:: `id`, `name`, `aliases`, `releases`, `description`, `packages`, `reports`, `tags`, `analysis`, `analyzed_at`, `comment`, `severity`, `verdict`, `justification`, `resolution`.
 
 Release chronological order:: Oldest first.
 
 Vulnerability reverse chronological order:: Newest first (based on the earliest `reports[].at` date, entries without dates sorted last).
-
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-Ship check-only initially. Add --fix later.
-YAML round-tripping on the JVM does not preserve comments
-(SnakeYAML, kaml, Jackson YAML). Consider token-level processing.
-////
-// end::dev-notes[]
 
 [[vulnlog-stats]]
 ==== `vulnlog stats`
@@ -981,11 +956,13 @@ Example output:
 project: Demo Project
 total: 7
 by_verdict:
-  affected: 0
+  affected: 2
   not_affected: 2
-  fixed: 2
   risk_acceptable: 1
   under_investigation: 2
+by_resolution:
+  resolved: 3
+  unresolved: 4
 by_severity:
   critical: 2
   high: 0
@@ -1040,7 +1017,6 @@ See <<VEX Document Versioning>>.
 ==== `vulnlog add`
 
 Adds a vulnerability stub entry to one or more Vulnlog files.
-Designed for the multi-branch workflow where the same CVE needs to be recorded across multiple files.
 
 [source]
 ----
@@ -1061,37 +1037,16 @@ vulnlog add <file...> --vuln-id <id> --reporter <type> [flags]
 | Release to associate. When omitted, adds to all releases in each file.
 |===
 
-The command adds a minimal stub entry (id, releases, packages placeholder, report) to each specified file.
+The command inserts a minimal stub entry at the top of the vulnerabilities array in each file.
 If an entry with the same `id` already exists in a file, the command skips that file and reports a warning.
 
 Example:
 
 [source,bash]
 ----
-# Add CVE-2026-001 to three branch files at once
 vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
   --vuln-id CVE-2026-001 --reporter trivy
 ----
-
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-The stub entry added to each file:
-
-  - id: <vuln-id>
-    releases: [<all release IDs in the file, or --release value>]
-    packages: []
-    reports:
-      - reporter: <type>
-
-The entry is inserted at position 0 in the vulnerabilities array (newest first convention).
-packages is an empty array — the engineer fills in the purl after reviewing the scanner report.
-
-If the file already contains an entry with the same id, skip and warn:
-  "Skipping <file>: CVE-2026-001 already exists."
-////
-// end::dev-notes[]
 
 [[vulnlog-sarif]]
 ==== `vulnlog sarif` (Future)
@@ -1104,26 +1059,6 @@ vulnlog sarif <file> [filter flags] [-o <path>]
 ----
 
 Default output: `vulnlog.sarif.json`.
-
-// tag::dev-notes[]
-////
-IMPLEMENTATION NOTE:
-
-SARIF mapping:
-- vulnerability entry -> SARIF `result`
-- `id` -> `result.ruleId`
-- `description` -> `result.message.text`
-- `verdict` mapping:
-  - affected -> level: "error"
-  - risk_acceptable -> level: "warning"
-  - not_affected -> kind: "notApplicable"
-  - fixed -> kind: "pass"
-  - absent -> kind: "open"
-- `packages[]` -> `result.locations`
-- `analysis` -> `result.message.markdown`
-- `comment` is NOT included in SARIF output.
-////
-// end::dev-notes[]
 
 === Exit Codes
 
@@ -1165,7 +1100,7 @@ SARIF mapping:
 === Cross-File References
 
 A future version will introduce a `ref` field on vulnerability entries to reference an entry in another Vulnlog file.
-This addresses the duplication problem in multi-branch setups: the analysis is written once, and branch-specific files reference it with only the per-branch differences.
+This addresses the duplication problem in multi-branch setups.
 
 // tag::dev-notes[]
 ////
@@ -1179,71 +1114,22 @@ A vulnerability entry can use `ref` instead of `id` to reference an entry from a
       releases: [ 8.1.5 ]
       reports:
         - reporter: trivy
-          at: 2026-03-01
       verdict: not_affected
       justification: vulnerable_code_not_in_execute_path
 
-The CLI resolves the reference and imports all fields from the target entry.
-Fields defined in the ref entry override the imported values.
-Fields not defined are inherited.
-
 Rules:
 1. `ref` references `id` entries only, never other `ref` entries.
-   This prevents reference chains and keeps resolution simple.
 2. References should point from shorter-lived branches to longer-lived branches.
-   Example: 8.1.x references 8.3.x (the main development branch).
-   This ensures the target file outlives the referencing file,
-   and archiving older branches does not break active references.
-3. The CLI validates references at `validate` time:
-   - The referenced file must exist.
-   - The referenced ID must exist in that file.
-   - The referenced entry must be an `id` entry (not a `ref`).
+3. The CLI validates references at `validate` time.
 4. Required fields in a `ref` entry: `ref`, `releases`, `reports`.
-   Everything else is optional (inherited or overridden).
 5. `ref` and `id` are mutually exclusive on the same entry.
-6. The resolved entry (after merge) must pass all normal validation rules.
-
-Merge semantics: field-level override, not array merge.
-If the ref entry defines `packages`, it completely replaces the referenced `packages`.
-If it omits `packages`, the referenced value is used.
+6. Merge semantics: field-level override. Defined fields override, omitted fields are inherited.
 ////
 // end::dev-notes[]
 
 === Multi-File Imports
 
 A future version will introduce an `imports` directive for splitting a Vulnlog file into static project data and dynamic vulnerability data.
-
-// tag::dev-notes[]
-////
-DESIGN: Multi-file support via imports
-
-  # main file (passed to CLI)
-  schemaVersion: "1"
-  imports:
-    - demo-project-vulns.vl.yaml
-
-  project:
-    organization: Demo Project Inc
-    name: Demo Project
-    author: Demo Security Team
-  tags:
-    - id: binary
-  releases:
-    - id: 8.1.0
-
-  # imported file
-  vulnerabilities:
-    - id: CVE-2021-001
-      ...
-
-Rules:
-1. Imported files can contain: tags, releases, vulnerabilities.
-   `schemaVersion` and `project` must be in the main file only.
-2. Arrays are concatenated across files. Duplicate IDs are errors.
-3. Imports are relative to the importing file. No recursive imports.
-4. CLI: no changes. Positional arg is always the main file.
-////
-// end::dev-notes[]
 
 === SARIF Export
 

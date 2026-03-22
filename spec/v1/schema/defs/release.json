@@ -16,7 +16,7 @@
       "$ref": "common.json#/$defs/date"
     },
     "purls": {
-      "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents. Tags on purl entries enable scoped VEX generation.",
+      "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents.",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -32,7 +32,7 @@
       "required": [ "purl" ],
       "properties": {
         "purl": {
-          "description": "The versioned Package URL for this artifact in this release (e.g., 'pkg:docker/demo-project@8.1.1').",
+          "description": "The versioned Package URL for this artifact in this release.",
           "$ref": "common.json#/$defs/purl"
         },
         "tags": {

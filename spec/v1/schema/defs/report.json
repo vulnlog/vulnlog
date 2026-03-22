@@ -11,16 +11,16 @@
       "$ref": "common.json#/$defs/reporterType"
     },
     "at": {
-      "description": "Date the vulnerability was reported by this scanner or source.",
+      "description": "Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation.",
       "$ref": "common.json#/$defs/date"
     },
     "source": {
-      "description": "Description of the report source (e.g., 'Oracle Critical Patch Update April 2022'). Optional for scanner reporters. Required by the CLI for reporter type 'other'.",
+      "description": "Description of the report source. Optional for scanner reporters. Required by the CLI for reporter type 'other'.",
       "type": "string",
       "minLength": 1
     },
     "vuln_id": {
-      "description": "Scanner-specific vulnerability identifiers (e.g., 'SNYK-JAVA-LOG4J-2314720'). Used when generating scanner-specific suppression files.",
+      "description": "Scanner-specific vulnerability identifiers. Used when generating scanner-specific suppression files.",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -35,12 +35,11 @@
   "additionalProperties": false,
   "$defs": {
     "suppressEntry": {
-      "description": "Controls time-limited suppression for a specific scanner.",
+      "description": "Suppression configuration for a specific scanner. When present without expires_at, the suppression is permanent.",
       "type": "object",
-      "required": [ "expires_at" ],
       "properties": {
         "expires_at": {
-          "description": "Expiration date of the suppression. After this date, the CLI no longer includes this entry in the generated suppression file.",
+          "description": "Expiration date of the suppression. When omitted, the suppression is permanent.",
           "$ref": "common.json#/$defs/date"
         }
       },

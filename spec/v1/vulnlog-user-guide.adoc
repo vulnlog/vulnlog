@@ -1,6 +1,6 @@
 = Vulnlog User Guide
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-13
+:revdate: 2026-03-15
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -23,27 +23,24 @@ Record and manage vulnerability findings from multiple SCA scanners in a single 
 Each finding captures the scanner report, affected packages, and the team's triage verdict.
 
 Verdict-driven workflow::
-Classify vulnerabilities with a clear verdict: `affected`, `not_affected`, `fixed`, or `risk_acceptable`.
+Classify vulnerabilities with a clear verdict: `affected`, `not_affected`, or `risk_acceptable`.
 Entries without a verdict are tracked as under investigation.
-Each verdict type enforces appropriate companion fields (justification, severity, fix reference).
+Resolutions (dependency updates, patches) are recorded independently of the verdict.
 
 Flexible tagging::
 Tag vulnerability entries with a team-defined taxonomy.
 Tags can represent deliverables (`binary`, `container`), usage contexts (`build-dep`, `test-infra`), or any other categorization.
-Use tags to filter CLI output and scope VEX products.
 
 Suppression file generation::
 Generate scanner-specific suppression files (`.trivyignore`, `.snyk`, etc.) from the Vulnlog file.
-Only suppress what needs to be suppressed: vulnerabilities marked as fixed are excluded from suppression to verify the fix is complete.
+Vulnerabilities with a resolution are excluded from suppression to verify the fix is complete.
 
 HTML report generation::
 Generate self-contained HTML reports for communicating vulnerability status to team members, partners, and customers.
-Reports include summary statistics, filtering, sorting, and search by any identifier.
 
 OpenVEX statement generation::
 Generate OpenVEX documents per release for standards-compliant vulnerability communication.
-Verdicts map directly to OpenVEX statuses.
-Tags scope VEX products to specific deliverables.
+Verdicts and resolutions map directly to OpenVEX statuses.
 
 Multi-scanner support::
 Track findings from multiple SCA scanners in a single file.
@@ -67,18 +64,17 @@ Lint for consistent field ordering and formatting.
 CI/CD integration::
 The CLI runs on developer machines and in CI pipelines.
 Generate suppression files in CI to keep scanner pipelines green for triaged findings.
-Generate reports and VEX documents as build artifacts.
 
 === When to Use Vulnlog
 
 Vulnlog is most valuable when your team:
 
-- Uses multiple SCA scanners (Trivy, Snyk, Grype, OWASP Dependency Check, etc.) and needs a unified view of findings across scanners.
-- Maintains multiple release branches and needs to track vulnerability decisions per branch without duplicating work.
-- Needs to communicate vulnerability status to customers, partners, or auditors via HTML reports or VEX statements.
-- Wants to keep vulnerability analysis in the repository, next to the code, rather than in external tools.
-- Wants to prevent stale suppression files that shadow real findings after vulnerabilities have been fixed.
-- Wants to avoid losing vulnerability analysis, suppressions, or VEX statements when moving to another SCA tool.
+- Uses multiple SCA scanners and needs a unified view of findings.
+- Maintains multiple release branches and needs to track vulnerability decisions per branch.
+- Needs to communicate vulnerability status via HTML reports or VEX statements.
+- Wants to keep vulnerability analysis in the repository, next to the code.
+- Wants to prevent stale suppression files that shadow real findings.
+- Wants to avoid losing vulnerability analysis when moving to another SCA tool.
 
 Vulnlog may be more than you need if you have a single scanner on a single branch -- in that case, the scanner's native suppression mechanism may suffice.
 
@@ -87,43 +83,25 @@ Vulnlog may be more than you need if you have a single scanner on a single branc
 ==== vs. Scanner-native suppression files
 
 Scanner-native suppression files (`.trivyignore`, `.snyk`) track *what to suppress* but not *why*.
-They don't record the analysis, the verdict reasoning, or who made the decision.
-When team members rotate, the reasoning is lost.
 Vulnlog generates these files from a richer decision record, keeping the *why* alongside the *what*.
-
-Suppression files also tend to accumulate stale entries for vulnerabilities that were fixed long ago.
-Vulnlog never generates suppressions for fixed vulnerabilities, keeping the suppression file accurate.
 
 ==== vs. Scanner vendor UIs
 
-Scanner vendor UIs (Snyk dashboard, GitHub Security tab, or Semgrep UI) provide good visibility into findings for one scanner.
-But they create vendor lock-in: your triage decisions and analysis live in the vendor's platform.
-Switching scanners means starting over.
-Vulnlog keeps your analysis in a YAML file you own, and generates outputs for any supported scanner.
+Scanner vendor UIs (Snyk dashboard, GitHub Security tab, or Semgrep UI) create vendor lock-in: your triage decisions live in the vendor's platform.
+Vulnlog keeps your analysis in a YAML file you own.
 
 ==== vs. Ticketing systems, spreadsheets, and Confluence pages
 
-Spreadsheets and wiki pages are flexible but disconnected from the code.
-They require manual synchronization, don't support automated output generation, and are easy to forget when the code changes.
+Spreadsheets and wiki pages are disconnected from the code.
 Vulnlog lives in the repository and generates suppression files, reports, and VEX documents directly from the data.
 
 === How Vulnlog Relates to Other Standards
 
-VEX (Vulnerability Exploitability eXchange):: Vulnlog generates OpenVEX documents.
-VEX communicates whether vulnerabilities are exploitable in the context of a specific product.
-Vulnlog is the decision record; VEX is one of its outputs.
+VEX (Vulnerability Exploitability eXchange):: Vulnlog generates OpenVEX documents. Vulnlog is the decision record; VEX is one of its outputs.
 
-SBOM (Software Bill of Materials):: Complementary.
-SBOMs describe what components are in your software.
-Vulnlog tracks decisions about vulnerability findings in those components.
-Together they answer "what do we have?" (SBOM) and "what have we decided about findings?" (Vulnlog).
+SBOM (Software Bill of Materials):: Complementary. SBOMs describe what components are in your software. Vulnlog tracks decisions about vulnerability findings in those components.
 
-SARIF (Static Analysis Results Interchange Format):: A future Vulnlog output.
-SARIF provides a standardized format for findings that integrates with development tools (GitHub Code Scanning, Azure DevOps, VS Code).
-
-CSAF (Common Security Advisory Framework):: Complementary.
-CSAF is a broader advisory format.
-Vulnlog focuses specifically on team-level triage decisions and suppression management.
+SARIF (Static Analysis Results Interchange Format):: A future Vulnlog output for integration with development tools.
 
 === Supported Reporters
 
@@ -172,21 +150,16 @@ Vulnlog focuses specifically on team-level triage decisions and suppression mana
 
 === Creating a Vulnlog File
 
-Use the CLI to scaffold a new project:
-
 [source,bash]
 ----
 vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
 ----
 
-This creates a minimal Vulnlog file with only the required sections.
-
 .File Name Convention
 [NOTE]
 ====
-For simple projects that only work with one Vulnlog file, `vulnlog.[yaml|yml]` are valid file names.
-
-If you need to work with multiple Vulnlog files, such as when working with multiple release branches or products, use the file name convention `<project-name>.vl.[yaml|yml]`.
+For simple projects, `vulnlog.[yaml|yml]` are valid file names.
+For multiple Vulnlog files, use `<project-name>.vl.[yaml|yml]`.
 ====
 
 === A Minimal Example
@@ -198,15 +171,17 @@ include::{examplesdir}/quickstart.vl.yaml[]
 
 === IDE Setup
 
-Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore], which means IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
+Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore].
+IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
+
+To reference a local schema, add this as the first line of your Vulnlog file:
+
+[source,yaml]
+----
+# $schema: .vulnlog/vulnlog-schema.json
+----
 
 === CI Pipeline Integration
-
-A typical CI workflow with Vulnlog:
-
-. The SCA scanner runs and finds vulnerabilities.
-. Without Vulnlog, the pipeline fails on known, already-triaged findings.
-. With Vulnlog, the pipeline runs `vulnlog suppress` before the scanner to generate up-to-date suppression files. The scanner skips triaged findings and only fails on genuinely new ones.
 
 Example GitHub Actions workflow:
 
@@ -246,13 +221,11 @@ jobs:
 
 === New finding -- triage later
 
-Create a minimal stub entry:
-
 [source,yaml]
 ----
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
-    packages: ["pkg:npm/image-lib@3.1.0"]
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
     tags: [ webapp ]
@@ -260,15 +233,11 @@ Create a minimal stub entry:
 
 === Adding the same finding to multiple branch files
 
-When a CVE affects multiple release branches, use `vulnlog add` to create stub entries across files in one command:
-
 [source,bash]
 ----
 vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
   --vuln-id CVE-2026-5678 --reporter trivy
 ----
-
-Then open each file to fill in the package PURLs and analysis.
 
 === Finding does not affect us
 
@@ -277,7 +246,7 @@ Then open each file to fill in the package PURLs and analysis.
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -290,49 +259,67 @@ Then open each file to fill in the package PURLs and analysis.
     justification: vulnerable_code_not_in_execute_path
 ----
 
-=== Fixed in the next release
+=== Not affected, but dependency updated anyway
 
 [source,yaml]
 ----
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
+    reports:
+      - reporter: trivy
+        at: 2026-03-01
+    tags: [ webapp ]
+    analysis: >
+      The vulnerable code path requires SVG input processing.
+      Our application only accepts PNG and JPEG formats.
+    verdict: not_affected
+    justification: vulnerable_code_not_in_execute_path
+    resolution:
+      in: 2.0.1
+      note: "Updated image-lib from 3.1.0 to 3.2.0 during routine upgrade"
+----
+
+=== Affected and fixed in the next release
+
+[source,yaml]
+----
+  - id: CVE-2026-5678
+    releases: [ 2.0.0 ]
+    description: Memory corruption in image-lib
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
         at: 2026-03-01
     tags: [ webapp ]
     analysis: >
       Confirmed exploitable via crafted PNG uploads.
-      Updated image-lib to 3.2.0 which contains the fix.
     analyzed_at: 2026-03-02
     severity: high
-    verdict: fixed
-    fixed_in: 2.0.1
-    fixed_at: 2026-03-03
-    fix_ref: "https://jira.example.com/browse/SEC-99"
-    fix_note: "Updated image-lib from 3.1.0 to 3.2.0"
+    verdict: affected
+    resolution:
+      in: 2.0.1
+      at: 2026-03-03
+      ref: "https://jira.example.com/browse/SEC-99"
+      note: "Updated image-lib from 3.1.0 to 3.2.0"
 ----
 
-=== Risk accepted with temporary suppression
+=== Risk accepted with permanent suppression
 
 [source,yaml]
 ----
   - id: CVE-2026-5678
     releases: [ 2.0.0 ]
     description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
     reports:
       - reporter: trivy
-        at: 2026-03-01
-        suppress:
-          expires_at: 2026-03-08
+        suppress: {}
     tags: [ webapp ]
     analysis: >
       Vulnerability confirmed but only exploitable with
       specially crafted input that our validation layer rejects.
-      Accepting risk until upstream releases a stable fix.
-    analyzed_at: 2026-03-02
     severity: medium
     verdict: risk_acceptable
     comment: >
@@ -347,7 +334,7 @@ Then open each file to fill in the package PURLs and analysis.
   - id: CVE-2026-9999
     releases: [ 2.0.0 ]
     description: Command injection in build-tool
-    packages: ["pkg:npm/build-tool@5.0.0"]
+    packages: [ "pkg:npm/build-tool@5.0.0" ]
     reports:
       - reporter: trivy
         at: 2026-03-01
@@ -356,33 +343,8 @@ Then open each file to fill in the package PURLs and analysis.
       Affects the build pipeline only. The vulnerable command
       injection requires untrusted input which the CI environment
       does not expose.
-    analyzed_at: 2026-03-01
     verdict: not_affected
     justification: vulnerable_code_cannot_be_controlled_by_adversary
-----
-
-=== Non-scanner source
-
-[source,yaml]
-----
-  - id: CVE-2022-21449
-    name: Psychic Signatures
-    releases: [ 8.1.2 ]
-    description: ECDSA signature verification bypass in Java SE
-    packages: ["pkg:maven/com.oracle/jdk@17.0.2"]
-    reports:
-      - reporter: other
-        at: 2022-04-19
-        source: "Oracle Critical Patch Update April 2022"
-    tags: [ binary, container ]
-    analysis: >
-      The project uses Java 17 and ECDSA signatures for
-      JWT token verification. Confirmed exploitable.
-    analyzed_at: 2022-04-20
-    severity: critical
-    verdict: fixed
-    fixed_in: 8.1.2
-    fixed_at: 2022-04-22
 ----
 
 == Managing Multiple Release Branches
@@ -396,13 +358,7 @@ my-app-8.2.vl.yaml    # Release branch 8.2.x
 my-app-8.3.vl.yaml    # Release branch 8.3.x
 ----
 
-This avoids cherry-picking vulnerability analysis to older branches.
-When a release branch reaches end of life (EoL), its Vulnlog file naturally becomes a historical archive.
-
-Use `vulnlog add` to create stub entries across multiple files at once when a new CVE affects several branches.
-
-Alternatively, maintain a Vulnlog file directly on each release branch.
-Both approaches can coexist.
+Use `vulnlog add` to create stub entries across multiple files at once.
 
 == CLI Reference
 
@@ -415,31 +371,6 @@ vulnlog <command> <file> [flags]
 
 Every command except `init` requires a Vulnlog file as a positional argument.
 
-=== Global Flags
-
-[cols="2,3"]
-|===
-| Flag | Description
-
-| `-q, --quiet`
-| Suppress non-essential output.
-
-| `-v, --verbose`
-| Verbose output.
-
-| `--no-color`
-| Disable colored output.
-
-| `--format <f>`
-| Output format: `yaml` (default). Future: `json`, `text`.
-
-| `--version`
-| Print version.
-
-| `--help`
-| Print help.
-|===
-
 === Filtering
 
 [cols="2,3"]
@@ -450,7 +381,7 @@ Every command except `init` requires a Vulnlog file as a positional argument.
 | Include vulnerabilities affecting all releases up to and including this release.
 
 | `--tags <id>`
-| Filter by tag (repeatable for multiple tags).
+| Filter by tag (repeatable).
 |===
 
 === Commands
@@ -492,20 +423,14 @@ vulnlog stats my-app.vl.yaml --release 8.1.1
 ----
 vulnlog report my-app.vl.yaml
 vulnlog report my-app.vl.yaml --release 8.1.1 -o report.html
-vulnlog report my-app.vl.yaml --tags container --release 8.1.1
 ----
 
 ==== `vulnlog suppress`
 
 [source,bash]
 ----
-# Suppression for a specific reporter
 vulnlog suppress my-app.vl.yaml --reporter trivy --release 8.1.1
-
-# All reporters, all releases
 vulnlog suppress my-app.vl.yaml
-
-# Custom output path
 vulnlog suppress my-app.vl.yaml --reporter trivy -o custom/.trivyignore
 ----
 
@@ -521,12 +446,8 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json
 
 [source,bash]
 ----
-# Add a CVE to multiple branch files
 vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
   --vuln-id CVE-2026-001 --reporter trivy
-
-# Add to a single file for a specific release
-vulnlog add my-app.vl.yaml --vuln-id CVE-2026-001 --reporter trivy --release 2.0.1
 ----
 
 === Exit Codes
@@ -535,33 +456,13 @@ vulnlog add my-app.vl.yaml --vuln-id CVE-2026-001 --reporter trivy --release 2.0
 |===
 | Code | Name | Description
 
-| `0`
-| Success
-| Command completed successfully.
-
-| `1`
-| General error
-| Unexpected error.
-
-| `2`
-| Validation error
-| The Vulnlog file contains validation errors.
-
-| `3`
-| File not found
-| The specified file does not exist.
-
-| `4`
-| Lint violation
-| The file has lint violations (without `--fix`).
-
-| `5`
-| Missing a required flag
-| A required flag was not provided.
-
-| `6`
-| Invalid flag value
-| A flag references an unknown entity or unsupported type.
+| `0` | Success | Command completed successfully.
+| `1` | General error | Unexpected error.
+| `2` | Validation error | The Vulnlog file contains validation errors.
+| `3` | File not found | The specified file does not exist.
+| `4` | Lint violation | The file has lint violations (without `--fix`).
+| `5` | Missing required flag | A required flag was not provided.
+| `6` | Invalid flag value | A flag references an unknown entity or unsupported type.
 |===
 
 == Full Example
