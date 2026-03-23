@@ -373,6 +373,8 @@ Every command except `init` requires a Vulnlog file as a positional argument.
 
 === Filtering
 
+Common filters for commands: `stats`, `report`, `suppress` and `vex`.
+
 [cols="2,3"]
 |===
 | Flag | Description
