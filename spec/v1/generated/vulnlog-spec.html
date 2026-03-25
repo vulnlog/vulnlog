@@ -552,7 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Vulnlog Specification</h1>
 <div class="details">
 <span id="revnumber">version 1.0.0-draft,</span>
-<span id="revdate">2026-03-15</span>
+<span id="revdate">2026-03-25</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -617,7 +617,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_html_report_generation">8. HTML Report Generation</a>
 <ul class="sectlevel2">
-<li><a href="#_detail_pages_future">8.1. Detail Pages (Future)</a></li>
+<li><a href="#_report_filters">8.1. Report Filters</a></li>
+<li><a href="#_detail_pages_future">8.2. Detail Pages (Future)</a></li>
 </ul>
 </li>
 <li><a href="#_validation_rules">9. Validation Rules</a></li>
@@ -636,7 +637,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#vulnlog-suppress">10.4.6. <code>vulnlog suppress</code></a></li>
 <li><a href="#vulnlog-vex">10.4.7. <code>vulnlog vex</code></a></li>
 <li><a href="#vulnlog-add">10.4.8. <code>vulnlog add</code></a></li>
-<li><a href="#vulnlog-sarif">10.4.9. <code>vulnlog sarif</code> (Future)</a></li>
+<li><a href="#vulnlog-copy">10.4.9. <code>vulnlog copy</code></a></li>
+<li><a href="#vulnlog-sarif">10.4.10. <code>vulnlog sarif</code> (Future)</a></li>
 </ul>
 </li>
 <li><a href="#_exit_codes">10.5. Exit Codes</a></li>
@@ -644,10 +646,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_future_directions">11. Future Directions</a>
 <ul class="sectlevel2">
-<li><a href="#_cross_file_references">11.1. Cross-File References</a></li>
-<li><a href="#_multi_file_imports">11.2. Multi-File Imports</a></li>
-<li><a href="#_sarif_export">11.3. SARIF Export</a></li>
-<li><a href="#_per_vulnerability_html_detail_pages">11.4. Per-Vulnerability HTML Detail Pages</a></li>
+<li><a href="#_multi_file_imports">11.1. Multi-File Imports</a></li>
+<li><a href="#_sarif_export">11.2. SARIF Export</a></li>
+<li><a href="#_per_vulnerability_html_detail_pages">11.3. Per-Vulnerability HTML Detail Pages</a></li>
 </ul>
 </li>
 <li><a href="#_examples">12. Examples</a>
@@ -746,14 +747,15 @@ demo-project-8.3.vl.yaml    # Release branch 8.3.x</code></pre>
 <div class="paragraph">
 <p>Each file is self-contained.
 The CLI operates on one file at a time.
-This approach avoids cherry-picking vulnerability analysis to older Git branches.</p>
+This approach avoids cherry-picking vulnerability analysis to older Git branches.
+The Vulnlog file is archived together with the release branch once the version is EoL.</p>
 </div>
 <div class="paragraph">
 <p>It remains possible to maintain a Vulnlog file directly on each release branch.
 Both approaches can coexist.</p>
 </div>
 <div class="paragraph">
-<p>See <a href="#vulnlog-add"><code>vulnlog add</code></a> for CLI support to add entries across multiple files, and <a href="#_cross_file_references">Cross-File References</a> for the planned <code>ref</code> mechanism to share analysis between files.</p>
+<p>See <a href="#vulnlog-copy"><code>vulnlog copy</code></a> for CLI support to propagate entries across multiple files.</p>
 </div>
 </div>
 </div>
@@ -1111,7 +1113,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>comment</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Additional information not related to the analysis itself. May include evidence references, methodology notes, or reminders. Not used in any output generation.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Additional information not related to the analysis itself. May include evidence references, methodology notes, decision-making context, or reminders for future review. Not used in any output generation.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>severity</code></p></td>
@@ -1852,7 +1854,45 @@ Tags are displayed for filtering context.
 <code>comment</code> is not included in HTML reports (it is internal-only metadata).</p>
 </div>
 <div class="sect2">
-<h3 id="_detail_pages_future">8.1. Detail Pages (Future)</h3>
+<h3 id="_report_filters">8.1. Report Filters</h3>
+<div class="paragraph">
+<p>The HTML report provides interactive filters that can be combined:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Release</dt>
+<dd>
+<p>Filter by one or more release identifiers.</p>
+</dd>
+<dt class="hdlist1">Verdict</dt>
+<dd>
+<p>Filter by verdict (<code>affected</code>, <code>not_affected</code>, <code>risk_acceptable</code>, under investigation).</p>
+</dd>
+<dt class="hdlist1">Tags</dt>
+<dd>
+<p>Filter by one or more tags.</p>
+</dd>
+<dt class="hdlist1">Severity</dt>
+<dd>
+<p>Filter by severity level (<code>critical</code>, <code>high</code>, <code>medium</code>, <code>low</code>).</p>
+</dd>
+<dt class="hdlist1">Reporter</dt>
+<dd>
+<p>Filter by reporter type to compare scanner coverage.</p>
+</dd>
+<dt class="hdlist1">Resolution status</dt>
+<dd>
+<p>Filter by resolved (has <code>resolution</code>) or unresolved entries.</p>
+</dd>
+<dt class="hdlist1">Text search</dt>
+<dd>
+<p>Free-text search across <code>id</code>, <code>name</code>, <code>aliases</code>, <code>description</code>, and <code>vuln_id</code>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_detail_pages_future">8.2. Detail Pages (Future)</h3>
 <div class="paragraph">
 <p>A future version will generate per-vulnerability detail pages alongside the summary:</p>
 </div>
@@ -1925,11 +1965,13 @@ Tags are displayed for filtering context.
 <h3 id="_usage">10.1. Usage</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog &lt;command&gt; &lt;file&gt; [flags]</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog &lt;command&gt; &lt;file...&gt; [flags]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Every command except <code>init</code> requires a Vulnlog file as a positional argument.
+<p>Every command except <code>init</code> requires one or more Vulnlog files as positional arguments.
+Read-only commands (<code>validate</code>, <code>lint</code>, <code>stats</code>) accept multiple files.
+Output-generating commands (<code>report</code>, <code>suppress</code>, <code>vex</code>) operate on a single file.
 No automatic file detection.</p>
 </div>
 </div>
@@ -1961,7 +2003,7 @@ No automatic file detection.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>--format &lt;f&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Output format for structured output: <code>yaml</code> (default). Future: <code>json</code>, <code>text</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Output format for structured output: <code>text</code> (default), <code>yaml</code>, <code>json</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>--version</code></p></td>
@@ -2049,18 +2091,19 @@ No automatic file detection.</p>
 <h4 id="vulnlog-validate">10.4.2. <code>vulnlog validate</code></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog validate &lt;file&gt; [--strict]</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog validate &lt;file...&gt; [--strict]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p><code>--strict</code> treats warnings as errors (e.g., missing verdict, missing description).</p>
+<p>Validates one or more Vulnlog files against the schema and all validation rules.
+<code>--strict</code> treats warnings as errors (e.g., missing verdict, missing description).</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="vulnlog-lint">10.4.3. <code>vulnlog lint</code></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog lint &lt;file&gt; [--fix]</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog lint &lt;file...&gt; [--fix]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -2091,33 +2134,42 @@ No automatic file detection.</p>
 <h4 id="vulnlog-stats">10.4.4. <code>vulnlog stats</code></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog stats &lt;file&gt; [filter flags]</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog stats &lt;file...&gt; [filter flags]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Example output:</p>
+<p>Prints summary statistics for one or more Vulnlog files.
+When multiple files are provided, per-file statistics are shown followed by a total.</p>
+</div>
+<div class="paragraph">
+<p>Default output is a compact terminal format.
+Use <code>--format yaml</code> or <code>--format json</code> for machine-readable output.</p>
+</div>
+<div class="paragraph">
+<p>Example output (multiple files):</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">project: Demo Project
-total: 7
-by_verdict:
-  affected: 2
-  not_affected: 2
-  risk_acceptable: 1
-  under_investigation: 2
-by_resolution:
-  resolved: 3
-  unresolved: 4
-by_severity:
-  critical: 2
-  high: 0
-  medium: 0
-  low: 2
-  unrated: 1
-suppressions:
-  active: 2
-  expired: 1</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">  branch-8.1.vl.yaml (Demo Project · 8.1.x)
+  ──────────────────────────────────────────
+  Vulnerabilities: 12
+    affected: 2 · not_affected: 5 · risk_acceptable: 1 · under investigation: 4
+  Resolved: 3 of 12
+  Suppressions: 6 active · 2 expired
+
+  branch-8.2.vl.yaml (Demo Project · 8.2.x)
+  ──────────────────────────────────────────
+  Vulnerabilities: 8
+    affected: 1 · not_affected: 4 · risk_acceptable: 0 · under investigation: 3
+  Resolved: 2 of 8
+  Suppressions: 4 active · 0 expired
+
+  Total (2 files)
+  ──────────────────────────────────────────
+  Vulnerabilities: 20
+    affected: 3 · not_affected: 9 · risk_acceptable: 1 · under investigation: 7
+  Resolved: 5 of 20
+  Suppressions: 10 active · 2 expired</code></pre>
 </div>
 </div>
 </div>
@@ -2168,7 +2220,8 @@ See <a href="#vex-document-versioning">VEX Document Versioning</a>.</p>
 <div class="sect3">
 <h4 id="vulnlog-add">10.4.8. <code>vulnlog add</code></h4>
 <div class="paragraph">
-<p>Adds a vulnerability stub entry to one or more Vulnlog files.</p>
+<p>Adds a vulnerability stub entry to one or more Vulnlog files.
+Use this to create a fresh entry when no existing entry exists to copy from.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -2210,13 +2263,62 @@ If an entry with the same <code>id</code> already exists in a file, the command 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml \
   --vuln-id CVE-2026-001 --reporter trivy</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="vulnlog-sarif">10.4.9. <code>vulnlog sarif</code> (Future)</h4>
+<h4 id="vulnlog-copy">10.4.9. <code>vulnlog copy</code></h4>
+<div class="paragraph">
+<p>Copies a complete vulnerability entry from a source file into one or more target files.
+Use this to propagate an existing analysis across multiple branch files.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog copy &lt;source-file&gt; &lt;target-file...&gt; --vuln-id &lt;id&gt; [flags]</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 60%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Flag</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--vuln-id &lt;id&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vulnerability ID to copy (required). Must exist in the source file.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>The first positional argument is the source file.
+All subsequent positional arguments are target files.
+The entry is copied with all fields intact (analysis, verdict, justification, resolution, etc.).
+The <code>releases</code> field is adjusted to reference the latest published release that exist in each target file.</p>
+</div>
+<div class="paragraph">
+<p>If an entry with the same <code>id</code> already exists in a target file, the command skips that file and reports a warning.</p>
+</div>
+<div class="paragraph">
+<p>Example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Copy the analysis from the main branch file to older branch files
+vulnlog copy branch-8.3.vl.yaml branch-8.1.vl.yaml branch-8.2.vl.yaml \
+  --vuln-id CVE-2026-001</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="vulnlog-sarif">10.4.10. <code>vulnlog sarif</code> (Future)</h4>
 <div class="paragraph">
 <p>Generates a SARIF document from Vulnlog data.</p>
 </div>
@@ -2290,26 +2392,19 @@ If an entry with the same <code>id</code> already exists in a file, the command 
 <h2 id="_future_directions">11. Future Directions</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_cross_file_references">11.1. Cross-File References</h3>
-<div class="paragraph">
-<p>A future version will introduce a <code>ref</code> field on vulnerability entries to reference an entry in another Vulnlog file.
-This addresses the duplication problem in multi-branch setups.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_multi_file_imports">11.2. Multi-File Imports</h3>
+<h3 id="_multi_file_imports">11.1. Multi-File Imports</h3>
 <div class="paragraph">
 <p>A future version will introduce an <code>imports</code> directive for splitting a Vulnlog file into static project data and dynamic vulnerability data.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_sarif_export">11.3. SARIF Export</h3>
+<h3 id="_sarif_export">11.2. SARIF Export</h3>
 <div class="paragraph">
 <p>See <a href="#vulnlog-sarif"><code>vulnlog sarif</code> (Future)</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_per_vulnerability_html_detail_pages">11.4. Per-Vulnerability HTML Detail Pages</h3>
+<h3 id="_per_vulnerability_html_detail_pages">11.3. Per-Vulnerability HTML Detail Pages</h3>
 <div class="paragraph">
 <p>See <a href="#_html_report_generation">HTML Report Generation</a>.</p>
 </div>
@@ -2323,7 +2418,8 @@ This addresses the duplication problem in multi-branch setups.</p>
 <h3 id="_quick_start">12.1. Quick Start</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: ../generated/vulnlog-bundled.json
+---
 schemaVersion: "1"
 
 project:
@@ -2355,7 +2451,8 @@ vulnerabilities:
 <h3 id="_full_example">12.2. Full Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: ../generated/vulnlog-bundled.json
+---
 schemaVersion: "1"
 
 project:
@@ -2535,7 +2632,7 @@ vulnerabilities:
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-22 17:13:42 +0100
+Last updated 2026-03-25 18:38:46 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

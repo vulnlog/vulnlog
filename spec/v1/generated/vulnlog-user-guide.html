@@ -552,7 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h1>Vulnlog User Guide</h1>
 <div class="details">
 <span id="revnumber">version 1.0.0-draft,</span>
-<span id="revdate">2026-03-15</span>
+<span id="revdate">2026-03-25</span>
 </div>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
@@ -606,6 +606,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_vulnlog_suppress">5.3.6. <code>vulnlog suppress</code></a></li>
 <li><a href="#_vulnlog_vex">5.3.7. <code>vulnlog vex</code></a></li>
 <li><a href="#_vulnlog_add">5.3.8. <code>vulnlog add</code></a></li>
+<li><a href="#_vulnlog_copy">5.3.9. <code>vulnlog copy</code></a></li>
 </ul>
 </li>
 <li><a href="#_exit_codes">5.4. Exit Codes</a></li>
@@ -866,7 +867,8 @@ For multiple Vulnlog files, use <code>&lt;project-name&gt;.vl.[yaml|yml]</code>.
 <h3 id="_a_minimal_example">2.2. A Minimal Example</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: ../generated/vulnlog-bundled.json
+---
 schemaVersion: "1"
 
 project:
@@ -967,10 +969,22 @@ IDEs with YAML support can automatically provide validation and autocompletion f
 </div>
 <div class="sect2">
 <h3 id="_adding_the_same_finding_to_multiple_branch_files">3.2. Adding the same finding to multiple branch files</h3>
+<div class="paragraph">
+<p>Create stubs when no existing analysis exists yet:</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml \
   --vuln-id CVE-2026-5678 --reporter trivy</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or copy a complete entry when one branch already has the analysis:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog copy branch-8.3.vl.yaml branch-8.1.vl.yaml branch-8.2.vl.yaml \
+  --vuln-id CVE-2026-5678</code></pre>
 </div>
 </div>
 </div>
@@ -1103,7 +1117,7 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Use <code>vulnlog add</code> to create stub entries across multiple files at once.</p>
+<p>Use <code>vulnlog copy</code> to propagate complete analyses across multiple files.</p>
 </div>
 </div>
 </div>
@@ -1114,11 +1128,11 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x</code></pre>
 <h3 id="_usage">5.1. Usage</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog &lt;command&gt; &lt;file&gt; [flags]</code></pre>
+<pre class="highlightjs highlight"><code class="language-none hljs">vulnlog &lt;command&gt; &lt;file...&gt; [flags]</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Every command except <code>init</code> requires a Vulnlog file as a positional argument.</p>
+<p>Every command except <code>init</code> requires one or more Vulnlog files as positional arguments.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1161,7 +1175,7 @@ my-app-8.3.vl.yaml    # Release branch 8.3.x</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog validate my-app.vl.yaml
-vulnlog validate my-app.vl.yaml --strict</code></pre>
+vulnlog validate branch-8.1.vl.yaml branch-8.2.vl.yaml --strict</code></pre>
 </div>
 </div>
 </div>
@@ -1179,6 +1193,7 @@ vulnlog lint my-app.vl.yaml --fix    # Rewrite with corrected ordering</code></p
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog stats my-app.vl.yaml
+vulnlog stats branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml
 vulnlog stats my-app.vl.yaml --release 8.1.1</code></pre>
 </div>
 </div>
@@ -1215,8 +1230,19 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 <h4 id="_vulnlog_add">5.3.8. <code>vulnlog add</code></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Create stub entries in multiple files
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml \
   --vuln-id CVE-2026-001 --reporter trivy</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_vulnlog_copy">5.3.9. <code>vulnlog copy</code></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Copy a complete entry from the main branch file to older branch files
+vulnlog copy branch-8.3.vl.yaml branch-8.1.vl.yaml branch-8.2.vl.yaml \
+  --vuln-id CVE-2026-001</code></pre>
 </div>
 </div>
 </div>
@@ -1282,7 +1308,8 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json</cod
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: .vulnlog/vulnlog-schema.json
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml"># $schema: ../generated/vulnlog-bundled.json
+---
 schemaVersion: "1"
 
 project:
@@ -1461,7 +1488,7 @@ vulnerabilities:
 <div id="footer">
 <div id="footer-text">
 Version 1.0.0-draft<br>
-Last updated 2026-03-22 17:13:42 +0100
+Last updated 2026-03-25 18:40:48 +0100
 </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.3/highlight.min.js"></script>

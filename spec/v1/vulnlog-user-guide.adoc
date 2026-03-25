@@ -1,6 +1,6 @@
 = Vulnlog User Guide
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-15
+:revdate: 2026-03-25
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -233,10 +233,20 @@ jobs:
 
 === Adding the same finding to multiple branch files
 
+Create stubs when no existing analysis exists yet:
+
 [source,bash]
 ----
-vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml \
   --vuln-id CVE-2026-5678 --reporter trivy
+----
+
+Or copy a complete entry when one branch already has the analysis:
+
+[source,bash]
+----
+vulnlog copy branch-8.3.vl.yaml branch-8.1.vl.yaml branch-8.2.vl.yaml \
+  --vuln-id CVE-2026-5678
 ----
 
 === Finding does not affect us
@@ -358,7 +368,7 @@ my-app-8.2.vl.yaml    # Release branch 8.2.x
 my-app-8.3.vl.yaml    # Release branch 8.3.x
 ----
 
-Use `vulnlog add` to create stub entries across multiple files at once.
+Use `vulnlog copy` to propagate complete analyses across multiple files.
 
 == CLI Reference
 
@@ -366,14 +376,12 @@ Use `vulnlog add` to create stub entries across multiple files at once.
 
 [source]
 ----
-vulnlog <command> <file> [flags]
+vulnlog <command> <file...> [flags]
 ----
 
-Every command except `init` requires a Vulnlog file as a positional argument.
+Every command except `init` requires one or more Vulnlog files as positional arguments.
 
 === Filtering
-
-Common filters for commands: `stats`, `report`, `suppress` and `vex`.
 
 [cols="2,3"]
 |===
@@ -400,7 +408,7 @@ vulnlog init -o my-app.vl.yaml --project "My App" --organization "Acme Corp" --a
 [source,bash]
 ----
 vulnlog validate my-app.vl.yaml
-vulnlog validate my-app.vl.yaml --strict
+vulnlog validate branch-8.1.vl.yaml branch-8.2.vl.yaml --strict
 ----
 
 ==== `vulnlog lint`
@@ -416,6 +424,7 @@ vulnlog lint my-app.vl.yaml --fix    # Rewrite with corrected ordering
 [source,bash]
 ----
 vulnlog stats my-app.vl.yaml
+vulnlog stats branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml
 vulnlog stats my-app.vl.yaml --release 8.1.1
 ----
 
@@ -448,8 +457,18 @@ vulnlog vex my-app.vl.yaml --release 8.1.1 --tags binary -o vex-binary.json
 
 [source,bash]
 ----
-vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+# Create stub entries in multiple files
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml \
   --vuln-id CVE-2026-001 --reporter trivy
+----
+
+==== `vulnlog copy`
+
+[source,bash]
+----
+# Copy a complete entry from the main branch file to older branch files
+vulnlog copy branch-8.3.vl.yaml branch-8.1.vl.yaml branch-8.2.vl.yaml \
+  --vuln-id CVE-2026-001
 ----
 
 === Exit Codes

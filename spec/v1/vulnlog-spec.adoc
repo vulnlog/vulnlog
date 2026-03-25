@@ -1,6 +1,6 @@
 = Vulnlog Specification
 :revnumber: 1.0.0-draft
-:revdate: 2026-03-15
+:revdate: 2026-03-25
 :toc: left
 :toclevels: 3
 :sectnums:
@@ -65,11 +65,12 @@ demo-project-8.3.vl.yaml    # Release branch 8.3.x
 Each file is self-contained.
 The CLI operates on one file at a time.
 This approach avoids cherry-picking vulnerability analysis to older Git branches.
+The Vulnlog file is archived together with the release branch once the version is EoL.
 
 It remains possible to maintain a Vulnlog file directly on each release branch.
 Both approaches can coexist.
 
-See <<vulnlog-add>> for CLI support to add entries across multiple files, and <<Cross-File References>> for the planned `ref` mechanism to share analysis between files.
+See <<vulnlog-copy>> for CLI support to propagate entries across multiple files.
 
 == File Structure
 
@@ -780,6 +781,18 @@ Each vulnerability entry is a single row.
 Tags are displayed for filtering context.
 `comment` is not included in HTML reports (it is internal-only metadata).
 
+=== Report Filters
+
+The HTML report provides interactive filters that can be combined:
+
+Release:: Filter by one or more release identifiers.
+Verdict:: Filter by verdict (`affected`, `not_affected`, `risk_acceptable`, under investigation).
+Tags:: Filter by one or more tags.
+Severity:: Filter by severity level (`critical`, `high`, `medium`, `low`).
+Reporter:: Filter by reporter type to compare scanner coverage.
+Resolution status:: Filter by resolved (has `resolution`) or unresolved entries.
+Text search:: Free-text search across `id`, `name`, `aliases`, `description`, and `vuln_id`.
+
 === Detail Pages (Future)
 
 A future version will generate per-vulnerability detail pages alongside the summary:
@@ -838,10 +851,12 @@ Unique ID check algorithm:
 
 [source]
 ----
-vulnlog <command> <file> [flags]
+vulnlog <command> <file...> [flags]
 ----
 
-Every command except `init` requires a Vulnlog file as a positional argument.
+Every command except `init` requires one or more Vulnlog files as positional arguments.
+Read-only commands (`validate`, `lint`, `stats`) accept multiple files.
+Output-generating commands (`report`, `suppress`, `vex`) operate on a single file.
 No automatic file detection.
 
 === Global Flags
@@ -860,7 +875,7 @@ No automatic file detection.
 | Disable colored output.
 
 | `--format <f>`
-| Output format for structured output: `yaml` (default). Future: `json`, `text`.
+| Output format for structured output: `text` (default), `yaml`, `json`.
 
 | `--version`
 | Print version and exit.
@@ -918,9 +933,10 @@ vulnlog init [flags]
 
 [source]
 ----
-vulnlog validate <file> [--strict]
+vulnlog validate <file...> [--strict]
 ----
 
+Validates one or more Vulnlog files against the schema and all validation rules.
 `--strict` treats warnings as errors (e.g., missing verdict, missing description).
 
 [[vulnlog-lint]]
@@ -928,7 +944,7 @@ vulnlog validate <file> [--strict]
 
 [source]
 ----
-vulnlog lint <file> [--fix]
+vulnlog lint <file...> [--fix]
 ----
 
 Enforces:
@@ -946,32 +962,39 @@ Vulnerability reverse chronological order:: Newest first (based on the earliest 
 
 [source]
 ----
-vulnlog stats <file> [filter flags]
+vulnlog stats <file...> [filter flags]
 ----
 
-Example output:
+Prints summary statistics for one or more Vulnlog files.
+When multiple files are provided, per-file statistics are shown followed by a total.
 
-[source,yaml]
+Default output is a compact terminal format.
+Use `--format yaml` or `--format json` for machine-readable output.
+
+Example output (multiple files):
+
+[source]
 ----
-project: Demo Project
-total: 7
-by_verdict:
-  affected: 2
-  not_affected: 2
-  risk_acceptable: 1
-  under_investigation: 2
-by_resolution:
-  resolved: 3
-  unresolved: 4
-by_severity:
-  critical: 2
-  high: 0
-  medium: 0
-  low: 2
-  unrated: 1
-suppressions:
-  active: 2
-  expired: 1
+  branch-8.1.vl.yaml (Demo Project · 8.1.x)
+  ──────────────────────────────────────────
+  Vulnerabilities: 12
+    affected: 2 · not_affected: 5 · risk_acceptable: 1 · under investigation: 4
+  Resolved: 3 of 12
+  Suppressions: 6 active · 2 expired
+
+  branch-8.2.vl.yaml (Demo Project · 8.2.x)
+  ──────────────────────────────────────────
+  Vulnerabilities: 8
+    affected: 1 · not_affected: 4 · risk_acceptable: 0 · under investigation: 3
+  Resolved: 2 of 8
+  Suppressions: 4 active · 0 expired
+
+  Total (2 files)
+  ──────────────────────────────────────────
+  Vulnerabilities: 20
+    affected: 3 · not_affected: 9 · risk_acceptable: 1 · under investigation: 7
+  Resolved: 5 of 20
+  Suppressions: 10 active · 2 expired
 ----
 
 [[vulnlog-report]]
@@ -1017,6 +1040,7 @@ See <<VEX Document Versioning>>.
 ==== `vulnlog add`
 
 Adds a vulnerability stub entry to one or more Vulnlog files.
+Use this to create a fresh entry when no existing entry exists to copy from.
 
 [source]
 ----
@@ -1044,9 +1068,78 @@ Example:
 
 [source,bash]
 ----
-vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml branch-8.3.vl.yaml \
+vulnlog add branch-8.1.vl.yaml branch-8.2.vl.yaml \
   --vuln-id CVE-2026-001 --reporter trivy
 ----
+
+// tag::dev-notes[]
+////
+IMPLEMENTATION NOTE:
+
+Stub entry inserted at array position 0:
+
+  - id: <vuln-id>
+    releases: [<all release IDs in the file, or --release value>]
+    packages: []
+    reports:
+      - reporter: <type>
+
+Uses text-level insertion (not parse-serialize round-trip) to preserve
+file formatting and comments. Parse the file first to check for duplicate IDs.
+////
+// end::dev-notes[]
+
+[[vulnlog-copy]]
+==== `vulnlog copy`
+
+Copies a complete vulnerability entry from a source file into one or more target files.
+Use this to propagate an existing analysis across multiple branch files.
+
+[source]
+----
+vulnlog copy <source-file> <target-file...> --vuln-id <id> [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--vuln-id <id>`
+| Vulnerability ID to copy (required). Must exist in the source file.
+|===
+
+The first positional argument is the source file.
+All subsequent positional arguments are target files.
+The entry is copied with all fields intact (analysis, verdict, justification, resolution, etc.).
+The `releases` field is adjusted to reference the latest published release that exist in each target file.
+
+If an entry with the same `id` already exists in a target file, the command skips that file and reports a warning.
+
+Example:
+
+[source,bash]
+----
+# Copy the analysis from the main branch file to older branch files
+vulnlog copy branch-8.3.vl.yaml branch-8.1.vl.yaml branch-8.2.vl.yaml \
+  --vuln-id CVE-2026-001
+----
+
+// tag::dev-notes[]
+////
+IMPLEMENTATION NOTE:
+
+1. Parse the source file and extract the entry matching --vuln-id.
+2. For each target file:
+   a. Parse target to check for duplicate IDs and get release IDs.
+   b. Clone the source entry.
+   c. Replace `releases` with target file's release IDs (or --release value).
+   d. Insert at position 0 in the target's vulnerabilities array.
+   e. Write using text-level insertion: serialize the copied entry as YAML text
+      and insert it after the `vulnerabilities:` line.
+3. The copied entry may need adjustment after insertion (e.g., different packages
+   in the target branch). The engineer reviews and edits as needed.
+////
+// end::dev-notes[]
 
 [[vulnlog-sarif]]
 ==== `vulnlog sarif` (Future)
@@ -1097,39 +1190,41 @@ Default output: `vulnlog.sarif.json`.
 
 == Future Directions
 
-=== Cross-File References
-
-A future version will introduce a `ref` field on vulnerability entries to reference an entry in another Vulnlog file.
-This addresses the duplication problem in multi-branch setups.
-
-// tag::dev-notes[]
-////
-DESIGN: Cross-file references via `ref`
-
-A vulnerability entry can use `ref` instead of `id` to reference an entry from another file:
-
-  # branch-8.1.vl.yaml
-  vulnerabilities:
-    - ref: "branch-8.3.vl.yaml#CVE-2026-001"
-      releases: [ 8.1.5 ]
-      reports:
-        - reporter: trivy
-      verdict: not_affected
-      justification: vulnerable_code_not_in_execute_path
-
-Rules:
-1. `ref` references `id` entries only, never other `ref` entries.
-2. References should point from shorter-lived branches to longer-lived branches.
-3. The CLI validates references at `validate` time.
-4. Required fields in a `ref` entry: `ref`, `releases`, `reports`.
-5. `ref` and `id` are mutually exclusive on the same entry.
-6. Merge semantics: field-level override. Defined fields override, omitted fields are inherited.
-////
-// end::dev-notes[]
-
 === Multi-File Imports
 
 A future version will introduce an `imports` directive for splitting a Vulnlog file into static project data and dynamic vulnerability data.
+
+// tag::dev-notes[]
+////
+DESIGN: Multi-file support via imports
+
+  # main file (passed to CLI)
+  schemaVersion: "1"
+  imports:
+    - demo-project-vulns.vl.yaml
+
+  project:
+    organization: Demo Project Inc
+    name: Demo Project
+    author: Demo Security Team
+  tags:
+    - id: binary
+  releases:
+    - id: 8.1.0
+
+  # imported file
+  vulnerabilities:
+    - id: CVE-2021-001
+      ...
+
+Rules:
+1. Imported files can contain: tags, releases, vulnerabilities.
+   `schemaVersion` and `project` must be in the main file only.
+2. Arrays are concatenated across files. Duplicate IDs are errors.
+3. Imports are relative to the importing file. No recursive imports.
+4. CLI: no changes. Positional arg is always the main file.
+////
+// end::dev-notes[]
 
 === SARIF Export
 
