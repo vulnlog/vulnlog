@@ -4,12 +4,11 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
-data class ReportEntryDto(
-    val reporter: String,
+data class ResolutionDto(
+    @param:JsonProperty("in")
+    val release: String,
     @param:JsonFormat(pattern = "yyyy-MM-dd")
     val at: LocalDate? = null,
-    val source: String? = null,
-    @param:JsonProperty("vuln_ids")
-    val vulnIds: Set<String> = emptySet(),
-    val suppress: SuppressionDto? = null,
+    val ref: String? = null,
+    val note: String? = null,
 )

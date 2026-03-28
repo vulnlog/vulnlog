@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
-data class ReleaseEntryDto(
-    val id: String,
-    @param:JsonProperty("published_at")
+data class SuppressionDto(
+    @param:JsonProperty("expires_at")
     @param:JsonFormat(pattern = "yyyy-MM-dd")
-    val publishedAt: LocalDate? = null,
-    val purls: List<ReleasePurlEntryDto>? = null,
+    val expiresAt: LocalDate? = null,
 )

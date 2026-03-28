@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.clikt)
     implementation(libs.jacksonKotlin)
     implementation(libs.jacksonYaml)
+    implementation(libs.packageUrl)
 
     testImplementation(libs.kotestAssertionsCoreJvm)
     testImplementation(libs.kotestRunnerJunit5Jvm)

@@ -3,7 +3,16 @@ package dev.vulnlog.cli.model
 import java.time.LocalDate
 
 data class ReleaseEntry(
+    /**
+     * Unique release identifier.
+     */
     val id: Release,
-    val description: String? = null,
+    /**
+     * Publication date of the release. Absence indicates the release is not yet published.
+     */
     val publicationDate: LocalDate? = null,
+    /**
+     * Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents.
+     */
+    val purls: List<PurlEntry> = emptyList(),
 )

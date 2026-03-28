@@ -2,6 +2,8 @@ package dev.vulnlog.cli.core
 
 import dev.vulnlog.cli.model.ParseValidationVersion
 import dev.vulnlog.cli.model.Project
+import dev.vulnlog.cli.model.Purl
+import dev.vulnlog.cli.model.PurlEntry
 import dev.vulnlog.cli.model.Release
 import dev.vulnlog.cli.model.ReleaseEntry
 import dev.vulnlog.cli.model.ReportEntry
@@ -9,6 +11,7 @@ import dev.vulnlog.cli.model.ReporterType
 import dev.vulnlog.cli.model.SchemaVersion
 import dev.vulnlog.cli.model.Tag
 import dev.vulnlog.cli.model.TagEntry
+import dev.vulnlog.cli.model.Verdict
 import dev.vulnlog.cli.model.VulnId
 import dev.vulnlog.cli.model.VulnerabilityEntry
 import dev.vulnlog.cli.model.VulnlogFile
@@ -103,15 +106,34 @@ class ValidatorTest : FunSpec({
                 emptyFile().copy(
                     vulnerabilities =
                         listOf(
-                            VulnerabilityEntry(VulnId.Cve("CVE-2021-1"), emptyList(), emptyList()),
-                            VulnerabilityEntry(VulnId.Cve("CVE-2021-2"), emptyList(), emptyList()),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                packages = emptyList(),
+                                releases = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-2"),
+                                packages = emptyList(),
+                                releases = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
                         ),
                 )
             validate(context(file)).errors.shouldBeEmpty()
         }
 
         test("duplicate vulnerability IDs produce an error") {
-            val vuln = VulnerabilityEntry(VulnId.Cve("CVE-2021-1"), emptyList(), emptyList())
+            val vuln =
+                VulnerabilityEntry(
+                    id = VulnId.Cve("CVE-2021-1"),
+                    packages = emptyList(),
+                    releases = emptyList(),
+                    reports = emptyList(),
+                    verdict = Verdict.UnderInvestigation,
+                )
             val file = emptyFile().copy(vulnerabilities = listOf(vuln, vuln))
             val errors = validate(context(file)).errors
             errors shouldHaveSize 1
@@ -127,7 +149,13 @@ class ValidatorTest : FunSpec({
                     releases = listOf(ReleaseEntry(Release("v1.0"))),
                     vulnerabilities =
                         listOf(
-                            VulnerabilityEntry(VulnId.Cve("CVE-2021-1"), listOf(Release("v1.0")), emptyList()),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = listOf(Release("v1.0")),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
                         ),
                 )
             validate(context(file)).errors.shouldBeEmpty()
@@ -139,7 +167,13 @@ class ValidatorTest : FunSpec({
                     releases = listOf(ReleaseEntry(Release("v1.0"))),
                     vulnerabilities =
                         listOf(
-                            VulnerabilityEntry(VulnId.Cve("CVE-2021-1"), listOf(Release("v2.0")), emptyList()),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = listOf(Release("v2.0")),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
                         ),
                 )
             val errors = validate(context(file)).errors
@@ -155,7 +189,13 @@ class ValidatorTest : FunSpec({
                     releases = listOf(ReleaseEntry(Release("v1.0")), ReleaseEntry(Release("v1.1"))),
                     vulnerabilities =
                         listOf(
-                            VulnerabilityEntry(VulnId.Cve("CVE-2021-1"), listOf(Release("v9.9")), emptyList()),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = listOf(Release("v9.9")),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
                         ),
                 )
             val errors = validate(context(file)).errors
@@ -173,8 +213,10 @@ class ValidatorTest : FunSpec({
                             VulnerabilityEntry(
                                 id = VulnId.Cve("CVE-2021-1"),
                                 releases = emptyList(),
+                                packages = emptyList(),
                                 reports = listOf(ReportEntry(ReporterType.GRYPE, LocalDate.of(2021, 1, 1))),
                                 analyzedAt = LocalDate.of(2021, 6, 1),
+                                verdict = Verdict.UnderInvestigation,
                             ),
                         ),
                 )
@@ -189,9 +231,11 @@ class ValidatorTest : FunSpec({
                         listOf(
                             VulnerabilityEntry(
                                 id = VulnId.Cve("CVE-2021-1"),
+                                packages = emptyList(),
                                 releases = emptyList(),
                                 reports = listOf(ReportEntry(ReporterType.GRYPE, reportDate)),
                                 analyzedAt = reportDate,
+                                verdict = Verdict.UnderInvestigation,
                             ),
                         ),
                 )
@@ -205,15 +249,17 @@ class ValidatorTest : FunSpec({
                         listOf(
                             VulnerabilityEntry(
                                 id = VulnId.Cve("CVE-2021-1"),
+                                packages = emptyList(),
                                 releases = emptyList(),
                                 reports = listOf(ReportEntry(ReporterType.GRYPE, LocalDate.of(2021, 6, 1))),
                                 analyzedAt = LocalDate.of(2021, 1, 1),
+                                verdict = Verdict.UnderInvestigation,
                             ),
                         ),
                 )
             val warnings = validate(context(file)).warnings
             warnings shouldHaveSize 1
-            warnings[0].rule shouldBe Rule.ANALYSED_BEFORE_REPORTED
+            warnings[0].rule shouldBe Rule.ANALYZED_BEFORE_REPORTED
             warnings[0].severity shouldBe Severity.WARNING
             warnings[0].path shouldBe "vulnerabilities[CVE-2021-1].analyzed_at"
         }
@@ -225,9 +271,11 @@ class ValidatorTest : FunSpec({
                         listOf(
                             VulnerabilityEntry(
                                 id = VulnId.Cve("CVE-2021-1"),
+                                packages = emptyList(),
                                 releases = emptyList(),
                                 reports = listOf(ReportEntry(ReporterType.GRYPE, LocalDate.of(2021, 1, 1))),
                                 analyzedAt = null,
+                                verdict = Verdict.UnderInvestigation,
                             ),
                         ),
                 )
@@ -241,6 +289,7 @@ class ValidatorTest : FunSpec({
                         listOf(
                             VulnerabilityEntry(
                                 id = VulnId.Cve("CVE-2021-1"),
+                                packages = emptyList(),
                                 releases = emptyList(),
                                 reports =
                                     listOf(
@@ -248,6 +297,7 @@ class ValidatorTest : FunSpec({
                                         ReportEntry(ReporterType.SNYK, LocalDate.of(2021, 6, 1)),
                                     ),
                                 analyzedAt = LocalDate.of(2021, 1, 1),
+                                verdict = Verdict.UnderInvestigation,
                             ),
                         ),
                 )
@@ -262,13 +312,370 @@ class ValidatorTest : FunSpec({
                         listOf(
                             VulnerabilityEntry(
                                 id = VulnId.Cve("CVE-2021-1"),
+                                packages = emptyList(),
                                 releases = emptyList(),
                                 reports = listOf(ReportEntry(ReporterType.GRYPE, null)),
                                 analyzedAt = LocalDate.of(2021, 1, 1),
+                                verdict = Verdict.UnderInvestigation,
                             ),
                         ),
                 )
             validate(context(file)).warnings.shouldBeEmpty()
+        }
+    }
+
+    context("unreferenced releases") {
+        test("release referenced in a vulnerability produces no infos") {
+            val file =
+                emptyFile().copy(
+                    releases = listOf(ReleaseEntry(Release("v1.0"))),
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = listOf(Release("v1.0")),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).infos.shouldBeEmpty()
+        }
+
+        test("release not referenced in any vulnerability produces an info finding") {
+            val file =
+                emptyFile().copy(
+                    releases = listOf(ReleaseEntry(Release("v1.0"))),
+                )
+            val infos = validate(context(file)).infos
+            infos shouldHaveSize 1
+            infos[0].rule shouldBe Rule.UNREFERENCED_RELEASE_ID
+            infos[0].severity shouldBe Severity.INFO
+            infos[0].path shouldBe "releases[v1.0]"
+        }
+
+        test("only unreferenced releases produce infos") {
+            val file =
+                emptyFile().copy(
+                    releases = listOf(ReleaseEntry(Release("v1.0")), ReleaseEntry(Release("v2.0"))),
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = listOf(Release("v1.0")),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            val infos = validate(context(file)).infos
+            infos shouldHaveSize 1
+            infos[0].path shouldBe "releases[v2.0]"
+        }
+    }
+
+    context("unreferenced tags") {
+        test("tag used in vulnerability produces no infos") {
+            val file =
+                emptyFile().copy(
+                    tags = listOf(TagEntry(Tag("backend"))),
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                tags = listOf(Tag("backend")),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).infos.shouldBeEmpty()
+        }
+
+        test("tag used in a release PURL produces no infos") {
+            val file =
+                emptyFile().copy(
+                    tags = listOf(TagEntry(Tag("backend"))),
+                    releases =
+                        listOf(
+                            ReleaseEntry(
+                                id = Release("v1.0"),
+                                purls =
+                                    listOf(
+                                        PurlEntry(Purl.Maven("pkg:maven/acme/widget@1.0"), listOf(Tag("backend"))),
+                                    ),
+                            ),
+                        ),
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = listOf(Release("v1.0")),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).infos.filter { it.rule == Rule.UNREFERENCED_TAG_ID }.shouldBeEmpty()
+        }
+
+        test("tag not used anywhere produces an info finding") {
+            val file = emptyFile().copy(tags = listOf(TagEntry(Tag("backend"))))
+            val infos = validate(context(file)).infos
+            infos shouldHaveSize 1
+            infos[0].rule shouldBe Rule.UNREFERENCED_TAG_ID
+            infos[0].severity shouldBe Severity.INFO
+            infos[0].path shouldBe "tags[backend]"
+        }
+    }
+
+    context("alias also used as a primary vulnerability ID") {
+        test("alias not matching any primary ID produces no errors") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                aliases = listOf(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).errors.shouldBeEmpty()
+        }
+
+        test("alias matching a primary vulnerability ID produces an error") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                            VulnerabilityEntry(
+                                id = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"),
+                                aliases = listOf(VulnId.Cve("CVE-2021-1")),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            val errors = validate(context(file)).errors
+            errors shouldHaveSize 1
+            errors[0].rule shouldBe Rule.DUPLICATE_VULNERABILITY_ID
+        }
+    }
+
+    context("same alias referenced in multiple vulnerabilities") {
+        test("unique aliases across vulnerabilities produce no errors") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                aliases = listOf(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-2"),
+                                aliases = listOf(VulnId.Ghsa("GHSA-dddd-eeee-ffff")),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).errors.shouldBeEmpty()
+        }
+
+        test("same alias in two vulnerabilities produces errors for each") {
+            val sharedAlias = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                aliases = listOf(sharedAlias),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-2"),
+                                aliases = listOf(sharedAlias),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            val errors = validate(context(file)).errors
+            errors shouldHaveSize 2
+            errors.forEach { it.rule shouldBe Rule.DUPLICATE_VULNERABILITY_ID }
+        }
+    }
+
+    context("dangling tag references in releases") {
+        test("tag reference in release PURL matching a defined tag produces no errors") {
+            val file =
+                emptyFile().copy(
+                    tags = listOf(TagEntry(Tag("backend"))),
+                    releases =
+                        listOf(
+                            ReleaseEntry(
+                                id = Release("v1.0"),
+                                purls =
+                                    listOf(
+                                        PurlEntry(Purl.Maven("pkg:maven/acme/widget@1.0"), listOf(Tag("backend"))),
+                                    ),
+                            ),
+                        ),
+                )
+            validate(context(file)).errors.shouldBeEmpty()
+        }
+
+        test("tag reference in release PURL not matching any defined tag produces an error") {
+            val file =
+                emptyFile().copy(
+                    releases =
+                        listOf(
+                            ReleaseEntry(
+                                id = Release("v1.0"),
+                                purls =
+                                    listOf(
+                                        PurlEntry(Purl.Maven("pkg:maven/acme/widget@1.0"), listOf(Tag("unknown"))),
+                                    ),
+                            ),
+                        ),
+                )
+            val errors = validate(context(file)).errors
+            errors shouldHaveSize 1
+            errors[0].rule shouldBe Rule.DANGLING_TAG_REFERENCE
+            errors[0].path shouldBe "releases[v1.0].purls[pkg:maven/acme/widget@1.0].tags[unknown]"
+        }
+    }
+
+    context("dangling tag references in vulnerabilities") {
+        test("tag reference in vulnerability matching a defined tag produces no errors") {
+            val file =
+                emptyFile().copy(
+                    tags = listOf(TagEntry(Tag("backend"))),
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                tags = listOf(Tag("backend")),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).errors.shouldBeEmpty()
+        }
+
+        test("tag reference in vulnerability not matching any defined tag produces an error") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = emptyList(),
+                                tags = listOf(Tag("unknown")),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            val errors = validate(context(file)).errors
+            errors shouldHaveSize 1
+            errors[0].rule shouldBe Rule.DANGLING_TAG_REFERENCE
+            errors[0].path shouldBe "vulnerabilities[CVE-2021-1].tags[unknown]"
+        }
+    }
+
+    context("OTHER reporter requires source") {
+        test("OTHER reporter with a source produces no errors") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports =
+                                    listOf(
+                                        ReportEntry(ReporterType.OTHER, source = "https://example.com/advisory"),
+                                    ),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).errors.shouldBeEmpty()
+        }
+
+        test("OTHER reporter without source produces an error") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = listOf(ReportEntry(ReporterType.OTHER)),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            val errors = validate(context(file)).errors
+            errors shouldHaveSize 1
+            errors[0].rule shouldBe Rule.MISSING_REPORTER_INFORMATION
+            errors[0].path shouldBe "vulnerabilities[CVE-2021-1]"
+        }
+
+        test("non-OTHER reporter without source produces no errors") {
+            val file =
+                emptyFile().copy(
+                    vulnerabilities =
+                        listOf(
+                            VulnerabilityEntry(
+                                id = VulnId.Cve("CVE-2021-1"),
+                                releases = emptyList(),
+                                packages = emptyList(),
+                                reports = listOf(ReportEntry(ReporterType.GRYPE)),
+                                verdict = Verdict.UnderInvestigation,
+                            ),
+                        ),
+                )
+            validate(context(file)).errors.shouldBeEmpty()
         }
     }
 })
