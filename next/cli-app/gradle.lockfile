@@ -20,6 +20,7 @@ com.github.ajalt.mordant:mordant-jvm-jna-jvm:3.0.2=nativeImageClasspath,nativeIm
 com.github.ajalt.mordant:mordant-jvm-jna:3.0.2=nativeImageClasspath,nativeImageTestClasspath,runtimeClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.github.ajalt.mordant:mordant-jvm:3.0.2=compileClasspath,nativeImageClasspath,nativeImageTestClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.github.ajalt.mordant:mordant:3.0.2=compileClasspath,nativeImageClasspath,nativeImageTestClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
+com.github.package-url:packageurl-java:1.5.0=compileClasspath,nativeImageClasspath,nativeImageTestClasspath,runtimeClasspath,testCompileClasspath,testFixturesRuntimeClasspath,testRuntimeClasspath
 com.pinterest.ktlint:ktlint-cli-reporter-baseline:1.0.1=ktlint,ktlintBaselineReporter
 com.pinterest.ktlint:ktlint-cli-reporter-checkstyle:1.0.1=ktlint
 com.pinterest.ktlint:ktlint-cli-reporter-core:1.0.1=ktlint,ktlintBaselineReporter
