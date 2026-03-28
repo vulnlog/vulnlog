@@ -39,7 +39,7 @@ class ValidationRendererTest : FunSpec({
                 listOf(
                     ValidationFinding(
                         severity = Severity.WARNING,
-                        rule = Rule.ANALYSED_BEFORE_REPORTED,
+                        rule = Rule.ANALYZED_BEFORE_REPORTED,
                         path = "vulnerabilities[CVE-2021-1].analyzed_at",
                         message = "Analyzed date is before report date.",
                     ),
@@ -73,7 +73,7 @@ class ValidationRendererTest : FunSpec({
                 listOf(
                     ValidationFinding(
                         severity = Severity.WARNING,
-                        rule = Rule.ANALYSED_BEFORE_REPORTED,
+                        rule = Rule.ANALYZED_BEFORE_REPORTED,
                         path = "path.warning",
                         message = "A warning.",
                     ),
@@ -96,7 +96,7 @@ class ValidationRendererTest : FunSpec({
             ValidationResult(
                 listOf(
                     ValidationFinding(Severity.ERROR, Rule.DUPLICATE_RELEASE_ID, "p1", "msg"),
-                    ValidationFinding(Severity.WARNING, Rule.ANALYSED_BEFORE_REPORTED, "p2", "msg"),
+                    ValidationFinding(Severity.WARNING, Rule.ANALYZED_BEFORE_REPORTED, "p2", "msg"),
                     ValidationFinding(Severity.INFO, Rule.DUPLICATE_VULNERABILITY_ID, "p3", "msg"),
                 ),
             )

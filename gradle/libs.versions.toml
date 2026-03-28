@@ -7,6 +7,7 @@ jacksonVersion = "3.1.0"
 kotestVersion = "6.1.0"
 kotlinVersion = "2.3.0"
 ktlintVersion = "12.1.1"
+packageUrlVersion = "1.5.0"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
@@ -18,6 +19,7 @@ kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", ver
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
+packageUrl = { module = "com.github.package-url:packageurl-java", version.ref = "packageUrlVersion"}
 
 [bundles]
 

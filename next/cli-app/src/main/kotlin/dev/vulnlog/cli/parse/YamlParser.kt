@@ -13,13 +13,13 @@ class YamlParser(private val mapper: ObjectMapper) {
     fun parse(yaml: String): ParseResult {
         val schemaVersion: SchemaVersion =
             detectVersion(yaml)
-                ?: return ParseResult.Error(listOf("Missing or invalid schemaVersion"))
+                ?: return ParseResult.Error("Missing or invalid schemaVersion")
 
         val parseAndValidationVersion =
             when (schemaVersion.major) {
                 1 -> ParseValidationVersion.V1
                 else -> return ParseResult.Error(
-                    listOf("Unsupported schema version '$schemaVersion'. Try updating vulnlog."),
+                    "Unsupported schema version '$schemaVersion'. Try updating vulnlog.",
                 )
             }
 
@@ -43,7 +43,7 @@ class YamlParser(private val mapper: ObjectMapper) {
             try {
                 mapper.readValue<VulnlogFileV1Dto>(yaml)
             } catch (e: DatabindException) {
-                return ParseResult.Error(listOf("YAML parse error: ${e.originalMessage}"))
+                return ParseResult.Error("YAML parse error: ${e.originalMessage}")
             }
         return V1Mapper.toDomain(validationVersion, schemaVersion, dto)
     }

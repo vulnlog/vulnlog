@@ -47,7 +47,7 @@ class ValidateCommand : CliktCommand(name = "validate") {
             for ((file: File, result: ParseResult) in parseResults) {
                 if (result is ParseResult.Error) {
                     echo("Parsing of ${file.name} failed:", err = true)
-                    result.errors.forEach { echo(it, err = true) }
+                    echo(result.error, err = true)
                 }
             }
             throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
@@ -70,7 +70,7 @@ class ValidateCommand : CliktCommand(name = "validate") {
                 validationFindings
                     .filter { (_, findings) -> findings.findings.isNotEmpty() }
                     .map { (context, findings) -> context.fileName to renderValidation(findings) }
-                    .joinToString("\n\n") { (filename, results) -> "Validation findings for  $filename:\n$results" }
+                    .joinToString("\n\n") { (filename, results) -> "Validation findings for $filename:\n$results" }
             echo(result, err = true)
 
             val hasAnyError: Boolean = validationFindings.values.any { it.errors.isNotEmpty() }

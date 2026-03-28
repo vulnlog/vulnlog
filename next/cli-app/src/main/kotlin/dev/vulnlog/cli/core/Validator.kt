@@ -1,6 +1,8 @@
 package dev.vulnlog.cli.core
 
 import dev.vulnlog.cli.model.ParseValidationVersion
+import dev.vulnlog.cli.model.ReporterType
+import dev.vulnlog.cli.model.VulnId
 import dev.vulnlog.cli.model.VulnlogFile
 import dev.vulnlog.cli.model.VulnlogFileContext
 import dev.vulnlog.cli.result.Rule
@@ -27,14 +29,54 @@ fun validate(vulnlogContext: VulnlogFileContext): ValidationResult {
 
 private val v1Rules =
     listOf(
-        ::validateUniqueReleaseIds,
-        ::validateUniqueTagsIds,
-        ::validateUniqueVulnerabilityIds,
-        ::validateReleaseRefs,
-        ::analyzeDateNotBeforeEarliestReportDate,
+        ::validateEveryReleaseIsReferenced,
+        ::validateEveryTagIsReferenced,
+        ::validateUniqueReleases,
+        ::validateUniqueTags,
+        ::validateUniqueVulnerabilities,
+        ::validateVulnerabilityAliasNotReferencedInVulnerabilityIds,
+        ::validateAliasNotReferencedInAliasIds,
+        ::validateVulnerabilitiesReferenceValidReleases,
+        ::validateAnalyzeDateNotBeforeEarliestReportDate,
+        ::validateTagInReleasesIsDefined,
+        ::validateTagInVulnerabilityIsDefined,
+        ::validateSourceInReportIsDefinedWhenOther,
     )
 
-private fun validateUniqueReleaseIds(file: VulnlogFile): List<ValidationFinding> {
+private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
+    val usedReleases = file.vulnerabilities.flatMap { vulnerability -> vulnerability.releases }.toSet()
+    val usedReleasesInResolutions =
+        file.vulnerabilities.map { vulnerability -> vulnerability?.resolution?.release }.toSet()
+    val allReferencedReleases = usedReleases.union(usedReleasesInResolutions)
+    return file.releases
+        .filter { release -> release.id !in allReferencedReleases }
+        .map { release ->
+            ValidationFinding(
+                severity = Severity.INFO,
+                rule = Rule.UNREFERENCED_RELEASE_ID,
+                path = "releases[${release.id.value}]",
+                message = "Unreferenced release ID '${release.id.value}'.",
+            )
+        }
+}
+
+private fun validateEveryTagIsReferenced(file: VulnlogFile): List<ValidationFinding> {
+    val tagsFromReleases = file.releases.flatMap { release -> release.purls.flatMap { it.tags } }.toSet()
+    val tagsFromVulnerabilities = file.vulnerabilities.flatMap { vulnerability -> vulnerability.tags }.toSet()
+    val usedTags = tagsFromReleases.union(tagsFromVulnerabilities)
+    return file.tags
+        .filter { tag -> tag.id !in usedTags }
+        .map { tag ->
+            ValidationFinding(
+                severity = Severity.INFO,
+                rule = Rule.UNREFERENCED_TAG_ID,
+                path = "tags[${tag.id.value}]",
+                message = "Unreferenced tag ID '${tag.id.value}'.",
+            )
+        }
+}
+
+private fun validateUniqueReleases(file: VulnlogFile): List<ValidationFinding> {
     return file.releases
         .groupBy { it.id }
         .filter { (_, group) -> group.size > 1 }
@@ -48,21 +90,21 @@ private fun validateUniqueReleaseIds(file: VulnlogFile): List<ValidationFinding>
         }
 }
 
-private fun validateUniqueTagsIds(file: VulnlogFile): List<ValidationFinding> {
+private fun validateUniqueTags(file: VulnlogFile): List<ValidationFinding> {
     return file.tags
-        ?.groupBy { it.id }
-        ?.filter { (_, group) -> group.size > 1 }
-        ?.map { (id, _) ->
+        .groupBy { it.id }
+        .filter { (_, group) -> group.size > 1 }
+        .map { (id, _) ->
             ValidationFinding(
                 severity = Severity.ERROR,
                 rule = Rule.DUPLICATE_TAG_ID,
                 path = "tags[${id.value}]",
                 message = "Duplicate tag ID '$id'.",
             )
-        } ?: emptyList()
+        }
 }
 
-private fun validateUniqueVulnerabilityIds(file: VulnlogFile): List<ValidationFinding> {
+private fun validateUniqueVulnerabilities(file: VulnlogFile): List<ValidationFinding> {
     return file.vulnerabilities
         .groupBy { it.id }
         .filter { (_, group) -> group.size > 1 }
@@ -76,7 +118,44 @@ private fun validateUniqueVulnerabilityIds(file: VulnlogFile): List<ValidationFi
         }
 }
 
-private fun validateReleaseRefs(file: VulnlogFile): List<ValidationFinding> {
+private fun validateVulnerabilityAliasNotReferencedInVulnerabilityIds(file: VulnlogFile): List<ValidationFinding> {
+    val allId = file.vulnerabilities.map { it.id }.toSet()
+    return file.vulnerabilities
+        .filter { vulnerability -> vulnerability.aliases.any { it in allId } }
+        .map { vulnerability ->
+            val duplicateAliases = vulnerability.aliases.filter { it in allId }.joinToString(", ") { it.canonical() }
+            ValidationFinding(
+                severity = Severity.ERROR,
+                rule = Rule.DUPLICATE_VULNERABILITY_ID,
+                path = "vulnerabilities[${vulnerability.id.canonical()}].aliases[$duplicateAliases]",
+                message = "Duplicate aliases ID '$duplicateAliases'.",
+            )
+        }
+}
+
+private fun validateAliasNotReferencedInAliasIds(file: VulnlogFile): List<ValidationFinding> {
+    val aliasToVulnerabilities = mutableMapOf<VulnId, MutableList<VulnId>>()
+    file.vulnerabilities.forEach { vulnerability ->
+        vulnerability.aliases.forEach { alias ->
+            aliasToVulnerabilities.getOrPut(alias) { mutableListOf() }.add(vulnerability.id)
+        }
+    }
+    return aliasToVulnerabilities
+        .filter { (_, vulnIds) -> vulnIds.size > 1 }
+        .flatMap { (aliasId, vulnIds) ->
+            vulnIds.map { vulnId ->
+                val ids = vulnIds.joinToString(", ") { it.canonical() }
+                ValidationFinding(
+                    severity = Severity.ERROR,
+                    rule = Rule.DUPLICATE_VULNERABILITY_ID,
+                    path = "vulnerabilities[${vulnId.canonical()}].aliases[${aliasId.canonical()}]",
+                    message = "Alias ID '${aliasId.canonical()}' is referenced in multiple vulnerabilities: $ids.",
+                )
+            }
+        }
+}
+
+private fun validateVulnerabilitiesReferenceValidReleases(file: VulnlogFile): List<ValidationFinding> {
     val definedIds = file.releases.map { it.id }.toSet()
     return file.vulnerabilities.flatMap { vuln ->
         vuln.releases
@@ -94,7 +173,7 @@ private fun validateReleaseRefs(file: VulnlogFile): List<ValidationFinding> {
     }
 }
 
-private fun analyzeDateNotBeforeEarliestReportDate(file: VulnlogFile): List<ValidationFinding> {
+private fun validateAnalyzeDateNotBeforeEarliestReportDate(file: VulnlogFile): List<ValidationFinding> {
     return file.vulnerabilities
         .mapNotNull { vuln ->
             val analyzedAt = vuln.analyzedAt ?: return@mapNotNull null
@@ -102,12 +181,69 @@ private fun analyzeDateNotBeforeEarliestReportDate(file: VulnlogFile): List<Vali
             if (earliest > analyzedAt) {
                 ValidationFinding(
                     severity = Severity.WARNING,
-                    rule = Rule.ANALYSED_BEFORE_REPORTED,
+                    rule = Rule.ANALYZED_BEFORE_REPORTED,
                     path = "vulnerabilities[${vuln.id.canonical()}].analyzed_at",
                     message = "Analyzed date '$analyzedAt' is before earliest reported date '$earliest'.",
                 )
             } else {
                 null
             }
+        }
+}
+
+private fun validateTagInReleasesIsDefined(file: VulnlogFile): List<ValidationFinding> {
+    val definedTags = file.tags.map { it.id }.toSet()
+    return file.releases
+        .flatMap { release ->
+            release.purls.mapNotNull { purl ->
+                val unknownTags = purl.tags.filter { it !in definedTags }
+                if (unknownTags.isNotEmpty()) {
+                    val unknownTagsString = unknownTags.joinToString(", ") { it.value }
+                    ValidationFinding(
+                        severity = Severity.ERROR,
+                        rule = Rule.DANGLING_TAG_REFERENCE,
+                        path = "releases[${release.id.value}].purls[${purl.purl.value}].tags[$unknownTagsString]",
+                        message = "References undefined tags '$unknownTagsString'. Defined tags: ${
+                            file.tags.map { it.id }.toSet().sortedBy { it.value }.joinToString { it.value }
+                        }",
+                    )
+                } else {
+                    null
+                }
+            }
+        }
+}
+
+private fun validateTagInVulnerabilityIsDefined(file: VulnlogFile): List<ValidationFinding> {
+    val definedTags = file.tags.map { it.id }.toSet()
+    return file.vulnerabilities
+        .mapNotNull { vuln ->
+            val unknownTags = vuln.tags.filter { it !in definedTags }
+            if (unknownTags.isNotEmpty()) {
+                val unknownTagsString = unknownTags.joinToString(", ") { it.value }
+                ValidationFinding(
+                    severity = Severity.ERROR,
+                    rule = Rule.DANGLING_TAG_REFERENCE,
+                    path = "vulnerabilities[${vuln.id.canonical()}].tags[$unknownTagsString]",
+                    message = "References undefined tags '$unknownTagsString'. Defined tags: ${
+                        file.tags.map { it.id }.toSet().sortedBy { it.value }.joinToString { it.value }
+                    }",
+                )
+            } else {
+                null
+            }
+        }
+}
+
+private fun validateSourceInReportIsDefinedWhenOther(file: VulnlogFile): List<ValidationFinding> {
+    return file.vulnerabilities
+        .filter { vuln -> vuln.reports.any { it.reporter == ReporterType.OTHER && it.source.isNullOrBlank() } }
+        .map { vuln ->
+            ValidationFinding(
+                severity = Severity.ERROR,
+                rule = Rule.MISSING_REPORTER_INFORMATION,
+                path = "vulnerabilities[${vuln.id.canonical()}]",
+                message = "Generic reporter without source specified.",
+            )
         }
 }
