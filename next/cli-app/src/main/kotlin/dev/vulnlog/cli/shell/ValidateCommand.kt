@@ -12,11 +12,8 @@ import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.core.renderValidation
 import dev.vulnlog.cli.core.validate
 import dev.vulnlog.cli.model.VulnlogFileContext
-import dev.vulnlog.cli.parse.YamlParser
-import dev.vulnlog.cli.parse.createYamlMapper
-import dev.vulnlog.cli.result.ParseResult
 import dev.vulnlog.cli.result.ValidationResult
-import java.io.File
+import dev.vulnlog.cli.shell.shared.parseFiles
 import java.nio.file.Path
 
 class ValidateCommand : CliktCommand(name = "validate") {
@@ -36,27 +33,18 @@ class ValidateCommand : CliktCommand(name = "validate") {
     val strict: Boolean by option("--strict", help = "Treats warnings as errors.").flag(default = false)
 
     override fun run() {
-        val parser = YamlParser(createYamlMapper())
-
-        // parse and check for parsing errors
-        val parseResults: Map<File, ParseResult> =
-            files
-                .map { path -> path.toFile() }
-                .associateWith { file -> parser.parse(file.readText()) }
-        if (parseResults.values.any { it is ParseResult.Error }) {
-            for ((file: File, result: ParseResult) in parseResults) {
-                if (result is ParseResult.Error) {
-                    echo("Parsing of ${file.name} failed:", err = true)
-                    echo(result.error, err = true)
-                }
-            }
+        val parseResults = parseFiles(files)
+        parseResults.onEachFailure { file, result ->
+            echo("Parsing of ${file.name} failed:", err = true)
+            echo(result.error, err = true)
+        }
+        if (parseResults.failure.isNotEmpty()) {
             throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
         }
 
         // validate and check for validation findings
         val validationFindings: Map<VulnlogFileContext, ValidationResult> =
-            parseResults
-                .map { (file, parseResult) -> file to parseResult as ParseResult.Ok }
+            parseResults.success
                 .map { (file, parseResult) ->
                     VulnlogFileContext(
                         parseResult.validationVersion,
