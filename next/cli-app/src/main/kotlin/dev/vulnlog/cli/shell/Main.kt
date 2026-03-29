@@ -10,6 +10,7 @@ fun main(args: Array<String>) =
     VulnlogCli()
         .subcommands(InitCommand())
         .subcommands(ValidateCommand())
+        .subcommands(SuppressCommand())
         .main(args)
 
 class VulnlogCli : CliktCommand(name = "vulnlog") {

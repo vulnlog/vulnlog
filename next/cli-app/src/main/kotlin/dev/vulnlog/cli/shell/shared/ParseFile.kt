@@ -6,6 +6,17 @@ import dev.vulnlog.cli.result.ParseResult
 import dev.vulnlog.cli.result.ParseResults
 import java.io.File
 import java.nio.file.Path
+import kotlin.io.path.readText
+
+fun parseFile(path: Path): ParseResults {
+    val parser = YamlParser(createYamlMapper())
+
+    val fileToResult = mapOf(path.toFile() to parser.parse(path.readText()))
+
+    val ok = filterByType<ParseResult.Ok>(fileToResult)
+    val failure = filterByType<ParseResult.Error>(fileToResult)
+    return ParseResults(ok, failure)
+}
 
 fun parseFiles(paths: List<Path>): ParseResults {
     val parser = YamlParser(createYamlMapper())
