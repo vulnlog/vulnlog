@@ -14,4 +14,9 @@ sealed interface Suppressable : Suppression {
         override val vulnIdTypes: Set<KClass<out VulnId>>
             get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class)
     }
+
+    data object Snyk : Suppressable {
+        override val vulnIdTypes: Set<KClass<out VulnId>>
+            get() = setOf(VulnId.Snyk::class)
+    }
 }

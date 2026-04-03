@@ -193,7 +193,7 @@ class SuppressionTest : FunSpec({
         }
     }
 
-    context("mapToSuppression") {
+    context("mapToSuppression to Trivy") {
 
         test("maps trivy suppressions to TrivySuppression output") {
             val entry = suppressedVuln()
@@ -208,11 +208,11 @@ class SuppressionTest : FunSpec({
         test("filters out non-suppressable reporters") {
             val entry =
                 suppressedVuln(
-                    report = ReportEntry(reporter = ReporterType.SNYK, suppress = Suppression()),
+                    report = ReportEntry(reporter = ReporterType.OTHER, suppress = Suppression()),
                 )
-            val input = mapOf(ReporterType.SNYK to listOf(entry))
+            val input = mapOf(ReporterType.OTHER to listOf(entry))
 
-            val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+            val result = mapToSuppression(setOf(ReporterType.OTHER), input)
 
             result.shouldBeEmpty()
         }
@@ -307,6 +307,110 @@ class SuppressionTest : FunSpec({
             val trivy = result.first() as SuppressionOutput.TrivySuppression
 
             trivy.entries shouldHaveSize 1
+        }
+    }
+
+    context("mapToSuppression for Snyk") {
+
+        test("maps snyk suppressions to SnykSuppression output") {
+            val report =
+                ReportEntry(
+                    reporter = ReporterType.SNYK,
+                    vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")),
+                    suppress = Suppression(),
+                )
+            val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
+            val input = mapOf(ReporterType.SNYK to listOf(entry))
+
+            val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+
+            result shouldHaveSize 1
+            result.first().shouldBeInstanceOf<SuppressionOutput.SnykSuppression>()
+        }
+
+        test("produces correct snyk entries from Snyk vulnId") {
+            val report =
+                ReportEntry(
+                    reporter = ReporterType.SNYK,
+                    vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")),
+                    suppress = Suppression(),
+                )
+            val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report, analysis = "not exploitable")
+            val input = mapOf(ReporterType.SNYK to listOf(entry))
+
+            val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+            val snyk = result.first() as SuppressionOutput.SnykSuppression
+
+            snyk.entries shouldHaveSize 1
+            snyk.entries.first().id shouldBe VulnId.Snyk("SNYK-JAVA-001")
+            snyk.entries.first().reason shouldBe "not exploitable"
+        }
+
+        test("produces empty SnykSuppression when no suppressions match") {
+            val result = mapToSuppression(setOf(ReporterType.SNYK), emptyMap())
+
+            result shouldHaveSize 1
+            val snyk = result.first() as SuppressionOutput.SnykSuppression
+            snyk.entries.shouldBeEmpty()
+        }
+
+        test("propagates expiresAt to snyk entries") {
+            val expiresAt = LocalDate.of(2026, 12, 31)
+            val report =
+                ReportEntry(
+                    reporter = ReporterType.SNYK,
+                    vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")),
+                    suppress = Suppression(expiresAt = expiresAt),
+                )
+            val entry = suppressedVuln(report = report)
+            val input = mapOf(ReporterType.SNYK to listOf(entry))
+
+            val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+            val snyk = result.first() as SuppressionOutput.SnykSuppression
+
+            snyk.entries.first().expiresAt shouldBe expiresAt
+        }
+
+        test("ignores non-snyk vulnIds and falls back to main id if snyk type") {
+            val report =
+                ReportEntry(
+                    reporter = ReporterType.SNYK,
+                    vulnIds = setOf(VulnId.Cve("CVE-2024-0001")),
+                    suppress = Suppression(),
+                )
+            val entry = suppressedVuln(id = VulnId.Snyk("SNYK-JAVA-001"), report = report)
+            val input = mapOf(ReporterType.SNYK to listOf(entry))
+
+            val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+            val snyk = result.first() as SuppressionOutput.SnykSuppression
+
+            snyk.entries shouldHaveSize 1
+            snyk.entries.first().id shouldBe VulnId.Snyk("SNYK-JAVA-001")
+        }
+
+        test("produces no entries when neither vulnIds nor main id are snyk type") {
+            val report =
+                ReportEntry(
+                    reporter = ReporterType.SNYK,
+                    vulnIds = setOf(VulnId.Cve("CVE-2024-0001")),
+                    suppress = Suppression(),
+                )
+            val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
+            val input = mapOf(ReporterType.SNYK to listOf(entry))
+
+            val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+            val snyk = result.first() as SuppressionOutput.SnykSuppression
+
+            snyk.entries.shouldBeEmpty()
+        }
+    }
+
+    context("mapToSuppression for multiple reporters") {
+
+        test("produces both trivy and snyk output") {
+            val result = mapToSuppression(setOf(ReporterType.TRIVY, ReporterType.SNYK), emptyMap())
+
+            result shouldHaveSize 2
         }
     }
 
