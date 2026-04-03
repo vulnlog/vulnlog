@@ -74,8 +74,7 @@ fun mapToSuppression(
     reporterToSuppressions: Map<ReporterType, List<SuppressedVulnerability>>,
 ): Set<SuppressionOutput> =
     targetReporters
-        .map {
-                reporter ->
+        .map { reporter ->
             getDefaultSettingsForReporter(reporter) to (reporterToSuppressions[reporter] ?: emptyList())
         }
         .filter { (defaults, _) -> defaults is Suppressable }
@@ -91,7 +90,7 @@ private fun getDefaultSettingsForReporter(reporter: ReporterType): Suppression =
         ReporterType.OTHER -> NotSuppressable
         ReporterType.RUST_AUDIT -> NotSuppressable
         ReporterType.SEMGREP -> NotSuppressable
-        ReporterType.SNYK -> NotSuppressable
+        ReporterType.SNYK -> Suppressable.Snyk
         ReporterType.TRIVY -> Suppressable.Trivy
     }
 
@@ -101,6 +100,7 @@ private fun createSuppression(
 ): SuppressionOutput =
     when (defaults) {
         is Suppressable.Trivy -> createTrivySuppression(defaults, suppressions)
+        is Suppressable.Snyk -> createSnykSuppression(defaults, suppressions)
     }
 
 private fun createTrivySuppression(
@@ -120,6 +120,25 @@ private fun createTrivySuppression(
             }
             .toSet()
     return SuppressionOutput.TrivySuppression(entries = entries)
+}
+
+private fun createSnykSuppression(
+    defaults: Suppressable,
+    suppressions: List<SuppressedVulnerability>,
+): SuppressionOutput {
+    val entries =
+        suppressions
+            .flatMap { entry ->
+                resolveVulnIds(entry, defaults).map { id ->
+                    SuppressionVuln.SnykSuppressionEntry(
+                        id = id,
+                        expiresAt = entry.reports.suppress?.expiresAt,
+                        reason = entry.analysis,
+                    )
+                }
+            }
+            .toSet()
+    return SuppressionOutput.SnykSuppression(entries = entries)
 }
 
 private fun resolveVulnIds(
