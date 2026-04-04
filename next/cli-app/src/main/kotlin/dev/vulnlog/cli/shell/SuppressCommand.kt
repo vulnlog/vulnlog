@@ -78,7 +78,9 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         outputSuppressions.forEach { suppressionOutput ->
             val file = writeSuppressionOutput(suppressionOutput)
-            output.resolve(file.fileName).writeText(file.content)
+            val outputPath = output.resolve(file.fileName)
+            outputPath.writeText(file.content)
+            echo("Suppression file created at: ${outputPath.toAbsolutePath()}")
         }
     }
 

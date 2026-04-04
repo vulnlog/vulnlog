@@ -83,15 +83,15 @@ fun mapToSuppression(
 
 private fun getDefaultSettingsForReporter(reporter: ReporterType): Suppression =
     when (reporter) {
-        ReporterType.DEPENDENCY_CHECK -> NotSuppressable
-        ReporterType.GITHUB_SECURITY_ADVISORY -> NotSuppressable
-        ReporterType.GRYPE -> NotSuppressable
-        ReporterType.NPM_AUDIT -> NotSuppressable
+        ReporterType.DEPENDENCY_CHECK -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.GITHUB_SECURITY_ADVISORY -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.GRYPE -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.NPM_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.OTHER -> NotSuppressable
-        ReporterType.RUST_AUDIT -> NotSuppressable
-        ReporterType.SEMGREP -> NotSuppressable
-        ReporterType.SNYK -> Suppressable.Snyk
-        ReporterType.TRIVY -> Suppressable.Trivy
+        ReporterType.RUST_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.SEMGREP -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.SNYK -> Suppressable.NativeFormat.Snyk
+        ReporterType.TRIVY -> Suppressable.NativeFormat.Trivy
     }
 
 private fun createSuppression(
@@ -99,9 +99,32 @@ private fun createSuppression(
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput =
     when (defaults) {
-        is Suppressable.Trivy -> createTrivySuppression(defaults, suppressions)
-        is Suppressable.Snyk -> createSnykSuppression(defaults, suppressions)
+        is Suppressable.GenericFormat.Generic -> createGenericSuppression(defaults, suppressions)
+        is Suppressable.NativeFormat.Trivy -> createTrivySuppression(defaults, suppressions)
+        is Suppressable.NativeFormat.Snyk -> createSnykSuppression(defaults, suppressions)
     }
+
+private fun createGenericSuppression(
+    defaults: Suppressable.GenericFormat.Generic,
+    suppressions: List<SuppressedVulnerability>,
+): SuppressionOutput {
+    val entries =
+        suppressions
+            .flatMap { entry ->
+                resolveVulnIds(entry, defaults).map { id ->
+                    SuppressionVuln.GenericSuppressionEntry(
+                        id = id,
+                        expiresAt = entry.reports.suppress?.expiresAt,
+                        reason = entry.analysis,
+                    )
+                }
+            }
+            .toSet()
+    return SuppressionOutput.GenericSuppression(
+        fileName = defaults.reporter.name.lowercase() + ".generic.json",
+        entries = entries,
+    )
+}
 
 private fun createTrivySuppression(
     defaults: Suppressable,

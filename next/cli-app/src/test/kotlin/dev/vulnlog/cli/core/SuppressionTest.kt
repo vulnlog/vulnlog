@@ -238,7 +238,7 @@ class SuppressionTest : FunSpec({
         }
 
         test("ignores target reporters not in suppressable set") {
-            val result = mapToSuppression(setOf(ReporterType.GRYPE, ReporterType.TRIVY), emptyMap())
+            val result = mapToSuppression(setOf(ReporterType.OTHER, ReporterType.TRIVY), emptyMap())
 
             result shouldHaveSize 1
             result.first().shouldBeInstanceOf<SuppressionOutput.TrivySuppression>()

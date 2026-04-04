@@ -76,5 +76,17 @@
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.suppression.generic.dto.GenericSuppressionDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.suppression.generic.dto.GenericVulnerabilityEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   }
 ]
