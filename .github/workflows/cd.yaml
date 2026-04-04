@@ -72,22 +72,11 @@ jobs:
           VERSION="${{ github.ref_name }}"
           VERSION="${VERSION#v}"
           ./gradlew :next:nativeCompile --no-configuration-cache -PappVersion="$VERSION"
-      - name: Package native image (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          cd next/cli-app/build/native/nativeCompile
-          zip ${{ matrix.artifact-name }}.zip vulnlog
-      - name: Package native image (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          cd next/cli-app/build/native/nativeCompile
-          Compress-Archive -Path vulnlog.exe -DestinationPath "${{ matrix.artifact-name }}.zip"
       - name: Upload native image
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: next/cli-app/build/native/nativeCompile/${{ matrix.artifact-name }}.zip
+          path: next/cli-app/build/native/nativeCompile/vulnlog${{ runner.os == 'Windows' && '.exe' || '' }}
 
   publish-release:
     name: Publish release
@@ -114,7 +103,12 @@ jobs:
         with:
           pattern: vulnlog-*
           path: native-images
-          merge-multiple: true
+      - name: Package native images
+        run: |
+          for dir in native-images/vulnlog-*/; do
+            name=$(basename "$dir")
+            (cd "$dir" && zip "../${name}.zip" *)
+          done
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -151,11 +145,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: vulnlog-linux-amd64
-          path: native-image
-      - name: Extract native binary
-        run: |
-          unzip native-image/vulnlog-linux-amd64.zip -d next/cli-app/build/native/nativeCompile
-          chmod +x next/cli-app/build/native/nativeCompile/vulnlog
+          path: next/cli-app/build/native/nativeCompile
+      - name: Mark binary as executable
+        run: chmod +x next/cli-app/build/native/nativeCompile/vulnlog
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
