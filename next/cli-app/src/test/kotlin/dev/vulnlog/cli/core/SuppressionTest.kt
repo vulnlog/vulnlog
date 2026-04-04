@@ -84,7 +84,7 @@ class SuppressionTest : FunSpec({
 
         test("collects vulnerability with suppressed report") {
             val file = emptyFile().copy(vulnerabilities = listOf(vulnerability()))
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result shouldHaveSize 1
             result[ReporterType.TRIVY]!! shouldHaveSize 1
@@ -95,20 +95,37 @@ class SuppressionTest : FunSpec({
             val report = trivyReport(suppress = null)
             val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.LOW))
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result.shouldBeEmpty()
         }
 
-        test("filters by release") {
+        test("filters by single release") {
             val vuln1 = vulnerability(id = VulnId.Cve("CVE-2024-0001"), releases = listOf(releaseV1))
             val vuln2 = vulnerability(id = VulnId.Cve("CVE-2024-0002"), releases = listOf(releaseV2))
             val file = emptyFile().copy(vulnerabilities = listOf(vuln1, vuln2))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(releaseV1, emptySet(), null, today))
+            val result =
+                collectSuppressedVulnerabilities(file, SuppressionFilter(setOf(releaseV1), emptySet(), null, today))
 
             result[ReporterType.TRIVY]!! shouldHaveSize 1
             result[ReporterType.TRIVY]!!.first().id shouldBe VulnId.Cve("CVE-2024-0001")
+        }
+
+        test("filters by multiple releases includes vulnerabilities for any of them") {
+            val releaseV3 = Release("v3.0")
+            val vuln1 = vulnerability(id = VulnId.Cve("CVE-2024-0001"), releases = listOf(releaseV1))
+            val vuln2 = vulnerability(id = VulnId.Cve("CVE-2024-0002"), releases = listOf(releaseV2))
+            val vuln3 = vulnerability(id = VulnId.Cve("CVE-2024-0003"), releases = listOf(releaseV3))
+            val file = emptyFile().copy(vulnerabilities = listOf(vuln1, vuln2, vuln3))
+
+            val result =
+                collectSuppressedVulnerabilities(
+                    file,
+                    SuppressionFilter(setOf(releaseV1, releaseV2), emptySet(), null, today),
+                )
+
+            result[ReporterType.TRIVY]!! shouldHaveSize 2
         }
 
         test("filters by tag") {
@@ -117,7 +134,7 @@ class SuppressionTest : FunSpec({
             val vuln2 = vulnerability(id = VulnId.Cve("CVE-2024-0002"), tags = emptyList())
             val file = emptyFile().copy(vulnerabilities = listOf(vuln1, vuln2))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, setOf(tag), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), setOf(tag), null, today))
 
             result[ReporterType.TRIVY]!! shouldHaveSize 1
             result[ReporterType.TRIVY]!!.first().id shouldBe VulnId.Cve("CVE-2024-0001")
@@ -132,7 +149,7 @@ class SuppressionTest : FunSpec({
                 )
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result.shouldBeEmpty()
         }
@@ -141,7 +158,7 @@ class SuppressionTest : FunSpec({
             val vuln = vulnerability(verdict = Verdict.Affected(Severity.HIGH))
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result shouldHaveSize 1
         }
@@ -151,7 +168,7 @@ class SuppressionTest : FunSpec({
             val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.LOW))
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result.shouldBeEmpty()
         }
@@ -161,7 +178,7 @@ class SuppressionTest : FunSpec({
             val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.LOW))
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result shouldHaveSize 1
         }
@@ -173,7 +190,10 @@ class SuppressionTest : FunSpec({
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
             val result =
-                collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), ReporterType.TRIVY, today))
+                collectSuppressedVulnerabilities(
+                    file,
+                    SuppressionFilter(emptySet(), emptySet(), ReporterType.TRIVY, today),
+                )
 
             result shouldHaveSize 1
             result.keys.first() shouldBe ReporterType.TRIVY
@@ -185,7 +205,7 @@ class SuppressionTest : FunSpec({
             val vuln = vulnerability(reports = listOf(trivyReport, snykReport))
             val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(null, emptySet(), null, today))
+            val result = collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
 
             result shouldHaveSize 2
         }

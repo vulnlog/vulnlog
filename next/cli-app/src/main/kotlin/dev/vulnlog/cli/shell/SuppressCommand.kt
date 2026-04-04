@@ -51,7 +51,10 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             """.trimIndent(),
     )
         .convert { ReporterType.valueOf(it.uppercase()) }
-    val releaseOption: String? by option("--release", help = "Filter on release.")
+    val releaseOption: String? by option(
+        "--release",
+        help = "Filter on release, include all releases up to and including that release.",
+    )
     val tagsOptions: Set<String> by option(
         "--tag",
         help = "Filter on tags. Use multiple times to filter on multiple tags.",
@@ -63,7 +66,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         val parseResults = parseAndValidate()
         val vulnlogFile = parseResults.values.first().content
 
-        val release: Release? = checkProvidedReleaseFilter(vulnlogFile)
+        val releases: Set<Release> = checkProvidedReleaseFilter(vulnlogFile)
         val tags: Set<Tag> = checkProvidedTagsFilter(vulnlogFile)
 
         val targetReporters =
@@ -73,7 +76,8 @@ class SuppressCommand : CliktCommand(name = "suppress") {
                 .filter { reporter == null || it == reporter }
                 .toSet()
 
-        val suppressionVulns = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(release, tags, reporter))
+        val suppressionVulns =
+            collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(releases, tags, reporter))
         val outputSuppressions = mapToSuppression(targetReporters, suppressionVulns)
 
         outputSuppressions.forEach { suppressionOutput ->
@@ -102,23 +106,25 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         return parseResults.success
     }
 
-    private fun checkProvidedReleaseFilter(vulnlogFile: VulnlogFile): Release? =
+    private fun checkProvidedReleaseFilter(vulnlogFile: VulnlogFile): Set<Release> =
         if (releaseOption != null) {
             try {
                 val release = Release(releaseOption!!)
-                if (release !in vulnlogFile.releases.map { it.id }) {
+                val orderedReleases = vulnlogFile.releases.map { it.id }
+                val index = orderedReleases.indexOf(release)
+                if (index == -1) {
                     echo("Release not found: $releaseOption", err = true)
-                    echo("Known releases: ${vulnlogFile.releases.joinToString(", ") { it.id.value }}", err = true)
+                    echo("Known releases: ${orderedReleases.joinToString(", ") { it.value }}", err = true)
                     throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.ordinal)
                 }
-                release
+                orderedReleases.take(index + 1).toSet()
             } catch (e: IllegalArgumentException) {
                 echo("Invalid release: ${e.message}", err = true)
                 echo("Known releases: ${vulnlogFile.releases.joinToString(", ") { it.id.value }}", err = true)
                 throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.ordinal)
             }
         } else {
-            null
+            emptySet()
         }
 
     private fun checkProvidedTagsFilter(vulnlogFile: VulnlogFile): Set<Tag> =
