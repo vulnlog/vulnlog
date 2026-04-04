@@ -3,7 +3,9 @@ package dev.vulnlog.cli.core
 import dev.vulnlog.cli.model.Release
 import dev.vulnlog.cli.model.ReporterType
 import dev.vulnlog.cli.model.Tag
+import dev.vulnlog.cli.model.Verdict
 import dev.vulnlog.cli.model.VulnId
+import dev.vulnlog.cli.model.VulnerabilityEntry
 import dev.vulnlog.cli.model.VulnlogFile
 import dev.vulnlog.cli.model.suppress.NotSuppressable
 import dev.vulnlog.cli.model.suppress.Suppressable
@@ -38,23 +40,37 @@ fun collectSuppressedVulnerabilities(
         .asSequence()
         .filter { filter.release == null || it.releases.contains(filter.release) }
         .filter { filter.tags.isEmpty() || filter.tags.any { tag -> it.tags.contains(tag) } }
-        .filter { it.resolution == null || it.resolution.at?.isAfter(filter.today) ?: true }
-        .flatMap { vulnerability ->
-            vulnerability.reports
-                .filter { it.suppress != null }
-                .filter { it.suppress?.expiresAt?.isAfter(filter.today) ?: true }
-                .map { suppressionReport ->
-                    SuppressedVulnerability(
-                        id = vulnerability.id,
-                        releases = vulnerability.releases,
-                        reports = suppressionReport,
-                        tags = vulnerability.tags,
-                        analysis = vulnerability.analysis!!,
-                    )
-                }
-        }
+        .flatMap { vulnerability -> collectEligibleReports(vulnerability, filter.today) }
         .groupBy { it.reports.reporter }
         .filter { filter.reporter == null || it.key == filter.reporter }
+
+private fun collectEligibleReports(
+    vulnerability: VulnerabilityEntry,
+    today: LocalDate,
+): List<SuppressedVulnerability> {
+    if (vulnerability.verdict is Verdict.Affected && vulnerability.resolution != null) {
+        return emptyList()
+    }
+
+    val eligibleReports =
+        when (vulnerability.verdict) {
+            is Verdict.NotAffected -> vulnerability.reports
+            else ->
+                vulnerability.reports
+                    .filter { it.suppress != null }
+                    .filter { it.suppress?.expiresAt?.isAfter(today) ?: true }
+        }
+
+    return eligibleReports.map { report ->
+        SuppressedVulnerability(
+            id = vulnerability.id,
+            releases = vulnerability.releases,
+            reports = report,
+            tags = vulnerability.tags,
+            analysis = vulnerability.analysis ?: "",
+        )
+    }
+}
 
 /**
  * Maps target reporters to their corresponding suppression outputs based on default settings
