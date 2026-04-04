@@ -31,12 +31,10 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
     val file: Path by argument()
         .path(mustExist = true)
-        .check("file name must be [vulnlog|*.vl].[yaml|yml}") {
-            it.all { file ->
-                file.fileName.toString() == "vulnlog.yaml" ||
-                    file.fileName.toString().endsWith(".vl.yaml") ||
-                    file.fileName.toString().endsWith(".vl.yml")
-            }
+        .check("file name must be [vulnlog|*.vl].[yaml|yml}") { file ->
+            file.fileName.toString() == "vulnlog.yaml" ||
+                file.fileName.toString().endsWith(".vl.yaml") ||
+                file.fileName.toString().endsWith(".vl.yml")
         }
     val output: Path by option("--output", help = "Output directory. Defaults to current directory.")
         .path(mustExist = true, canBeDir = true, canBeFile = false)
