@@ -1,0 +1,172 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Demo Project Inc
+  name: Demo Project
+  author: Demo Security Team
+  contact: security@demo.com
+
+tags:
+  - id: binary
+    description: Demo Project binary file
+  - id: container
+    description: Demo Project container image
+  - id: sdk
+    description: Demo Project SDK
+  - id: build-dep
+    description: Internal build dependency
+
+releases:
+  - id: 8.1.0
+    published_at: 2021-01-15
+    purls:
+      - purl: "pkg:generic/demo-project@8.1.0"
+        tags: [ binary ]
+      - purl: "pkg:docker/demo-project@8.1.0"
+        tags: [ container ]
+  - id: 8.1.1
+    published_at: 2021-02-11
+    purls:
+      - purl: "pkg:generic/demo-project@8.1.1"
+        tags: [ binary ]
+      - purl: "pkg:docker/demo-project@8.1.1"
+        tags: [ container ]
+  - id: 8.1.2
+
+vulnerabilities:
+
+  # Report from a non-scanner source (Oracle CPU)
+  - id: CVE-2022-21449
+    name: Psychic Signatures
+    releases: [ 8.1.2 ]
+    description: ECDSA signature verification bypass in Java SE
+    packages: [ "pkg:maven/com.oracle/jdk@17.0.2" ]
+    reports:
+      - reporter: other
+        at: 2022-04-19
+        source: "Oracle Critical Patch Update April 2022"
+    tags: [ binary, container ]
+    analysis: The project uses Java 17 and ECDSA signatures for JWT token verification. Confirmed exploitable.
+    analyzed_at: 2022-04-20
+    severity: critical
+    verdict: affected
+    resolution:
+      in: 8.1.2
+      at: 2022-04-22
+      ref: "https://jira.example.com/browse/SEC-55"
+      note: "Updated JDK from 17.0.2 to 17.0.3"
+
+  # Verdict: risk_acceptable - vulnerability present but risk accepted
+  - id: SNYK-2021-003
+    releases: [ 8.1.2 ]
+    description: DoS vulnerability in some-other-dependency
+    packages: [ "pkg:maven/com.some.other/some-other-dependency@3.11.0" ]
+    reports:
+      - reporter: snyk
+        at: 2022-04-28
+    tags: [ binary, container ]
+    analysis: >
+      Demo project utilizes some-other-dependency but only in rare cases.
+      Therefore the risk is considered low and a fix would potentially
+      be breaking for customer setups.
+    analyzed_at: 2022-04-29
+    comment: >
+      Risk accepted by project lead (decision documented in RISK-12).
+      Revisit when some-other-dependency 4.0 is released.
+    severity: low
+    verdict: risk_acceptable
+
+  # Verdict: not_affected - OS-level vulnerability in container base image
+  - id: CVE-2024-5535
+    releases: [ 8.1.1 ]
+    description: Buffer overread in OpenSSL SSL_select_next_proto
+    packages: [ "pkg:apk/alpine/openssl@3.1.4-r0" ]
+    reports:
+      - reporter: trivy
+        at: 2024-06-28
+    tags: [ container ]
+    analysis: >
+      Vulnerable OpenSSL is present in the container base image but the affected
+      NPN/ALPN negotiation code path is never invoked by our application.
+    analyzed_at: 2024-06-29
+    verdict: not_affected
+    justification: vulnerable_code_not_in_execute_path
+
+  # Verdict: affected - resolved in a subsequent release (named vulnerability)
+  - id: CVE-2021-44228
+    name: Log4Shell
+    aliases: [ GHSA-jfh8-c2jp-5v3q ]
+    releases: [ 8.1.1 ]
+    description: RCE vulnerability in Log4J via JNDI lookup
+    packages: [ "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" ]
+    reports:
+      - reporter: trivy
+        at: 2021-12-10
+    tags: [ binary ]
+    analysis: >
+      Demo project utilizes Log4J and a PoC showed that the project
+      is vulnerable to this RCE vulnerability.
+    analyzed_at: 2021-12-10
+    comment: >
+      PoC exploit confirmed by Jane (security team) on 2021-12-10.
+      See internal report attached to SEC-42.
+    severity: critical
+    verdict: affected
+    resolution:
+      in: 8.1.2
+      at: 2021-12-12
+      ref: "https://jira.example.com/browse/SEC-42"
+      note: "Updated Log4J from 2.14.1 to 2.17.1"
+
+  # Verdict: not_affected - with defensive resolution
+  - id: CVE-2021-002
+    aliases: [ GHSA-xxxx-yyyy ]
+    releases: [ 8.1.1 ]
+    description: Deserialization vulnerability in some-dependency
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-03
+      - reporter: snyk
+        at: 2021-03-03
+        vuln_ids: [ SNYK-2021-002 ]
+    tags: [ binary, container ]
+    analysis: >
+      Demo project does not utilize some-dependency
+      and therefore is not affected.
+    analyzed_at: 2021-03-03
+    verdict: not_affected
+    justification: vulnerable_code_not_present
+    resolution:
+      in: 8.1.2
+      note: "Removed unused dependency some-dependency"
+
+  # Stub entry - quick triage, no description, no verdict yet
+  - id: CVE-2021-007
+    releases: [ 8.1.1 ]
+    packages: [ "pkg:maven/com.example/some-lib@4.0.0" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-10
+    tags: [ binary ]
+
+  # No verdict - under investigation, with temporary suppression
+  - id: CVE-2020-099
+    releases: [ 8.1.0 ]
+    description: Path traversal vulnerability in random-dependency
+    packages: [ "pkg:maven/org.random/random-core@1.33.7" ]
+    reports:
+      - reporter: trivy
+        at: 2020-12-28
+        suppress:
+          expires_at: 2021-01-02
+    tags: [ build-dep ]
+    analysis: >
+      Vulnerability in internal build dependency.
+      No fixed library available at the moment. Re-check later.
+    comment: >
+      Checked upstream issue tracker - fix expected in random-core 1.33.8.
+      Monitor https://github.com/random/random-core/issues/421
+    severity: low

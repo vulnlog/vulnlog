@@ -1,0 +1,6 @@
+= Installation
+
+// TODO: Document installation methods
+// - Docker image (ghcr.io)
+// - Native binary (GraalVM)
+// - Building from source

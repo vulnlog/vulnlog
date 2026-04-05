@@ -1,0 +1,9 @@
+= Vulnerabilities
+
+// TODO: Document the vulnerability entry structure
+// - id, name, aliases, description
+// - releases, packages
+// - reports (reporter, at, source, suppress, vuln_ids)
+// - analysis, analyzed_at, comment
+// - severity (critical, high, medium, low)
+// - Lifecycle: stub entry -> under investigation -> analysed

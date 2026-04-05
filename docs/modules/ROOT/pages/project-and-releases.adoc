@@ -1,0 +1,6 @@
+= Project and Releases
+
+// TODO: Document the project and releases sections
+// - project: organization, name, author, contact
+// - releases: id, published_at, purls (purl + tags)
+// - Package URL (purl) format

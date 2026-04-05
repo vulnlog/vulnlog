@@ -1,0 +1,7 @@
+= Vulnlog YAML Format
+
+// TODO: High-level overview of the *.vl.yaml format
+// - Schema version
+// - File naming conventions (vulnlog.yaml, *.vl.yaml, *.vl.yml)
+// - Top-level structure: project, tags, releases, vulnerabilities
+// - JSON Schema validation

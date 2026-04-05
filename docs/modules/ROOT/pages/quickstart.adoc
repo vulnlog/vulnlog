@@ -1,0 +1,40 @@
+= Quickstart
+
+// TODO: Walk through creating a Vulnlog file from scratch
+// 1. vulnlog init
+// 2. Add a vulnerability entry
+// 3. vulnlog validate
+// 4. vulnlog suppress
+
+== Creating a Vulnlog File
+
+[source,bash]
+----
+vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
+----
+
+.File Name Convention
+[NOTE]
+====
+For simple projects, `vulnlog.[yaml|yml]` are valid file names.
+For multiple Vulnlog files, use `<project-name>.vl.[yaml|yml]`.
+====
+
+== A Minimal Example
+
+[source,yaml]
+----
+include::{examplesdir}/quickstart.vl.yaml[]
+----
+
+== IDE Setup
+
+Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore].
+IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
+
+To reference a local schema, add this as the first line of your Vulnlog file:
+
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+----

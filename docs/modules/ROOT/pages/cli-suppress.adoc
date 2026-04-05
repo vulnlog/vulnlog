@@ -1,0 +1,20 @@
+= vulnlog suppress
+
+// TODO: Document the suppress command
+// - Purpose: generate suppression files for scanners
+// - Arguments: single Vulnlog file
+// - Options: --output, --reporter, --release, --tag
+// - Supported reporters: trivy, snyk, generic
+// - Filtering logic
+// - Example usage and output
+
+[source]
+----
+vulnlog suppress <file> [--reporter <type>] [filter flags] [-o <path>]
+----
+
+When `--reporter` is specified, generates a single suppression file.
+When omitted, generates for all reporter types found in the vulnerability reports.
+
+Output path: `--output` flag or default for the reporter type.
+`--output` is only valid with `--reporter`.
