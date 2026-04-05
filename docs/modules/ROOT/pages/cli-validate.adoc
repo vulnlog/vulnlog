@@ -1,0 +1,16 @@
+= vulnlog validate
+
+// TODO: Document the validate command
+// - Purpose: validate Vulnlog YAML files
+// - Arguments: one or more file paths
+// - Options: --strict (treats warnings as errors)
+// - Exit codes
+// - Example usage and output
+
+[source]
+----
+vulnlog validate <file...> [--strict]
+----
+
+Validates one or more Vulnlog files against the schema and all validation rules.
+`--strict` treats warnings as errors (e.g., missing verdict, missing description).

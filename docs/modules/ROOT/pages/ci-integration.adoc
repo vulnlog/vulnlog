@@ -1,0 +1,7 @@
+= CI/CD Integration
+
+// TODO: Document CI/CD integration patterns
+// - GitHub Actions workflow examples
+// - Validating Vulnlog files in CI
+// - Generating suppression files as part of the pipeline
+// - Using the Docker image in CI

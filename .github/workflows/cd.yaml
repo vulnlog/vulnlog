@@ -9,6 +9,8 @@ permissions:
   contents: write
   discussions: write
   packages: write
+  pages: write
+  id-token: write
 
 jobs:
   generate-changelog:
@@ -133,6 +135,40 @@ jobs:
             For a full description of changes, take a look at our [release notes](https://github.com/vulnlog/vulnlog/releases/tag/${{ github.ref_name }}).
           category-name: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-pages:
+    name: Deploy website and docs to GitHub Pages
+    needs: [ publish-release ]
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - name: Build Antora docs
+        run: npx antora antora-playbook.yml
+      - name: Compose site
+        run: |
+          mkdir -p _site/docs _site/schema
+          cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
+          cp -r build/docs/* _site/docs/
+          cp schema/*.json _site/schema/
+          echo 'vulnlog.dev' > _site/CNAME
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   publish-docker:
     name: Publish Docker image

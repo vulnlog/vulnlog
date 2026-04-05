@@ -1,0 +1,17 @@
+= CLI Overview
+
+// TODO: Document the CLI
+// - General usage: vulnlog [options] <command>
+// - Global options (--version, --help)
+// - Available commands: init, validate, suppress
+// - File naming requirements: vulnlog.yaml, *.vl.yaml, *.vl.yml
+
+[source]
+----
+vulnlog <command> <file...> [flags]
+----
+
+Every command except `init` requires one or more Vulnlog files as positional arguments.
+Read-only commands like `validate` accept multiple files.
+Output-generating commands like `suppress` operate on a single file.
+No automatic file detection.

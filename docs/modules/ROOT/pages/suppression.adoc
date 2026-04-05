@@ -1,0 +1,7 @@
+= Suppression
+
+// TODO: Document suppression concepts and output formats
+// - Per-report suppression (expires_at)
+// - Verdict-based suppression logic
+// - Output formats: Trivy, Snyk, generic
+// - Filtering by release, tag, reporter

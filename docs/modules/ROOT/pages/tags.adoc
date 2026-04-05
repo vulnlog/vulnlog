@@ -1,0 +1,6 @@
+= Tags and Filtering
+
+// TODO: Document the tagging system
+// - Defining tags (id, description)
+// - Assigning tags to releases (via purls) and vulnerabilities
+// - Filtering by tags in CLI commands
