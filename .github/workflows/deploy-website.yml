@@ -1,66 +1,50 @@
-# Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy website and docs to GitHub Pages
 
 on:
   push:
     paths:
       - "website/**"
-      - ".github/workflows/website-deploy.yml"
-  # Allows you to run this workflow manually from the Actions tab
+      - "docs/**"
+      - "schema/**"
+      - "antora-playbook.yml"
+      - ".github/workflows/deploy-website.yml"
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
-#    environment:
-#      name: github-pages
-#      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Use Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
-          cache: 'npm'
-          cache-dependency-path: 'website/package-lock.json'
-      - name: Install dependencies
-        working-directory: website
-        run: npm ci
-      - name: Build site
-        working-directory: website
-        run: npm run build
-        env:
-          SITE_URL: https://vulnlog.dev
-      - name: Deploy to FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+          node-version: 'lts/*'
+      - name: Build Antora docs
+        run: npx antora antora-playbook.yml
+      - name: Compose site
+        run: |
+          mkdir -p _site/docs _site/schema
+          cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
+          cp -r build/docs/* _site/docs/
+          cp schema/*.json _site/schema/
+          echo 'vulnlog.dev' > _site/CNAME
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: './website/public/'
-          server-dir: /
-          dangerous-clean-slate: false
-#          SITE_URL: ${{ steps.deployment.outputs.page_url }}
-#      - name: Setup Pages
-#        uses: actions/configure-pages@v5
-#      - name: Upload artifact
-#        uses: actions/upload-pages-artifact@v3
-#        with:
-#          path: './website/public/'
-#      - name: Deploy to GitHub Pages
-#        id: deployment
-#        uses: actions/deploy-pages@v4
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
