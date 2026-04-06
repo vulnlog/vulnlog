@@ -58,7 +58,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
         with:
-          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk
+          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects
 
       - name: Upload Snyk SARIF to GitHub
         if: always() && hashFiles('snyk-results.sarif') != ''
