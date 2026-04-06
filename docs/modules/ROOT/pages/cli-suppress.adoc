@@ -1,20 +1,45 @@
 = vulnlog suppress
 
-// TODO: Document the suppress command
-// - Purpose: generate suppression files for scanners
-// - Arguments: single Vulnlog file
-// - Options: --output, --reporter, --release, --tag
-// - Supported reporters: trivy, snyk, generic
-// - Filtering logic
-// - Example usage and output
+Create suppression files for various SCA scanners.
+These files, also known as ignore files, contain vulnerability identifiers and advise the dependency scanner to not report the findings again.
 
 [source]
 ----
-vulnlog suppress <file> [--reporter <type>] [filter flags] [-o <path>]
+vulnlog suppress <file> [flags]
 ----
 
-When `--reporter` is specified, generates a single suppression file.
-When omitted, generates for all reporter types found in the vulnerability reports.
+[cols="2,3"]
+|===
+| Flag | Description
 
-Output path: `--output` flag or default for the reporter type.
-`--output` is only valid with `--reporter`.
+| `-o, --output <path>`
+| Output directory. Defaults to current directory.
+
+| `--reporter <value>`
+| Filter on reporter.
+
+| `--release <text>`
+| Filter on release, include all releases up to and including that release.
+
+| `--tag <text>`
+| Filter on tags. Use multiple times to filter on multiple tags.
+
+| `-`
+| Use to read from STDIN.
+
+|===
+
+.Create suppression files for all reporters
+[source]
+----
+vulnlog suppress full-example.vl.yaml
+Suppression file created at: .snyk
+Suppression file created at: .trivyignore.yaml
+----
+
+.Create suppression for releases up to and including 8.1.1 and reporter snyk
+[source]
+----
+vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
+Suppression file created at: .snyk
+----

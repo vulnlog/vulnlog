@@ -1,11 +1,5 @@
 = vulnlog init
 
-// TODO: Document the init command
-// - Purpose: scaffold a minimal Vulnlog file
-// - Required options: --organization, --name, --author
-// - Optional: -o/--output (default: ./vulnlog.yaml)
-// - Example usage and output
-
 Scaffolds a minimal Vulnlog file containing only the required sections (`schemaVersion`, `project`, `releases`, `vulnerabilities`).
 
 [source]
@@ -18,14 +12,31 @@ vulnlog init [flags]
 | Flag | Description
 
 | `-o, --output <path>`
-| Output file path (default: `vulnlog.yaml`).
+| Output path for the generated file. Defaults to stdout.
 
-| `--project <n>`
+| `--project <text>`
 | Project name. Prompted if not provided.
 
-| `--organization <n>`
+| `--organization <text>`
 | Organization name. Prompted if not provided.
 
-| `--author <n>`
+| `--author <text>`
 | Author name. Prompted if not provided.
 |===
+
+.Create a new Vulnlog project.
+[source]
+----
+vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team"
+---
+schemaVersion: "1"
+
+project:
+  organization: "foo"
+  name: "bar"
+  author: "baz"
+
+releases: []
+
+vulnerabilities: []
+----
