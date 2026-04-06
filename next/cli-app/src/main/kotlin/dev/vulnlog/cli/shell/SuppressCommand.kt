@@ -5,11 +5,9 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.options.convert
-import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
-import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.core.SuppressionFilter
 import dev.vulnlog.cli.core.collectSuppressedVulnerabilities
 import dev.vulnlog.cli.core.mapToSuppression
@@ -30,9 +28,11 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     override fun help(context: Context): String = "Create suppression files."
 
     val file: String by argument()
-    val output: Path by option("-o", "--output", help = "Output directory. Defaults to current directory.")
-        .path(mustExist = true, canBeDir = true, canBeFile = false)
-        .default(Path.of(System.getProperty("user.dir")))
+    val output: String? by option(
+        "-o",
+        "--output",
+        help = "Output directory, or '-' to write to stdout. Defaults to current directory.",
+    )
 
     val reporter: ReporterType? by option(
         "--reporter",
@@ -72,11 +72,36 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(releases, tags, reporter))
         val outputSuppressions = mapToSuppression(targetReporters, suppressionVulns)
 
+        val writeToStdout = output == "-"
+        if (writeToStdout && outputSuppressions.size > 1) {
+            echo(
+                "Error: Cannot write multiple suppression files to stdout. Use --reporter to select a single reporter.",
+                err = true,
+            )
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        }
+
+        val outputDir =
+            if (!writeToStdout) {
+                val dir = Path.of(output ?: System.getProperty("user.dir"))
+                if (!dir.toFile().isDirectory) {
+                    echo("Error: Output path '$dir' is not a directory.", err = true)
+                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+                }
+                dir
+            } else {
+                null
+            }
+
         outputSuppressions.forEach { suppressionOutput ->
             val file = writeSuppressionOutput(suppressionOutput)
-            val outputPath = output.resolve(file.fileName)
-            outputPath.writeText(file.content)
-            echo("Suppression file created at: ${outputPath.toAbsolutePath()}")
+            if (writeToStdout) {
+                echo(file.content)
+            } else {
+                val outputPath = outputDir!!.resolve(file.fileName)
+                outputPath.writeText(file.content)
+                echo("Suppression file created at: ${outputPath.toAbsolutePath()}")
+            }
         }
     }
 

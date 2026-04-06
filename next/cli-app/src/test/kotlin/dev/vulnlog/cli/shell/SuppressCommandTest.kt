@@ -39,13 +39,13 @@ private val VALID_VULNLOG_YAML =
 
 class SuppressCommandTest : FunSpec({
 
-    test("suppress succeeds with valid file path") {
+    test("suppress writes to file with valid file path") {
         val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
         val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
         try {
             tempFile.writeText(VALID_VULNLOG_YAML)
 
-            val result = SuppressCommand().test("${tempFile.absolutePath} --output ${outputDir.toAbsolutePath()}")
+            val result = SuppressCommand().test("${tempFile.absolutePath} -o ${outputDir.toAbsolutePath()}")
 
             result.statusCode shouldBe 0
             result.stdout shouldContain "Suppression file created at:"
@@ -55,13 +55,41 @@ class SuppressCommandTest : FunSpec({
         }
     }
 
-    test("suppress reads from stdin when - is passed") {
+    test("suppress writes to stdout with -o -") {
+        val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+        try {
+            tempFile.writeText(VALID_VULNLOG_YAML)
+
+            val result = SuppressCommand().test("${tempFile.absolutePath} -o -")
+
+            result.statusCode shouldBe 0
+            result.stdout shouldContain "CVE-2026-1234"
+        } finally {
+            tempFile.delete()
+        }
+    }
+
+    test("suppress reads from stdin and writes to stdout") {
+        val originalStdin = System.`in`
+        try {
+            System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
+
+            val result = SuppressCommand().test("- -o -")
+
+            result.statusCode shouldBe 0
+            result.stdout shouldContain "CVE-2026-1234"
+        } finally {
+            System.setIn(originalStdin)
+        }
+    }
+
+    test("suppress reads from stdin and writes to directory") {
         val originalStdin = System.`in`
         val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
         try {
             System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
 
-            val result = SuppressCommand().test("- --output ${outputDir.toAbsolutePath()}")
+            val result = SuppressCommand().test("- -o ${outputDir.toAbsolutePath()}")
 
             result.statusCode shouldBe 0
             result.stdout shouldContain "Suppression file created at:"
