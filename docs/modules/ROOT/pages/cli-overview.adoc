@@ -1,11 +1,5 @@
 = CLI Overview
 
-// TODO: Document the CLI
-// - General usage: vulnlog [options] <command>
-// - Global options (--version, --help)
-// - Available commands: init, validate, suppress
-// - File naming requirements: vulnlog.yaml, *.vl.yaml, *.vl.yml
-
 [source]
 ----
 vulnlog <command> <file...> [flags]
@@ -15,3 +9,38 @@ Every command except `init` requires one or more Vulnlog files as positional arg
 Read-only commands like `validate` accept multiple files.
 Output-generating commands like `suppress` operate on a single file.
 No automatic file detection.
+
+== Exit Codes
+
+[cols="1,2,3"]
+|===
+| Code | Name | Description
+
+| `0`
+| Success
+| Command completed successfully.
+
+| `1`
+| General error
+| Unexpected error (I/O failure, unhandled exception).
+
+| `2`
+| Validation error
+| The Vulnlog file contains validation errors.
+
+| `3`
+| File not found
+| The specified Vulnlog file does not exist.
+
+| `4`
+| Lint violation
+| The file has lint violations (without `--fix`).
+
+| `5`
+| Missing required flag
+| A required flag was not provided.
+
+| `6`
+| Invalid flag value
+| A flag references an unknown entity or unsupported type.
+|===

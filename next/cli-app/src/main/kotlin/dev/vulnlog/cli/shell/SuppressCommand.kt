@@ -30,7 +30,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     override fun help(context: Context): String = "Create suppression files."
 
     val file: String by argument()
-    val output: Path by option("--output", help = "Output directory. Defaults to current directory.")
+    val output: Path by option("-o", "--output", help = "Output directory. Defaults to current directory.")
         .path(mustExist = true, canBeDir = true, canBeFile = false)
         .default(Path.of(System.getProperty("user.dir")))
 
