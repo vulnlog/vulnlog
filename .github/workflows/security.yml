@@ -24,6 +24,8 @@ jobs:
             -w /work \
             ghcr.io/${{ github.repository }}:latest \
             suppress vulnlog.yaml -o /work
+          # Fallback when no suppression files were created otherwise just no-op. 
+          touch .snyk .trivyignore.yaml
 
       - name: Upload suppression files
         uses: actions/upload-artifact@v4
