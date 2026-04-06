@@ -4,7 +4,6 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.arguments.check
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.multiple
@@ -21,6 +20,7 @@ import dev.vulnlog.cli.model.VulnlogFile
 import dev.vulnlog.cli.parse.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.cli.result.ParseResult
 import dev.vulnlog.cli.shell.shared.parseFile
+import dev.vulnlog.cli.shell.shared.parseStdin
 import dev.vulnlog.cli.shell.shared.validateFiles
 import java.io.File
 import java.nio.file.Path
@@ -29,13 +29,7 @@ import kotlin.io.path.writeText
 class SuppressCommand : CliktCommand(name = "suppress") {
     override fun help(context: Context): String = "Create suppression files."
 
-    val file: Path by argument()
-        .path(mustExist = true)
-        .check("file name must be [vulnlog|*.vl].[yaml|yml}") { file ->
-            file.fileName.toString() == "vulnlog.yaml" ||
-                file.fileName.toString().endsWith(".vl.yaml") ||
-                file.fileName.toString().endsWith(".vl.yml")
-        }
+    val file: String by argument()
     val output: Path by option("--output", help = "Output directory. Defaults to current directory.")
         .path(mustExist = true, canBeDir = true, canBeFile = false)
         .default(Path.of(System.getProperty("user.dir")))
@@ -87,7 +81,22 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     }
 
     private fun parseAndValidate(): Map<File, ParseResult.Ok> {
-        val parseResults = parseFile(file)
+        val parseResults =
+            if (file == "-") {
+                parseStdin()
+            } else {
+                val path = Path.of(file)
+                if (!path.toFile().exists()) {
+                    echo("Error: Path '$file' does not exist.", err = true)
+                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+                }
+                val name = path.fileName.toString()
+                if (!(name == "vulnlog.yaml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml"))) {
+                    echo("Error: file name must be [vulnlog|*.vl].[yaml|yml]: $file", err = true)
+                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+                }
+                parseFile(path)
+            }
         parseResults.onEachFailure { file, result ->
             echo("Parsing of ${file.name} failed:", err = true)
             echo(result.error, err = true)
