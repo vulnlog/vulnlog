@@ -1,0 +1,12 @@
+---
+schemaVersion: "1"
+
+project:
+  organization: "Vulnlog"
+  name: "Vulnlog"
+  author: "Vulnlog Dev Team"
+
+releases: []
+
+vulnerabilities: []
+

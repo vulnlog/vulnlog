@@ -1,71 +1,96 @@
-name: Scan project for vulnerabilities
+name: Security Scanning
 
 on:
+  schedule:
+    - cron: "0 12 * * 1"
   workflow_dispatch:
 
-jobs:
-  vulnTracking:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
+permissions:
+  contents: read
+  security-events: write
 
-      - name: Check out project
-        uses: actions/checkout@v3
+jobs:
+  suppress:
+    name: Generate suppression files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate suppression files
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/work" \
+            -w /work \
+            ghcr.io/${{ github.repository }}:latest \
+            suppress vulnlog.yaml -o /work
+
+      - name: Upload suppression files
+        uses: actions/upload-artifact@v4
+        with:
+          name: suppressions
+          path: |
+            .snyk
+            .trivyignore.yaml
+
+  snyk:
+    name: Snyk Open Source
+    needs: [ suppress ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download suppression files
+        uses: actions/download-artifact@v4
+        with:
+          name: suppressions
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           architecture: x64
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5
-
-      - name: Build project
-        run: ./gradlew build
-
-      - name: Install project
-        run: ./gradlew install
-
-      - name: Create vulnlog suppression file
-        run: |
-          mkdir -p build/suppressions/snyk
-          mkdir -p build/suppressions/owasp
-          mkdir -p build/reports/snyk
-          mkdir -p build/reports/owasp
-          ./cli/build/install/vl/bin/vl supp -f vl.vulnlog.kts \
-          --templates templates --outputs build/suppressions
-
-      # OWAS Dependency Checker
-
-      #      - name: Analyze project with OWASP Dependency Checker
-      #        continue-on-error: true
-      #        env:
-      #          OWASP_DEPENDENCY_CHECK: ${{ secrets.OWASP_DEPENDENCY_CHECK }}
-      #        run: ./gradlew dependencyCheckAnalyze
-      #
-      #      - name: Aggregate OWASP Dependency Checker
-      #        env:
-      #          OWASP_DEPENDENCY_CHECK: ${{ secrets.OWASP_DEPENDENCY_CHECK }}
-      #        run: ./gradlew :dependencyCheckAggregate
-
-      # Snyk Open Source
-      - name: Analyze project with Snyk Open Source
+      - name: Run Snyk
+        uses: snyk/actions/gradle@master
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
-        run: ./gradlew snyk-test
-
-      - name: Upload reports
-        uses: actions/upload-artifact@v4
         with:
-          name: reports
-          path: |
-            build/reports/*
-            build/suppressions/*
+          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk
 
-# Only supported on public GitHub repositories
-#      - name: Upload SARIF file to GitHub
-#        uses: github/codeql-action/upload-sarif@v3
-#        with:
-#          sarif_file: build/reports/snyk/report.sarif
+      - name: Upload Snyk SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-results.sarif
+          category: snyk
+
+  trivy:
+    name: Trivy Vulnerability Scan
+    needs: [ suppress ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download suppression files
+        uses: actions/download-artifact@v4
+        with:
+          name: suppressions
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          trivyignores: .trivyignore.yaml
+
+      - name: Upload Trivy SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
