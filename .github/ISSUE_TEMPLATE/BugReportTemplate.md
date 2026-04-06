@@ -13,9 +13,9 @@ A clear and concise description of what the bug is.
 Where does the problem occur:
 
 - [ ] CLI
-- [ ] DSL
-- [ ] Gradle Plugin
-- [ ] HTML Report
+- [ ] YAML format
+- [ ] Suppression output
+- [ ] \<describe another component\>
 
 ### Steps to Reproduce
 
@@ -35,7 +35,7 @@ What actually happened instead.
 
 ### Environment (optional)
 
-- **Version:** [e.g., Vulnlog v1.0.0]
+- **Version:** [output of `vulnlog --version`]
 
 ### Additional Context (optional)
 

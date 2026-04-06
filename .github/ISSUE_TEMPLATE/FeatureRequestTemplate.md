@@ -10,7 +10,7 @@ assignees: ''
 
 A clear and concise description of the feature or improvement you'd like to see.
 
-### Problem Solved
+### Use Case
 
 How does this feature solve a problem or improve the project?
 

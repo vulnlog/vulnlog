@@ -1,4 +1,4 @@
-# Vulnlog
+# Docker
 
 ## Use the Docker image
 

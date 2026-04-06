@@ -75,7 +75,8 @@ trim = true
 # Parse commits according to the conventional commits specification.
 # See https://www.conventionalcommits.org
 conventional_commits = true
-# Exclude commits that do not match the conventional commits specification.
+# Include non-conventional commits to preserve historical changelog entries.
+# Noise is handled by the skip rules in commit_parsers instead.
 filter_unconventional = false
 # An array of regex based parsers to modify commit messages prior to further processing.
 commit_preprocessors = [
@@ -86,18 +87,28 @@ commit_preprocessors = [
 # Assigns commits to groups.
 # Optionally sets the commit's scope and can decide to exclude commits from further processing.
 commit_parsers = [
-    { message = "^[a|A]dd", group = "Added" },
-    { message = "^[s|S]upport", group = "Added" },
-    { message = "^[r|R]emove", group = "Removed" },
-    { message = "^.*: add", group = "Added" },
-    { message = "^.*: support", group = "Added" },
-    { message = "^.*: remove", group = "Removed" },
-    { message = "^.*: delete", group = "Removed" },
-    { message = "^test", group = "Fixed" },
+    # Skip release-machinery and housekeeping commits
+    { message = "^chore\\(release\\)", skip = true },
+    { message = "^docs\\(changelog\\)", skip = true },
+    { message = "^ci", skip = true },
+    { message = "^style", skip = true },
+    { message = "^test", skip = true },
+    { message = "^chore", skip = true },
+    { message = "^Release version", skip = true },
+    { message = "^Start next release", skip = true },
+    { message = "^Update for refs/tags", skip = true },
+    { message = "^Update for v", skip = true },
+    # User-facing changes (conventional commits)
+    { message = "^feat", group = "Added" },
     { message = "^fix", group = "Fixed" },
-    { message = "^.*: fix", group = "Fixed" },
+    { message = "^docs", group = "Documentation" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Changed" },
+    # Catch-all for older non-conventional commits
     { message = "^.*", group = "Changed" },
 ]
+# Prevent commits that are breaking from being excluded by commit parsers.
+protect_breaking_commits = true
 # Exclude commits that are not matched by any commit parser.
 filter_commits = false
 # Order releases topologically instead of chronologically.
