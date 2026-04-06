@@ -48,7 +48,7 @@ class InitCommand : CliktCommand(name = "init") {
                 echo("Error writing file: ${e.message}", err = true)
                 throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
             }
-            echo("Vulnlog file created at: ${file.toPath().toAbsolutePath()}", err = true)
+            echo("Vulnlog file created at: ${file.toPath().toAbsolutePath()}")
         }
     }
 }

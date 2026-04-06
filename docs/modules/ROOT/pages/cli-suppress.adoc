@@ -13,7 +13,7 @@ vulnlog suppress <file> [flags]
 | Flag | Description
 
 | `-o, --output <path>`
-| Output directory. Defaults to current directory.
+| Output directory, or `-` to write to stdout. Defaults to current directory.
 
 | `--reporter <value>`
 | Filter on reporter.
@@ -25,7 +25,7 @@ vulnlog suppress <file> [flags]
 | Filter on tags. Use multiple times to filter on multiple tags.
 
 | `-`
-| Use to read from STDIN.
+| Use as the file argument to read from STDIN.
 
 |===
 
@@ -43,3 +43,12 @@ Suppression file created at: .trivyignore.yaml
 vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
 Suppression file created at: .snyk
 ----
+
+.Read from STDIN and write to STDOUT.
+[source]
+----
+vulnlog suppress --reporter trivy - -o - < full-example.vl.yaml > .myTrivy
+----
+
+NOTE: Writing to stdout with `-o -` requires `--reporter` to select a single reporter.
+Multiple suppression files cannot be written to stdout simultaneously.

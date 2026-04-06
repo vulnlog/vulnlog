@@ -42,8 +42,7 @@ class InitCommandTest : FunSpec({
                 )
 
             result.statusCode shouldBe 0
-            result.stdout shouldBe ""
-            result.stderr shouldContain "Vulnlog file created at:"
+            result.stdout shouldContain "Vulnlog file created at:"
             tempFile.readText() shouldContain "acme"
         } finally {
             tempFile.delete()
