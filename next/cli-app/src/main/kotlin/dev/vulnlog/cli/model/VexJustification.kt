@@ -1,6 +1,8 @@
 package dev.vulnlog.cli.model
 
-enum class VexJustification(val value: String) {
+enum class VexJustification(
+    val value: String,
+) {
     /**
      * The vulnerable component is not included in the deliverable.
      */

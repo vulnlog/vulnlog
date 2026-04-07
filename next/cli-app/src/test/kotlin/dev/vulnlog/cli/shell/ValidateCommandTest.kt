@@ -46,90 +46,91 @@ private val INVALID_VULNLOG_YAML =
       author: Acme Corp Security Team
     """.trimIndent()
 
-class ValidateCommandTest : FunSpec({
+class ValidateCommandTest :
+    FunSpec({
 
-    test("validate succeeds with valid vulnlog file") {
-        val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-        try {
-            tempFile.writeText(VALID_VULNLOG_YAML)
+        test("validate succeeds with valid vulnlog file") {
+            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
 
-            val result = ValidateCommand().test(tempFile.absolutePath)
+                val result = ValidateCommand().test(tempFile.absolutePath)
 
-            result.statusCode shouldBe 0
-            result.stdout shouldContain "Validation OK"
-        } finally {
-            tempFile.delete()
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "Validation OK"
+            } finally {
+                tempFile.delete()
+            }
         }
-    }
 
-    test("validate reads from stdin when - is passed") {
-        val originalStdin = System.`in`
-        try {
-            System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
+        test("validate reads from stdin when - is passed") {
+            val originalStdin = System.`in`
+            try {
+                System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
 
-            val result = ValidateCommand().test("-")
+                val result = ValidateCommand().test("-")
 
-            result.statusCode shouldBe 0
-            result.stdout shouldContain "Validation OK"
-        } finally {
-            System.setIn(originalStdin)
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "Validation OK"
+            } finally {
+                System.setIn(originalStdin)
+            }
         }
-    }
 
-    test("validate fails with no arguments") {
-        val result = ValidateCommand().test("")
-
-        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-        result.stderr shouldContain "No input provided"
-    }
-
-    test("validate fails when file does not exist") {
-        val result = ValidateCommand().test("/nonexistent/vulnlog.vl.yaml")
-
-        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-        result.stderr shouldContain "does not exist"
-    }
-
-    test("validate fails when file name does not match expected pattern") {
-        val tempFile = Files.createTempFile("invalid-name", ".txt").toFile()
-        try {
-            tempFile.writeText(VALID_VULNLOG_YAML)
-
-            val result = ValidateCommand().test(tempFile.absolutePath)
+        test("validate fails with no arguments") {
+            val result = ValidateCommand().test("")
 
             result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldContain "file name must be"
-        } finally {
-            tempFile.delete()
+            result.stderr shouldContain "No input provided"
         }
-    }
 
-    test("validate reports parsing errors for invalid vulnlog YAML") {
-        val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-        try {
-            tempFile.writeText(INVALID_VULNLOG_YAML)
+        test("validate fails when file does not exist") {
+            val result = ValidateCommand().test("/nonexistent/vulnlog.vl.yaml")
 
-            val result = ValidateCommand().test(tempFile.absolutePath)
-
-            result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-            result.stderr shouldContain "Parsing"
-            result.stderr shouldContain "failed"
-        } finally {
-            tempFile.delete()
+            result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+            result.stderr shouldContain "does not exist"
         }
-    }
 
-    test("validate reports parsing errors from stdin for invalid vulnlog YAML") {
-        val originalStdin = System.`in`
-        try {
-            System.setIn(ByteArrayInputStream(INVALID_VULNLOG_YAML.toByteArray()))
+        test("validate fails when file name does not match expected pattern") {
+            val tempFile = Files.createTempFile("invalid-name", ".txt").toFile()
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
 
-            val result = ValidateCommand().test("-")
+                val result = ValidateCommand().test(tempFile.absolutePath)
 
-            result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-            result.stderr shouldContain "Parsing of <stdin> failed"
-        } finally {
-            System.setIn(originalStdin)
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.stderr shouldContain "file name must be"
+            } finally {
+                tempFile.delete()
+            }
         }
-    }
-})
+
+        test("validate reports parsing errors for invalid vulnlog YAML") {
+            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+            try {
+                tempFile.writeText(INVALID_VULNLOG_YAML)
+
+                val result = ValidateCommand().test(tempFile.absolutePath)
+
+                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                result.stderr shouldContain "Parsing"
+                result.stderr shouldContain "failed"
+            } finally {
+                tempFile.delete()
+            }
+        }
+
+        test("validate reports parsing errors from stdin for invalid vulnlog YAML") {
+            val originalStdin = System.`in`
+            try {
+                System.setIn(ByteArrayInputStream(INVALID_VULNLOG_YAML.toByteArray()))
+
+                val result = ValidateCommand().test("-")
+
+                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                result.stderr shouldContain "Parsing of <stdin> failed"
+            } finally {
+                System.setIn(originalStdin)
+            }
+        }
+    })

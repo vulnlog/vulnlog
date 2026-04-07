@@ -44,4 +44,8 @@ data class ValidationResult(
     val infos: List<ValidationFinding> get() = findings.filter { it.severity == Severity.INFO }
 }
 
-data class ValidationResults(val renderedFindings: String, val hasErrors: Boolean, val hasWarnings: Boolean)
+data class ValidationResults(
+    val renderedFindings: String,
+    val hasErrors: Boolean,
+    val hasWarnings: Boolean,
+)

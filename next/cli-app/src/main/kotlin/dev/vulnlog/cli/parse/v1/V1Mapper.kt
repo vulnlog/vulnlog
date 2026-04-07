@@ -46,17 +46,16 @@ object V1Mapper {
 
     private fun Project.toDto(): ProjectDto = ProjectDto(organization, name, author, contact)
 
-    private fun releasesToDto(releases: List<ReleaseEntry>): List<ReleaseEntryDto> {
-        return releases.map {
+    private fun releasesToDto(releases: List<ReleaseEntry>): List<ReleaseEntryDto> =
+        releases.map {
             ReleaseEntryDto(
                 id = it.id.value,
                 publishedAt = it.publicationDate,
             )
         }
-    }
 
-    private fun vulnerabilitiesToDto(vulnerabilities: List<VulnerabilityEntry>): List<VulnerabilityEntryDto> {
-        return vulnerabilities.map {
+    private fun vulnerabilitiesToDto(vulnerabilities: List<VulnerabilityEntry>): List<VulnerabilityEntryDto> =
+        vulnerabilities.map {
             val vulnId =
                 when (it.id) {
                     is VulnId.Cve -> it.id.id
@@ -86,17 +85,15 @@ object V1Mapper {
                 comment = it.comment,
             )
         }
-    }
 
-    private fun reportsToDto(reports: List<ReportEntry>): List<ReportEntryDto> {
-        return reports.map {
+    private fun reportsToDto(reports: List<ReportEntry>): List<ReportEntryDto> =
+        reports.map {
             ReportEntryDto(
                 reporter = it.reporter.canonical(),
                 at = it.at,
                 source = it.source,
             )
         }
-    }
 
     fun toDomain(
         validationVersion: ParseValidationVersion,
@@ -136,33 +133,30 @@ object V1Mapper {
 
     private fun ProjectDto.toDomain(): Project = Project(organization, name, author, contact)
 
-    private fun tagsToDomain(tags: List<TagEntryDto>?): List<TagEntry> {
-        return tags?.map { tag ->
+    private fun tagsToDomain(tags: List<TagEntryDto>?): List<TagEntry> =
+        tags?.map { tag ->
             TagEntry(
                 id = Tag(tag.id),
                 description = tag.description,
             )
         } ?: emptyList()
-    }
 
-    private fun releasesToDomain(releases: List<ReleaseEntryDto>): List<ReleaseEntry> {
-        return releases.map { release ->
+    private fun releasesToDomain(releases: List<ReleaseEntryDto>): List<ReleaseEntry> =
+        releases.map { release ->
             ReleaseEntry(
                 id = Release(release.id),
                 publicationDate = release.publishedAt,
                 purls = purlsToDomain(release.purls),
             )
         }
-    }
 
-    private fun purlsToDomain(purls: List<ReleasePurlEntryDto>?): List<PurlEntry> {
-        return purls?.map { purl ->
+    private fun purlsToDomain(purls: List<ReleasePurlEntryDto>?): List<PurlEntry> =
+        purls?.map { purl ->
             PurlEntry(
                 purl = parsePurl(purl.purl),
                 tags = purl.tags.map(::Tag),
             )
         } ?: emptyList()
-    }
 
     private fun vulnerabilitiesToDomain(vulnerabilities: List<VulnerabilityEntryDto>): List<VulnerabilityEntry> =
         vulnerabilities.map { vulnerability ->
@@ -232,8 +226,8 @@ object V1Mapper {
 
     private fun vulnerabilityReleasesToDomain(releases: List<String>): List<Release> = releases.map(::Release)
 
-    private fun reportsToDomain(reports: List<ReportEntryDto>): List<ReportEntry> {
-        return reports.map { report ->
+    private fun reportsToDomain(reports: List<ReportEntryDto>): List<ReportEntry> =
+        reports.map { report ->
             ReportEntry(
                 reporter = parseReporter(report.reporter),
                 at = report.at,
@@ -242,11 +236,9 @@ object V1Mapper {
                 suppress = report.suppress?.let(::suppressionsToDomain),
             )
         }
-    }
 
-    private fun suppressionsToDomain(dto: SuppressionDto): Suppression {
-        return Suppression(
+    private fun suppressionsToDomain(dto: SuppressionDto): Suppression =
+        Suppression(
             expiresAt = dto.expiresAt,
         )
-    }
 }

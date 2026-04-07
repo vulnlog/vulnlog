@@ -76,8 +76,8 @@ private fun validateEveryTagIsReferenced(file: VulnlogFile): List<ValidationFind
         }
 }
 
-private fun validateUniqueReleases(file: VulnlogFile): List<ValidationFinding> {
-    return file.releases
+private fun validateUniqueReleases(file: VulnlogFile): List<ValidationFinding> =
+    file.releases
         .groupBy { it.id }
         .filter { (_, group) -> group.size > 1 }
         .map { (id, _) ->
@@ -88,10 +88,9 @@ private fun validateUniqueReleases(file: VulnlogFile): List<ValidationFinding> {
                 message = "Duplicate release ID '$id'.",
             )
         }
-}
 
-private fun validateUniqueTags(file: VulnlogFile): List<ValidationFinding> {
-    return file.tags
+private fun validateUniqueTags(file: VulnlogFile): List<ValidationFinding> =
+    file.tags
         .groupBy { it.id }
         .filter { (_, group) -> group.size > 1 }
         .map { (id, _) ->
@@ -102,10 +101,9 @@ private fun validateUniqueTags(file: VulnlogFile): List<ValidationFinding> {
                 message = "Duplicate tag ID '$id'.",
             )
         }
-}
 
-private fun validateUniqueVulnerabilities(file: VulnlogFile): List<ValidationFinding> {
-    return file.vulnerabilities
+private fun validateUniqueVulnerabilities(file: VulnlogFile): List<ValidationFinding> =
+    file.vulnerabilities
         .groupBy { it.id }
         .filter { (_, group) -> group.size > 1 }
         .map { (id, _) ->
@@ -116,7 +114,6 @@ private fun validateUniqueVulnerabilities(file: VulnlogFile): List<ValidationFin
                 message = "Duplicate vulnerability ID '${id.canonical()}'.",
             )
         }
-}
 
 private fun validateVulnerabilityAliasNotReferencedInVulnerabilityIds(file: VulnlogFile): List<ValidationFinding> {
     val allId = file.vulnerabilities.map { it.id }.toSet()
@@ -235,8 +232,8 @@ private fun validateTagInVulnerabilityIsDefined(file: VulnlogFile): List<Validat
         }
 }
 
-private fun validateSourceInReportIsDefinedWhenOther(file: VulnlogFile): List<ValidationFinding> {
-    return file.vulnerabilities
+private fun validateSourceInReportIsDefinedWhenOther(file: VulnlogFile): List<ValidationFinding> =
+    file.vulnerabilities
         .filter { vuln -> vuln.reports.any { it.reporter == ReporterType.OTHER && it.source.isNullOrBlank() } }
         .map { vuln ->
             ValidationFinding(
@@ -246,4 +243,3 @@ private fun validateSourceInReportIsDefinedWhenOther(file: VulnlogFile): List<Va
                 message = "Generic reporter without source specified.",
             )
         }
-}

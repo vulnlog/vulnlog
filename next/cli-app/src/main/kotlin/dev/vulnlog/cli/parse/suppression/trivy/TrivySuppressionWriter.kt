@@ -7,7 +7,8 @@ import tools.jackson.module.kotlin.kotlinModule
 
 object TrivySuppressionWriter {
     private val mapper =
-        YAMLMapper.builder()
+        YAMLMapper
+            .builder()
             .addModule(kotlinModule())
             .enable(YAMLWriteFeature.MINIMIZE_QUOTES)
             .enable(YAMLWriteFeature.LITERAL_BLOCK_STYLE)

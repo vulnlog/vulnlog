@@ -92,8 +92,7 @@ fun mapToSuppression(
     targetReporters
         .map { reporter ->
             getDefaultSettingsForReporter(reporter) to (reporterToSuppressions[reporter] ?: emptyList())
-        }
-        .filter { (defaults, _) -> defaults is Suppressable }
+        }.filter { (defaults, _) -> defaults is Suppressable }
         .map { (defaults, suppressions) -> createSuppression(defaults as Suppressable, suppressions) }
         .toSet()
 
@@ -134,8 +133,7 @@ private fun createGenericSuppression(
                         reason = entry.analysis,
                     )
                 }
-            }
-            .toSet()
+            }.toSet()
     return SuppressionOutput.GenericSuppression(
         fileName = defaults.reporter.name.lowercase() + ".generic.json",
         entries = entries,
@@ -156,8 +154,7 @@ private fun createTrivySuppression(
                         reason = entry.analysis,
                     )
                 }
-            }
-            .toSet()
+            }.toSet()
     return SuppressionOutput.TrivySuppression(entries = entries)
 }
 
@@ -175,8 +172,7 @@ private fun createSnykSuppression(
                         reason = entry.analysis,
                     )
                 }
-            }
-            .toSet()
+            }.toSet()
     return SuppressionOutput.SnykSuppression(entries = entries)
 }
 

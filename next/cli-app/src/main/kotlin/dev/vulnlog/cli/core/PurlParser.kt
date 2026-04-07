@@ -3,8 +3,8 @@ package dev.vulnlog.cli.core
 import com.github.packageurl.PackageURL
 import dev.vulnlog.cli.model.Purl
 
-fun parsePurl(purl: PackageURL): Purl {
-    return when (purl.type.lowercase()) {
+fun parsePurl(purl: PackageURL): Purl =
+    when (purl.type.lowercase()) {
         "cargo" -> Purl.Cargo(purl.canonicalize())
         "deb" -> Purl.Deb(purl.canonicalize())
         "docker" -> Purl.Docker(purl.canonicalize())
@@ -18,4 +18,3 @@ fun parsePurl(purl: PackageURL): Purl {
         "rpm" -> Purl.Rpm(purl.canonicalize())
         else -> Purl.Generic(purl.canonicalize())
     }
-}

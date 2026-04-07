@@ -9,7 +9,9 @@ import tools.jackson.databind.DatabindException
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
 
-class YamlParser(private val mapper: ObjectMapper) {
+class YamlParser(
+    private val mapper: ObjectMapper,
+) {
     fun parse(yaml: String): ParseResult {
         val schemaVersion: SchemaVersion =
             detectVersion(yaml)

@@ -41,8 +41,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             Filter on reporter.
             Supported reporters: ${ReporterType.entries.joinToString(", ") { it.name.lowercase() }}
             """.trimIndent(),
-    )
-        .convert { ReporterType.valueOf(it.uppercase()) }
+    ).convert { ReporterType.valueOf(it.uppercase()) }
     val releaseOption: String? by option(
         "--release",
         help = "Filter on release, include all releases up to and including that release.",
@@ -50,8 +49,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     val tagsOptions: Set<String> by option(
         "--tag",
         help = "Filter on tags. Use multiple times to filter on multiple tags.",
-    )
-        .multiple()
+    ).multiple()
         .unique()
 
     override fun run() {

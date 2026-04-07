@@ -57,309 +57,331 @@ private fun vulnlogFile(
     vulnerabilities = vulnerabilities,
 )
 
-class V1MapperTest : FunSpec({
+class V1MapperTest :
+    FunSpec({
 
-    test("schema version with zero minor is formatted as major only") {
-        val dto = V1Mapper.toDto(vulnlogFile(schemaVersion = SchemaVersion(1, 0)))
+        test("schema version with zero minor is formatted as major only") {
+            val dto = V1Mapper.toDto(vulnlogFile(schemaVersion = SchemaVersion(1, 0)))
 
-        dto.schemaVersion shouldBe "1"
-    }
-
-    test("schema version with non-zero minor is formatted as major.minor") {
-        val dto = V1Mapper.toDto(vulnlogFile(schemaVersion = SchemaVersion(1, 2)))
-
-        dto.schemaVersion shouldBe "1.2"
-    }
-
-    test("project fields are mapped to dto") {
-        val dto = V1Mapper.toDto(vulnlogFile(organization = "acme", project = "widget", author = "alice"))
-
-        dto.project shouldBe ProjectDto("acme", "widget", "alice")
-    }
-
-    test("releases are mapped to dto") {
-        val dto =
-            V1Mapper.toDto(
-                vulnlogFile(releases = listOf(ReleaseEntry(Release("v1.0")), ReleaseEntry(Release("v2.0")))),
-            )
-
-        dto.releases shouldBe listOf(ReleaseEntryDto("v1.0"), ReleaseEntryDto("v2.0"))
-    }
-
-    test("vulnerabilities are mapped to dto") {
-        val dto =
-            V1Mapper.toDto(
-                vulnlogFile(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntry(
-                                id = VulnId.Cve("CVE-2024-1234"),
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                verdict = Verdict.UnderInvestigation,
-                            ),
-                        ),
-                ),
-            )
-
-        dto.vulnerabilities shouldBe
-            listOf(
-                VulnerabilityEntryDto(
-                    id = "CVE-2024-1234",
-                    releases = emptyList(),
-                    packages = emptyList(),
-                    reports = emptyList(),
-                ),
-            )
-    }
-
-    context("toDomain — project mapping") {
-        test("project fields are mapped from dto") {
-            toDomain(minimalDto()).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.project shouldBe Project("acme", "widget", "alice")
+            dto.schemaVersion shouldBe "1"
         }
 
-        test("project contact field is mapped when present") {
-            val dto = minimalDto().copy(project = ProjectDto("acme", "widget", "alice", "alice@example.com"))
+        test("schema version with non-zero minor is formatted as major.minor") {
+            val dto = V1Mapper.toDto(vulnlogFile(schemaVersion = SchemaVersion(1, 2)))
 
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.project.contact shouldBe "alice@example.com"
-        }
-    }
-
-    context("toDomain — tags mapping") {
-        test("null tags list maps to empty list") {
-            toDomain(minimalDto(tags = null)).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.tags shouldBe emptyList()
+            dto.schemaVersion shouldBe "1.2"
         }
 
-        test("tag entries are mapped with id and description") {
-            val dto = minimalDto(tags = listOf(TagEntryDto("backend", "Backend services")))
+        test("project fields are mapped to dto") {
+            val dto = V1Mapper.toDto(vulnlogFile(organization = "acme", project = "widget", author = "alice"))
 
-            val tags = toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>().content.tags
-            tags shouldHaveSize 1
-            tags[0] shouldBe TagEntry(Tag("backend"), "Backend services")
+            dto.project shouldBe ProjectDto("acme", "widget", "alice")
         }
-    }
 
-    context("toDomain — releases mapping") {
-        test("releases are mapped by id") {
-            val dto = minimalDto(releases = listOf(ReleaseEntryDto("v1.0"), ReleaseEntryDto("v2.0")))
-
-            val releases = toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>().content.releases
-            releases shouldHaveSize 2
-            releases[0].id shouldBe Release("v1.0")
-            releases[1].id shouldBe Release("v2.0")
-        }
-    }
-
-    context("toDomain — vulnerability verdict mapping") {
-        test("null verdict maps to UnderInvestigation") {
+        test("releases are mapped to dto") {
             val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                            ),
-                        ),
+                V1Mapper.toDto(
+                    vulnlogFile(releases = listOf(ReleaseEntry(Release("v1.0")), ReleaseEntry(Release("v2.0")))),
                 )
 
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.vulnerabilities[0].verdict shouldBe Verdict.UnderInvestigation
+            dto.releases shouldBe listOf(ReleaseEntryDto("v1.0"), ReleaseEntryDto("v2.0"))
         }
 
-        test("under_investigation verdict maps to UnderInvestigation") {
+        test("vulnerabilities are mapped to dto") {
             val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                verdict = "under_investigation",
+                V1Mapper.toDto(
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntry(
+                                    id = VulnId.Cve("CVE-2024-1234"),
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    verdict = Verdict.UnderInvestigation,
+                                ),
                             ),
-                        ),
+                    ),
                 )
 
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.vulnerabilities[0].verdict shouldBe Verdict.UnderInvestigation
-        }
-
-        test("affected verdict with severity maps to Affected") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                verdict = "affected",
-                                severity = "critical",
-                            ),
-                        ),
-                )
-
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.vulnerabilities[0].verdict shouldBe Verdict.Affected(Severity.CRITICAL)
-        }
-
-        test("risk_acceptable verdict with severity maps to RiskAcceptable") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                verdict = "risk_acceptable",
-                                severity = "low",
-                            ),
-                        ),
-                )
-
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.vulnerabilities[0].verdict shouldBe Verdict.RiskAcceptable(Severity.LOW)
-        }
-
-        test("not_affected verdict with justification maps to NotAffected") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                verdict = "not_affected",
-                                justification = "vulnerable_code_not_present",
-                            ),
-                        ),
-                )
-
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.vulnerabilities[0].verdict shouldBe
-                Verdict.NotAffected(
-                    VexJustification.VULNERABLE_CODE_NOT_PRESENT,
+            dto.vulnerabilities shouldBe
+                listOf(
+                    VulnerabilityEntryDto(
+                        id = "CVE-2024-1234",
+                        releases = emptyList(),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                    ),
                 )
         }
 
-        test("unknown verdict returns a parse error") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                verdict = "invalid_verdict",
-                            ),
-                        ),
-                )
+        context("toDomain — project mapping") {
+            test("project fields are mapped from dto") {
+                toDomain(minimalDto())
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.project shouldBe Project("acme", "widget", "alice")
+            }
 
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Error>()
-        }
-    }
+            test("project contact field is mapped when present") {
+                val dto = minimalDto().copy(project = ProjectDto("acme", "widget", "alice", "alice@example.com"))
 
-    context("toDomain — vulnerability aliases mapping") {
-        test("aliases are mapped to VulnId instances") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                aliases = listOf("GHSA-aaaa-bbbb-cccc"),
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                            ),
-                        ),
-                )
-
-            val aliases =
-                toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0].aliases
-            aliases shouldHaveSize 1
-            aliases[0] shouldBe VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")
-        }
-    }
-
-    context("toDomain — report mapping") {
-        test("report is mapped with reporter type") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = listOf(ReportEntryDto("grype")),
-                            ),
-                        ),
-                )
-
-            val reports =
-                toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0].reports
-            reports shouldHaveSize 1
-            reports[0].reporter shouldBe dev.vulnlog.cli.model.ReporterType.GRYPE
-        }
-    }
-
-    context("toDomain — resolution mapping") {
-        test("null resolution maps to null") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                            ),
-                        ),
-                )
-
-            toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                .content.vulnerabilities[0].resolution shouldBe null
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.project.contact shouldBe "alice@example.com"
+            }
         }
 
-        test("resolution is mapped with release and ref") {
-            val dto =
-                minimalDto(
-                    vulnerabilities =
-                        listOf(
-                            VulnerabilityEntryDto(
-                                "CVE-2021-1",
-                                releases = emptyList(),
-                                packages = emptyList(),
-                                reports = emptyList(),
-                                resolution = ResolutionDto(release = "v2.0", ref = "https://example.com/fix"),
-                            ),
-                        ),
-                )
+        context("toDomain — tags mapping") {
+            test("null tags list maps to empty list") {
+                toDomain(minimalDto(tags = null))
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.tags shouldBe emptyList()
+            }
 
-            val resolution =
-                toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0].resolution
-            resolution?.release shouldBe Release("v2.0")
-            resolution?.ref shouldBe "https://example.com/fix"
+            test("tag entries are mapped with id and description") {
+                val dto = minimalDto(tags = listOf(TagEntryDto("backend", "Backend services")))
+
+                val tags = toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>().content.tags
+                tags shouldHaveSize 1
+                tags[0] shouldBe TagEntry(Tag("backend"), "Backend services")
+            }
         }
-    }
-})
+
+        context("toDomain — releases mapping") {
+            test("releases are mapped by id") {
+                val dto = minimalDto(releases = listOf(ReleaseEntryDto("v1.0"), ReleaseEntryDto("v2.0")))
+
+                val releases = toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>().content.releases
+                releases shouldHaveSize 2
+                releases[0].id shouldBe Release("v1.0")
+                releases[1].id shouldBe Release("v2.0")
+            }
+        }
+
+        context("toDomain — vulnerability verdict mapping") {
+            test("null verdict maps to UnderInvestigation") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.vulnerabilities[0]
+                    .verdict shouldBe Verdict.UnderInvestigation
+            }
+
+            test("under_investigation verdict maps to UnderInvestigation") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    verdict = "under_investigation",
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.vulnerabilities[0]
+                    .verdict shouldBe Verdict.UnderInvestigation
+            }
+
+            test("affected verdict with severity maps to Affected") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    verdict = "affected",
+                                    severity = "critical",
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.vulnerabilities[0]
+                    .verdict shouldBe Verdict.Affected(Severity.CRITICAL)
+            }
+
+            test("risk_acceptable verdict with severity maps to RiskAcceptable") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    verdict = "risk_acceptable",
+                                    severity = "low",
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.vulnerabilities[0]
+                    .verdict shouldBe Verdict.RiskAcceptable(Severity.LOW)
+            }
+
+            test("not_affected verdict with justification maps to NotAffected") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    verdict = "not_affected",
+                                    justification = "vulnerable_code_not_present",
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.vulnerabilities[0]
+                    .verdict shouldBe
+                    Verdict.NotAffected(
+                        VexJustification.VULNERABLE_CODE_NOT_PRESENT,
+                    )
+            }
+
+            test("unknown verdict returns a parse error") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    verdict = "invalid_verdict",
+                                ),
+                            ),
+                    )
+
+                toDomain(dto).shouldBeInstanceOf<ParseResult.Error>()
+            }
+        }
+
+        context("toDomain — vulnerability aliases mapping") {
+            test("aliases are mapped to VulnId instances") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    aliases = listOf("GHSA-aaaa-bbbb-cccc"),
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                ),
+                            ),
+                    )
+
+                val aliases =
+                    toDomain(dto)
+                        .shouldBeInstanceOf<ParseResult.Ok>()
+                        .content.vulnerabilities[0]
+                        .aliases
+                aliases shouldHaveSize 1
+                aliases[0] shouldBe VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")
+            }
+        }
+
+        context("toDomain — report mapping") {
+            test("report is mapped with reporter type") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = listOf(ReportEntryDto("grype")),
+                                ),
+                            ),
+                    )
+
+                val reports =
+                    toDomain(dto)
+                        .shouldBeInstanceOf<ParseResult.Ok>()
+                        .content.vulnerabilities[0]
+                        .reports
+                reports shouldHaveSize 1
+                reports[0].reporter shouldBe dev.vulnlog.cli.model.ReporterType.GRYPE
+            }
+        }
+
+        context("toDomain — resolution mapping") {
+            test("null resolution maps to null") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .shouldBeInstanceOf<ParseResult.Ok>()
+                    .content.vulnerabilities[0]
+                    .resolution shouldBe null
+            }
+
+            test("resolution is mapped with release and ref") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    "CVE-2021-1",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    resolution = ResolutionDto(release = "v2.0", ref = "https://example.com/fix"),
+                                ),
+                            ),
+                    )
+
+                val resolution =
+                    toDomain(dto)
+                        .shouldBeInstanceOf<ParseResult.Ok>()
+                        .content.vulnerabilities[0]
+                        .resolution
+                resolution?.release shouldBe Release("v2.0")
+                resolution?.ref shouldBe "https://example.com/fix"
+            }
+        }
+    })

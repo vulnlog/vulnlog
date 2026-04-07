@@ -5,6 +5,7 @@ import tools.jackson.dataformat.yaml.YAMLMapper
 import tools.jackson.module.kotlin.kotlinModule
 
 fun createYamlMapper(): ObjectMapper =
-    YAMLMapper.builder()
+    YAMLMapper
+        .builder()
         .addModule(kotlinModule())
         .build()
