@@ -95,7 +95,7 @@ class SuppressionTest :
 
             test("excludes reports without suppress for non-not_affected verdict") {
                 val report = trivyReport(suppress = null)
-                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.LOW))
+                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
                 val result =
                     collectSuppressedVulnerabilities(file, SuppressionFilter(emptySet(), emptySet(), null, today))
@@ -171,7 +171,7 @@ class SuppressionTest :
 
             test("excludes suppression expired before today") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(1)))
-                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.LOW))
+                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result =
@@ -182,7 +182,7 @@ class SuppressionTest :
 
             test("includes suppression expiring after today") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.plusDays(30)))
-                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.LOW))
+                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result =
@@ -458,7 +458,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("not_affected is included even with resolution present") {
+            test("not_affected with resolution is excluded") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
@@ -468,13 +468,39 @@ class SuppressionTest :
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result shouldHaveSize 1
+                result.shouldBeEmpty()
             }
 
             test("affected with resolution is excluded regardless of suppress block") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.Affected(Severity.HIGH),
+                        resolution = Resolution(release = releaseV1),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+
+                result.shouldBeEmpty()
+            }
+
+            test("risk_acceptable with resolution is excluded regardless of suppress block") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
+                        resolution = Resolution(release = releaseV1),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+
+                result.shouldBeEmpty()
+            }
+
+            test("not_affected with resolution is excluded regardless of suppress block") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
                         resolution = Resolution(release = releaseV1),
                     )
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
@@ -512,14 +538,14 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("risk_acceptable is excluded when suppress block absent") {
+            test("risk_acceptable is included when suppress block absent") {
                 val report = trivyReport(suppress = null)
                 val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.MEDIUM))
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result.shouldBeEmpty()
+                result shouldHaveSize 1
             }
 
             test("under_investigation is included when suppress block present") {
@@ -539,6 +565,20 @@ class SuppressionTest :
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
                 result.shouldBeEmpty()
+            }
+
+            test("risk_acceptable ignores suppress expiration") {
+                val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(30)))
+                val vuln =
+                    vulnerability(
+                        reports = listOf(report),
+                        verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+
+                result shouldHaveSize 1
             }
 
             test("not_affected ignores suppress expiration") {
@@ -564,7 +604,7 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("includes vulnerability with resolution but no date") {
+            test("excludes vulnerability with resolution even if no date") {
                 val resolution = Resolution(release = releaseV1, at = null)
                 val file =
                     emptyFile().copy(
@@ -573,7 +613,7 @@ class SuppressionTest :
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result shouldHaveSize 1
+                result.shouldBeEmpty()
             }
 
             test("includes suppression with no expiresAt") {
