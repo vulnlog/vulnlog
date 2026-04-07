@@ -6,7 +6,7 @@ graalvmNativeBuildToolsVersion = "0.10.4"
 jacksonVersion = "3.1.0"
 kotestVersion = "6.1.0"
 kotlinVersion = "2.3.0"
-ktlintVersion = "12.1.1"
+ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
 
 [libraries]
