@@ -3,7 +3,7 @@
 #detektVersion = "1.23.7"
 cliktVersion = "5.1.0"
 graalvmNativeBuildToolsVersion = "0.10.4"
-jacksonVersion = "3.1.0"
+jacksonVersion = "3.1.1"
 kotestVersion = "6.1.0"
 kotlinVersion = "2.3.0"
 ktlintVersion = "14.2.0"
