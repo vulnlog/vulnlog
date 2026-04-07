@@ -7,7 +7,8 @@ import tools.jackson.module.kotlin.kotlinModule
 
 object GenericSuppressionWriter {
     private val mapper =
-        JsonMapper.builder()
+        JsonMapper
+            .builder()
             .enable(SerializationFeature.INDENT_OUTPUT)
             .addModule(kotlinModule())
             .build()

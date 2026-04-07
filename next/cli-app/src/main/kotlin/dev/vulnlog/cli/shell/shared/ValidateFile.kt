@@ -22,14 +22,12 @@ fun validateFiles(fileToResult: Map<File, ParseResult.Ok>): ValidationResults {
     )
 }
 
-private fun validateEachFile(fileToResult: Map<File, ParseResult.Ok>): Map<VulnlogFileContext, ValidationResult> {
-    return fileToResult
+private fun validateEachFile(fileToResult: Map<File, ParseResult.Ok>): Map<VulnlogFileContext, ValidationResult> =
+    fileToResult
         .map { (file, parseResult) ->
             VulnlogFileContext(
                 parseResult.validationVersion,
                 file.name,
                 parseResult.content,
             )
-        }
-        .associateWith { context -> validate(context) }
-}
+        }.associateWith { context -> validate(context) }

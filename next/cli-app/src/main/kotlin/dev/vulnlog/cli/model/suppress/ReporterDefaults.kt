@@ -12,7 +12,9 @@ sealed interface Suppressable : Suppression {
     val vulnIdTypes: Set<KClass<out VulnId>>
 
     sealed interface GenericFormat : Suppressable {
-        data class Generic(val reporter: ReporterType) : Suppressable {
+        data class Generic(
+            val reporter: ReporterType,
+        ) : Suppressable {
             override val vulnIdTypes: Set<KClass<out VulnId>>
                 get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class, VulnId.Snyk::class, VulnId.RustSec::class)
         }

@@ -30,9 +30,15 @@ fun renderValidation(result: ValidationResult): String =
 
         val summary =
             listOfNotNull(
-                result.errors.size.takeIf { it > 0 }?.let { "$it error(s)" },
-                result.warnings.size.takeIf { it > 0 }?.let { "$it warning(s)" },
-                result.infos.size.takeIf { it > 0 }?.let { "$it info(s)" },
+                result.errors.size
+                    .takeIf { it > 0 }
+                    ?.let { "$it error(s)" },
+                result.warnings.size
+                    .takeIf { it > 0 }
+                    ?.let { "$it warning(s)" },
+                result.infos.size
+                    .takeIf { it > 0 }
+                    ?.let { "$it info(s)" },
             ).joinToString()
         append(summary)
     }

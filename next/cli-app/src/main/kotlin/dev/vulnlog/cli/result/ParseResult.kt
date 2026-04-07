@@ -5,9 +5,14 @@ import dev.vulnlog.cli.model.VulnlogFile
 import java.io.File
 
 sealed interface ParseResult {
-    data class Ok(val validationVersion: ParseValidationVersion, val content: VulnlogFile) : ParseResult
+    data class Ok(
+        val validationVersion: ParseValidationVersion,
+        val content: VulnlogFile,
+    ) : ParseResult
 
-    data class Error(val error: String) : ParseResult
+    data class Error(
+        val error: String,
+    ) : ParseResult
 }
 
 data class ParseResults(

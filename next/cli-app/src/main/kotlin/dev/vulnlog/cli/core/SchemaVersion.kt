@@ -9,10 +9,9 @@ import dev.vulnlog.cli.model.SchemaVersion
  * @return A string representation of the schema version. If the minor version is zero, only the major version
  *         is included. Otherwise, both the major and minor versions are included, separated by a dot.
  */
-fun shortenSchemaVersion(version: SchemaVersion): String {
-    return if (version.minor == 0) {
+fun shortenSchemaVersion(version: SchemaVersion): String =
+    if (version.minor == 0) {
         "${version.major}"
     } else {
         "${version.major}.${version.minor}"
     }
-}

@@ -37,101 +37,102 @@ private val VALID_VULNLOG_YAML =
         justification: vulnerable_code_not_in_execute_path
     """.trimIndent()
 
-class SuppressCommandTest : FunSpec({
+class SuppressCommandTest :
+    FunSpec({
 
-    test("suppress writes to file with valid file path") {
-        val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-        val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
-        try {
-            tempFile.writeText(VALID_VULNLOG_YAML)
+        test("suppress writes to file with valid file path") {
+            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+            val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
 
-            val result = SuppressCommand().test("${tempFile.absolutePath} -o ${outputDir.toAbsolutePath()}")
+                val result = SuppressCommand().test("${tempFile.absolutePath} -o ${outputDir.toAbsolutePath()}")
 
-            result.statusCode shouldBe 0
-            result.stdout shouldContain "Suppression file created at:"
-        } finally {
-            outputDir.toFile().deleteRecursively()
-            tempFile.delete()
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "Suppression file created at:"
+            } finally {
+                outputDir.toFile().deleteRecursively()
+                tempFile.delete()
+            }
         }
-    }
 
-    test("suppress writes to stdout with -o -") {
-        val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-        try {
-            tempFile.writeText(VALID_VULNLOG_YAML)
+        test("suppress writes to stdout with -o -") {
+            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
 
-            val result = SuppressCommand().test("${tempFile.absolutePath} -o -")
+                val result = SuppressCommand().test("${tempFile.absolutePath} -o -")
 
-            result.statusCode shouldBe 0
-            result.stdout shouldContain "CVE-2026-1234"
-        } finally {
-            tempFile.delete()
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "CVE-2026-1234"
+            } finally {
+                tempFile.delete()
+            }
         }
-    }
 
-    test("suppress reads from stdin and writes to stdout") {
-        val originalStdin = System.`in`
-        try {
-            System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
+        test("suppress reads from stdin and writes to stdout") {
+            val originalStdin = System.`in`
+            try {
+                System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
 
-            val result = SuppressCommand().test("- -o -")
+                val result = SuppressCommand().test("- -o -")
 
-            result.statusCode shouldBe 0
-            result.stdout shouldContain "CVE-2026-1234"
-        } finally {
-            System.setIn(originalStdin)
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "CVE-2026-1234"
+            } finally {
+                System.setIn(originalStdin)
+            }
         }
-    }
 
-    test("suppress reads from stdin and writes to directory") {
-        val originalStdin = System.`in`
-        val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
-        try {
-            System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
+        test("suppress reads from stdin and writes to directory") {
+            val originalStdin = System.`in`
+            val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
+            try {
+                System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
 
-            val result = SuppressCommand().test("- -o ${outputDir.toAbsolutePath()}")
+                val result = SuppressCommand().test("- -o ${outputDir.toAbsolutePath()}")
 
-            result.statusCode shouldBe 0
-            result.stdout shouldContain "Suppression file created at:"
-        } finally {
-            System.setIn(originalStdin)
-            outputDir.toFile().deleteRecursively()
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "Suppression file created at:"
+            } finally {
+                System.setIn(originalStdin)
+                outputDir.toFile().deleteRecursively()
+            }
         }
-    }
 
-    test("suppress fails when file does not exist") {
-        val result = SuppressCommand().test("/nonexistent/vulnlog.vl.yaml")
-
-        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-        result.stderr shouldContain "does not exist"
-    }
-
-    test("suppress fails when file name does not match expected pattern") {
-        val tempFile = Files.createTempFile("invalid-name", ".txt").toFile()
-        try {
-            tempFile.writeText(VALID_VULNLOG_YAML)
-
-            val result = SuppressCommand().test(tempFile.absolutePath)
+        test("suppress fails when file does not exist") {
+            val result = SuppressCommand().test("/nonexistent/vulnlog.vl.yaml")
 
             result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldContain "file name must be"
-        } finally {
-            tempFile.delete()
+            result.stderr shouldContain "does not exist"
         }
-    }
 
-    test("suppress fails with invalid vulnlog YAML from stdin") {
-        val originalStdin = System.`in`
-        try {
-            val invalidVulnlog = "---\nproject:\n  organization: Acme\n  name: Test\n  author: Bob\n"
-            System.setIn(ByteArrayInputStream(invalidVulnlog.toByteArray()))
+        test("suppress fails when file name does not match expected pattern") {
+            val tempFile = Files.createTempFile("invalid-name", ".txt").toFile()
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
 
-            val result = SuppressCommand().test("-")
+                val result = SuppressCommand().test(tempFile.absolutePath)
 
-            result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-            result.stderr shouldContain "Parsing of <stdin> failed"
-        } finally {
-            System.setIn(originalStdin)
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.stderr shouldContain "file name must be"
+            } finally {
+                tempFile.delete()
+            }
         }
-    }
-})
+
+        test("suppress fails with invalid vulnlog YAML from stdin") {
+            val originalStdin = System.`in`
+            try {
+                val invalidVulnlog = "---\nproject:\n  organization: Acme\n  name: Test\n  author: Bob\n"
+                System.setIn(ByteArrayInputStream(invalidVulnlog.toByteArray()))
+
+                val result = SuppressCommand().test("-")
+
+                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                result.stderr shouldContain "Parsing of <stdin> failed"
+            } finally {
+                System.setIn(originalStdin)
+            }
+        }
+    })

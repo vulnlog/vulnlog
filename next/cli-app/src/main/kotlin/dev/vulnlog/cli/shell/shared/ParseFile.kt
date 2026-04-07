@@ -50,6 +50,8 @@ fun merge(vararg results: ParseResults?): ParseResults {
     )
 }
 
-private inline fun <reified T : ParseResult> filterByType(fileToResult: Map<File, ParseResult>): Map<File, T> {
-    return fileToResult.filterValues { it is T }.mapValues { (_, result) -> result as T }
-}
+private inline fun <reified T : ParseResult> filterByType(fileToResult: Map<File, ParseResult>): Map<File, T> =
+    fileToResult
+        .filterValues {
+            it is T
+        }.mapValues { (_, result) -> result as T }
