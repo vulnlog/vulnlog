@@ -38,7 +38,7 @@ fun collectSuppressedVulnerabilities(
 ): Map<ReporterType, List<SuppressedVulnerability>> =
     vulnlogFile.vulnerabilities
         .asSequence()
-        .filter { filter.releases.isEmpty() || it.releases.any { r -> r in filter.releases } }
+        .filter { filter.releases.isEmpty() || it.releases.any { release -> release in filter.releases } }
         .filter { filter.tags.isEmpty() || filter.tags.any { tag -> it.tags.contains(tag) } }
         .flatMap { vulnerability -> collectEligibleReports(vulnerability, filter.today) }
         .groupBy { it.reports.reporter }
@@ -48,13 +48,13 @@ private fun collectEligibleReports(
     vulnerability: VulnerabilityEntry,
     today: LocalDate,
 ): List<SuppressedVulnerability> {
-    if (vulnerability.verdict is Verdict.Affected && vulnerability.resolution != null) {
+    if (vulnerability.resolution != null) {
         return emptyList()
     }
 
     val eligibleReports =
         when (vulnerability.verdict) {
-            is Verdict.NotAffected -> vulnerability.reports
+            is Verdict.NotAffected, is Verdict.RiskAcceptable -> vulnerability.reports
             else ->
                 vulnerability.reports
                     .filter { it.suppress != null }
