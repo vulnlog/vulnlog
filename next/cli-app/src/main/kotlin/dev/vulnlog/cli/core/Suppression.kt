@@ -1,8 +1,6 @@
 package dev.vulnlog.cli.core
 
-import dev.vulnlog.cli.model.Release
 import dev.vulnlog.cli.model.ReporterType
-import dev.vulnlog.cli.model.Tag
 import dev.vulnlog.cli.model.Verdict
 import dev.vulnlog.cli.model.VulnId
 import dev.vulnlog.cli.model.VulnerabilityEntry
@@ -16,9 +14,7 @@ import dev.vulnlog.cli.model.suppress.SuppressionVuln
 import java.time.LocalDate
 
 data class SuppressionFilter(
-    val releases: Set<Release> = emptySet(),
-    val tags: Set<Tag> = emptySet(),
-    val reporter: ReporterType? = null,
+    val filter: VulnlogFilter = VulnlogFilter(),
     val today: LocalDate = LocalDate.now(),
 )
 
@@ -38,11 +34,10 @@ fun collectSuppressedVulnerabilities(
 ): Map<ReporterType, List<SuppressedVulnerability>> =
     vulnlogFile.vulnerabilities
         .asSequence()
-        .filter { filter.releases.isEmpty() || it.releases.any { release -> release in filter.releases } }
-        .filter { filter.tags.isEmpty() || filter.tags.any { tag -> it.tags.contains(tag) } }
+        .applyFilter(filter.filter)
         .flatMap { vulnerability -> collectEligibleReports(vulnerability, filter.today) }
         .groupBy { it.reports.reporter }
-        .filter { filter.reporter == null || it.key == filter.reporter }
+        .filter { filter.filter.reporter == null || it.key == filter.filter.reporter }
 
 private fun collectEligibleReports(
     vulnerability: VulnerabilityEntry,
