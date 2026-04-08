@@ -7,10 +7,12 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.cli.result.InputValidationResult
 import dev.vulnlog.cli.shell.shared.merge
 import dev.vulnlog.cli.shell.shared.parseFiles
 import dev.vulnlog.cli.shell.shared.parseStdin
 import dev.vulnlog.cli.shell.shared.validateFiles
+import dev.vulnlog.cli.shell.shared.validateInputPath
 import java.nio.file.Path
 
 class ValidateCommand : CliktCommand(name = "validate") {
@@ -25,13 +27,9 @@ class ValidateCommand : CliktCommand(name = "validate") {
         val filePaths = args.filter { it != "-" }.map { Path.of(it) }
 
         filePaths.forEach { file ->
-            if (!file.toFile().exists()) {
-                echo("Error: Path '$file' does not exist.", err = true)
-                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-            }
-            val name = file.fileName.toString()
-            if (!(name == "vulnlog.yaml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml"))) {
-                echo("Error: file name must be [vulnlog|*.vl].[yaml|yml]: $file", err = true)
+            val result = validateInputPath(file)
+            if (result is InputValidationResult.Error) {
+                echo(result.message, err = true)
                 throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
             }
         }

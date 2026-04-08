@@ -115,7 +115,7 @@ class SuppressCommandTest :
                 val result = SuppressCommand().test(tempFile.absolutePath)
 
                 result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                result.stderr shouldContain "file name must be"
+                result.stderr shouldContain "File name must be"
             } finally {
                 tempFile.delete()
             }
