@@ -1,0 +1,33 @@
+= vulnlog report
+
+Create a simple HTML report from one or multiple Vulnlog file.
+
+[source]
+----
+vulnlog report <file> [filter flags] [--format html] [-o <path>]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <path>`
+| Output file path. Defaults to vulnlog-report.html in the current directory.
+
+| `--reporter <value>`
+| Filter on reporter. Supported reporters
+
+| `--release <text>`
+| Filter on release, include all releases up to and including that release.
+
+| `--tag <text>`
+| Filter on tags. Use multiple times to filter on multiple tags.
+
+|===
+
+.Create simple HTML report
+[source]
+----
+vulnlog report full-example.vl.yaml
+Report written to: vulnlog-report.html
+----
