@@ -1,14 +1,6 @@
 name: Deploy website and docs to GitHub Pages
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "website/**"
-      - "docs/**"
-      - "schema/**"
-      - "antora-playbook.yml"
-      - ".github/workflows/deploy-website.yml"
   workflow_dispatch:
 
 permissions:
