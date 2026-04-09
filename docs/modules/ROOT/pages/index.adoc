@@ -1,18 +1,24 @@
 = Vulnlog Documentation
 
 Vulnlog is a developer-oriented CLI tool for tracking and documenting software vulnerability findings.
-It uses a YAML-based format (`*.vl.yaml`) that lives in your repository alongside your code, giving your team a single source of truth for vulnerability management.
+It uses a YAML-based format that lives in the repository alongside the code, providing a single source of truth for vulnerability management.
 
 == What Vulnlog does
 
-* Track SCA vulnerability findings in your repository
+* Track SCA vulnerability findings in the repository
 * Record analysis verdicts and justifications per vulnerability
 * Generate suppression files for scanners (Trivy, Snyk, and generic format)
 * Validate Vulnlog files against the schema
 * Filter by release, tag, or reporter
+
+== Open Source
+
+Vulnlog is open source and hosted on https://github.com/vulnlog/vulnlog[GitHub].
+Contributions, bug reports, and feature requests are welcome.
 
 == Next steps
 
 * xref:installation.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
 * Learn about the xref:format-overview.adoc[Vulnlog YAML format]
 * Explore the xref:cli-overview.adoc[CLI commands]
+* Plan the xref:branching-strategy.adoc[branching strategy] for single or multi-branch projects

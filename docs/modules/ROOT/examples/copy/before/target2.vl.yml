@@ -8,15 +8,14 @@ project:
   author: Acme Corp Security Team
 
 releases:
-  - id: 1.0.0
+  - id: 2.0.0
     published_at: 2026-01-15
 
 vulnerabilities:
 
-  - id: CVE-2026-1234
-    releases: [ 1.0.0 ]
-    description: Remote code execution in example-lib
-    packages: [ "pkg:npm/example-lib@2.3.0" ]
+  - id: CVE-2026-001
+    releases: [ 2.0.0 ]
+    packages: [ "pkg:maven/example/lib@1.2.3" ]
     reports:
       - reporter: trivy
     analysis: >
