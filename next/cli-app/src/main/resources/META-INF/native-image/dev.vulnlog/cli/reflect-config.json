@@ -88,5 +88,23 @@
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.reporting.dto.ProjectDataDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.reporting.dto.ReportDataDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.cli.parse.reporting.dto.ReportEntryDataDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
   }
 ]
