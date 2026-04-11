@@ -1,0 +1,14 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Web App
+  author: Acme Corp Security Team
+
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+
+vulnerabilities: []

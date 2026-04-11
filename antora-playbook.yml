@@ -3,12 +3,19 @@ site:
   url: https://vulnlog.dev/docs
   start_page: vulnlog::index.adoc
 
+#content:
+#  sources:
+#    - url: .
+#      branches:
+#        - HEAD
+#        - release/0.11.0
+#      start_path: docs
+
+# Only use this for local testing
 content:
   sources:
-    - url: .
-      branches:
-        - HEAD
-        - release/0.11.0
+    - url: ../vulnlog
+      branches: docs/0.12.0
       start_path: docs
 
 ui:

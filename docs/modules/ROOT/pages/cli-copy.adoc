@@ -1,0 +1,53 @@
+= vulnlog copy
+
+Copies a complete vulnerability entry from a source file into one or more target files.
+Use this to propagate an existing analysis across multiple branch files.
+
+[source]
+----
+vulnlog copy <source-file> <target-file...> [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--vuln-id <id>`
+| Vulnerability ID to copy (required). Must exist in the source file.
+|===
+
+The first positional argument is the source file.
+All subsequent positional arguments are target files.
+The entry is copied with all fields intact (analysis, verdict, justification, resolution, etc.).
+The `releases` field is adjusted to reference the latest published release that exist in each target file.
+
+If an entry with the same `id` already exists in a target file, the command skips that file and reports a warning.
+
+== Example
+
+In this example the vulnerability `CVE-2026-002` is copied from link:{examplesdir}/before/source.vl.yml[source.vl.yml] to link:{examplesdir}/after/target1.vl.yml[target1.vl.yml] and link:{examplesdir}/after/target2.vl.yml[target2.vl.yml].
+
+.Copy the vulnerability with the ID `CVE-2026-002` from source.vl.yml to targe1.vl.yml and target2.vl.yml.
+[source,bash]
+----
+vulnlog copy source.vl.yml target1.vl.yml target2.vl.yml --vuln-id CVE-2026-002
+
+Copied 'CVE-2026-002' to target1.vl.yml
+Copied 'CVE-2026-002' to target2.vl.yml
+----
+
+The above command adds the vulnerability entry to the before empty `vulnerabilities` list.
+
+This copies `CVE-2026-002` from before:
+
+[source,yaml]
+----
+include::{examplesdir}/copy/before/target1.vl.yml[lines=14..15]
+----
+
+After the operation, the vulnerability entry is added:
+
+[source,yaml]
+----
+include::{examplesdir}/copy/after/target1.vl.yml[lines=14..32]
+----

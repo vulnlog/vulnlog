@@ -15,5 +15,6 @@
 ** xref:cli-validate.adoc[validate]
 ** xref:cli-suppress.adoc[suppress]
 ** xref:cli-report.adoc[report]
+// ** xref:cli-copy.adoc[copy]
 // * Guides
 // ** xref:ci-integration.adoc[CI/CD Integration]

@@ -1,0 +1,31 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Web App
+  author: Acme Corp Security Team
+
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+
+vulnerabilities:
+
+  - id: "CVE-2026-002"
+    description: "Remote code execution in example-lib"
+    releases:
+    - "1.0.0"
+    packages:
+    - "pkg:npm/example-lib@2.3.0"
+    reports:
+    - reporter: "trivy"
+      at: null
+      source: null
+      vuln_ids: []
+      suppress: null
+    analysis: "The vulnerable code path is not reachable in our application because we\
+      \ only use the safe subset of the API.\n"
+    verdict: "not_affected"
+    justification: "vulnerable_code_not_in_execute_path"
