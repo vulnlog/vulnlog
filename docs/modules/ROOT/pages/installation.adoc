@@ -1,6 +1,94 @@
 = Installation
 
-// TODO: Document installation methods
-// - Docker image (ghcr.io)
-// - Native binary (GraalVM)
-// - Building from source
+Vulnlog can be installed in several ways.
+Pick the option that best fits your environment.
+
+// Future installation methods to consider:
+// - Snap package (Linux)
+// - Homebrew formula (macOS / Linux)
+// - Scoop or Winget (Windows)
+// - APT / RPM repositories
+// - Nix package
+
+== Docker
+
+A container image is published to the GitHub Container Registry on every release.
+
+[source,bash]
+----
+docker pull ghcr.io/vulnlog/vulnlog:latest
+----
+
+Run Vulnlog by mounting your working directory into the container:
+
+[source,bash]
+----
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/vulnlog/vulnlog:latest validate vulnlog.yaml
+----
+
+[TIP]
+====
+Pin to a specific version (for example `ghcr.io/vulnlog/vulnlog:0.12.0`) in CI pipelines to get reproducible builds.
+====
+
+[IMPORTANT]
+====
+Commands that write files (such as `suppress`) create those files as `root` by default, because the container runs as `root`.
+There are several ways to avoid this:
+
+* Run the container as your own user:
++
+[source,bash]
+----
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/work" -w /work ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml
+----
+
+* Use Vulnlog's STDIN/STDOUT support to stream input and output instead of mounting a volume.
+This avoids touching the host filesystem from inside the container entirely.
+
+* On Linux, enable Docker's https://docs.docker.com/engine/security/userns-remap/[user namespace remapping] so container `root` maps to an unprivileged host user.
+====
+
+All published images are listed at https://github.com/vulnlog/vulnlog/pkgs/container/vulnlog[ghcr.io/vulnlog/vulnlog].
+
+== Native Binary
+
+Standalone native binaries are built with GraalVM and require no Java runtime.
+They start instantly and are the recommended choice for local use.
+
+. Download the archive for your operating system and architecture from the https://github.com/vulnlog/vulnlog/releases[releases page].
+. Extract the archive.
+. Move the `vulnlog` binary to a directory on your `PATH`, for example `/usr/local/bin`.
+. Verify the installation:
++
+[source,bash]
+----
+vulnlog --version
+----
+
+== JVM Distribution
+
+A platform-independent JVM distribution is also published on the https://github.com/vulnlog/vulnlog/releases[releases page].
+It requires Java 21 or later to be installed.
+
+Use the JVM distribution if no native binary is available for your platform.
+
+== Build from Source
+
+Clone the repository and build with Gradle:
+
+[source,bash]
+----
+git clone https://github.com/vulnlog/vulnlog.git
+cd vulnlog
+./gradlew installDist
+----
+
+The resulting distribution is placed in `build/install/vulnlog`.
+Add its `bin` directory to your `PATH` to use it.
+
+[NOTE]
+====
+Building a native binary from source requires a local GraalVM installation.
+See the project's `README.md` for details.
+====

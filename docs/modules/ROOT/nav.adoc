@@ -1,6 +1,6 @@
 * xref:index.adoc[Overview]
 * Getting Started
-// ** xref:installation.adoc[Installation]
+** xref:installation.adoc[Installation]
 ** xref:quickstart.adoc[Quickstart]
 // * Vulnlog Format
 // ** xref:format-overview.adoc[Format Overview]
