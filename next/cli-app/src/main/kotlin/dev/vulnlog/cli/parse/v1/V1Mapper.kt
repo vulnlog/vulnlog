@@ -29,6 +29,7 @@ import dev.vulnlog.cli.parse.v1.dto.ProjectDto
 import dev.vulnlog.cli.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.cli.parse.v1.dto.ReleasePurlEntryDto
 import dev.vulnlog.cli.parse.v1.dto.ReportEntryDto
+import dev.vulnlog.cli.parse.v1.dto.ResolutionDto
 import dev.vulnlog.cli.parse.v1.dto.SuppressionDto
 import dev.vulnlog.cli.parse.v1.dto.TagEntryDto
 import dev.vulnlog.cli.parse.v1.dto.VulnerabilityEntryDto
@@ -55,36 +56,43 @@ object V1Mapper {
         }
 
     private fun vulnerabilitiesToDto(vulnerabilities: List<VulnerabilityEntry>): List<VulnerabilityEntryDto> =
-        vulnerabilities.map {
-            val vulnId =
-                when (it.id) {
-                    is VulnId.Cve -> it.id.id
-                    is VulnId.Ghsa -> it.id.id
-                    is VulnId.RustSec -> it.id.id
-                    is VulnId.Snyk -> it.id.id
+        vulnerabilities.map(::vulnerabilityToDto)
+
+    internal fun vulnerabilityToDto(entry: VulnerabilityEntry): VulnerabilityEntryDto {
+        val vulnId =
+            when (entry.id) {
+                is VulnId.Cve -> entry.id.id
+                is VulnId.Ghsa -> entry.id.id
+                is VulnId.RustSec -> entry.id.id
+                is VulnId.Snyk -> entry.id.id
+            }
+        val aliases =
+            entry.aliases.map { alias ->
+                when (alias) {
+                    is VulnId.Cve -> alias.id
+                    is VulnId.Ghsa -> alias.id
+                    is VulnId.RustSec -> alias.id
+                    is VulnId.Snyk -> alias.id
                 }
-            val aliases =
-                it.aliases.map { alias ->
-                    when (alias) {
-                        is VulnId.Cve -> alias.id
-                        is VulnId.Ghsa -> alias.id
-                        is VulnId.RustSec -> alias.id
-                        is VulnId.Snyk -> alias.id
-                    }
-                }
-            VulnerabilityEntryDto(
-                id = vulnId,
-                aliases = aliases,
-                description = it.description,
-                releases = it.releases.map { release -> release.value },
-                reports = reportsToDto(it.reports),
-                tags = it.tags.map { tag -> tag.value },
-                packages = it.packages.map { purl -> purl.value },
-                analysis = it.analysis,
-                analyzedAt = it.analyzedAt,
-                comment = it.comment,
-            )
-        }
+            }
+        return VulnerabilityEntryDto(
+            id = vulnId,
+            name = entry.name,
+            aliases = aliases,
+            description = entry.description,
+            releases = entry.releases.map { release -> release.value },
+            reports = reportsToDto(entry.reports),
+            tags = entry.tags.map { tag -> tag.value },
+            packages = entry.packages.map { purl -> purl.value },
+            analysis = entry.analysis,
+            analyzedAt = entry.analyzedAt,
+            verdict = verdictToString(entry.verdict),
+            severity = severityToString(entry.verdict),
+            justification = justificationToString(entry.verdict),
+            resolution = entry.resolution?.let { resolutionToDto(it) },
+            comment = entry.comment,
+        )
+    }
 
     private fun reportsToDto(reports: List<ReportEntry>): List<ReportEntryDto> =
         reports.map {
@@ -223,6 +231,43 @@ object V1Mapper {
             "vulnerable_code_not_present" -> VexJustification.VULNERABLE_CODE_NOT_PRESENT
             else -> throw IllegalArgumentException("Invalid justification: $justification")
         }
+
+    private fun verdictToString(verdict: Verdict): String? =
+        when (verdict) {
+            is Verdict.Affected -> "affected"
+            is Verdict.NotAffected -> "not_affected"
+            is Verdict.RiskAcceptable -> "risk_acceptable"
+            is Verdict.UnderInvestigation -> null
+        }
+
+    private fun severityToString(verdict: Verdict): String? =
+        when (verdict) {
+            is Verdict.Affected -> verdict.severity.name.lowercase()
+            is Verdict.RiskAcceptable -> verdict.severity.name.lowercase()
+            else -> null
+        }
+
+    private fun justificationToString(verdict: Verdict): String? =
+        when (verdict) {
+            is Verdict.NotAffected ->
+                when (verdict.justification) {
+                    VexJustification.COMPONENT_NOT_PRESENT -> "component_not_present"
+                    VexJustification.INLINE_MITIGATIONS_ALREADY_EXIST -> "inline_mitigations_already_exists"
+                    VexJustification.VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY ->
+                        "vulnerable_code_cannot_be_controlled_by_adversary"
+                    VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH -> "vulnerable_code_not_in_execute_path"
+                    VexJustification.VULNERABLE_CODE_NOT_PRESENT -> "vulnerable_code_not_present"
+                }
+            else -> null
+        }
+
+    private fun resolutionToDto(resolution: Resolution): ResolutionDto =
+        ResolutionDto(
+            release = resolution.release.value,
+            at = resolution.at,
+            ref = resolution.ref,
+            note = resolution.note,
+        )
 
     private fun vulnerabilityReleasesToDomain(releases: List<String>): List<Release> = releases.map(::Release)
 
