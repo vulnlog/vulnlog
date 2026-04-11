@@ -69,12 +69,14 @@ private fun vulnerability(
 
 private fun suppressedVuln(
     id: VulnId = VulnId.Cve("CVE-2024-0001"),
-    report: ReportEntry = trivyReport(),
+    reporter: ReporterType = ReporterType.TRIVY,
+    expiresAt: LocalDate? = null,
     analysis: String = "not affected",
 ) = SuppressedVulnerability(
     id = id,
     releases = listOf(releaseV1),
-    reports = report,
+    reporter = reporter,
+    expiresAt = expiresAt,
     analysis = analysis,
 )
 
@@ -101,6 +103,48 @@ class SuppressionTest :
                     collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
                 result.shouldBeEmpty()
+            }
+
+            test("collect only report specific vulnerability ID if one specified") {
+                val vuln =
+                    vulnerability(
+                        id = VulnId.Cve("CVE-2024-0001"),
+                        releases = listOf(releaseV1),
+                        reports = listOf(trivyReport(vulnIds = setOf(VulnId.Cve("CVE-2024-0002")))),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val filter = SuppressionFilter(VulnlogFilter(releases = setOf(releaseV1)), today)
+                val result = collectSuppressedVulnerabilities(file, filter)
+
+                result[ReporterType.TRIVY]!! shouldHaveSize 1
+                result[ReporterType.TRIVY]!![0].id shouldBe VulnId.Cve("CVE-2024-0002")
+            }
+
+            test("collect only report specific vulnerability ID if multiple specified") {
+                val vuln =
+                    vulnerability(
+                        id = VulnId.Cve("CVE-2024-0001"),
+                        releases = listOf(releaseV1),
+                        reports =
+                            listOf(
+                                trivyReport(
+                                    vulnIds =
+                                        setOf(
+                                            VulnId.Cve("CVE-2024-0002"),
+                                            VulnId.Cve("CVE-2024-0003"),
+                                        ),
+                                ),
+                            ),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val filter = SuppressionFilter(VulnlogFilter(releases = setOf(releaseV1)), today)
+                val result = collectSuppressedVulnerabilities(file, filter)
+
+                result[ReporterType.TRIVY]!! shouldHaveSize 2
+                result[ReporterType.TRIVY]!![0].id shouldBe VulnId.Cve("CVE-2024-0002")
+                result[ReporterType.TRIVY]!![1].id shouldBe VulnId.Cve("CVE-2024-0003")
             }
 
             test("filters by single release") {
@@ -233,10 +277,7 @@ class SuppressionTest :
             }
 
             test("filters out non-suppressable reporters") {
-                val entry =
-                    suppressedVuln(
-                        report = ReportEntry(reporter = ReporterType.OTHER, suppress = Suppression()),
-                    )
+                val entry = suppressedVuln(reporter = ReporterType.OTHER)
                 val input = mapOf(ReporterType.OTHER to listOf(entry))
 
                 val result = mapToSuppression(setOf(ReporterType.OTHER), input)
@@ -279,8 +320,7 @@ class SuppressionTest :
 
             test("propagates expiresAt to trivy entries") {
                 val expiresAt = LocalDate.of(2026, 12, 31)
-                val report = trivyReport(suppress = Suppression(expiresAt = expiresAt))
-                val entry = suppressedVuln(report = report)
+                val entry = suppressedVuln(expiresAt = expiresAt)
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
                 val result = mapToSuppression(setOf(ReporterType.TRIVY), input)
@@ -290,8 +330,7 @@ class SuppressionTest :
             }
 
             test("sets expiresAt to null for permanent suppression") {
-                val report = trivyReport(suppress = Suppression(expiresAt = null))
-                val entry = suppressedVuln(report = report)
+                val entry = suppressedVuln(expiresAt = null)
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
                 val result = mapToSuppression(setOf(ReporterType.TRIVY), input)
@@ -300,34 +339,9 @@ class SuppressionTest :
                 trivy.entries.first().expiresAt shouldBe null
             }
 
-            test("uses reporter-specific vulnIds over main id") {
-                val report = trivyReport(vulnIds = setOf(VulnId.Ghsa("GHSA-1234-5678-abcd")))
-                val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
-                val input = mapOf(ReporterType.TRIVY to listOf(entry))
-
-                val result = mapToSuppression(setOf(ReporterType.TRIVY), input)
-                val trivy = result.first() as SuppressionOutput.TrivySuppression
-
-                trivy.entries shouldHaveSize 1
-                trivy.entries.first().id shouldBe VulnId.Ghsa("GHSA-1234-5678-abcd")
-            }
-
-            test("falls back to main id when reporter vulnIds are not supported") {
-                val report = trivyReport(vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")))
-                val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
-                val input = mapOf(ReporterType.TRIVY to listOf(entry))
-
-                val result = mapToSuppression(setOf(ReporterType.TRIVY), input)
-                val trivy = result.first() as SuppressionOutput.TrivySuppression
-
-                trivy.entries shouldHaveSize 1
-                trivy.entries.first().id shouldBe VulnId.Cve("CVE-2024-0001")
-            }
-
             test("deduplicates entries across multiple vulnerabilities") {
-                val report = trivyReport()
-                val entry1 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
-                val entry2 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
+                val entry1 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"))
+                val entry2 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"))
                 val input = mapOf(ReporterType.TRIVY to listOf(entry1, entry2))
 
                 val result = mapToSuppression(setOf(ReporterType.TRIVY), input)
@@ -340,13 +354,7 @@ class SuppressionTest :
         context("mapToSuppression for Snyk") {
 
             test("maps snyk suppressions to SnykSuppression output") {
-                val report =
-                    ReportEntry(
-                        reporter = ReporterType.SNYK,
-                        vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")),
-                        suppress = Suppression(),
-                    )
-                val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
+                val entry = suppressedVuln(id = VulnId.Snyk("SNYK-JAVA-001"), reporter = ReporterType.SNYK)
                 val input = mapOf(ReporterType.SNYK to listOf(entry))
 
                 val result = mapToSuppression(setOf(ReporterType.SNYK), input)
@@ -356,14 +364,12 @@ class SuppressionTest :
             }
 
             test("produces correct snyk entries from Snyk vulnId") {
-                val report =
-                    ReportEntry(
-                        reporter = ReporterType.SNYK,
-                        vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")),
-                        suppress = Suppression(),
-                    )
                 val entry =
-                    suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report, analysis = "not exploitable")
+                    suppressedVuln(
+                        id = VulnId.Snyk("SNYK-JAVA-001"),
+                        reporter = ReporterType.SNYK,
+                        analysis = "not exploitable",
+                    )
                 val input = mapOf(ReporterType.SNYK to listOf(entry))
 
                 val result = mapToSuppression(setOf(ReporterType.SNYK), input)
@@ -372,6 +378,16 @@ class SuppressionTest :
                 snyk.entries shouldHaveSize 1
                 snyk.entries.first().id shouldBe VulnId.Snyk("SNYK-JAVA-001")
                 snyk.entries.first().reason shouldBe "not exploitable"
+            }
+
+            test("filters out non-snyk vuln ids for Snyk output") {
+                val cveEntry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), reporter = ReporterType.SNYK)
+                val input = mapOf(ReporterType.SNYK to listOf(cveEntry))
+
+                val result = mapToSuppression(setOf(ReporterType.SNYK), input)
+                val snyk = result.first() as SuppressionOutput.SnykSuppression
+
+                snyk.entries.shouldBeEmpty()
             }
 
             test("produces empty SnykSuppression when no suppressions match") {
@@ -384,52 +400,18 @@ class SuppressionTest :
 
             test("propagates expiresAt to snyk entries") {
                 val expiresAt = LocalDate.of(2026, 12, 31)
-                val report =
-                    ReportEntry(
+                val entry =
+                    suppressedVuln(
+                        id = VulnId.Snyk("SNYK-JAVA-001"),
                         reporter = ReporterType.SNYK,
-                        vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-001")),
-                        suppress = Suppression(expiresAt = expiresAt),
+                        expiresAt = expiresAt,
                     )
-                val entry = suppressedVuln(report = report)
                 val input = mapOf(ReporterType.SNYK to listOf(entry))
 
                 val result = mapToSuppression(setOf(ReporterType.SNYK), input)
                 val snyk = result.first() as SuppressionOutput.SnykSuppression
 
                 snyk.entries.first().expiresAt shouldBe expiresAt
-            }
-
-            test("ignores non-snyk vulnIds and falls back to main id if snyk type") {
-                val report =
-                    ReportEntry(
-                        reporter = ReporterType.SNYK,
-                        vulnIds = setOf(VulnId.Cve("CVE-2024-0001")),
-                        suppress = Suppression(),
-                    )
-                val entry = suppressedVuln(id = VulnId.Snyk("SNYK-JAVA-001"), report = report)
-                val input = mapOf(ReporterType.SNYK to listOf(entry))
-
-                val result = mapToSuppression(setOf(ReporterType.SNYK), input)
-                val snyk = result.first() as SuppressionOutput.SnykSuppression
-
-                snyk.entries shouldHaveSize 1
-                snyk.entries.first().id shouldBe VulnId.Snyk("SNYK-JAVA-001")
-            }
-
-            test("produces no entries when neither vulnIds nor main id are snyk type") {
-                val report =
-                    ReportEntry(
-                        reporter = ReporterType.SNYK,
-                        vulnIds = setOf(VulnId.Cve("CVE-2024-0001")),
-                        suppress = Suppression(),
-                    )
-                val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), report = report)
-                val input = mapOf(ReporterType.SNYK to listOf(entry))
-
-                val result = mapToSuppression(setOf(ReporterType.SNYK), input)
-                val snyk = result.first() as SuppressionOutput.SnykSuppression
-
-                snyk.entries.shouldBeEmpty()
             }
         }
 
@@ -458,7 +440,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("not_affected with resolution is excluded") {
+            test("not_affected with resolution is still included") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
@@ -468,7 +450,7 @@ class SuppressionTest :
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result.shouldBeEmpty()
+                result shouldHaveSize 1
             }
 
             test("affected with resolution is excluded regardless of suppress block") {
@@ -484,7 +466,7 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk_acceptable with resolution is excluded regardless of suppress block") {
+            test("risk_acceptable with resolution is included when suppress block present") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
@@ -494,20 +476,7 @@ class SuppressionTest :
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result.shouldBeEmpty()
-            }
-
-            test("not_affected with resolution is excluded regardless of suppress block") {
-                val vuln =
-                    vulnerability(
-                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
-                        resolution = Resolution(release = releaseV1),
-                    )
-                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
-
-                val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
-
-                result.shouldBeEmpty()
+                result shouldHaveSize 1
             }
 
             test("affected without resolution is included when suppress block present") {
@@ -538,14 +507,14 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("risk_acceptable is included when suppress block absent") {
+            test("risk_acceptable is excluded when suppress block absent") {
                 val report = trivyReport(suppress = null)
                 val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.MEDIUM))
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result shouldHaveSize 1
+                result.shouldBeEmpty()
             }
 
             test("under_investigation is included when suppress block present") {
@@ -567,13 +536,23 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk_acceptable ignores suppress expiration") {
+            test("risk_acceptable respects suppress expiration") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(30)))
                 val vuln =
                     vulnerability(
                         reports = listOf(report),
                         verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
                     )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+
+                result.shouldBeEmpty()
+            }
+
+            test("expires_at equal to today is included") {
+                val report = trivyReport(suppress = Suppression(expiresAt = today))
+                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
@@ -604,11 +583,17 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("excludes vulnerability with resolution even if no date") {
+            test("excludes affected vulnerability with resolution even if no date") {
                 val resolution = Resolution(release = releaseV1, at = null)
                 val file =
                     emptyFile().copy(
-                        vulnerabilities = listOf(vulnerability(resolution = resolution)),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    verdict = Verdict.Affected(Severity.HIGH),
+                                    resolution = resolution,
+                                ),
+                            ),
                     )
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))

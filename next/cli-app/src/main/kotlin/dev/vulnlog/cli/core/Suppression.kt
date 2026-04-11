@@ -13,20 +13,14 @@ import dev.vulnlog.cli.model.suppress.SuppressionOutput
 import dev.vulnlog.cli.model.suppress.SuppressionVuln
 import java.time.LocalDate
 
-data class SuppressionFilter(
-    val filter: VulnlogFilter = VulnlogFilter(),
-    val today: LocalDate = LocalDate.now(),
-)
-
 /**
- * Collects and groups suppressed vulnerabilities from the provided VulnlogFile based on the specified suppression filter criteria.
+ * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression
+ * filter criteria. The vulnerabilities are grouped by their reporter type.
  *
- * This method processes the vulnerabilities by applying the filter configuration, including release, tags, resolution, and reporter type.
- * Suppressed vulnerabilities are extracted from the reports, filtered for their expiration status, and grouped by the reporter type.
- *
- * @param vulnlogFile The VulnlogFile containing vulnerabilities to be processed.
- * @param filter The suppression filter that defines filtering criteria such as release, tags, reporter, and the current date for expiration checks.
- * @return A map where the keys are the reporter types, and the values are lists of suppressed vulnerabilities that match the filter criteria.
+ * @param vulnlogFile The Vulnlog file containing vulnerability records to analyze.
+ * @param filter The suppression filter to apply for selecting and grouping vulnerabilities.
+ * @return A map where the keys are the reporter types, and the values are lists of suppressed vulnerabilities
+ *         associated with each reporter.
  */
 fun collectSuppressedVulnerabilities(
     vulnlogFile: VulnlogFile,
@@ -34,37 +28,45 @@ fun collectSuppressedVulnerabilities(
 ): Map<ReporterType, List<SuppressedVulnerability>> =
     vulnlogFile.vulnerabilities
         .asSequence()
-        .applyFilter(filter.filter)
-        .flatMap { vulnerability -> collectEligibleReports(vulnerability, filter.today) }
-        .groupBy { it.reports.reporter }
+        .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today) }
+        .applyFilter(filter)
+        .groupBy { it.reporter }
         .filter { filter.filter.reporter == null || it.key == filter.filter.reporter }
 
-private fun collectEligibleReports(
+private fun explodeAndMapToSuppressedVulnerabilities(
     vulnerability: VulnerabilityEntry,
     today: LocalDate,
 ): List<SuppressedVulnerability> {
-    if (vulnerability.resolution != null) {
+    if (vulnerability.verdict is Verdict.Affected && vulnerability.resolution != null) {
         return emptyList()
     }
-
-    val eligibleReports =
-        when (vulnerability.verdict) {
-            is Verdict.NotAffected, is Verdict.RiskAcceptable -> vulnerability.reports
-            else ->
-                vulnerability.reports
-                    .filter { it.suppress != null }
-                    .filter { it.suppress?.expiresAt?.isAfter(today) ?: true }
+    return vulnerability.reports.flatMap { report ->
+        if (!isReportEligible(vulnerability.verdict, report.suppress, today)) {
+            return@flatMap emptyList()
         }
-
-    return eligibleReports.map { report ->
-        SuppressedVulnerability(
-            id = vulnerability.id,
-            releases = vulnerability.releases,
-            reports = report,
-            tags = vulnerability.tags,
-            analysis = vulnerability.analysis ?: "",
-        )
+        val ids: Collection<VulnId> = report.vulnIds.ifEmpty { listOf(vulnerability.id) }
+        ids.map { id ->
+            SuppressedVulnerability(
+                id = id,
+                releases = vulnerability.releases,
+                reporter = report.reporter,
+                expiresAt = report.suppress?.expiresAt,
+                tags = vulnerability.tags,
+                analysis = vulnerability.analysis ?: "",
+            )
+        }
     }
+}
+
+private fun isReportEligible(
+    verdict: Verdict,
+    suppress: dev.vulnlog.cli.model.Suppression?,
+    today: LocalDate,
+): Boolean {
+    if (verdict is Verdict.NotAffected) return true
+    if (suppress == null) return false
+    val expiresAt = suppress.expiresAt ?: return true
+    return !expiresAt.isBefore(today)
 }
 
 /**
@@ -120,14 +122,13 @@ private fun createGenericSuppression(
 ): SuppressionOutput {
     val entries =
         suppressions
-            .flatMap { entry ->
-                resolveVulnIds(entry, defaults).map { id ->
-                    SuppressionVuln.GenericSuppressionEntry(
-                        id = id,
-                        expiresAt = entry.reports.suppress?.expiresAt,
-                        reason = entry.analysis,
-                    )
-                }
+            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .map { suppression ->
+                SuppressionVuln.GenericSuppressionEntry(
+                    id = suppression.id,
+                    expiresAt = suppression.expiresAt,
+                    reason = suppression.analysis,
+                )
             }.toSet()
     return SuppressionOutput.GenericSuppression(
         fileName = defaults.reporter.name.lowercase() + ".generic.json",
@@ -136,50 +137,35 @@ private fun createGenericSuppression(
 }
 
 private fun createTrivySuppression(
-    defaults: Suppressable,
+    defaults: Suppressable.NativeFormat.Trivy,
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput {
     val entries =
         suppressions
-            .flatMap { entry ->
-                resolveVulnIds(entry, defaults).map { id ->
-                    SuppressionVuln.TrivySuppressionEntry(
-                        id = id,
-                        expiresAt = entry.reports.suppress?.expiresAt,
-                        reason = entry.analysis,
-                    )
-                }
+            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .map { suppression ->
+                SuppressionVuln.TrivySuppressionEntry(
+                    id = suppression.id,
+                    expiresAt = suppression.expiresAt,
+                    reason = suppression.analysis,
+                )
             }.toSet()
     return SuppressionOutput.TrivySuppression(entries = entries)
 }
 
 private fun createSnykSuppression(
-    defaults: Suppressable,
+    defaults: Suppressable.NativeFormat.Snyk,
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput {
     val entries =
         suppressions
-            .flatMap { entry ->
-                resolveVulnIds(entry, defaults).map { id ->
-                    SuppressionVuln.SnykSuppressionEntry(
-                        id = id,
-                        expiresAt = entry.reports.suppress?.expiresAt,
-                        reason = entry.analysis,
-                    )
-                }
+            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .map { suppression ->
+                SuppressionVuln.SnykSuppressionEntry(
+                    id = suppression.id,
+                    expiresAt = suppression.expiresAt,
+                    reason = suppression.analysis,
+                )
             }.toSet()
     return SuppressionOutput.SnykSuppression(entries = entries)
-}
-
-private fun resolveVulnIds(
-    entry: SuppressedVulnerability,
-    defaults: Suppressable,
-): Set<VulnId> {
-    val reporterSpecific =
-        entry.reports.vulnIds
-            .filter { it::class in defaults.vulnIdTypes }
-            .toSet()
-    return reporterSpecific.ifEmpty {
-        if (entry.id::class in defaults.vulnIdTypes) setOf(entry.id) else emptySet()
-    }
 }
