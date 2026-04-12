@@ -9,8 +9,8 @@ class ReportsTest :
     FunSpec({
 
         context("parseReporter") {
-            test("parses dependency_check") {
-                parseReporter("dependency_check") shouldBe ReporterType.DEPENDENCY_CHECK
+            test("parses dependency-check") {
+                parseReporter("dependency-check") shouldBe ReporterType.DEPENDENCY_CHECK
             }
 
             test("parses github_advisory") {
@@ -53,8 +53,8 @@ class ReportsTest :
         }
 
         context("canonical") {
-            test("DEPENDENCY_CHECK canonical is dependency_check") {
-                ReporterType.DEPENDENCY_CHECK.canonical() shouldBe "dependency_check"
+            test("DEPENDENCY_CHECK canonical is dependency-check") {
+                ReporterType.DEPENDENCY_CHECK.canonical() shouldBe "dependency-check"
             }
 
             test("GITHUB_SECURITY_ADVISORY canonical is github_advisory") {
@@ -92,7 +92,7 @@ class ReportsTest :
             test("parseReporter and canonical are inverse") {
                 val allCanonicals =
                     listOf(
-                        "dependency_check",
+                        "dependency-check",
                         "github_advisory",
                         "grype",
                         "npm_audit",

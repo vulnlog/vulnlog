@@ -111,7 +111,7 @@
           "enum": [
             "trivy",
             "snyk",
-            "dependency_check",
+            "dependency-check",
             "grype",
             "cargo-audit",
             "semgrep",
