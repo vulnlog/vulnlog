@@ -13,43 +13,58 @@ Pick the option that best fits your environment.
 == Docker
 
 A container image is published to the GitHub Container Registry on every release.
+The image runs as a non-root user (UID 1000) by default.
 
 [source,bash]
 ----
 docker pull ghcr.io/vulnlog/vulnlog:latest
 ----
 
-Run Vulnlog by mounting your working directory into the container:
-
-[source,bash]
-----
-docker run --rm -v "$PWD:/work" -w /work ghcr.io/vulnlog/vulnlog:latest validate vulnlog.yaml
-----
+All published images are listed at https://github.com/vulnlog/vulnlog/pkgs/container/vulnlog[ghcr.io/vulnlog/vulnlog].
 
 [TIP]
 ====
 Pin to a specific version (for example `ghcr.io/vulnlog/vulnlog:0.12.0`) in CI pipelines to get reproducible builds.
 ====
 
-[IMPORTANT]
-====
-Commands that write files (such as `suppress`) create those files as `root` by default, because the container runs as `root`.
-There are several ways to avoid this:
+=== CI Usage
 
-* Run the container as your own user:
-+
+In most CI environments (GitHub Actions, Jenkins, GitLab CI) the runner's workspace is owned by UID 1000, so the container works without extra flags:
+
 [source,bash]
 ----
-docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/work" -w /work ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest validate vulnlog.yaml
 ----
 
-* Use Vulnlog's STDIN/STDOUT support to stream input and output instead of mounting a volume.
-This avoids touching the host filesystem from inside the container entirely.
+If your CI runner requires root access, override the user at runtime:
 
-* On Linux, enable Docker's https://docs.docker.com/engine/security/userns-remap/[user namespace remapping] so container `root` maps to an unprivileged host user.
-====
+[source,bash]
+----
+docker run --rm --user root -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml
+----
 
-All published images are listed at https://github.com/vulnlog/vulnlog/pkgs/container/vulnlog[ghcr.io/vulnlog/vulnlog].
+=== Local Usage
+
+On most Linux and macOS systems the default user is UID 1000, so bind mounts work out of the box:
+
+[source,bash]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml
+----
+
+If your host user has a different UID, pass it explicitly:
+
+[source,bash]
+----
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml
+----
+
+Alternatively, use STDIN and STDOUT to avoid writing to the host filesystem from inside the container entirely:
+
+[source,bash]
+----
+cat vulnlog.yaml | docker run --rm -i ghcr.io/vulnlog/vulnlog:latest suppress --reporter trivy - > .trivyignore.yaml
+----
 
 == Native Binary
 
