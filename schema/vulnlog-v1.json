@@ -113,7 +113,7 @@
             "snyk",
             "dependency_check",
             "grype",
-            "rust_audit",
+            "cargo-audit",
             "semgrep",
             "npm_audit",
             "github_advisory",

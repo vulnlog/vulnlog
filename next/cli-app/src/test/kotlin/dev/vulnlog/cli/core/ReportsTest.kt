@@ -29,8 +29,8 @@ class ReportsTest :
                 parseReporter("other") shouldBe ReporterType.OTHER
             }
 
-            test("parses rust_audit") {
-                parseReporter("rust_audit") shouldBe ReporterType.RUST_AUDIT
+            test("parses cargo-audit") {
+                parseReporter("cargo-audit") shouldBe ReporterType.CARGO_AUDIT
             }
 
             test("parses semgrep") {
@@ -73,8 +73,8 @@ class ReportsTest :
                 ReporterType.OTHER.canonical() shouldBe "other"
             }
 
-            test("RUST_AUDIT canonical is rust_audit") {
-                ReporterType.RUST_AUDIT.canonical() shouldBe "rust_audit"
+            test("cargo-audit canonical is cargo-audit") {
+                ReporterType.CARGO_AUDIT.canonical() shouldBe "cargo-audit"
             }
 
             test("SEMGREP canonical is semgrep") {
@@ -97,7 +97,7 @@ class ReportsTest :
                         "grype",
                         "npm_audit",
                         "other",
-                        "rust_audit",
+                        "cargo-audit",
                         "semgrep",
                         "snyk",
                         "trivy",

@@ -7,7 +7,7 @@ import dev.vulnlog.cli.model.ReporterType
  *
  * @param reporter The string identifier of the reporter, expected to match one of the predefined reporter names.
  *                 Supported values include: "dependency_check", "github_advisory", "grype", "npm_audit",
- *                 "other", "rust_audit", "semgrep", "snyk", and "trivy".
+ *                 "other", "cargo-audit", "semgrep", "snyk", and "trivy".
  * @return The corresponding ReporterType enumeration value for the specified reporter.
  * @throws IllegalArgumentException If the specified reporter is not supported.
  */
@@ -18,7 +18,7 @@ fun parseReporter(reporter: String): ReporterType =
         "grype" -> ReporterType.GRYPE
         "npm_audit" -> ReporterType.NPM_AUDIT
         "other" -> ReporterType.OTHER
-        "rust_audit" -> ReporterType.RUST_AUDIT
+        "cargo-audit" -> ReporterType.CARGO_AUDIT
         "semgrep" -> ReporterType.SEMGREP
         "snyk" -> ReporterType.SNYK
         "trivy" -> ReporterType.TRIVY
@@ -38,7 +38,7 @@ fun ReporterType.canonical(): String =
         ReporterType.GRYPE -> "grype"
         ReporterType.NPM_AUDIT -> "npm_audit"
         ReporterType.OTHER -> "other"
-        ReporterType.RUST_AUDIT -> "rust_audit"
+        ReporterType.CARGO_AUDIT -> "cargo-audit"
         ReporterType.SEMGREP -> "semgrep"
         ReporterType.SNYK -> "snyk"
         ReporterType.TRIVY -> "trivy"
