@@ -95,7 +95,7 @@ class SuppressionTest :
                 result[ReporterType.TRIVY]!!.first().id shouldBe VulnId.Cve("CVE-2024-0001")
             }
 
-            test("excludes reports without suppress for non-not_affected verdict") {
+            test("excludes reports without suppress for non-not affected verdict") {
                 val report = trivyReport(suppress = null)
                 val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
@@ -426,7 +426,7 @@ class SuppressionTest :
 
         context("verdict-based suppression eligibility") {
 
-            test("not_affected is always included without suppress block") {
+            test("not affected is always included without suppress block") {
                 val report = trivyReport(suppress = null)
                 val vuln =
                     vulnerability(
@@ -440,7 +440,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("not_affected with resolution is still included") {
+            test("not affected with resolution is still included") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
@@ -466,7 +466,7 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk_acceptable with resolution is included when suppress block present") {
+            test("risk acceptable with resolution is included when suppress block present") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
@@ -498,7 +498,7 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk_acceptable is included when suppress block present") {
+            test("risk acceptable is included when suppress block present") {
                 val vuln = vulnerability(verdict = Verdict.RiskAcceptable(Severity.MEDIUM))
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
@@ -507,7 +507,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("risk_acceptable is excluded when suppress block absent") {
+            test("risk acceptable is excluded when suppress block absent") {
                 val report = trivyReport(suppress = null)
                 val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.MEDIUM))
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
@@ -536,7 +536,7 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk_acceptable respects suppress expiration") {
+            test("risk acceptable respects suppress expiration") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(30)))
                 val vuln =
                     vulnerability(
@@ -560,7 +560,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("not_affected ignores suppress expiration") {
+            test("not affected ignores suppress expiration") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(30)))
                 val vuln =
                     vulnerability(

@@ -8,7 +8,7 @@ enum class ReporterType {
     GRYPE,
     NPM_AUDIT,
     OTHER,
-    RUST_AUDIT,
+    CARGO_AUDIT,
     SEMGREP,
     SNYK,
     TRIVY,

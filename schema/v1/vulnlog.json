@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vulnlog.dev/schemas/v1/vulnlog.json",
+  "title": "Vulnlog",
+  "description": "Vulnlog YAML format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners. Each file is scoped to a single release branch. See https://vulnlog.dev for the full specification",
+  "type": "object",
+  "required": [ "schemaVersion", "project", "releases", "vulnerabilities" ],
+  "properties": {
+    "schemaVersion": {
+      "description": "Schema version of the Vulnlog file",
+      "const": "1"
+    },
+    "project": {
+      "$ref": "defs/project.json"
+    },
+    "tags": {
+      "description": "Tags for categorizing and scoping vulnerability entries",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "defs/tag.json"
+      }
+    },
+    "releases": {
+      "description": "Releases tracked in this Vulnlog file. Must be in chronological order (oldest first)",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "defs/release.json"
+      }
+    },
+    "vulnerabilities": {
+      "description": "Vulnerability entries. May be empty. Newest entries first",
+      "type": "array",
+      "items": {
+        "$ref": "defs/vulnerability.json"
+      }
+    }
+  },
+  "additionalProperties": false
+}

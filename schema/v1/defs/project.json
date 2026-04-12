@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vulnlog.dev/schemas/v1/defs/project.json",
+  "title": "Vulnlog Project",
+  "description": "Project-level metadata. Used in report generation and as author information in VEX documents",
+  "type": "object",
+  "required": [ "organization", "name", "author" ],
+  "properties": {
+    "organization": {
+      "description": "Name of the organization or vendor",
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "description": "Name of the software project",
+      "type": "string",
+      "minLength": 1
+    },
+    "author": {
+      "description": "Name of the responsible security team or author. Used as the author in VEX documents",
+      "type": "string",
+      "minLength": 1
+    },
+    "contact": {
+      "description": "Contact email for the security team. Used as the author contact in VEX documents",
+      "type": "string",
+      "format": "email"
+    }
+  },
+  "additionalProperties": false
+}

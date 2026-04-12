@@ -207,7 +207,7 @@ class YamlParserTest :
                     .verdict shouldBe Verdict.Affected(Severity.HIGH)
             }
 
-            test("vulnerability with not_affected verdict and justification is parsed") {
+            test("vulnerability with not affected verdict and justification is parsed") {
                 val yaml =
                     """
                     schemaVersion: "1"
@@ -221,8 +221,8 @@ class YamlParserTest :
                         releases: []
                         packages: []
                         reports: []
-                        verdict: not_affected
-                        justification: component_not_present
+                        verdict: not affected
+                        justification: component not present
                     """.trimIndent()
 
                 parser
@@ -233,7 +233,7 @@ class YamlParserTest :
                     Verdict.NotAffected(VexJustification.COMPONENT_NOT_PRESENT)
             }
 
-            test("vulnerability with risk_acceptable verdict and severity is parsed") {
+            test("vulnerability with risk acceptable verdict and severity is parsed") {
                 val yaml =
                     """
                     schemaVersion: "1"
@@ -247,7 +247,7 @@ class YamlParserTest :
                         releases: []
                         packages: []
                         reports: []
-                        verdict: risk_acceptable
+                        verdict: risk acceptable
                         severity: medium
                     """.trimIndent()
 

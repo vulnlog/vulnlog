@@ -82,7 +82,7 @@ class HtmlReportRendererTest :
                     entry(primaryId = VulnId.Cve("CVE-2026-1234")),
                     entry(
                         primaryId = VulnId.Cve("CVE-2026-5678"),
-                        impact = Impact.NotAffected("vulnerable_code_not_in_execute_path"),
+                        impact = Impact.NotAffected("vulnerable code not in execute path"),
                         state = WorkState.OPEN,
                     ),
                 )
@@ -92,7 +92,7 @@ class HtmlReportRendererTest :
 
             html shouldContain "CVE-2026-1234"
             html shouldContain "CVE-2026-5678"
-            html shouldContain "not_affected"
+            html shouldContain "not affected"
         }
 
         test("includes aliases in serialized data") {

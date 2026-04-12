@@ -42,8 +42,8 @@ object HtmlReportMapper {
     private fun verdictLabel(impact: Impact): String =
         when (impact) {
             is Impact.Affected -> "affected"
-            is Impact.NotAffected -> "not_affected"
-            is Impact.AcceptableRisk -> "risk_acceptable"
+            is Impact.NotAffected -> "not affected"
+            is Impact.AcceptableRisk -> "risk acceptable"
             is Impact.Unknown -> "under_investigation"
         }
 

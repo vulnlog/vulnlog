@@ -222,7 +222,7 @@ class V1MapperTest :
                     .verdict shouldBe Verdict.Affected(Severity.CRITICAL)
             }
 
-            test("risk_acceptable verdict with severity maps to RiskAcceptable") {
+            test("risk acceptable verdict with severity maps to RiskAcceptable") {
                 val dto =
                     minimalDto(
                         vulnerabilities =
@@ -232,7 +232,7 @@ class V1MapperTest :
                                     releases = emptyList(),
                                     packages = emptyList(),
                                     reports = emptyList(),
-                                    verdict = "risk_acceptable",
+                                    verdict = "risk acceptable",
                                     severity = "low",
                                 ),
                             ),
@@ -244,7 +244,7 @@ class V1MapperTest :
                     .verdict shouldBe Verdict.RiskAcceptable(Severity.LOW)
             }
 
-            test("not_affected verdict with justification maps to NotAffected") {
+            test("not affected verdict with justification maps to NotAffected") {
                 val dto =
                     minimalDto(
                         vulnerabilities =
@@ -254,8 +254,8 @@ class V1MapperTest :
                                     releases = emptyList(),
                                     packages = emptyList(),
                                     reports = emptyList(),
-                                    verdict = "not_affected",
-                                    justification = "vulnerable_code_not_present",
+                                    verdict = "not affected",
+                                    justification = "vulnerable code not present",
                                 ),
                             ),
                     )

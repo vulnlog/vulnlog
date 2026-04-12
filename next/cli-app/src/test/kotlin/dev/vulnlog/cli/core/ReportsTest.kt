@@ -9,28 +9,28 @@ class ReportsTest :
     FunSpec({
 
         context("parseReporter") {
-            test("parses dependency_check") {
-                parseReporter("dependency_check") shouldBe ReporterType.DEPENDENCY_CHECK
+            test("parses dependency-check") {
+                parseReporter("dependency-check") shouldBe ReporterType.DEPENDENCY_CHECK
             }
 
-            test("parses github_advisory") {
-                parseReporter("github_advisory") shouldBe ReporterType.GITHUB_SECURITY_ADVISORY
+            test("parses github-advisory") {
+                parseReporter("github-advisory") shouldBe ReporterType.GITHUB_SECURITY_ADVISORY
             }
 
             test("parses grype") {
                 parseReporter("grype") shouldBe ReporterType.GRYPE
             }
 
-            test("parses npm_audit") {
-                parseReporter("npm_audit") shouldBe ReporterType.NPM_AUDIT
+            test("parses npm-audit") {
+                parseReporter("npm-audit") shouldBe ReporterType.NPM_AUDIT
             }
 
             test("parses other") {
                 parseReporter("other") shouldBe ReporterType.OTHER
             }
 
-            test("parses rust_audit") {
-                parseReporter("rust_audit") shouldBe ReporterType.RUST_AUDIT
+            test("parses cargo-audit") {
+                parseReporter("cargo-audit") shouldBe ReporterType.CARGO_AUDIT
             }
 
             test("parses semgrep") {
@@ -53,28 +53,28 @@ class ReportsTest :
         }
 
         context("canonical") {
-            test("DEPENDENCY_CHECK canonical is dependency_check") {
-                ReporterType.DEPENDENCY_CHECK.canonical() shouldBe "dependency_check"
+            test("DEPENDENCY_CHECK canonical is dependency-check") {
+                ReporterType.DEPENDENCY_CHECK.canonical() shouldBe "dependency-check"
             }
 
-            test("GITHUB_SECURITY_ADVISORY canonical is github_advisory") {
-                ReporterType.GITHUB_SECURITY_ADVISORY.canonical() shouldBe "github_advisory"
+            test("GITHUB_SECURITY_ADVISORY canonical is github-advisory") {
+                ReporterType.GITHUB_SECURITY_ADVISORY.canonical() shouldBe "github-advisory"
             }
 
             test("GRYPE canonical is grype") {
                 ReporterType.GRYPE.canonical() shouldBe "grype"
             }
 
-            test("NPM_AUDIT canonical is npm_audit") {
-                ReporterType.NPM_AUDIT.canonical() shouldBe "npm_audit"
+            test("NPM_AUDIT canonical is npm-audit") {
+                ReporterType.NPM_AUDIT.canonical() shouldBe "npm-audit"
             }
 
             test("OTHER canonical is other") {
                 ReporterType.OTHER.canonical() shouldBe "other"
             }
 
-            test("RUST_AUDIT canonical is rust_audit") {
-                ReporterType.RUST_AUDIT.canonical() shouldBe "rust_audit"
+            test("cargo-audit canonical is cargo-audit") {
+                ReporterType.CARGO_AUDIT.canonical() shouldBe "cargo-audit"
             }
 
             test("SEMGREP canonical is semgrep") {
@@ -92,12 +92,12 @@ class ReportsTest :
             test("parseReporter and canonical are inverse") {
                 val allCanonicals =
                     listOf(
-                        "dependency_check",
-                        "github_advisory",
+                        "dependency-check",
+                        "github-advisory",
                         "grype",
-                        "npm_audit",
+                        "npm-audit",
                         "other",
-                        "rust_audit",
+                        "cargo-audit",
                         "semgrep",
                         "snyk",
                         "trivy",

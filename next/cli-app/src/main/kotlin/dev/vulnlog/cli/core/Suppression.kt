@@ -100,7 +100,7 @@ private fun getDefaultSettingsForReporter(reporter: ReporterType): Suppression =
         ReporterType.GRYPE -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.NPM_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.OTHER -> NotSuppressable
-        ReporterType.RUST_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.CARGO_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.SEMGREP -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.SNYK -> Suppressable.NativeFormat.Snyk
         ReporterType.TRIVY -> Suppressable.NativeFormat.Trivy
