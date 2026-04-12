@@ -1,20 +1,19 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Vulnlog",
-  "description": "Vulnlog YAML format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners. Each file is scoped to a single release branch. See https://vulnlog.dev for the full specification.",
+  "description": "Vulnlog YAML format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners. Each file is scoped to a single release branch. See https://vulnlog.dev for the full specification",
   "type": "object",
   "required": [ "schemaVersion", "project", "releases", "vulnerabilities" ],
   "properties": {
     "schemaVersion": {
-      "description": "Schema version of the Vulnlog file.",
-      "type": "string",
+      "description": "Schema version of the Vulnlog file",
       "const": "1"
     },
     "project": {
       "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1project.json"
     },
     "tags": {
-      "description": "Tags for categorizing and scoping vulnerability entries.",
+      "description": "Tags for categorizing and scoping vulnerability entries",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -22,7 +21,7 @@
       }
     },
     "releases": {
-      "description": "Releases tracked in this Vulnlog file. Must be in chronological order (oldest first).",
+      "description": "Releases tracked in this Vulnlog file. Must be in chronological order (oldest first)",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -30,7 +29,7 @@
       }
     },
     "vulnerabilities": {
-      "description": "Vulnerability entries. May be empty. Newest entries first.",
+      "description": "Vulnerability entries. May be empty. Newest entries first",
       "type": "array",
       "items": {
         "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1vulnerability.json"
@@ -42,27 +41,27 @@
     "https://vulnlog.dev/schemas/v1/defs/project.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Project",
-      "description": "Project-level metadata. Used in report generation and as author information in VEX documents.",
+      "description": "Project-level metadata. Used in report generation and as author information in VEX documents",
       "type": "object",
       "required": [ "organization", "name", "author" ],
       "properties": {
         "organization": {
-          "description": "Name of the organization or vendor.",
+          "description": "Name of the organization or vendor",
           "type": "string",
           "minLength": 1
         },
         "name": {
-          "description": "Name of the software project.",
+          "description": "Name of the software project",
           "type": "string",
           "minLength": 1
         },
         "author": {
-          "description": "Name of the responsible security team or author. Used as the author in VEX documents.",
+          "description": "Name of the responsible security team or author. Used as the author in VEX documents",
           "type": "string",
           "minLength": 1
         },
         "contact": {
-          "description": "Contact email for the security team. Used as the author contact in VEX documents.",
+          "description": "Contact email for the security team. Used as the author contact in VEX documents",
           "type": "string",
           "format": "email"
         }
@@ -72,31 +71,28 @@
     "https://vulnlog.dev/schemas/v1/defs/common.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Common Definitions",
-      "description": "Shared types and formats used across the Vulnlog schema.",
+      "description": "Shared types and formats used across the Vulnlog schema",
       "$defs": {
         "date": {
-          "description": "Date in ISO 8601 format (YYYY-MM-DD).",
+          "description": "Date in ISO 8601 format (YYYY-MM-DD)",
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         },
         "purl": {
-          "description": "Package URL (purl) as defined by the purl specification (https://github.com/package-url/purl-spec).",
+          "description": "Package URL (purl) as defined by the purl specification (https://github.com/package-url/purl-spec)",
           "type": "string",
           "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/"
         },
         "verdict": {
-          "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation.",
-          "type": "string",
+          "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation",
           "enum": [ "affected", "not_affected", "risk_acceptable" ]
         },
         "severity": {
-          "description": "Severity assessment of a vulnerability.",
-          "type": "string",
+          "description": "Severity assessment of a vulnerability",
           "enum": [ "critical", "high", "medium", "low" ]
         },
         "justification": {
-          "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not_affected'.",
-          "type": "string",
+          "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not_affected'",
           "enum": [
             "component_not_present",
             "vulnerable_code_not_present",
@@ -106,8 +102,7 @@
           ]
         },
         "reporterType": {
-          "description": "The scanner or source type. Determines the suppression file format for reporters with suppression support.",
-          "type": "string",
+          "description": "The scanner or source type. Determines the suppression file format for reporters with suppression support",
           "enum": [
             "trivy",
             "snyk",
@@ -125,21 +120,21 @@
     "https://vulnlog.dev/schemas/v1/defs/release.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Release",
-      "description": "A release tracked in this Vulnlog file. Releases must be listed in chronological order (oldest first).",
+      "description": "A release tracked in this Vulnlog file. Releases must be listed in chronological order (oldest first)",
       "type": "object",
       "required": [ "id" ],
       "properties": {
         "id": {
-          "description": "Unique release identifier (e.g., '8.1.1', '2.0.0-SNAPSHOT').",
+          "description": "Unique release identifier (e.g., '8.1.1', '2.0.0-SNAPSHOT')",
           "type": "string",
           "minLength": 1
         },
         "published_at": {
-          "description": "Publication date of the release. Absence indicates the release is not yet published.",
+          "description": "Publication date of the release. Absence indicates the release is not yet published",
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
         },
         "purls": {
-          "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents.",
+          "description": "Versioned Package URLs identifying the release artifacts. Used as product identifiers in VEX documents",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -150,16 +145,16 @@
       "additionalProperties": false,
       "$defs": {
         "purlEntry": {
-          "description": "A release artifact identified by its Package URL, optionally tagged for scoping.",
+          "description": "A release artifact identified by its Package URL, optionally tagged for scoping",
           "type": "object",
           "required": [ "purl" ],
           "properties": {
             "purl": {
-              "description": "The versioned Package URL for this artifact in this release.",
+              "description": "The versioned Package URL for this artifact in this release",
               "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/purl"
             },
             "tags": {
-              "description": "Tags associated with this purl. Used to match vulnerability tags for scoped VEX generation.",
+              "description": "Tags associated with this purl. Used to match vulnerability tags for scoped VEX generation",
               "type": "array",
               "minItems": 1,
               "items": {
@@ -175,17 +170,17 @@
     "https://vulnlog.dev/schemas/v1/defs/tag.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Tag",
-      "description": "A tag for categorizing and scoping vulnerability entries.",
+      "description": "A tag for categorizing and scoping vulnerability entries",
       "type": "object",
       "required": [ "id" ],
       "properties": {
         "id": {
-          "description": "Unique identifier for the tag. Referenced by vulnerability entries and release purl entries.",
+          "description": "Unique identifier for the tag. Referenced by vulnerability entries and release purl entries",
           "type": "string",
           "minLength": 1
         },
         "description": {
-          "description": "Human-readable description of what this tag represents.",
+          "description": "Human-readable description of what this tag represents",
           "type": "string"
         }
       },
@@ -194,25 +189,35 @@
     "https://vulnlog.dev/schemas/v1/defs/report.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Report Entry",
-      "description": "Records that a specific SCA scanner or other source reported a vulnerability.",
+      "description": "Records that a specific SCA scanner or other source reported a vulnerability",
       "type": "object",
+      "if": {
+        "properties": {
+          "reporter": {
+            "const": "other"
+          }
+        }
+      },
+      "then": {
+        "required": [ "source" ]
+      },
       "required": [ "reporter" ],
       "properties": {
         "reporter": {
-          "description": "The scanner or source type that reported this vulnerability.",
+          "description": "The scanner or source type that reported this vulnerability",
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/reporterType"
         },
         "at": {
-          "description": "Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation.",
+          "description": "Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation",
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
         },
         "source": {
-          "description": "Description of the report source. Optional for scanner reporters. Required by the CLI for reporter type 'other'.",
+          "description": "Description of the report source. Optional for scanner reporters. Required by the CLI for reporter type 'other'",
           "type": "string",
           "minLength": 1
         },
         "vuln_ids": {
-          "description": "Scanner-specific vulnerability identifiers. Used when generating scanner-specific suppression files.",
+          "description": "Scanner-specific vulnerability identifiers. Used when generating scanner-specific suppression files",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -227,11 +232,11 @@
       "additionalProperties": false,
       "$defs": {
         "suppressEntry": {
-          "description": "Suppression configuration for a specific scanner. When present without expires_at, the suppression is permanent.",
+          "description": "Suppression configuration for a specific scanner. When present without expires_at, the suppression is permanent",
           "type": "object",
           "properties": {
             "expires_at": {
-              "description": "Expiration date of the suppression. When omitted, the suppression is permanent.",
+              "description": "Expiration date of the suppression. When omitted, the suppression is permanent",
               "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
             }
           },
@@ -242,9 +247,22 @@
     "https://vulnlog.dev/schemas/v1/defs/vulnerability.json": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "title": "Vulnlog Vulnerability Entry",
-      "description": "A single vulnerability finding and the human verdict about it. Each vulnerability ID must be unique across all entries, including aliases.",
+      "description": "A single vulnerability finding and the human verdict about it. Each vulnerability ID must be unique across all entries, including aliases",
       "type": "object",
       "allOf": [
+        {
+          "if": {
+            "required": [ "verdict" ],
+            "properties": {
+              "verdict": {
+                "enum": [ "affected", "risk_acceptable" ]
+              }
+            }
+          },
+          "then": {
+            "required": [ "severity" ]
+          }
+        },
         {
           "if": {
             "required": [ "verdict" ],
@@ -274,35 +292,22 @@
               "required": [ "justification" ]
             }
           }
-        },
-        {
-          "if": {
-            "required": [ "verdict" ],
-            "properties": {
-              "verdict": {
-                "enum": [ "affected", "risk_acceptable" ]
-              }
-            }
-          },
-          "then": {
-            "required": [ "severity" ]
-          }
         }
       ],
       "required": [ "id", "releases", "packages", "reports" ],
       "properties": {
         "id": {
-          "description": "Primary identifier of the vulnerability. Must be unique across all vulnerability entries and aliases in the file.",
+          "description": "Primary identifier of the vulnerability. Must be unique across all vulnerability entries and aliases in the file",
           "type": "string",
           "minLength": 1
         },
         "name": {
-          "description": "Common name of the vulnerability, if one exists (e.g., 'Log4Shell', 'Heartbleed'). Displayed prominently in reports.",
+          "description": "Common name of the vulnerability, if one exists (e.g., 'Log4Shell', 'Heartbleed'). Displayed prominently in reports",
           "type": "string",
           "minLength": 1
         },
         "aliases": {
-          "description": "Alternative identifiers for the same vulnerability. Must not overlap with any id or alias in other entries.",
+          "description": "Alternative identifiers for the same vulnerability. Must not overlap with any id or alias in other entries",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -311,7 +316,7 @@
           }
         },
         "releases": {
-          "description": "Release identifiers affected by this vulnerability.",
+          "description": "Release identifiers affected by this vulnerability",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -320,12 +325,12 @@
           }
         },
         "description": {
-          "description": "Brief human-readable description of the vulnerability.",
+          "description": "Brief human-readable description of the vulnerability",
           "type": "string",
           "minLength": 1
         },
         "packages": {
-          "description": "Package URLs of affected dependencies.",
+          "description": "Package URLs of affected dependencies",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -333,7 +338,7 @@
           }
         },
         "reports": {
-          "description": "Scanner reports that identified this vulnerability.",
+          "description": "Scanner reports that identified this vulnerability",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -341,7 +346,7 @@
           }
         },
         "tags": {
-          "description": "Tags for categorizing and scoping this vulnerability.",
+          "description": "Tags for categorizing and scoping this vulnerability",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -350,15 +355,15 @@
           }
         },
         "analysis": {
-          "description": "Free-text analysis and rationale for the triage decision.",
+          "description": "Free-text analysis and rationale for the triage decision",
           "type": "string"
         },
         "analyzed_at": {
-          "description": "Date the analysis was performed.",
+          "description": "Date the analysis was performed",
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
         },
         "comment": {
-          "description": "Additional information not related to the analysis itself. Not used in any output generation.",
+          "description": "Additional information not related to the analysis itself. Not used in any output generation",
           "type": "string"
         },
         "severity": {
@@ -377,26 +382,26 @@
       "additionalProperties": false,
       "$defs": {
         "resolutionEntry": {
-          "description": "Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict.",
+          "description": "Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict",
           "type": "object",
           "required": [ "in" ],
           "properties": {
             "in": {
-              "description": "Release in which the resolution was applied.",
+              "description": "Release in which the resolution was applied",
               "type": "string",
               "minLength": 1
             },
             "at": {
-              "description": "Date the resolution was applied.",
+              "description": "Date the resolution was applied",
               "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
             },
             "ref": {
-              "description": "Reference to the issue or ticket tracking the resolution.",
+              "description": "Reference to the issue or ticket tracking the resolution",
               "type": "string",
               "format": "uri"
             },
             "note": {
-              "description": "Brief description of how the vulnerability was resolved.",
+              "description": "Brief description of how the vulnerability was resolved",
               "type": "string"
             }
           },
