@@ -1,0 +1,138 @@
+= Branching Strategy
+
+How you organize your Vulnlog files depends on how many release branches your project maintains.
+
+== Single Branch
+
+The simplest setup.
+Your project has one continuing line of releases without parallel branches.
+New versions are added linearly.
+
+Use a single `vulnlog.yaml` file in your repository:
+
+[source]
+----
+my-project/
+  vulnlog.yaml
+----
+
+Releases are listed in chronological order inside the file:
+
+[source,yaml]
+----
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+  - id: 1.1.0
+    published_at: 2026-03-01
+  - id: 1.2.0
+----
+
+This approach works well when:
+
+- You only support the latest release.
+- Older versions are not patched independently.
+- You want the simplest possible setup.
+
+== Multiple Release Branches
+
+When your project maintains multiple release branches in parallel -- for example, shipping security patches to both version 1.x and 2.x simultaneously -- a single file is no longer sufficient.
+Each release branch has its own lifecycle and may have different vulnerability findings or resolutions.
+
+There are two approaches:
+
+=== Option A: Multiple files on the main branch
+
+Maintain one Vulnlog file per release branch, all on the `main` (or `master`) branch:
+
+[source]
+----
+my-project/
+  my-project-1.vl.yaml    # Release branch 1.x
+  my-project-2.vl.yaml    # Release branch 2.x
+  my-project-3.vl.yaml    # Release branch 3.x
+----
+
+Each file is self-contained and tracks the releases for one branch:
+
+[source,yaml]
+----
+# my-project-2.vl.yaml
+releases:
+  - id: 2.0.0
+    published_at: 2026-01-15
+  - id: 2.0.1
+    published_at: 2026-02-20
+  - id: 2.1.0
+----
+
+*Pros:*
+
+- All vulnerability analysis lives in a single Git branch.
+- Adding or updating an analysis across multiple files requires only one commit -- no cherry-picking needed.
+- Suppression files for all release branches can be generated from the main branch in CI.
+- When a release branch reaches end of life, its Vulnlog file is naturally archived alongside the code.
+- Easier to review the overall security posture across all branches.
+
+*Cons:*
+
+- The vulnerability analysis is not co-located with the branch-specific code.
+- File names need a naming convention to distinguish branches.
+
+=== Option B: One file per Git branch
+
+Maintain a `vulnlog.yaml` file directly on each release branch:
+
+[source]
+----
+branch: release/1.x
+  vulnlog.yaml
+
+branch: release/2.x
+  vulnlog.yaml
+
+branch: release/3.x
+  vulnlog.yaml
+----
+
+*Pros:*
+
+- The vulnerability analysis lives next to the code it describes.
+- Each branch is fully self-contained.
+- Simple file naming -- always `vulnlog.yaml`.
+
+*Cons:*
+
+- Propagating the same analysis to multiple branches requires cherry-picking or merging commits.
+- Suppression file generation must run on each branch separately.
+- Reviewing the overall security posture requires checking out multiple branches.
+
+// TODO: When `vulnlog copy` is available, mention it here as a way to propagate
+// entries across multiple files (Option A) without manual duplication.
+
+=== Combining Both Approaches
+
+The two approaches can coexist.
+For example, you might use Option A for actively maintained release branches and Option B for a legacy branch that is rarely updated.
+
+== Choosing an Approach
+
+[cols="1,1,1"]
+|===
+| | Single Branch | Multiple Release Branches
+
+| Parallel support
+| No
+| Yes
+
+| File count
+| 1
+| 1 per release branch
+
+| Recommended for
+| Projects with one active version
+| Projects maintaining multiple versions in parallel
+|===
+
+If you are unsure, start with a single `vulnlog.yaml`.
+You can migrate to a multi-file setup later by splitting the file when you introduce a second release branch.

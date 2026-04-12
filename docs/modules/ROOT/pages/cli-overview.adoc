@@ -7,8 +7,67 @@ vulnlog <command> <file...> [flags]
 
 Every command except `init` requires one or more Vulnlog files as positional arguments.
 Read-only commands like `validate` accept multiple files.
-Output-generating commands like `suppress` operate on a single file.
+Output-generating commands like `suppress` and `report` operate on a single file.
 No automatic file detection.
+
+== Global Flags
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-q, --quiet`
+| Suppress non-essential output.
+
+| `-v, --verbose`
+| Verbose output.
+
+| `--no-color`
+| Disable colored output.
+
+| `--format <f>`
+| Output format for structured output: `text` (default), `yaml`, `json`.
+
+| `--version`
+| Print version and exit.
+
+| `--help`
+| Print help.
+|===
+
+== Filtering Flags
+
+Available on `report` and `suppress` commands.
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--release <id>`
+| Include vulnerabilities affecting all releases up to and including this release.
+
+| `--tags <id>`
+| Filter by tag (repeatable).
+|===
+
+== Commands
+
+[cols="1,3"]
+|===
+| Command | Description
+
+| xref:cli-init.adoc[init]
+| Scaffold a new Vulnlog file.
+
+| xref:cli-validate.adoc[validate]
+| Validate files against the schema and all validation rules.
+
+| xref:cli-suppress.adoc[suppress]
+| Generate scanner-specific suppression files.
+
+| xref:cli-report.adoc[report]
+| Generate an HTML vulnerability report.
+|===
 
 == Exit Codes
 

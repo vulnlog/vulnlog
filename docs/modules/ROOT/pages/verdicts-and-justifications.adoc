@@ -1,6 +1,117 @@
 = Verdicts and Justifications
 
-// TODO: Document verdict and justification values
-// - Verdicts: affected, not affected, risk acceptable, under_investigation
-// - VEX justifications: vulnerable code not present, vulnerable code not in execute path, etc.
-// - resolution: in, at, ref, note
+The term "verdict" is used deliberately to distinguish from automated scanner statuses -- it reflects a deliberate human judgment about the impact of a vulnerability.
+
+== Verdict Values
+
+[cols="1,3"]
+|===
+| Value | Description
+
+| `affected`
+| The vulnerability affects this release. Requires `severity`.
+
+| `not_affected`
+| The vulnerability does not affect this release. Requires `justification`.
+
+| `risk_acceptable`
+| The vulnerability affects this release but the risk has been assessed and accepted. Requires `severity`.
+
+| _(absent)_
+| Not yet triaged. The entry is under investigation.
+|===
+
+NOTE: "Fixed" is not a verdict. Fixing a vulnerability is a resolution action, not a judgment about impact. Use `verdict: affected` with a `resolution` block to record that a vulnerability was real and subsequently fixed. Use `verdict: not_affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
+
+=== `affected`
+
+Use when the vulnerability is confirmed to impact the project.
+Requires a `severity` assessment.
+
+When a `resolution` is also present, the vulnerability was real and has been addressed.
+
+[source,yaml]
+----
+verdict: affected
+severity: high
+resolution:
+  in: 2.0.1
+  at: 2026-03-03
+  note: "Updated image-lib from 3.1.0 to 3.2.0"
+----
+
+=== `not_affected`
+
+Use when the vulnerability does not impact the project.
+Requires a `justification` explaining why.
+
+[source,yaml]
+----
+verdict: not_affected
+justification: vulnerable_code_not_in_execute_path
+analysis: >
+  The vulnerable code path requires SVG input processing.
+  Our application only accepts PNG and JPEG formats.
+----
+
+=== `risk_acceptable`
+
+Use when the vulnerability is confirmed but the risk has been assessed and accepted.
+Requires a `severity` assessment.
+
+[source,yaml]
+----
+verdict: risk_acceptable
+severity: medium
+analysis: >
+  Vulnerability confirmed but only exploitable with
+  specially crafted input that our validation layer rejects.
+----
+
+[[severity-values]]
+== Severity Values
+
+Required when `verdict` is `affected` or `risk_acceptable`.
+
+[cols="1,3"]
+|===
+| Value | Description
+
+| `critical`
+| Immediate action required. Exploitable with severe impact.
+
+| `high`
+| Action required. Significant impact if exploited.
+
+| `medium`
+| Action recommended. Moderate impact.
+
+| `low`
+| Low priority. Minimal impact or difficult to exploit.
+|===
+
+[[justification-values]]
+== Justification Values
+
+Required when `verdict` is `not_affected`.
+Values align with the OpenVEX justification vocabulary.
+
+[cols="1,3"]
+|===
+| Value | Description
+
+| `component_not_present`
+| The vulnerable component is not included in the deliverable.
+
+| `vulnerable_code_not_present`
+| The vulnerable code is present but the specific vulnerable function or code path is not included.
+
+| `vulnerable_code_not_in_execute_path`
+| The vulnerable code is present but cannot be reached during execution.
+
+| `vulnerable_code_cannot_be_controlled_by_adversary`
+| The vulnerable code is reachable but cannot be triggered by an attacker.
+
+| `inline_mitigations_already_exist`
+| The vulnerability is mitigated by existing controls (e.g., WAF, input validation).
+|===

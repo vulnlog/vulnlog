@@ -1,7 +1,74 @@
 = CI/CD Integration
 
-// TODO: Document CI/CD integration patterns
-// - GitHub Actions workflow examples
-// - Validating Vulnlog files in CI
-// - Generating suppression files as part of the pipeline
-// - Using the Docker image in CI
+The Vulnlog CLI runs on developer machines and in CI pipelines.
+Generate suppression files in CI to keep scanner pipelines green for triaged findings.
+
+== GitHub Actions
+
+Example workflow that generates a suppression file, runs a Trivy scan, and produces a vulnerability report:
+
+[source,yaml]
+----
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vulnlog CLI
+        run: # install step
+
+      - name: Generate Trivy suppression file
+        run: vulnlog suppress my-app.vl.yaml --reporter trivy --release ${{ github.ref_name }}
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          trivyignores: .trivyignore
+
+      - name: Generate vulnerability report
+        if: always()
+        run: vulnlog report my-app.vl.yaml --release ${{ github.ref_name }} -o vulnlog-report.html
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-report
+          path: vulnlog-report.html
+----
+
+== Using the Docker Image
+
+Pin to a specific version in CI pipelines for reproducible builds:
+
+[source,bash]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:0.12.0 validate vulnlog.yaml
+----
+
+In most CI environments (GitHub Actions, Jenkins, GitLab CI) the runner's workspace is owned by UID 1000, so the container works without extra flags:
+
+[source,bash]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml --reporter trivy
+----
+
+If your CI runner requires root access, override the user at runtime:
+
+[source,bash]
+----
+docker run --rm --user root -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml
+----
+
+== Validating in CI
+
+Run validation as part of your CI pipeline to catch Vulnlog file errors early:
+
+[source,bash]
+----
+vulnlog validate my-app.vl.yaml --strict
+----
+
+`--strict` treats warnings as errors (e.g., missing verdict, missing description).

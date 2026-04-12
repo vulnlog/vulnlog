@@ -2,13 +2,13 @@
 * Getting Started
 ** xref:installation.adoc[Installation]
 ** xref:quickstart.adoc[Quickstart]
-// * Vulnlog Format
-// ** xref:format-overview.adoc[Format Overview]
-// ** xref:project-and-releases.adoc[Project and Releases]
-// ** xref:vulnerabilities.adoc[Vulnerabilities]
-// ** xref:verdicts-and-justifications.adoc[Verdicts and Justifications]
-// ** xref:suppression.adoc[Suppression]
-// ** xref:tags.adoc[Tags and Filtering]
+* Vulnlog Format
+** xref:format-overview.adoc[Format Overview]
+** xref:project-and-releases.adoc[Project and Releases]
+** xref:vulnerabilities.adoc[Vulnerabilities]
+** xref:verdicts-and-justifications.adoc[Verdicts and Justifications]
+** xref:suppression.adoc[Suppression]
+** xref:tags.adoc[Tags and Filtering]
 * CLI Reference
 ** xref:cli-overview.adoc[CLI Overview]
 ** xref:cli-init.adoc[init]
@@ -16,5 +16,7 @@
 ** xref:cli-suppress.adoc[suppress]
 ** xref:cli-report.adoc[report]
 // ** xref:cli-copy.adoc[copy]
-// * Guides
-// ** xref:ci-integration.adoc[CI/CD Integration]
+* Guides
+** xref:branching-strategy.adoc[Branching Strategy]
+** xref:ci-integration.adoc[CI/CD Integration]
+* xref:glossary.adoc[Glossary]

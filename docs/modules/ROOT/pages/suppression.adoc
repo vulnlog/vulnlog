@@ -1,7 +1,101 @@
 = Suppression
 
-// TODO: Document suppression concepts and output formats
-// - Per-report suppression (expires_at)
-// - Verdict-based suppression logic
-// - Output formats: Trivy, Snyk, generic
-// - Filtering by release, tag, reporter
+Suppression directives exclude specific vulnerability findings from a scanner's output.
+The Vulnlog CLI generates scanner-specific suppression files from the Vulnlog file, keeping the triage rationale alongside the suppression rules.
+
+== Suppression Rules
+
+Entries where `verdict` is `not_affected` are always included in suppression files.
+
+Entries where `verdict` is `affected` with a `resolution` are *not* included in suppression files.
+The vulnerable dependency version should no longer be present after the resolution.
+If the scanner still reports the finding, the resolution is incomplete.
+
+For all other cases (`affected` without resolution, `risk_acceptable`, absent verdict), suppression requires an explicit `suppress` block on the report entry.
+If the `suppress` block includes `expires_at`, the suppression is temporary.
+If `expires_at` is omitted, the suppression is permanent.
+
+=== Permanent Suppression
+
+[source,yaml]
+----
+reports:
+  - reporter: trivy
+    suppress: {}
+----
+
+=== Temporary Suppression
+
+[source,yaml]
+----
+reports:
+  - reporter: trivy
+    suppress:
+      expires_at: 2026-06-01
+----
+
+After the expiration date, the entry is excluded from the generated suppression file.
+
+== Suppression Identifier Resolution
+
+The CLI determines which identifiers to write into the suppression file using this order:
+
+. `vuln_ids` values from the report entry for the target reporter type, if present.
+. The vulnerability's `id` field.
+
+`aliases` are not used for suppression.
+
+[[supported-reporters]]
+== Supported Reporters
+
+[cols="1,2,2,1"]
+|===
+| Value | Scanner | Default Suppression Path | Suppression Support
+
+| `trivy`
+| Trivy
+| `.trivyignore`
+| Yes
+
+| `snyk`
+| Snyk
+| `.snyk`
+| Yes
+
+| `dependency_check`
+| OWASP Dependency Check
+| `dependency-check-suppressions.xml`
+| Yes
+
+| `grype`
+| Grype
+| `.grype.yaml`
+| Yes
+
+| `rust_audit`
+| Cargo Audit (Rust)
+| `.cargo-audit.toml`
+| Yes
+
+| `semgrep`
+| Semgrep
+| --
+| No
+
+| `npm_audit`
+| npm audit
+| --
+| No
+
+| `github_advisory`
+| GitHub Advisory Database
+| --
+| No
+
+| `other`
+| Generic / non-scanner source
+| --
+| No
+|===
+
+For reporters of type `other`, the `source` field on report entries is required.

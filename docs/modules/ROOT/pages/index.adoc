@@ -16,3 +16,4 @@ It uses a YAML-based format (`*.vl.yaml`) that lives in your repository alongsid
 * xref:installation.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
 * Learn about the xref:format-overview.adoc[Vulnlog YAML format]
 * Explore the xref:cli-overview.adoc[CLI commands]
+* Plan your xref:branching-strategy.adoc[branching strategy] for single or multi-branch projects
