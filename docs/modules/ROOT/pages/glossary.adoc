@@ -30,7 +30,7 @@ Used for cross-referencing in reports but not for suppression file generation.
 Verdict::
 The human triage decision recorded for a vulnerability entry, stored in the `verdict` field.
 The term reflects a deliberate judgment by an engineer, distinct from automated scanner statuses.
-Possible values: `affected`, `not_affected`, `risk_acceptable`.
+Possible values: `affected`, `not affected`, `risk acceptable`.
 When absent, the vulnerability is considered under investigation.
 See xref:verdicts-and-justifications.adoc[Verdicts and Justifications].
 
@@ -43,18 +43,18 @@ Records why the team reached the verdict.
 
 Justification::
 The reason why a vulnerability does not affect the project, stored in the `justification` field.
-Required when the verdict is `not_affected`.
+Required when the verdict is `not affected`.
 Values align with the OpenVEX justification vocabulary.
 See xref:verdicts-and-justifications.adoc#justification-values[Justification Values].
 
 Severity::
 The assessed severity of a vulnerability.
 Values: `critical`, `high`, `medium`, `low`.
-Required when the verdict is `affected` or `risk_acceptable`.
+Required when the verdict is `affected` or `risk acceptable`.
 
 Resolution::
 A structured record that a dependency update or other corrective action was taken, stored in the `resolution` block.
-Independent of the verdict -- a vulnerability may be `not_affected` yet still have a resolution.
+Independent of the verdict -- a vulnerability may be `not affected` yet still have a resolution.
 
 Report (vulnerability report)::
 A record in the `reports` array indicating that a specific scanner or source reported the finding.
@@ -62,7 +62,7 @@ Not to be confused with HTML report (an output artifact).
 
 Reporter type::
 The `reporter` field on a report entry, identifying the scanner or source.
-A fixed enum (e.g., `trivy`, `snyk`, `dependency_check`, `other`).
+A fixed enum (e.g., `trivy`, `snyk`, `dependency-check`, `other`).
 Determines the suppression file format.
 
 Suppression::

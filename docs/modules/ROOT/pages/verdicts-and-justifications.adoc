@@ -11,10 +11,10 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 | `affected`
 | The vulnerability affects this release. Requires `severity`.
 
-| `not_affected`
+| `not affected`
 | The vulnerability does not affect this release. Requires `justification`.
 
-| `risk_acceptable`
+| `risk acceptable`
 | The vulnerability affects this release but the risk has been assessed and accepted. Requires `severity`.
 
 | _(absent)_
@@ -24,7 +24,7 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 NOTE: "Fixed" is not a verdict.
 Fixing a vulnerability is a resolution action, not a judgment about impact.
 Use `verdict: affected` with a `resolution` block to record that a vulnerability was real and subsequently fixed.
-Use `verdict: not_affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
+Use `verdict: not affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
 
 === `affected`
 
@@ -43,28 +43,28 @@ resolution:
   note: "Updated image-lib from 3.1.0 to 3.2.0"
 ----
 
-=== `not_affected`
+=== `not affected`
 
 Use when the vulnerability does not impact the project.
 Requires a `justification` explaining why.
 
 [source,yaml]
 ----
-verdict: not_affected
-justification: vulnerable_code_not_in_execute_path
+verdict: not affected
+justification: vulnerable code not in execute path
 analysis: >
   The vulnerable code path requires SVG input processing.
   Our application only accepts PNG and JPEG formats.
 ----
 
-=== `risk_acceptable`
+=== `risk acceptable`
 
 Use when the vulnerability is confirmed but the risk has been assessed and accepted.
 Requires a `severity` assessment.
 
 [source,yaml]
 ----
-verdict: risk_acceptable
+verdict: risk acceptable
 severity: medium
 analysis: >
   Vulnerability confirmed but only exploitable with
@@ -74,7 +74,7 @@ analysis: >
 [[severity-values]]
 == Severity Values
 
-Required when `verdict` is `affected` or `risk_acceptable`.
+Required when `verdict` is `affected` or `risk acceptable`.
 
 [cols="1,3"]
 |===
@@ -96,25 +96,25 @@ Required when `verdict` is `affected` or `risk_acceptable`.
 [[justification-values]]
 == Justification Values
 
-Required when `verdict` is `not_affected`.
+Required when `verdict` is `not affected`.
 Values align with the OpenVEX justification vocabulary.
 
 [cols="1,3"]
 |===
 | Value | Description
 
-| `component_not_present`
+| `component not present`
 | The vulnerable component is not included in the deliverable.
 
-| `vulnerable_code_not_present`
+| `vulnerable code not present`
 | The vulnerable code is present but the specific vulnerable function or code path is not included.
 
-| `vulnerable_code_not_in_execute_path`
+| `vulnerable code not in execute path`
 | The vulnerable code is present but cannot be reached during execution.
 
-| `vulnerable_code_cannot_be_controlled_by_adversary`
+| `vulnerable code cannot be controlled by adversary`
 | The vulnerable code is reachable but cannot be triggered by an attacker.
 
-| `inline_mitigations_already_exist`
+| `inline mitigations already exist`
 | The vulnerability is mitigated by existing controls (e.g., WAF, input validation).
 |===

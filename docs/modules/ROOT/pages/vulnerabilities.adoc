@@ -69,7 +69,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `severity`
 | String (enum)
 | Conditional
-| Severity assessment. Required when `verdict` is `affected` or `risk_acceptable`. See xref:verdicts-and-justifications.adoc#severity-values[Severity Values].
+| Severity assessment. Required when `verdict` is `affected` or `risk acceptable`. See xref:verdicts-and-justifications.adoc#severity-values[Severity Values].
 
 | `verdict`
 | String (enum)
@@ -79,7 +79,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `justification`
 | String (enum)
 | Conditional
-| Required when `verdict` is `not_affected`. See xref:verdicts-and-justifications.adoc#justification-values[Justification Values].
+| Required when `verdict` is `not affected`. See xref:verdicts-and-justifications.adoc#justification-values[Justification Values].
 
 | `resolution`
 | <<resolution-entry,Resolution entry>>
@@ -152,7 +152,7 @@ A record indicating that a specific scanner or source reported the finding.
 == Resolution Entry
 
 Records that a dependency update or other corrective action was taken, independent of the verdict.
-A vulnerability may be `not_affected` (the verdict) yet still have a `resolution` (the dependency was updated defensively).
+A vulnerability may be `not affected` (the verdict) yet still have a `resolution` (the dependency was updated defensively).
 A vulnerability may be `affected` with a `resolution` indicating it was fixed in a subsequent release.
 
 [cols="1,1,1,3"]

@@ -68,8 +68,8 @@ Without a `verdict`, the entry is tracked as under investigation.
       The vulnerable code path requires SVG input processing.
       Our application only accepts PNG and JPEG formats.
     analyzed_at: 2026-03-02
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: not affected
+    justification: vulnerable code not in execute path
 ----
 
 === Not affected, but dependency updated anyway
@@ -87,8 +87,8 @@ Without a `verdict`, the entry is tracked as under investigation.
     analysis: >
       The vulnerable code path requires SVG input processing.
       Our application only accepts PNG and JPEG formats.
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: not affected
+    justification: vulnerable code not in execute path
     resolution:
       in: 2.0.1
       note: "Updated image-lib from 3.1.0 to 3.2.0 during routine upgrade"
@@ -134,7 +134,7 @@ Without a `verdict`, the entry is tracked as under investigation.
       Vulnerability confirmed but only exploitable with
       specially crafted input that our validation layer rejects.
     severity: medium
-    verdict: risk_acceptable
+    verdict: risk acceptable
     comment: >
       Risk accepted by project lead. Revisit when upstream
       releases a stable fix.
@@ -156,8 +156,8 @@ Without a `verdict`, the entry is tracked as under investigation.
       Affects the build pipeline only. The vulnerable command
       injection requires untrusted input which the CI environment
       does not expose.
-    verdict: not_affected
-    justification: vulnerable_code_cannot_be_controlled_by_adversary
+    verdict: not affected
+    justification: vulnerable code cannot be controlled by adversary
 ----
 
 == Next Steps

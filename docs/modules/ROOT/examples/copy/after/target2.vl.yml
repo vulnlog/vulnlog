@@ -27,8 +27,8 @@ vulnerabilities:
       suppress: null
     analysis: "The vulnerable code path is not reachable in our application because we\
       \ only use the safe subset of the API.\n"
-    verdict: "not_affected"
-    justification: "vulnerable_code_not_in_execute_path"
+    verdict: "not affected"
+    justification: "vulnerable code not in execute path"
 
   - id: CVE-2026-001
     releases: [ 2.0.0 ]
@@ -38,5 +38,5 @@ vulnerabilities:
     analysis: >
       The vulnerable code path is not reachable in our application
       because we only use the safe subset of the API.
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: not affected
+    justification: vulnerable code not in execute path

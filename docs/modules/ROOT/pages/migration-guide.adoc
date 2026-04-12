@@ -63,7 +63,7 @@ This is the most significant workflow change.
 
 Conflicting verdicts::
 The same CVE can have different verdicts on different branches.
-A vulnerability might be `not_affected` on version 3.x (where the vulnerable code path was refactored) but `affected` on version 2.x (where it is still present).
+A vulnerability might be `not affected` on version 3.x (where the vulnerable code path was refactored) but `affected` on version 2.x (where it is still present).
 A single file would need per-branch verdict structures, making entries more complex and harder to read.
 Separate files handle this naturally -- each file has its own verdict.
 

@@ -22,13 +22,13 @@ See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dyna
 
 == Suppression Rules
 
-Entries where `verdict` is `not_affected` are always included in suppression files.
+Entries where `verdict` is `not affected` are always included in suppression files.
 
 Entries where `verdict` is `affected` with a `resolution` are *not* included in suppression files.
 The vulnerable dependency version should no longer be present after the resolution.
 If the scanner still reports the finding, the resolution is incomplete.
 
-For all other cases (`affected` without resolution, `risk_acceptable`, absent verdict), suppression requires an explicit `suppress` block on the report entry.
+For all other cases (`affected` without resolution, `risk acceptable`, absent verdict), suppression requires an explicit `suppress` block on the report entry.
 If the `suppress` block includes `expires_at`, the suppression is temporary.
 If `expires_at` is omitted, the suppression is permanent.
 
@@ -79,7 +79,7 @@ The CLI determines which identifiers to write into the suppression file using th
 | `.snyk`
 | Yes
 
-| `dependency_check`
+| `dependency-check`
 | OWASP Dependency Check
 | `dependency-check-suppressions.xml`
 | Planned
@@ -89,7 +89,7 @@ The CLI determines which identifiers to write into the suppression file using th
 | `.grype.yaml`
 | Planned
 
-| `rust_audit`
+| `cargo-audit`
 | Cargo Audit (Rust)
 | `.cargo-audit.toml`
 | Planned
@@ -99,12 +99,12 @@ The CLI determines which identifiers to write into the suppression file using th
 | --
 | No
 
-| `npm_audit`
+| `npm-audit`
 | npm audit
 | --
 | No
 
-| `github_advisory`
+| `github-advisory`
 | GitHub Advisory Database
 | --
 | No
