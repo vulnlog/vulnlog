@@ -72,6 +72,8 @@ class CopyTest :
             yaml shouldNotContain "description:"
             yaml shouldNotContain "comment:"
             yaml shouldNotContain "resolution:"
+            yaml shouldNotContain "source:"
+            yaml shouldNotContain "suppress:"
         }
 
         test("serializeEntryYaml omits empty lists") {
@@ -89,6 +91,7 @@ class CopyTest :
 
             yaml shouldNotContain "aliases:"
             yaml shouldNotContain "tags:"
+            yaml shouldNotContain "vuln_ids:"
         }
 
         test("insertEntryAfterVulnerabilitiesHeader inserts after header") {
