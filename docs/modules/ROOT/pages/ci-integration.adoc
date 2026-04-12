@@ -27,7 +27,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
-          trivyignores: .trivyignore
+          trivyignores: .trivyignore.yaml
 
       - name: Generate vulnerability report
         if: always()

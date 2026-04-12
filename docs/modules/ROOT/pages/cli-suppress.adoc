@@ -1,7 +1,7 @@
 = vulnlog suppress
 
-Create suppression files for various SCA scanners.
-These files, also known as ignore files, contain vulnerability identifiers and advise the dependency scanner to not report the findings again.
+Generates suppression files for SCA scanners.
+These files contain vulnerability identifiers that instruct the scanner to exclude the corresponding findings.
 
 [source]
 ----

@@ -8,7 +8,7 @@ The Vulnlog CLI generates scanner-specific suppression files from the Vulnlog fi
 Vulnlog supports two approaches for managing generated suppression files:
 
 Static (checked in)::
-The generated suppression files (e.g., `.trivyignore`, `.snyk`) are committed to the repository.
+The generated suppression files (e.g., `.trivyignore.yaml`, `.snyk`) are committed to the repository.
 When the Vulnlog file is edited, the developer regenerates the suppression files and commits the updated versions.
 This approach makes suppressions visible in code review and provides a clear history of changes.
 
@@ -71,7 +71,7 @@ The CLI determines which identifiers to write into the suppression file using th
 
 | `trivy`
 | Trivy
-| `.trivyignore`
+| `.trivyignore.yaml`
 | Yes
 
 | `snyk`
@@ -82,17 +82,17 @@ The CLI determines which identifiers to write into the suppression file using th
 | `dependency_check`
 | OWASP Dependency Check
 | `dependency-check-suppressions.xml`
-| Yes
+| Planned
 
 | `grype`
 | Grype
 | `.grype.yaml`
-| Yes
+| Planned
 
 | `rust_audit`
 | Cargo Audit (Rust)
 | `.cargo-audit.toml`
-| Yes
+| Planned
 
 | `semgrep`
 | Semgrep

@@ -1,6 +1,6 @@
 = vulnlog report
 
-Create a simple HTML report from one or multiple Vulnlog file.
+Generates an HTML report from a Vulnlog file.
 
 [source]
 ----
@@ -15,7 +15,7 @@ vulnlog report <file> [filter flags] [--format html] [-o <path>]
 | Output file path. Defaults to vulnlog-report.html in the current directory.
 
 | `--reporter <value>`
-| Filter on reporter. Supported reporters
+| Filter on reporter.
 
 | `--release <text>`
 | Filter on release, include all releases up to and including that release.
@@ -25,7 +25,7 @@ vulnlog report <file> [filter flags] [--format html] [-o <path>]
 
 |===
 
-.Create simple HTML report
+.Generate an HTML report
 [source]
 ----
 vulnlog report full-example.vl.yaml
@@ -34,7 +34,7 @@ Report written to: vulnlog-report.html
 
 == Example
 
-To generate an HTML report with the Vulnlog Docker container use:
+To generate an HTML report using the Vulnlog Docker container:
 
 [source]
 ----

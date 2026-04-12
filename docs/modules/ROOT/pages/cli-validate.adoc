@@ -26,7 +26,7 @@ vulnlog validate web-app-1.vl.yaml web-app-2.vl.yaml
 Validation OK
 ----
 
-.Validate a Vulnlog files by STDIN.
+.Validate a Vulnlog file from STDIN.
 [source]
 ----
 vulnlog validate - < vulnlog.yaml

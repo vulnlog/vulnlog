@@ -4,7 +4,7 @@
 
 [source,bash]
 ----
-vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
+vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
 ----
 
 .File Name Convention
@@ -25,7 +25,7 @@ include::{examplesdir}/quickstart.vl.yaml[]
 
 == IDE Setup
 
-Vulnlog's JSON Schema is published on https://vulnlog.dev/schema/vulnlog-v1.json[vulnlod.dev/].
+Vulnlog's JSON Schema is published on https://vulnlog.dev/schema/vulnlog-v1.json[vulnlog.dev].
 IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
 
 To reference a local schema, add this as the first line of your Vulnlog file:

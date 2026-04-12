@@ -97,7 +97,7 @@ Entries must be recreated manually.
 +
 [source,bash]
 ----
-vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
+vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
 ----
 . Add the releases for that branch to the `releases` section.
 . Recreate the vulnerability entries from the old `.vl.kts` file, translating them to the YAML format.
