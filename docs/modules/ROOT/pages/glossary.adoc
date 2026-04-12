@@ -85,6 +85,7 @@ Releases must be listed in chronological order (oldest first) because the CLI us
 Release branch::
 A line of releases sharing a common major/minor version.
 Each Vulnlog file is scoped to a single release branch.
+See xref:branching-strategy.adoc[Branching Strategy] for how to organize files across branches.
 
 Tag::
 A label defined in the optional `tags` section.

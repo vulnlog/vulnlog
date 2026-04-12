@@ -10,8 +10,10 @@ vulnlog init --project "My App" --organization "Acme Corp" --author "Security Te
 .File Name Convention
 [NOTE]
 ====
-For simple projects, `vulnlog.[yaml|yml]` are valid file names.
-For multiple Vulnlog files, use `<project-name>.vl.[yaml|yml]`.
+For simple projects, `vulnlog.yaml` is the recommended file name.
+For multiple Vulnlog files, use `<project-name>.vl.yaml`.
+
+See also xref:branching-strategy.adoc[]
 ====
 
 == A Minimal Example

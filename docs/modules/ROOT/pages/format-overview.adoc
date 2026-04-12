@@ -17,9 +17,9 @@ Changes are tracked via Git history rather than in-file audit trails.
 
 == File Name Convention
 
-Vulnlog files use the naming convention `<project-name>.vl.[yaml|yml]`.
+Vulnlog files use the naming convention `<project-name>.vl.yaml`.
 The `.vl.` infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use `vulnlog.[yaml|yml]`.
+Simple projects may use `vulnlog.yaml` (see also xref:branching-strategy.adoc[]).
 
 The file location within the repository is not prescribed.
 The CLI requires an explicit file path as a positional argument; it does not search for files automatically.

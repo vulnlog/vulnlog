@@ -3,6 +3,23 @@
 Suppression directives exclude specific vulnerability findings from a scanner's output.
 The Vulnlog CLI generates scanner-specific suppression files from the Vulnlog file, keeping the triage rationale alongside the suppression rules.
 
+== Static and Dynamic Suppression
+
+Vulnlog supports two approaches for managing generated suppression files:
+
+Static (checked in)::
+The generated suppression files (e.g., `.trivyignore`, `.snyk`) are committed to the repository.
+When the Vulnlog file is edited, the developer regenerates the suppression files and commits the updated versions.
+This approach makes suppressions visible in code review and provides a clear history of changes.
+
+Dynamic (generated in CI)::
+The suppression files are generated on the fly in the CI pipeline, just before the SCA scanner runs.
+They exist only temporarily during the pipeline execution and are not committed to the repository.
+This approach avoids keeping generated files in the repository and ensures suppressions are always in sync with the Vulnlog file.
+
+Both approaches can be combined -- for example, using static suppression for local development and dynamic generation in CI.
+See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dynamic generation.
+
 == Suppression Rules
 
 Entries where `verdict` is `not_affected` are always included in suppression files.

@@ -1,7 +1,7 @@
 = Vulnlog Documentation
 
 Vulnlog is a developer-oriented CLI tool for tracking and documenting software vulnerability findings.
-It uses a YAML-based format (`*.vl.yaml`) that lives in your repository alongside your code, giving your team a single source of truth for vulnerability management.
+It uses a YAML-based format that lives in your repository alongside your code, giving your team a single source of truth for vulnerability management.
 
 == What Vulnlog does
 

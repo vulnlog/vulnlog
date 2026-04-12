@@ -1,11 +1,13 @@
 = CI/CD Integration
 
 The Vulnlog CLI runs on developer machines and in CI pipelines.
-Generate suppression files in CI to keep scanner pipelines green for triaged findings.
+
+A common pattern is dynamic suppression: generate suppression files in the CI pipeline just before the scanner runs, so they are always in sync with the Vulnlog file and never need to be committed.
+See xref:suppression.adoc#_static_and_dynamic_suppression[Static and Dynamic Suppression] for more details on both approaches.
 
 == GitHub Actions
 
-Example workflow that generates a suppression file, runs a Trivy scan, and produces a vulnerability report:
+Example workflow using dynamic suppression -- the suppression file is generated, used by the scanner, and discarded after the pipeline completes:
 
 [source,yaml]
 ----
