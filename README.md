@@ -70,8 +70,8 @@ vulnerabilities:
     analysis: >
       The vulnerable code path is not reachable in our application
       because we only use the safe subset of the API.
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: not affected
+    justification: vulnerable code not in execute path
 ```
 
 ### Validate and generate suppression files

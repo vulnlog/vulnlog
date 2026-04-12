@@ -85,20 +85,20 @@
         },
         "verdict": {
           "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation",
-          "enum": [ "affected", "not_affected", "risk_acceptable" ]
+          "enum": [ "affected", "not affected", "risk acceptable" ]
         },
         "severity": {
           "description": "Severity assessment of a vulnerability",
           "enum": [ "critical", "high", "medium", "low" ]
         },
         "justification": {
-          "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not_affected'",
+          "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not affected'",
           "enum": [
-            "component_not_present",
-            "vulnerable_code_not_present",
-            "vulnerable_code_not_in_execute_path",
-            "vulnerable_code_cannot_be_controlled_by_adversary",
-            "inline_mitigations_already_exist"
+            "component not present",
+            "vulnerable code not present",
+            "vulnerable code not in execute path",
+            "vulnerable code cannot be controlled by adversary",
+            "inline mitigations already exist"
           ]
         },
         "reporterType": {
@@ -255,7 +255,7 @@
             "required": [ "verdict" ],
             "properties": {
               "verdict": {
-                "enum": [ "affected", "risk_acceptable" ]
+                "enum": [ "affected", "risk acceptable" ]
               }
             }
           },
@@ -268,7 +268,7 @@
             "required": [ "verdict" ],
             "properties": {
               "verdict": {
-                "const": "not_affected"
+                "const": "not affected"
               }
             }
           },
@@ -282,7 +282,7 @@
               "required": [ "verdict" ],
               "properties": {
                 "verdict": {
-                  "const": "not_affected"
+                  "const": "not affected"
                 }
               }
             }

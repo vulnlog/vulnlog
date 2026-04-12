@@ -181,8 +181,8 @@ object V1Mapper {
                 verdict =
                     when (vulnerability.verdict) {
                         "affected" -> Verdict.Affected(parseSeverity(vulnerability.severity))
-                        "not_affected" -> Verdict.NotAffected(parseVexJustification(vulnerability.justification))
-                        "risk_acceptable" -> Verdict.RiskAcceptable(parseSeverity(vulnerability.severity))
+                        "not affected" -> Verdict.NotAffected(parseVexJustification(vulnerability.justification))
+                        "risk acceptable" -> Verdict.RiskAcceptable(parseSeverity(vulnerability.severity))
                         "under_investigation" -> Verdict.UnderInvestigation
                         null -> Verdict.UnderInvestigation
                         else -> throw IllegalArgumentException("Invalid verdict: ${vulnerability.verdict}")
@@ -222,21 +222,21 @@ object V1Mapper {
 
     private fun parseVexJustification(justification: String?): VexJustification =
         when (justification) {
-            "component_not_present" -> VexJustification.COMPONENT_NOT_PRESENT
-            "inline_mitigations_already_exists" -> VexJustification.INLINE_MITIGATIONS_ALREADY_EXIST
-            "vulnerable_code_cannot_be_controlled_by_adversary" ->
+            "component not present" -> VexJustification.COMPONENT_NOT_PRESENT
+            "inline mitigations already exist" -> VexJustification.INLINE_MITIGATIONS_ALREADY_EXIST
+            "vulnerable code cannot be controlled by adversary" ->
                 VexJustification.VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY
 
-            "vulnerable_code_not_in_execute_path" -> VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH
-            "vulnerable_code_not_present" -> VexJustification.VULNERABLE_CODE_NOT_PRESENT
+            "vulnerable code not in execute path" -> VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH
+            "vulnerable code not present" -> VexJustification.VULNERABLE_CODE_NOT_PRESENT
             else -> throw IllegalArgumentException("Invalid justification: $justification")
         }
 
     private fun verdictToString(verdict: Verdict): String? =
         when (verdict) {
             is Verdict.Affected -> "affected"
-            is Verdict.NotAffected -> "not_affected"
-            is Verdict.RiskAcceptable -> "risk_acceptable"
+            is Verdict.NotAffected -> "not affected"
+            is Verdict.RiskAcceptable -> "risk acceptable"
             is Verdict.UnderInvestigation -> null
         }
 
@@ -251,12 +251,12 @@ object V1Mapper {
         when (verdict) {
             is Verdict.NotAffected ->
                 when (verdict.justification) {
-                    VexJustification.COMPONENT_NOT_PRESENT -> "component_not_present"
-                    VexJustification.INLINE_MITIGATIONS_ALREADY_EXIST -> "inline_mitigations_already_exists"
+                    VexJustification.COMPONENT_NOT_PRESENT -> "component not present"
+                    VexJustification.INLINE_MITIGATIONS_ALREADY_EXIST -> "inline mitigations already exist"
                     VexJustification.VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY ->
-                        "vulnerable_code_cannot_be_controlled_by_adversary"
-                    VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH -> "vulnerable_code_not_in_execute_path"
-                    VexJustification.VULNERABLE_CODE_NOT_PRESENT -> "vulnerable_code_not_present"
+                        "vulnerable code cannot be controlled by adversary"
+                    VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH -> "vulnerable code not in execute path"
+                    VexJustification.VULNERABLE_CODE_NOT_PRESENT -> "vulnerable code not present"
                 }
             else -> null
         }

@@ -101,7 +101,7 @@
                 <div class="code-block" id="hero-example"></div>
                 <script id="hero-example-src" type="text/plain">
                     # $schema: https://vulnlog.dev/schema/vulnlog-v1.json
-                    # quickstart.vl.yaml
+                    ---
                     schemaVersion: "1"
 
                     project:
@@ -119,8 +119,8 @@
                         packages: [ "pkg:npm/example-lib@2.3.0" ]
                         reports:
                           - reporter: trivy
-                        verdict: not_affected
-                        justification: vulnerable_code_not_in_execute_path
+                        verdict: not affected
+                        justification: vulnerable code not in execute path
                         analysis: >
                           The vulnerable code path is not reachable
                           in our application.
@@ -188,8 +188,8 @@
             </div>
             <div class="card">
                 <h3>VEX-aligned verdicts</h3>
-                <p>Use standardised verdicts (<code>affected</code>, <code>not_affected</code>,
-                    <code>risk_acceptable</code>) and VEX justifications to document your analysis.</p>
+                <p>Use standardised verdicts (<code>affected</code>, <code>not affected</code>,
+                    <code>risk acceptable</code>) and VEX justifications to document your analysis.</p>
             </div>
             <div class="card">
                 <h3>Scanner suppression</h3>
@@ -365,7 +365,7 @@
             safe = safe.replace(/^(\s*)([\w_]+):/, function (m, sp, key) {
                 return sp + span('c-key', key) + ':';
             });
-            safe = safe.replace(/\b(not_affected|affected|risk_acceptable)\b/g, function (m) {
+            safe = safe.replace(/\b(not affected|affected|risk acceptable)\b/g, function (m) {
                 return span('c-value', m);
             });
             // Restore quoted strings

@@ -1,6 +1,6 @@
 = Verdicts and Justifications
 
 // TODO: Document verdict and justification values
-// - Verdicts: affected, not_affected, risk_acceptable, under_investigation
-// - VEX justifications: vulnerable_code_not_present, vulnerable_code_not_in_execute_path, etc.
+// - Verdicts: affected, not affected, risk acceptable, under_investigation
+// - VEX justifications: vulnerable code not present, vulnerable code not in execute path, etc.
 // - resolution: in, at, ref, note

@@ -65,7 +65,7 @@ private fun reportingEntry(
     primaryId: VulnId = cve1,
     state: WorkState = WorkState.OPEN,
     ids: Set<VulnId> = setOf(primaryId),
-    impact: Impact = Impact.NotAffected("vulnerable_code_not_in_execute_path"),
+    impact: Impact = Impact.NotAffected("vulnerable code not in execute path"),
     analysis: String? = "not affected",
     reportFor: Set<Release> = setOf(releaseV1),
     fixedIn: Set<Release> = emptySet(),

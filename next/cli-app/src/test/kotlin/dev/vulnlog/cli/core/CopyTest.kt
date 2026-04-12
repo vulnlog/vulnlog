@@ -42,8 +42,8 @@ class CopyTest :
                     releases = listOf("1.0.0"),
                     packages = listOf("pkg:npm/example-lib@2.3.0"),
                     reports = listOf(ReportEntryDto(reporter = "trivy")),
-                    verdict = "not_affected",
-                    justification = "vulnerable_code_not_in_execute_path",
+                    verdict = "not affected",
+                    justification = "vulnerable code not in execute path",
                 )
 
             val yaml = serializeEntryYaml(dto, createYamlMapper())

@@ -32,8 +32,8 @@ private val SOURCE_YAML =
           - reporter: trivy
         analysis: >
           The vulnerable code path is not reachable.
-        verdict: not_affected
-        justification: vulnerable_code_not_in_execute_path
+        verdict: not affected
+        justification: vulnerable code not in execute path
 
       - id: CVE-2026-5678
         releases: [ 2.0.0 ]
@@ -41,8 +41,8 @@ private val SOURCE_YAML =
         packages: [ "pkg:npm/other-lib@1.0.0" ]
         reports:
           - reporter: trivy
-        verdict: not_affected
-        justification: component_not_present
+        verdict: not affected
+        justification: component not present
     """.trimIndent()
 
 private val TARGET_YAML =
@@ -68,8 +68,8 @@ private val TARGET_YAML =
         packages: [ "pkg:npm/foo@1.0.0" ]
         reports:
           - reporter: trivy
-        verdict: not_affected
-        justification: component_not_present
+        verdict: not affected
+        justification: component not present
     """.trimIndent()
 
 class CopyCommandTest :

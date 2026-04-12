@@ -58,7 +58,7 @@ vulnerabilities:
       ref: "https://jira.example.com/browse/SEC-55"
       note: "Updated JDK from 17.0.2 to 17.0.3"
 
-  # Verdict: risk_acceptable - vulnerability present but risk accepted
+  # Verdict: risk acceptable - vulnerability present but risk accepted
   - id: SNYK-2021-003
     releases: [ 8.1.2 ]
     description: DoS vulnerability in some-other-dependency
@@ -76,9 +76,9 @@ vulnerabilities:
       Risk accepted by project lead (decision documented in RISK-12).
       Revisit when some-other-dependency 4.0 is released.
     severity: low
-    verdict: risk_acceptable
+    verdict: risk acceptable
 
-  # Verdict: not_affected - OS-level vulnerability in container base image
+  # Verdict: not affected - OS-level vulnerability in container base image
   - id: CVE-2024-5535
     releases: [ 8.1.1 ]
     description: Buffer overread in OpenSSL SSL_select_next_proto
@@ -91,8 +91,8 @@ vulnerabilities:
       Vulnerable OpenSSL is present in the container base image but the affected
       NPN/ALPN negotiation code path is never invoked by our application.
     analyzed_at: 2024-06-29
-    verdict: not_affected
-    justification: vulnerable_code_not_in_execute_path
+    verdict: not affected
+    justification: vulnerable code not in execute path
 
   # Verdict: affected - resolved in a subsequent release (named vulnerability)
   - id: CVE-2021-44228
@@ -120,7 +120,7 @@ vulnerabilities:
       ref: "https://jira.example.com/browse/SEC-42"
       note: "Updated Log4J from 2.14.1 to 2.17.1"
 
-  # Verdict: not_affected - with defensive resolution
+  # Verdict: not affected - with defensive resolution
   - id: CVE-2021-002
     aliases: [ GHSA-xxxx-yyyy ]
     releases: [ 8.1.1 ]
@@ -137,8 +137,8 @@ vulnerabilities:
       Demo project does not utilize some-dependency
       and therefore is not affected.
     analyzed_at: 2021-03-03
-    verdict: not_affected
-    justification: vulnerable_code_not_present
+    verdict: not affected
+    justification: vulnerable code not present
     resolution:
       in: 8.1.2
       note: "Removed unused dependency some-dependency"
