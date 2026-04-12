@@ -21,7 +21,10 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 | Not yet triaged. The entry is under investigation.
 |===
 
-NOTE: "Fixed" is not a verdict. Fixing a vulnerability is a resolution action, not a judgment about impact. Use `verdict: affected` with a `resolution` block to record that a vulnerability was real and subsequently fixed. Use `verdict: not_affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
+NOTE: "Fixed" is not a verdict.
+Fixing a vulnerability is a resolution action, not a judgment about impact.
+Use `verdict: affected` with a `resolution` block to record that a vulnerability was real and subsequently fixed.
+Use `verdict: not_affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
 
 === `affected`
 

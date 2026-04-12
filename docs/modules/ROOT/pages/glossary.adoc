@@ -2,8 +2,7 @@
 
 Vulnlog::
 An open-source tool and format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners.
-The name combines "vulnerability" and "log."
-The term refers to both the YAML file format and the CLI tool collectively.
+The name combines "vulnerability" and "log." The term refers to both the YAML file format and the CLI tool collectively.
 
 Vulnlog file::
 A YAML file following the Vulnlog specification, identified by the `.vl.yaml` (or `.vl.yml`) file extension.

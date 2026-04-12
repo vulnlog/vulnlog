@@ -91,11 +91,14 @@ If a package appears in multiple contexts, the analysis should focus on the high
 
 A vulnerability entry typically goes through the following stages:
 
-Stub entry:: A minimal entry containing only required fields (`id`, `releases`, `packages`, `reports`). Created during quick triage.
+Stub entry:: A minimal entry containing only required fields (`id`, `releases`, `packages`, `reports`).
+Created during quick triage.
 
-Under investigation:: The implicit state when no `verdict` has been set. The team is still analyzing the finding.
+Under investigation:: The implicit state when no `verdict` has been set.
+The team is still analyzing the finding.
 
-Analysed:: The entry has a `verdict`, `analysis`, and any required conditional fields (`severity`, `justification`). Optionally includes a `resolution` if the dependency was updated.
+Analysed:: The entry has a `verdict`, `analysis`, and any required conditional fields (`severity`, `justification`).
+Optionally includes a `resolution` if the dependency was updated.
 
 [[report-entry]]
 == Report Entry

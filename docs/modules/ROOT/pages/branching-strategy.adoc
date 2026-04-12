@@ -128,6 +128,20 @@ Each branch carries its own `vulnlog.yaml` with the releases specific to that br
 - Propagating the same analysis to multiple branches requires cherry-picking or merging commits.
 - Reviewing the overall security posture requires checking out multiple branches.
 
+=== Git Worktrees
+
+When using the xref:branching-strategy.adoc#per-branch[per-branch] strategy, https://git-scm.com/docs/git-worktree[Git worktrees] can simplify working with multiple branches at the same time.
+Instead of switching branches back and forth, worktrees let you have multiple branches checked out simultaneously in separate directories:
+
+[source,bash]
+----
+# Create worktrees for each release branch
+git worktree add ../my-project-v1 release/1.x
+git worktree add ../my-project-v2 release/2.x
+----
+
+This gives you direct file system access to each branch's `vulnlog.yaml`, making it easy to compare and update entries across branches without switching contexts.
+
 == Combining Strategies
 
 The multi-file and per-branch strategies can coexist.

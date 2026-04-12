@@ -19,4 +19,5 @@
 * Guides
 ** xref:branching-strategy.adoc[Branching Strategy]
 ** xref:ci-integration.adoc[CI/CD Integration]
+** xref:migration-guide.adoc[Migration from Kotlin DSL]
 * xref:glossary.adoc[Glossary]
