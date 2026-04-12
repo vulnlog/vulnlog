@@ -31,3 +31,13 @@ vulnlog report <file> [filter flags] [--format html] [-o <path>]
 vulnlog report full-example.vl.yaml
 Report written to: vulnlog-report.html
 ----
+
+== Example
+
+To generate an HTML report with the Vulnlog Docker container use:
+
+[source]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest report vulnlog.yaml --output report.html
+Report written to: /work/report.html
+----
