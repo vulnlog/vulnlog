@@ -115,8 +115,8 @@
             "grype",
             "cargo-audit",
             "semgrep",
-            "npm_audit",
-            "github_advisory",
+            "npm-audit",
+            "github-advisory",
             "other"
           ]
         }

@@ -13,16 +13,16 @@ class ReportsTest :
                 parseReporter("dependency-check") shouldBe ReporterType.DEPENDENCY_CHECK
             }
 
-            test("parses github_advisory") {
-                parseReporter("github_advisory") shouldBe ReporterType.GITHUB_SECURITY_ADVISORY
+            test("parses github-advisory") {
+                parseReporter("github-advisory") shouldBe ReporterType.GITHUB_SECURITY_ADVISORY
             }
 
             test("parses grype") {
                 parseReporter("grype") shouldBe ReporterType.GRYPE
             }
 
-            test("parses npm_audit") {
-                parseReporter("npm_audit") shouldBe ReporterType.NPM_AUDIT
+            test("parses npm-audit") {
+                parseReporter("npm-audit") shouldBe ReporterType.NPM_AUDIT
             }
 
             test("parses other") {
@@ -57,16 +57,16 @@ class ReportsTest :
                 ReporterType.DEPENDENCY_CHECK.canonical() shouldBe "dependency-check"
             }
 
-            test("GITHUB_SECURITY_ADVISORY canonical is github_advisory") {
-                ReporterType.GITHUB_SECURITY_ADVISORY.canonical() shouldBe "github_advisory"
+            test("GITHUB_SECURITY_ADVISORY canonical is github-advisory") {
+                ReporterType.GITHUB_SECURITY_ADVISORY.canonical() shouldBe "github-advisory"
             }
 
             test("GRYPE canonical is grype") {
                 ReporterType.GRYPE.canonical() shouldBe "grype"
             }
 
-            test("NPM_AUDIT canonical is npm_audit") {
-                ReporterType.NPM_AUDIT.canonical() shouldBe "npm_audit"
+            test("NPM_AUDIT canonical is npm-audit") {
+                ReporterType.NPM_AUDIT.canonical() shouldBe "npm-audit"
             }
 
             test("OTHER canonical is other") {
@@ -93,9 +93,9 @@ class ReportsTest :
                 val allCanonicals =
                     listOf(
                         "dependency-check",
-                        "github_advisory",
+                        "github-advisory",
                         "grype",
-                        "npm_audit",
+                        "npm-audit",
                         "other",
                         "cargo-audit",
                         "semgrep",
