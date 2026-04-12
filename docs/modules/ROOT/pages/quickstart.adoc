@@ -23,7 +23,7 @@ include::{examplesdir}/quickstart.vl.yaml[]
 
 == IDE Setup
 
-Vulnlog's JSON Schema is published to https://www.schemastore.org/[SchemaStore].
+Vulnlog's JSON Schema is published on https://vulnlog.dev/schema/vulnlog-v1.json[vulnlod.dev/].
 IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
 
 To reference a local schema, add this as the first line of your Vulnlog file:

@@ -11,11 +11,9 @@ From this file, the Vulnlog CLI generates machine-readable outputs such as SCA s
 
 Compact and readable:: The format prioritizes ease of writing and reading over exhaustive detail.
 The common case -- reporting a finding and recording a verdict -- should require minimal boilerplate.
-IDE-supported:: A JSON Schema published to SchemaStore provides validation, autocompletion, and inline documentation in editors.
+IDE-supported:: A JSON Schema provides validation, autocompletion, and inline documentation in editors.
 Git-friendly:: The file is designed for version control.
 Changes are tracked via Git history rather than in-file audit trails.
-Data-oriented:: Entries are plain data records with no behavior.
-The CLI applies transformations and business logic.
 
 == File Name Convention
 
@@ -32,16 +30,16 @@ To enable IDE validation and autocompletion, add a schema reference comment as t
 
 [source,yaml]
 ----
-# $schema: .vulnlog/vulnlog-schema.json
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
 ----
 
-The path can point to a local bundled schema file or to the published SchemaStore URL.
+The path can point to a local bundled schema file or to the published JSON schema URL.
 
 == File Structure
 
 [source,yaml]
 ----
-# $schema: .vulnlog/vulnlog-schema.json
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
 schemaVersion: "1"
 
 project:
@@ -64,9 +62,13 @@ Optional top-level sections: `tags`.
 
 === Ordering Rules
 
-Releases:: Must be in chronological order (oldest first). This ordering has functional significance -- the CLI uses array position to resolve `--release` range filtering. A release at position N includes all releases at positions 0 through N.
+Releases:: Must be in chronological order (oldest first).
+This ordering has functional significance -- the CLI uses array position to resolve `--release` range filtering.
+A release at position N includes all releases at positions 0 through N.
 
-Vulnerabilities:: Should be in reverse chronological order (newest first). The most recent findings appear at the top of the file for immediate visibility. This is a readability convention enforced by the linter, with no functional impact on CLI output.
+Vulnerabilities:: Should be in reverse chronological order (newest first).
+The most recent findings appear at the top of the file for immediate visibility.
+This is a readability convention enforced by the linter, with no functional impact on CLI output.
 
 === Unique Identifiers
 
