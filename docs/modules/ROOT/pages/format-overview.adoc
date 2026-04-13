@@ -13,7 +13,7 @@ Compact and readable:: The format prioritizes ease of writing and reading over e
 The common case -- reporting a finding and recording a verdict -- should require minimal boilerplate.
 IDE-supported:: A JSON Schema provides validation, autocompletion, and inline documentation in editors.
 Git-friendly:: The file is designed for version control.
-Changes are tracked via Git history rather than in-file audit trails.
+Changes are tracked through Git history rather than in-file audit trails.
 
 == File Name Convention
 
@@ -26,7 +26,7 @@ The CLI requires an explicit file path as a positional argument; it does not sea
 
 == Schema Reference
 
-To enable IDE validation and autocompletion, add a schema reference comment as the first line of the Vulnlog file:
+To enable IDE validation and autocompletion, add a schema reference comment as the first line:
 
 [source,yaml]
 ----

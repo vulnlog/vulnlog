@@ -16,18 +16,6 @@ No automatic file detection.
 |===
 | Flag | Description
 
-| `-q, --quiet`
-| Suppress non-essential output.
-
-| `-v, --verbose`
-| Verbose output.
-
-| `--no-color`
-| Disable colored output.
-
-| `--format <f>`
-| Output format for structured output: `text` (default), `yaml`, `json`.
-
 | `--version`
 | Print version and exit.
 

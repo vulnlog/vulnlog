@@ -57,7 +57,7 @@ In most CI environments (GitHub Actions, Jenkins, GitLab CI) the runner's worksp
 docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppress vulnlog.yaml --reporter trivy
 ----
 
-If your CI runner requires root access, override the user at runtime:
+When the CI runner requires root access, override the user at runtime:
 
 [source,bash]
 ----
@@ -66,7 +66,7 @@ docker run --rm --user root -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest suppr
 
 == Validating in CI
 
-Run validation as part of your CI pipeline to catch Vulnlog file errors early:
+Running validation as part of the CI pipeline catches Vulnlog file errors early:
 
 [source,bash]
 ----

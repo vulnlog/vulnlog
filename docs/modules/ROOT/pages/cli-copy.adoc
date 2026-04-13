@@ -1,7 +1,7 @@
 = vulnlog copy
 
 Copies a complete vulnerability entry from a source file into one or more target files.
-Use this to propagate an existing analysis across multiple branch files.
+This propagates an existing analysis across multiple branch files.
 
 [source]
 ----
@@ -36,7 +36,7 @@ Copied 'CVE-2026-002' to target1.vl.yml
 Copied 'CVE-2026-002' to target2.vl.yml
 ----
 
-The above command adds the vulnerability entry to the before empty `vulnerabilities` list.
+The command adds the vulnerability entry to the previously empty `vulnerabilities` list.
 
 This copies `CVE-2026-002` from before:
 

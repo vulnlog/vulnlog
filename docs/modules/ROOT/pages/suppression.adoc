@@ -9,7 +9,7 @@ Vulnlog supports two approaches for managing generated suppression files:
 
 Static (checked in)::
 The generated suppression files (e.g., `.trivyignore.yaml`, `.snyk`) are committed to the repository.
-When the Vulnlog file is edited, the developer regenerates the suppression files and commits the updated versions.
+When the Vulnlog file is edited, the suppression files are regenerated and the updated versions committed.
 This approach makes suppressions visible in code review and provides a clear history of changes.
 
 Dynamic (generated in CI)::

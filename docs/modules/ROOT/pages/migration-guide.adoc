@@ -110,5 +110,5 @@ vulnlog validate my-app.vl.yaml
 ----
 . Remove the old `.vl.kts` file once the migration is complete.
 
-TIP: Start with the most active release branch.
-Once you are comfortable with the YAML format, migrate the remaining branches.
+TIP: Starting with the most active release branch is recommended.
+Remaining branches can be migrated incrementally.
