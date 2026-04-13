@@ -26,7 +26,7 @@ include::{examplesdir}/quickstart.vl.yaml[]
 == IDE Setup
 
 Vulnlog's JSON Schema is published on https://vulnlog.dev/schema/vulnlog-v1.json[vulnlog.dev].
-IDEs with YAML support can automatically provide validation and autocompletion for `.vl.[yaml|yml]` and `vulnlog.[yaml|yml]` files.
+IDEs with YAML support can automatically provide validation and autocompletion for `.vl.yaml` and `vulnlog.yaml` files.
 
 To reference a local schema, add the following as the first line of the Vulnlog file:
 
@@ -138,6 +138,88 @@ Without a `verdict`, the entry is tracked as under investigation.
     comment: >
       Risk accepted by project lead. Revisit when upstream
       releases a stable fix.
+----
+
+=== Evolving an entry over time
+
+A vulnerability entry typically starts as a stub and is refined as the analysis progresses.
+The following example shows the same entry at each stage.
+
+*Stage 1 -- Stub entry during initial triage:*
+
+[source,yaml]
+----
+  - id: CVE-2026-5678
+    releases: [ 2.0.0 ]
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
+    reports:
+      - reporter: trivy
+        at: 2026-03-01
+----
+
+*Stage 2 -- Analysis complete, verdict recorded:*
+
+[source,yaml]
+----
+  - id: CVE-2026-5678
+    releases: [ 2.0.0 ]
+    description: Memory corruption in image-lib
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
+    reports:
+      - reporter: trivy
+        at: 2026-03-01
+    analysis: >
+      Confirmed exploitable via crafted PNG uploads.
+    analyzed_at: 2026-03-02
+    severity: high
+    verdict: affected
+----
+
+*Stage 3 -- Resolution recorded after fix:*
+
+[source,yaml]
+----
+  - id: CVE-2026-5678
+    releases: [ 2.0.0 ]
+    description: Memory corruption in image-lib
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
+    reports:
+      - reporter: trivy
+        at: 2026-03-01
+    analysis: >
+      Confirmed exploitable via crafted PNG uploads.
+    analyzed_at: 2026-03-02
+    severity: high
+    verdict: affected
+    resolution:
+      in: 2.0.1
+      at: 2026-03-03
+      note: "Updated image-lib from 3.1.0 to 3.2.0"
+----
+
+Once a resolution is recorded with `verdict: affected`, the entry is automatically excluded from generated suppression files.
+The scanner is expected to no longer report the finding after the dependency update.
+
+=== False positive
+
+When a scanner reports a finding that does not actually apply, record it as `not affected` with a justification that captures why the report is incorrect.
+
+[source,yaml]
+----
+  - id: CVE-2026-4321
+    releases: [ 2.0.0 ]
+    description: Remote code execution in logging-framework
+    packages: [ "pkg:npm/logging-framework@2.0.0" ]
+    reports:
+      - reporter: trivy
+        at: 2026-03-15
+    analysis: >
+      False positive. The scanner flagged logging-framework as a
+      runtime dependency, but it is only present in the test scope
+      and not included in the deliverable.
+    analyzed_at: 2026-03-16
+    verdict: not affected
+    justification: component not present
 ----
 
 === Internal dependency, no customer impact

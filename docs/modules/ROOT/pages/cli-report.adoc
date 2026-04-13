@@ -41,3 +41,8 @@ To generate an HTML report using the Vulnlog Docker container:
 docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:latest report vulnlog.yaml --output report.html
 Report written to: /work/report.html
 ----
+
+This renders an example Vulnlog HTML report:
+
+.Example Vulnlog HTML Report
+image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]

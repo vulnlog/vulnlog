@@ -52,3 +52,17 @@ vulnlog suppress --reporter trivy - -o - < full-example.vl.yaml > .myTrivy
 
 NOTE: Writing to stdout with `-o -` requires `--reporter` to select a single reporter.
 Multiple suppression files cannot be written to stdout simultaneously.
+
+== Output Examples
+
+.Generated Snyk suppression file
+[source,yaml]
+----
+include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..5]
+----
+
+.Generated Trivy suppression file
+[source,yaml]
+----
+include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..4]
+----

@@ -80,7 +80,7 @@ Available on `report` and `suppress` commands.
 | The specified Vulnlog file does not exist.
 
 | `4`
-| Lint violation
+| Lint violation (planned for a future release)
 | The file has lint violations (without `--fix`).
 
 | `5`

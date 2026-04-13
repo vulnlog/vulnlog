@@ -53,6 +53,32 @@ reports:
 
 After the expiration date, the entry is excluded from the generated suppression file.
 
+== Multiple Reporters
+
+When multiple scanners report the same vulnerability, each scanner is listed as a separate report entry.
+Suppression is configured independently per reporter, allowing different suppression strategies per scanner.
+
+[source,yaml]
+----
+  - id: CVE-2021-002
+    releases: [ 8.1.1 ]
+    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
+    reports:
+      - reporter: trivy
+        at: 2021-03-03
+      - reporter: snyk
+        at: 2021-03-03
+        vuln_ids: [ SNYK-2021-002 ]
+    verdict: not affected
+    justification: vulnerable code not present
+----
+
+In this example, both Trivy and Snyk reported the same CVE.
+The Snyk report entry includes a `vuln_ids` field with the scanner-specific identifier, which is used instead of the CVE ID when generating the Snyk suppression file.
+
+Since the verdict is `not affected`, both reporters are automatically included in suppression output.
+Adding a `suppress` block to only one reporter limits suppression to that specific scanner.
+
 == Suppression Identifier Resolution
 
 The CLI determines which identifiers to write into the suppression file using this order:

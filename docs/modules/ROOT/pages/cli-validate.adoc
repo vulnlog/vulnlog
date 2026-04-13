@@ -2,6 +2,16 @@
 
 Validates one or more Vulnlog files against the schema and all validation rules.
 
+Parsing a Vulnlog is the first stage in the validation process.
+After the Vulnlog document is parsed successfully, its content is validated.
+
+The validation is either successful or reports one or multiple issues:
+
+[horizontal]
+Error:: Indicate structurally invalid or semantically broken files that would produce incorrect output.
+Warning:: File is technically valid, but something is likely wrong or will cause problems in the future.
+Info:: Informational findings that highlight potential improvements or non-critical observations.
+
 [source]
 ----
 vulnlog validate <file...> [--strict]
@@ -31,4 +41,13 @@ Validation OK
 ----
 vulnlog validate - < vulnlog.yaml
 Validation OK
+----
+
+.Validation was not successful because an undefined tag was used.
+[source]
+----
+vulnlog validate vulnlog.yaml
+Validation findings for vulnlog.yaml:
+[ERROR] vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
+1 error(s)
 ----

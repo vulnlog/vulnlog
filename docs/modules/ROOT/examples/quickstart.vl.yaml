@@ -1,4 +1,4 @@
-# $schema: ../../../../schema/vulnlog-v1.json
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
 ---
 schemaVersion: "1"
 

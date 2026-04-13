@@ -9,13 +9,13 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 | Value | Description
 
 | `affected`
-| The vulnerability affects this release. Requires `severity`.
+| The vulnerability impacts this release and remediation is expected. Requires `severity`.
 
 | `not affected`
-| The vulnerability does not affect this release. Requires `justification`.
+| The vulnerability is present in a dependency but does not impact this release. Requires `justification`.
 
 | `risk acceptable`
-| The vulnerability affects this release but the risk has been assessed and accepted. Requires `severity`.
+| The vulnerability impacts this release but the risk has been assessed and accepted without remediation. Requires `severity`.
 
 | _(absent)_
 | Not yet triaged. The entry is under investigation.
@@ -28,10 +28,12 @@ Use `verdict: not affected` with an optional `resolution` to record that a vulne
 
 === `affected`
 
-Use when the vulnerability is confirmed to impact the project.
+The vulnerability is confirmed to impact the project and remediation is expected.
 Requires a `severity` assessment.
+Typically paired with a `resolution` block once the fix is applied.
 
-When a `resolution` is also present, the vulnerability was real and has been addressed.
+Once a resolution is recorded, the entry is automatically excluded from generated suppression files -- the scanner is expected to stop reporting the finding after the dependency update.
+Without a resolution, an explicit `suppress` block is required to suppress the finding.
 
 [source,yaml]
 ----
@@ -45,8 +47,10 @@ resolution:
 
 === `not affected`
 
-Use when the vulnerability does not impact the project.
-Requires a `justification` explaining why.
+The vulnerable dependency is present but does not impact the project.
+Requires a `justification` explaining why the vulnerability is not exploitable in this context.
+
+Entries with this verdict are always included in generated suppression files without requiring an explicit `suppress` block.
 
 [source,yaml]
 ----
@@ -59,8 +63,12 @@ analysis: >
 
 === `risk acceptable`
 
-Use when the vulnerability is confirmed but the risk has been assessed and accepted.
+The vulnerability is confirmed to impact the project, but a deliberate decision has been made to accept the risk without remediation.
 Requires a `severity` assessment.
+
+Unlike `affected`, this verdict signals that no fix is planned.
+The vulnerable dependency remains in place, so the scanner continues to report the finding.
+An explicit `suppress` block on the report entry is required to suppress the finding.
 
 [source,yaml]
 ----

@@ -23,4 +23,4 @@ fun validateInputPath(path: Path): InputValidationResult {
 }
 
 private fun isVulnlogFileName(name: String): Boolean =
-    name == "vulnlog.yaml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml")
+    name == "vulnlog.yaml" || name == "vulnlog.yml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml")

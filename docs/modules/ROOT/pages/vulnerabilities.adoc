@@ -39,7 +39,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `packages`
 | Array of String (Package URL)
 | Yes
-| Package URLs of affected dependencies.
+| Package URLs of affected dependencies. See <<finding-package-urls>>.
 
 | `reports`
 | Array of <<report-entry,Report entries>>
@@ -85,6 +85,45 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | <<resolution-entry,Resolution entry>>
 | No
 | Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict.
+|===
+
+[[finding-package-urls]]
+== Finding Package URLs
+
+The `packages` field requires https://github.com/package-url/purl-spec[Package URLs (PURLs)] identifying the affected dependencies.
+PURLs follow the format `pkg:<type>/<namespace>/<name>@<version>`.
+
+Common sources for obtaining the correct PURL:
+
+Scanner output:: Most SCA scanners (Trivy, Snyk, Grype) include the PURL in their findings.
+This is the most reliable source, as it matches exactly what the scanner reported.
+
+Package registries:: Registries such as https://mvnrepository.com[Maven Central], https://www.npmjs.com[npm], and https://pypi.org[PyPI] list the coordinates needed to construct a PURL.
+
+Lock files:: Dependency lock files (`package-lock.json`, `go.sum`, `Cargo.lock`) contain the exact package coordinates and versions.
+
+.Common PURL types
+[cols="1,2"]
+|===
+| Type | Example
+
+| Maven
+| `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`
+
+| npm
+| `pkg:npm/image-lib@3.1.0`
+
+| Docker
+| `pkg:docker/demo-project@8.1.1`
+
+| Go
+| `pkg:golang/golang.org/x/net@0.17.0`
+
+| PyPI
+| `pkg:pypi/requests@2.28.0`
+
+| Generic
+| `pkg:generic/demo-project@8.1.1`
 |===
 
 == Lifecycle
