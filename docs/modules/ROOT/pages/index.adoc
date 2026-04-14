@@ -11,6 +11,11 @@ It uses a YAML-based format that lives in the repository alongside the code, pro
 * Validate Vulnlog files against the schema
 * Filter by release, tag, or reporter
 
+== Open Source
+
+Vulnlog is open source and hosted on https://github.com/vulnlog/vulnlog[GitHub].
+Contributions, bug reports, and feature requests are welcome.
+
 == Next steps
 
 * xref:installation.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
