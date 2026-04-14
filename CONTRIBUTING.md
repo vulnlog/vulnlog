@@ -86,8 +86,8 @@ chance of your pull request being accepted.
 
 ## Licensing
 
-By contributing, you agree that your contributions will be licensed under the same license as this project
-(see [LICENSE](LICENSE)).
+This project is licensed under the [Apache License, Version 2.0](LICENSE). By contributing, you agree that your
+contributions will be licensed under the same terms.
 
 ## Maintainers
 
