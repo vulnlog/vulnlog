@@ -1,13 +1,11 @@
-[![Vulnlog](https://vulnlog.dev/logo/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
+[![Vulnlog](assets/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
 
 [![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog?color=%23f405c5)](https://github.com/vulnlog/vulnlog/releases)
 [![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
-[![License: GPL-3.0](https://img.shields.io/github/license/vulnlog/vulnlog)](LICENSE)
 
 Vulnlog is an open-source tool for tracking, documenting and communicating vulnerability analysis directly in your
-source
-code repository. It uses a simple YAML format for recording your findings and a CLI for generating suppression files
-for common SCA scanners.
+source code repository. It uses a simple YAML format for recording your findings and a CLI for generating suppression
+files for common SCA scanners.
 
 > **Note:** Vulnlog is in active development. The YAML format, CLI commands and Gradle plugin may still change.
 > Feedback and contributions are very welcome!
@@ -98,10 +96,6 @@ vulnlog suppress vulnlog.yaml --reporter trivy -o -
 
 [![Bluesky](https://img.shields.io/bluesky/followers/vulnlog.bsky.social?style=flat&logo=bluesky&labelColor=white&color=blue)](https://bsky.app/profile/vulnlog.bsky.social)
 [![Mastodon](https://img.shields.io/mastodon/follow/114149693629631038?domain=infosec.exchange&style=flat&logo=mastodon&labelColor=white&color=blue)](https://infosec.exchange/@vulnlog)
-
-## License
-
-Vulnlog is licensed under the [GPL-3.0 License](LICENSE).
 
 ## Contributing
 

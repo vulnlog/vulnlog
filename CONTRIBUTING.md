@@ -1,117 +1,85 @@
-# Vulnlog Contributor's Guide
+# Contributing to Vulnlog
 
-Welcome to the Vulnlog community, and thank you for contributing! Whether you are fixing a typo, reporting a bug,
-improving documentation, or adding a feature -- every contribution helps.
+Thank you for contributing! Every contribution helps, whether it is a bug report, a docs fix, or a new feature.
 
-* [Prerequisites](#prerequisites)
-* [Local Setup](#local-setup)
-* [Where to Start](#where-to-start)
-* [Issue Tracking](#issue-tracking)
-* [Pull Requests](#pull-requests)
-* [Developer Certificate of Origin](#developer-certificate-of-origin)
-* [Licensing](#licensing)
-* [Maintainers](#maintainers)
+## Getting Started
 
-## Prerequisites
+**Prerequisites:** Git and JDK 17+ (Gradle will automatically provision JDK 25 for compilation via
+[Foojay](https://github.com/gradle/foojay-toolchains)).
 
-The following tools are required to build and contribute to this project:
-
-- **JDK 17+** — the Gradle toolchain will automatically provision JDK 25 for compilation via
-  [Foojay](https://github.com/gradle/foojay-toolchains), so any JDK 17+ suffices to bootstrap Gradle.
-  The project targets JVM 17 bytecode.
-- **Git**
-
-Optional, only needed to build native images locally:
-
-- **GraalVM CE 21** — install via [SDKMAN](https://sdkman.io) (`sdk install java 21.0.x-graal`) or
-  [GraalVM's releases](https://github.com/graalvm/graalvm-ce-builds/releases)
-
-## Local Setup
-
-After cloning, install the ktlint pre-commit hook so your code is automatically formatted before each commit:
+After cloning, install the pre-commit hook for automatic code formatting:
 
 ```terminal
 ./gradlew installGitHooks
 ```
 
-This uses the project's own ktlint version via Gradle — no separate `ktlint` installation required.
+Not sure where to begin? Look for issues labelled **good first issue**, try Vulnlog on your own project, or improve
+the documentation. For questions or ideas, open a [GitHub Discussion](https://github.com/vulnlog/vulnlog/discussions).
 
-## Where to Start
+## Making Changes
 
-Not sure where to begin? Here are a few ideas:
+1. For significant changes, discuss them first via a
+   [GitHub Issue](https://github.com/vulnlog/vulnlog/issues/new) or
+   [Discussion](https://github.com/vulnlog/vulnlog/discussions).
+2. Format code with `./gradlew ktlintFormat` if not using the pre-commit hook.
+3. Verify that `./gradlew check` passes before opening a pull request.
 
-- Look for issues labelled **good first issue** — these are scoped to be approachable for newcomers.
-- Try using Vulnlog on a project of your own and report any rough edges you find.
-- Improve or clarify the documentation — fresh eyes catch things maintainers miss.
+## Commit Conventions
 
-If you have a question or want to bounce an idea around before writing code, feel free to open
-a [GitHub Discussion](https://github.com/vulnlog/vulnlog/discussions).
+This project uses [Conventional Commits](https://www.conventionalcommits.org). Every commit message must follow
+this format:
 
-## Issue Tracking
+```
+<type>: <description>
+```
 
-To file a bug or feature request, use [GitHub Issues](https://github.com/vulnlog/vulnlog/issues/new). Please include:
+Use one of these types:
 
-* Context
-    * What are/were you trying to achieve?
-    * What's the impact of this bug/feature?
+| Type       | Purpose                                               |
+|------------|-------------------------------------------------------|
+| `feat`     | New feature or capability                             |
+| `fix`      | Bug fix                                               |
+| `docs`     | Documentation changes                                 |
+| `refactor` | Code restructuring without behavior change            |
+| `perf`     | Performance improvement                               |
+| `test`     | Adding or updating tests                              |
+| `ci`       | CI/CD configuration and dependency updates            |
+| `chore`    | Maintenance tasks (dependency updates, configs, etc.) |
 
-For bug reports, additionally include:
-
-* The output of `vulnlog --version`.
-* The complete error message.
-* The simplest possible steps to reproduce.
-
-## Pull Requests
-
-When preparing a pull request, follow this checklist:
-
-* Imitate the conventions of surrounding code.
-* Format code with `./gradlew ktlintFormat` if not using the pre-commit hook.
-* Verify that `./gradlew check` passes.
-* For native image builds: `./gradlew :next:nativeCompile --no-configuration-cache`.
-* Use [conventional commit](https://www.conventionalcommits.org) messages.
-* Follow the seven rules of great Git commit messages:
-    * Separate the subject from the body with a blank line.
-    * Limit the subject line to 50 characters.
-    * Capitalize the subject line.
-    * Do not end the subject line with a period.
-    * Use the imperative mood in the subject line.
-    * Wrap the body at 72 characters.
-    * Use the body to explain what and why vs. how.
-
-Important: If you plan to make significant changes or add new features, we encourage you to first discuss them with the
-wider Vulnlog developer community. You can do this by filing
-a [GitHub Issue](https://github.com/vulnlog/vulnlog/issues/new) or by
-starting a [GitHub Discussion](https://github.com/vulnlog/vulnlog/discussions). This will save time and increase the
-chance of your pull request being accepted.
+Keep the subject line concise (50 characters or less), use imperative mood ("Add support for..." not "Added
+support for..."), and do not end it with a period. Use the commit body to explain *what* and *why*, not *how*.
 
 ## Developer Certificate of Origin
 
 This project uses the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) to certify that
-contributors have the right to submit their work under the project's license. Every commit must include a `Signed-off-by`
+contributors have the right to submit their work under the project's license. Every commit must include a
+`Signed-off-by`
 trailer with the contributor's real name and email address.
 
 Git provides the `-s` / `--signoff` flag for this:
 
 ```terminal
-git commit -s -m "fix: correct YAML parsing for empty lists"
+git commit -s -m "fix: Correct YAML parsing for empty lists"
 ```
 
-This appends a line like `Signed-off-by: Jane Doe <jane@example.com>` to the commit message. If you forgot to sign off,
-you can amend the most recent commit:
+If you forgot to sign off, amend the most recent commit:
 
 ```terminal
 git commit --amend -s --no-edit
 ```
 
-Pull requests where any commit is missing a valid `Signed-off-by` trailer will fail the CI check.
+Commits without a valid `Signed-off-by` trailer will fail the CI check. See the full
+[DCO text](https://developercertificate.org/) for details.
+
+## Reporting Bugs
+
+File bugs via [GitHub Issues](https://github.com/vulnlog/vulnlog/issues/new) and include:
+
+- What you were trying to achieve and the impact.
+- The output of `vulnlog --version`.
+- The complete error message and steps to reproduce.
 
 ## Licensing
 
 This project is licensed under the [Apache License, Version 2.0](LICENSE). By contributing, you agree that your
 contributions will be licensed under the same terms.
-
-## Maintainers
-
-The project's maintainers (those with write access to the upstream repository) are listed
-in [MAINTAINERS.md](MAINTAINERS.md).
