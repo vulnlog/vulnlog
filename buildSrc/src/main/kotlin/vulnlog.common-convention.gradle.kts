@@ -3,6 +3,7 @@ plugins {
 //    id("io.gitlab.arturbosch.detekt")
     id("org.jetbrains.kotlin.jvm")
     id("org.jlleitschuh.gradle.ktlint")
+    id("com.diffplug.spotless")
     `java-test-fixtures`
 }
 
@@ -63,8 +64,21 @@ tasks.register("resolveAndLockAll") {
     }
 }
 
+spotless {
+    kotlin {
+        targetExclude("build/**")
+        licenseHeader(
+            """
+            // Copyright 2024 the Vulnlog contributors
+            // SPDX-License-Identifier: Apache-2.0
+            """.trimIndent(),
+        )
+    }
+}
+
 tasks.named("check").configure {
     dependsOn(tasks.named("ktlintCheck"))
+    dependsOn(tasks.named("spotlessCheck"))
 }
 
 // Disable until fully supported in JDK 25 with Kotlin 2.3.0
