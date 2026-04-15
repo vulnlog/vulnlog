@@ -8,6 +8,7 @@ improving documentation, or adding a feature -- every contribution helps.
 * [Where to Start](#where-to-start)
 * [Issue Tracking](#issue-tracking)
 * [Pull Requests](#pull-requests)
+* [Developer Certificate of Origin](#developer-certificate-of-origin)
 * [Licensing](#licensing)
 * [Maintainers](#maintainers)
 
@@ -83,6 +84,27 @@ wider Vulnlog developer community. You can do this by filing
 a [GitHub Issue](https://github.com/vulnlog/vulnlog/issues/new) or by
 starting a [GitHub Discussion](https://github.com/vulnlog/vulnlog/discussions). This will save time and increase the
 chance of your pull request being accepted.
+
+## Developer Certificate of Origin
+
+This project uses the [Developer Certificate of Origin](https://developercertificate.org/) (DCO) to certify that
+contributors have the right to submit their work under the project's license. Every commit must include a `Signed-off-by`
+trailer with the contributor's real name and email address.
+
+Git provides the `-s` / `--signoff` flag for this:
+
+```terminal
+git commit -s -m "fix: correct YAML parsing for empty lists"
+```
+
+This appends a line like `Signed-off-by: Jane Doe <jane@example.com>` to the commit message. If you forgot to sign off,
+you can amend the most recent commit:
+
+```terminal
+git commit --amend -s --no-edit
+```
+
+Pull requests where any commit is missing a valid `Signed-off-by` trailer will fail the CI check.
 
 ## Licensing
 
