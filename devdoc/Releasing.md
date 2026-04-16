@@ -5,7 +5,7 @@
 Running or building locally without passing a version produces a developer build automatically:
 
 ```terminal
-./gradlew :next:run
+./gradlew :cli-app:run
 # → Vulnlog SNAPSHOT+a1b2c3d
 ```
 

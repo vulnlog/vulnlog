@@ -6,7 +6,7 @@ plugins {
 
 // GraalVM Native Build Tools does not yet fully support configuration cache.
 // Always pass --no-configuration-cache when running native tasks locally:
-//   ./gradlew :next:nativeCompile --no-configuration-cache
+//   ./gradlew :cli-app:nativeCompile --no-configuration-cache
 
 graalvmNative {
     binaries {

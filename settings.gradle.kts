@@ -4,6 +4,8 @@ plugins {
 
 rootProject.name = "vulnlog"
 
-include(":next")
+include(":cli-app")
+include(":lib")
 
-project(":next").projectDir = file("next/cli-app")
+project(":cli-app").projectDir = file("modules/cli-app")
+project(":lib").projectDir = file("modules/lib")
