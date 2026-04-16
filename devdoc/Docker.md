@@ -17,7 +17,7 @@ Make sure the native image is available under `build/native/nativeCompile/vulnlo
 Build the Docker image locally:
 
 ```shell
-docker build -t vulnlog ./next/cli-app/
+docker build -t vulnlog ./modules/cli-app/
 ```
 
 Run it locally:
