@@ -198,3 +198,27 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
             ghcr.io/${{ github.repository }}:latest
+
+  publish-gradle-plugin:
+    name: Publish Gradle plugin
+    needs: [ generate-changelog ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Publish Gradle plugin
+        env:
+          ORG_GRADLE_PROJECT_gradle.publish.key: ${{ secrets.GRADLE_PLUGIN_KEY }}
+          ORG_GRADLE_PROJECT_gradle.publish.secret: ${{ secrets.GRADLE_PLUGIN_SECRET }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          ./gradlew :gradle-plugin:publishPlugins -PappVersion="$VERSION"
