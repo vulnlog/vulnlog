@@ -5,19 +5,21 @@ on:
   push:
     branches:
       - main
-      - vl-0.9
-  schedule:
-    - cron: "0 0 * * 0"
   workflow_dispatch:
 
 permissions:
   contents: read
   pull-requests: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   pr-validation:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,8 +60,31 @@ jobs:
             chore
             ci
 
+  detect-changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      native_relevant: ${{ steps.filter.outputs.native_relevant }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect native-image-relevant changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            native_relevant:
+              - 'modules/lib/src/main/resources/META-INF/native-image/**'
+              - 'modules/lib/src/main/kotlin/dev/vulnlog/lib/parse/**'
+              - 'modules/cli-app/**'
+              - 'modules/lib/build.gradle.kts'
+              - 'gradle/libs.versions.toml'
+              - 'buildSrc/**'
+
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -70,13 +95,20 @@ jobs:
           distribution: 'temurin'
           architecture: x64
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
       - name: Check
         run: ./gradlew check
 
   native-image:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    needs: [ detect-changes ]
+    if: |
+      always() && (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'pull_request' && needs.detect-changes.outputs.native_relevant == 'true')
+      )
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,7 +119,7 @@ jobs:
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
       - name: Build native image
         run: ./gradlew :cli-app:nativeCompile --no-configuration-cache
       - name: Upload native image
@@ -100,7 +132,9 @@ jobs:
   publish-docker:
     name: Publish snapshot Docker image
     needs: [ native-image ]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       packages: write
     steps:

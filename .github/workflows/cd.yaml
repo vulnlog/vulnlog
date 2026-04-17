@@ -3,21 +3,22 @@ name: Continuous Deployment
 on:
   push:
     tags:
-      - "v0.1[0-9].*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+      - "!v0.9.*"
 
 permissions:
-  contents: write
-  discussions: write
-  packages: write
-  pages: write
-  id-token: write
+  contents: read
 
 jobs:
   generate-changelog:
     name: Generate changelog
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
     outputs:
-      release_notes_body: ${{ steps.release-notes.outputs.content }}
+      release_notes_body: ${{ steps.release-notes.outputs.content || steps.release-notes-rc.outputs.content }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,26 +28,38 @@ jobs:
         uses: orhun/git-cliff-action@v4
         with:
           config: .github/changelog.toml
-          args: --tag ${{ github.ref }} --github-repo ${{ github.repository }}
+          args: --tag ${{ github.ref_name }} --github-repo ${{ github.repository }}
         env:
           OUTPUT: CHANGELOG.md
       - name: Commit CHANGELOG.md
+        if: ${{ !contains(github.ref_name, '-') }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add CHANGELOG.md
-          git commit -m "docs(changelog): update for ${{ github.ref }}" || echo "No changes to commit"
+          git commit -m "docs(changelog): update for ${{ github.ref_name }}" || echo "No changes to commit"
           git pull --rebase origin main
           git push origin HEAD:main
       - name: Generate release notes
+        if: ${{ !contains(github.ref_name, '-') }}
         uses: orhun/git-cliff-action@v4
         id: release-notes
         with:
           config: .github/release-notes.toml
           args: --latest --github-repo ${{ github.repository }}
+      - name: Release notes for RC
+        if: ${{ contains(github.ref_name, '-') }}
+        id: release-notes-rc
+        run: |
+          {
+            echo 'content<<EOF'
+            echo '🚧 Release candidate. Final release notes will be published with the final version.'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
   build-native-images:
     name: Build native image (${{ matrix.artifact-name }})
+    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -67,7 +80,7 @@ jobs:
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
       - name: Build native image
         shell: bash
         run: |
@@ -84,6 +97,10 @@ jobs:
     name: Publish release
     needs: [ generate-changelog, build-native-images ]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      discussions: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,7 +111,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
       - name: Build JVM distribution
         run: |
           VERSION="${{ github.ref_name }}"
@@ -126,12 +143,13 @@ jobs:
             native-images/*.zip
       - name: Create a new GitHub discussion
         id: create-discussion
-        uses: abirismyname/create-discussion@main
+        if: ${{ !contains(github.ref_name, '-') }}
+        uses: abirismyname/create-discussion@c2b7c825241769dda523865ae444a879f6bbd0e0 # v2.1.0
         with:
           title: Vulnlog ${{ github.ref_name }} is released
           body: |
             Vulnlog ${{ github.ref_name }} is released!
-            
+
             For a full description of changes, take a look at our [release notes](https://github.com/vulnlog/vulnlog/releases/tag/${{ github.ref_name }}).
           category-name: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -139,7 +157,12 @@ jobs:
   deploy-pages:
     name: Deploy website and docs to GitHub Pages
     needs: [ publish-release ]
+    if: ${{ !contains(github.ref_name, '-') }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -174,6 +197,9 @@ jobs:
     name: Publish Docker image
     needs: [ build-native-images ]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -197,12 +223,13 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-            ghcr.io/${{ github.repository }}:latest
+            ${{ !contains(github.ref_name, '-') && format('ghcr.io/{0}:latest', github.repository) || '' }}
 
   publish-gradle-plugin:
     name: Publish Gradle plugin
     needs: [ generate-changelog ]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -213,7 +240,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
       - name: Publish Gradle plugin
         env:
           ORG_GRADLE_PROJECT_gradle.publish.key: ${{ secrets.GRADLE_PLUGIN_KEY }}
