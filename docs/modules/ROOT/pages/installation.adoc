@@ -7,13 +7,13 @@ Vulnlog can be installed and used in several ways.
 A container image is published to the GitHub Container Registry on every release.
 The image runs as a non-root user (UID 1000) by default.
 
-.Pull version {cli-version} Vulnlog Docker image and print the version.
+.Pull version {vulnlog-version} Vulnlog Docker image and print the version.
 [source,bash,subs="attributes"]
 ----
-docker pull ghcr.io/vulnlog/vulnlog:{cli-version}
-docker run --rm ghcr.io/vulnlog/vulnlog:{cli-version} --version
+docker pull ghcr.io/vulnlog/vulnlog:{vulnlog-version}
+docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} --version
 
-vulnlog version {cli-version}
+vulnlog version {vulnlog-version}
 ----
 
 Either use STDOUT, STDIN or Docker volumes to pass files into the container and get them out of it.
@@ -21,7 +21,7 @@ Either use STDOUT, STDIN or Docker volumes to pass files into the container and 
 .Print the output of vulnlog init to STDOUT with `--output -`.
 [source,bash,subs="attributes"]
 ----
-docker run --rm ghcr.io/vulnlog/vulnlog:{cli-version} init --organization "Demo Org" --name Demo --author Me --output -
+docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} init --organization "Demo Org" --name Demo --author Me --output -
 ---
 schemaVersion: "1"
 
@@ -38,14 +38,14 @@ vulnerabilities: []
 .Use the Docker interactive `-i` flag to keep STDIN open to pass the vulnlog.yaml file into the container.
 [source,bash,subs="attributes"]
 ----
-docker run --rm -i ghcr.io/vulnlog/vulnlog:{cli-version} validate - < vulnlog.yaml
+docker run --rm -i ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate - < vulnlog.yaml
 Validation OK
 ----
 
 .Use Docker volumes to map a local directory into the Docker container.
 [source,bash,subs="attributes"]
 ----
-docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{cli-version} suppress vulnlog.yaml
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
 Suppression file created at: /work/.snyk
 Suppression file created at: /work/.trivyignore.yaml
 ----
@@ -69,7 +69,7 @@ They start instantly and are the recommended choice for local use.
 [source,bash,subs="attributes"]
 ----
 vulnlog --version
-vulnlog version {cli-version}
+vulnlog version {vulnlog-version}
 ----
 
 == JVM Distribution

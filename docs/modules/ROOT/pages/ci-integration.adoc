@@ -5,6 +5,11 @@ The Vulnlog CLI runs on developer machines and in CI pipelines.
 A common pattern is dynamic suppression: generate suppression files in the CI pipeline just before the scanner runs, so they are always in sync with the Vulnlog file and never need to be committed.
 See xref:suppression.adoc#_static_and_dynamic_suppression[Static and Dynamic Suppression] for more details on both approaches.
 
+== Gradle
+
+For Gradle-based builds, the Vulnlog Gradle plugin wires `validate`, `suppress`, and `init` into your build.
+See xref:gradle-plugin.adoc[Gradle Plugin] for details.
+
 == GitHub Actions
 
 Example workflow using dynamic suppression -- the suppression file is generated, used by the scanner, and discarded after the pipeline completes:
@@ -24,7 +29,7 @@ jobs:
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
             -w /work \
-            ghcr.io/vulnlog/vulnlog:{cli-version} \
+            ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
             suppress --reporter trivy vulnlog.yaml -o /work
 
       - name: Ensure suppression file exists
@@ -53,7 +58,7 @@ jobs:
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
             -w /work \
-            ghcr.io/vulnlog/vulnlog:{cli-version} \
+            ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
             report vulnlog.yaml -o /work
 
       - name: Upload Vulnlog HTML report
@@ -70,14 +75,14 @@ In most CI environments (GitHub Actions, Jenkins, GitLab CI) the runner's worksp
 
 [source,bash,subs="attributes"]
 ----
-docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{cli-version} suppress vulnlog.yaml --reporter trivy
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml --reporter trivy
 ----
 
 When the CI runner requires root access, override the user at runtime:
 
 [source,bash,subs="attributes"]
 ----
-docker run --rm --user root -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{cli-version} suppress vulnlog.yaml
+docker run --rm --user root -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
 ----
 
 == Validating in CI

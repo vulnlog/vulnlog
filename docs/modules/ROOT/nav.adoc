@@ -19,5 +19,6 @@
 * Guides
 ** xref:branching-strategy.adoc[Branching Strategy]
 ** xref:ci-integration.adoc[CI/CD Integration]
+** xref:gradle-plugin.adoc[Gradle Plugin]
 ** xref:migration-guide.adoc[Migration from Kotlin DSL]
 * xref:glossary.adoc[Glossary]
