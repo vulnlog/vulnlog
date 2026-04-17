@@ -70,7 +70,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Detect native-image-relevant changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
