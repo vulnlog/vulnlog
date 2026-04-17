@@ -111,6 +111,9 @@ commit_parsers = [
 protect_breaking_commits = true
 # Exclude commits that are not matched by any commit parser.
 filter_commits = false
+# Regex to exclude git tags after applying the tag_pattern.
+# Release-candidate tags are excluded so their commits roll up into the eventual final release.
+ignore_tags = "-rc"
 # Order releases topologically instead of chronologically.
 topo_order = false
 # Order of commits in each group/release within the changelog.
