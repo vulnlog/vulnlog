@@ -1,6 +1,6 @@
 = Vulnlog Documentation
 
-Vulnlog is a developer-oriented CLI tool for tracking and documenting software vulnerability findings.
+Vulnlog is a developer-oriented CLI tool for supply chain security: tracking and documenting software vulnerability findings reported by SCA scanners.
 It uses a YAML-based format that lives in the repository alongside the code, providing a single source of truth for vulnerability management.
 
 == What Vulnlog does

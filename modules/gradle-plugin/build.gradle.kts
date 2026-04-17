@@ -53,15 +53,18 @@ gradlePlugin {
             displayName = "Vulnlog"
             description =
                 """
-                Manage vulnerability records as code. Validate Vulnlog YAML files,
-                generate suppression files for downstream scanners (Trivy, Snyk,
-                generic format), and produce self-contained HTML vulnerability reports.
+                Supply chain security as code. Manage vulnerability records next to the
+                source, validate Vulnlog YAML files, generate suppression files for
+                downstream scanners (Trivy, Snyk, generic format), and produce
+                self-contained HTML vulnerability reports.
                 """.trimIndent()
             tags =
                 listOf(
                     "vulnlog",
                     "vulnerability",
                     "security",
+                    "supply-chain",
+                    "supply-chain-security",
                     "cve",
                     "audit",
                     "suppression",

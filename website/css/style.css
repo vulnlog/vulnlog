@@ -493,6 +493,15 @@ code {
     line-height: 1.7;
 }
 
+.hero .hero-tagline {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--vl-btn-primary-bg);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
 .hero .btn-group {
     margin-top: 2rem;
 }
