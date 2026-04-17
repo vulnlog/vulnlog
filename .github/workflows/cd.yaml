@@ -216,13 +216,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compute image version
+        id: version
+        run: |
+          VERSION="${{ github.ref_name }}"
+          echo "value=${VERSION#v}" >> "$GITHUB_OUTPUT"
       - name: Build and push release image
         uses: docker/build-push-action@v6
         with:
           context: modules/cli-app
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.value }}
             ${{ !contains(github.ref_name, '-') && format('ghcr.io/{0}:latest', github.repository) || '' }}
 
   publish-gradle-plugin:
