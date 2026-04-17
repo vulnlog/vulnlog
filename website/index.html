@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
-    <meta content="Vulnlog is an open-source CLI tool for tracking software vulnerability findings in your repository. Document analysis, verdicts, and generate suppression files for your scanners."
+    <meta content="Vulnlog is an open-source CLI for supply chain security: track SCA vulnerability findings in your repository, document analysis and verdicts, and generate suppression files for your scanners."
           name="description">
     <title>Vulnlog - Track vulnerability findings in your repository</title>
     <link href="favicon.ico" rel="icon">
@@ -13,6 +13,8 @@
     }</script>
 </head>
 <body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
 
 <!-- Navbar -->
 <nav aria-label="main navigation" class="navbar container" role="navigation">
@@ -52,20 +54,22 @@
 
     <div class="navbar-menu" id="mainMenu">
         <a href="/docs/">Documentation</a>
-        <a href="https://github.com/vulnlog/vulnlog" rel="noopener" target="_blank">GitHub</a>
+        <a href="https://github.com/vulnlog/vulnlog" rel="noopener noreferrer" target="_blank">GitHub</a>
         <div class="navbar-badges">
             <img alt="GitHub Repo stars" height="20" src="https://img.shields.io/github/stars/vulnlog/vulnlog"
                  width="80">
             <img alt="GitHub Release" height="20" src="https://img.shields.io/github/v/release/vulnlog/vulnlog"
                  width="100">
         </div>
-        <button aria-label="Toggle dark mode" class="theme-toggle">
-            <svg class="icon-moon" fill="none" height="18" stroke="currentColor" stroke-linecap="round"
+        <button aria-label="Toggle dark mode" aria-pressed="false" class="theme-toggle">
+            <svg aria-hidden="true" class="icon-moon" fill="none" height="18" stroke="currentColor"
+                 stroke-linecap="round"
                  stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18"
                  xmlns="http://www.w3.org/2000/svg">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
-            <svg class="icon-sun" fill="none" height="18" stroke="currentColor" stroke-linecap="round"
+            <svg aria-hidden="true" class="icon-sun" fill="none" height="18" stroke="currentColor"
+                 stroke-linecap="round"
                  stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="18"
                  xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="5"/>
@@ -82,174 +86,217 @@
     </div>
 </nav>
 
-<!-- Hero -->
-<section class="hero">
-    <div class="container">
-        <div class="hero-inner">
-            <div class="hero-content">
-                <h1>Track vulnerability findings in your repository</h1>
-                <p>Vulnlog is an open-source CLI tool that gives your team a single source of truth for SCA
-                    vulnerability management. Document findings, record verdicts, and generate suppression files &mdash;
-                    all from YAML files in your repo.</p>
-                <div class="btn-group">
-                    <a class="btn btn-primary btn-lg" href="/docs/">Get Started</a>
-                    <a class="btn btn-secondary btn-lg" href="https://github.com/vulnlog/vulnlog" rel="noopener"
-                       target="_blank">View on GitHub</a>
+<main id="main">
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-inner">
+                <div class="hero-content">
+                    <h1>Track vulnerability findings in your repository</h1>
+                    <p class="hero-tagline">Supply chain security, as code.</p>
+                    <p>Vulnlog is an open-source CLI tool that gives teams a single source of truth for SCA
+                        vulnerability triage. Analyze findings, document verdicts and team decisions, generate
+                        suppression files and HTML reports
+                        &mdash;
+                        all from YAML files in the repository.</p>
+                    <div class="btn-group">
+                        <a class="btn btn-primary btn-lg" href="/docs/">Get Started</a>
+                        <a class="btn btn-secondary btn-lg" href="https://github.com/vulnlog/vulnlog"
+                           rel="noopener noreferrer"
+                           target="_blank">View on GitHub</a>
+                    </div>
+                </div>
+                <div class="hero-code">
+                    <div class="code-block" id="hero-example"></div>
+                    <script id="hero-example-src" type="text/plain">
+                        # $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+                        ---
+                        schemaVersion: "1"
+
+                        project:
+                          organization: Acme Corp
+                          name: Acme Web App
+                          author: Security Team
+
+                        releases:
+                          - id: 1.0.0
+                            published_at: 2026-01-15
+
+                        vulnerabilities:
+                          - id: CVE-2025-1234
+                            releases: [ 1.0.0 ]
+                            packages: [ "pkg:npm/example-lib@2.3.0" ]
+                            reports:
+                              - reporter: trivy
+                            verdict: not affected
+                            justification: vulnerable code not in execute path
+                            analysis: >
+                              The vulnerable code path is not reachable
+                              in our application.
+                    </script>
                 </div>
             </div>
-            <div class="hero-code">
-                <div class="code-block" id="hero-example"></div>
-                <script id="hero-example-src" type="text/plain">
-                    # $schema: https://vulnlog.dev/schema/vulnlog-v1.json
-                    ---
-                    schemaVersion: "1"
+        </div>
+    </section>
 
-                    project:
-                      organization: Acme Corp
-                      name: Acme Web App
-                      author: Security Team
+    <!-- How it works -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">How it works</h2>
+            <div class="grid grid-3">
+                <div class="step">
+                    <div class="step-icon">
+                        <svg aria-hidden="true" fill="none" height="48" stroke="currentColor" stroke-linecap="round"
+                             stroke-linejoin="round"
+                             stroke-width="1.5" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" x2="8" y1="13" y2="13"/>
+                            <line x1="16" x2="8" y1="17" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <h3>1. Scanner reports a finding</h3>
+                    <p>Your SCA scanner (Trivy, Snyk, etc.) detects a vulnerability in a dependency.</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <svg aria-hidden="true" fill="none" height="48" stroke="currentColor" stroke-linecap="round"
+                             stroke-linejoin="round"
+                             stroke-width="1.5" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+                        </svg>
+                    </div>
+                    <h3>2. You analyse and document</h3>
+                    <p>Record your verdict, justification, and analysis in a <code>.vl.yaml</code> file alongside your
+                        code.
+                    </p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <svg aria-hidden="true" fill="none" height="48" stroke="currentColor" stroke-linecap="round"
+                             stroke-linejoin="round"
+                             stroke-width="1.5" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                            <polyline points="4 17 10 11 4 5"/>
+                            <line x1="12" x2="20" y1="19" y2="19"/>
+                        </svg>
+                    </div>
+                    <h3>3. Generate outputs</h3>
+                    <p>Use the CLI or Gradle plugin to validate files, generate scanner suppressions, and produce HTML
+                        reports.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    releases:
-                      - id: 1.0.0
-                        published_at: 2025-01-15
+    <!-- Features -->
+    <section class="section bg-alt">
+        <div class="container">
+            <h2 class="section-title">Features</h2>
+            <div class="grid grid-3">
+                <div class="card">
+                    <h3>Git-native workflow</h3>
+                    <p>Vulnerability records live in YAML files in your repository. Review them in PRs, track changes in
+                        git
+                        history, and keep everything close to the code.</p>
+                </div>
+                <div class="card">
+                    <h3>VEX-aligned verdicts</h3>
+                    <p>Use standardised verdicts (<code>affected</code>, <code>not affected</code>,
+                        <code>risk acceptable</code>) and VEX justifications to document your analysis.</p>
+                </div>
+                <div class="card">
+                    <h3>Scanner suppression</h3>
+                    <p>Generate suppression files for Trivy, Snyk, and a generic format directly from your Vulnlog
+                        entries.
+                        Stop maintaining suppression configs by hand.</p>
+                </div>
+                <div class="card">
+                    <h3>Multi-release tracking</h3>
+                    <p>Track vulnerabilities across multiple product releases. Filter by release, tag, or reporter to
+                        get
+                        the view you need.</p>
+                </div>
+                <div class="card">
+                    <h3>Schema validation</h3>
+                    <p>Vulnlog files are validated against a <a href="/schema/vulnlog-v1.json">JSON Schema</a>. Add a
+                        <code>$schema</code>
+                        comment for IDE autocompletion, and catch errors early with <code>vulnlog validate</code> in CI.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3>Runs where you build</h3>
+                    <p>Ship a single binary with no runtime dependencies, or integrate Vulnlog as a Gradle plugin. Also
+                        available as a JVM distribution or Docker image.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-                    vulnerabilities:
-                      - id: CVE-2025-1234
-                        releases: [ 1.0.0 ]
-                        packages: [ "pkg:npm/example-lib@2.3.0" ]
-                        reports:
-                          - reporter: trivy
-                        verdict: not affected
-                        justification: vulnerable code not in execute path
-                        analysis: >
-                          The vulnerable code path is not reachable
-                          in our application.
+    <!-- CLI example -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Get started in seconds</h2>
+            <div class="install-grid">
+                <div class="install-option">
+                    <h3>Docker</h3>
+                    <div class="code-block" id="install-docker"></div>
+                    <script id="install-docker-src" type="text/plain">
+                        docker pull ghcr.io/vulnlog/vulnlog:0.12.0
+                    </script>
+                </div>
+                <div class="install-option">
+                    <h3>Gradle plugin</h3>
+                    <div class="code-block" id="install-gradle"></div>
+                    <script id="install-gradle-src" type="text/plain">
+                        plugins {
+                            id("dev.vulnlog") version "0.12.0"
+                        }
+                    </script>
+                </div>
+            </div>
+            <p class="install-more">Prefer a native binary or JVM distribution? <a href="/docs/">See all installation
+                options</a>.</p>
+            <div class="cli-example">
+                <div class="code-block" id="cli-example"></div>
+                <script id="cli-example-src" type="text/plain">
+                    # Initialize a new Vulnlog file
+                    $ vulnlog init --organization "Acme" --name "Web App" --author "Security Team" -o vulnlog.yaml
+                    Vulnlog file created at: vulnlog.yaml
+
+                    # Validate your Vulnlog files
+                    $ vulnlog validate vulnlog.yaml
+                    Validation OK
+
+                    # Generate suppression files for your scanners
+                    $ vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
+                    Suppression file created at: .trivyignore.yaml
+
+                    # Generate an HTML vulnerability report
+                    $ vulnlog report vulnlog.yaml
+                    Report written to: vulnlog-report.html
                 </script>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- How it works -->
-<section class="section">
-    <div class="container">
-        <h2 class="section-title">How it works</h2>
-        <div class="grid grid-3">
-            <div class="step">
-                <div class="step-icon">
-                    <svg fill="none" height="48" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                         stroke-width="1.5" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="16" x2="8" y1="13" y2="13"/>
-                        <line x1="16" x2="8" y1="17" y2="17"/>
-                        <polyline points="10 9 9 9 8 9"/>
-                    </svg>
-                </div>
-                <h3>1. Scanner reports a finding</h3>
-                <p>Your SCA scanner (Trivy, Snyk, etc.) detects a vulnerability in a dependency.</p>
-            </div>
-            <div class="step">
-                <div class="step-icon">
-                    <svg fill="none" height="48" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                         stroke-width="1.5" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" x2="16.65" y1="21" y2="16.65"/>
-                    </svg>
-                </div>
-                <h3>2. You analyse and document</h3>
-                <p>Record your verdict, justification, and analysis in a <code>.vl.yaml</code> file alongside your code.
-                </p>
-            </div>
-            <div class="step">
-                <div class="step-icon">
-                    <svg fill="none" height="48" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                         stroke-width="1.5" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
-                        <polyline points="4 17 10 11 4 5"/>
-                        <line x1="12" x2="20" y1="19" y2="19"/>
-                    </svg>
-                </div>
-                <h3>3. Generate outputs</h3>
-                <p>Use the CLI to validate your files and generate suppression configs for your scanners.</p>
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to streamline your vulnerability management?</h2>
+            <p>Vulnlog is free and open source under the Apache 2.0 license.</p>
+            <div class="btn-group">
+                <a class="btn btn-primary btn-lg" href="/docs/">Read the Docs</a>
+                <a class="btn btn-secondary btn-lg" href="https://github.com/vulnlog/vulnlog/releases"
+                   rel="noopener noreferrer"
+                   target="_blank">Download</a>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Features -->
-<section class="section bg-alt">
-    <div class="container">
-        <h2 class="section-title">Features</h2>
-        <div class="grid grid-3">
-            <div class="card">
-                <h3>Git-native workflow</h3>
-                <p>Vulnerability records live in YAML files in your repository. Review them in PRs, track changes in git
-                    history, and keep everything close to the code.</p>
-            </div>
-            <div class="card">
-                <h3>VEX-aligned verdicts</h3>
-                <p>Use standardised verdicts (<code>affected</code>, <code>not affected</code>,
-                    <code>risk acceptable</code>) and VEX justifications to document your analysis.</p>
-            </div>
-            <div class="card">
-                <h3>Scanner suppression</h3>
-                <p>Generate suppression files for Trivy, Snyk, and a generic format directly from your Vulnlog entries.
-                    Stop maintaining suppression configs by hand.</p>
-            </div>
-            <div class="card">
-                <h3>Multi-release tracking</h3>
-                <p>Track vulnerabilities across multiple product releases. Filter by release, tag, or reporter to get
-                    the view you need.</p>
-            </div>
-            <div class="card">
-                <h3>Schema validation</h3>
-                <p>Vulnlog files are validated against a <a href="/schema/vulnlog-v1.json">JSON Schema</a>. Add a <code>$schema</code>
-                    comment for IDE autocompletion, and catch errors early with <code>vulnlog validate</code> in CI.</p>
-            </div>
-            <div class="card">
-                <h3>Lightweight and portable</h3>
-                <p>Single binary, no runtime dependencies. Available as a native executable, JVM distribution, or Docker
-                    image.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- CLI example -->
-<section class="section">
-    <div class="container">
-        <h2 class="section-title">Get started in seconds</h2>
-        <div class="cli-example">
-            <div class="code-block" id="cli-example"></div>
-            <script id="cli-example-src" type="text/plain">
-                # Initialize a new Vulnlog file
-                $ vulnlog init --organization "Acme" --name "Web App" --author "Security Team"
-                Vulnlog file created at: vulnlog.yaml
-
-                # Validate your Vulnlog files
-                $ vulnlog validate vulnlog.yaml
-                Validation OK
-
-                # Generate suppression files for your scanners
-                $ vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
-                Suppression file created at: .trivyignore.yaml
-            </script>
-        </div>
-    </div>
-</section>
-
-<!-- CTA -->
-<section class="cta">
-    <div class="container">
-        <h2>Ready to streamline your vulnerability management?</h2>
-        <p>Vulnlog is free and open source under the Apache 2.0 license.</p>
-        <div class="btn-group">
-            <a class="btn btn-primary btn-lg" href="/docs/">Read the Docs</a>
-            <a class="btn btn-secondary btn-lg" href="https://github.com/vulnlog/vulnlog/releases" rel="noopener"
-               target="_blank">Download</a>
-        </div>
-    </div>
-</section>
+</main>
 
 <!-- Footer -->
 <footer class="footer">
@@ -334,6 +381,15 @@
     const stored = localStorage.getItem('vl-theme');
     if (stored) document.documentElement.setAttribute('data-theme', stored);
 
+    function syncThemePressed() {
+        const current = document.documentElement.getAttribute('data-theme');
+        const isDark = current === 'dark' ||
+            (!current && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        themeBtn.setAttribute('aria-pressed', String(isDark));
+    }
+
+    syncThemePressed();
+
     themeBtn.addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-theme');
         const isDark = current === 'dark' ||
@@ -341,6 +397,7 @@
         const next = isDark ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem('vl-theme', next);
+        syncThemePressed();
     });
 
     // Code highlighting
@@ -395,8 +452,14 @@
         target.innerHTML = '<code>' + highlighter(raw) + '</code>';
     }
 
+    function highlightPlain(text) {
+        return esc(text);
+    }
+
     renderExample('hero-example', 'hero-example-src', highlightYaml);
     renderExample('cli-example', 'cli-example-src', highlightCli);
+    renderExample('install-docker', 'install-docker-src', highlightPlain);
+    renderExample('install-gradle', 'install-gradle-src', highlightPlain);
 </script>
 
 </body>

@@ -1,0 +1,114 @@
+= Migration Guide: Kotlin DSL to YAML
+
+Vulnlog 0.10.0 replaced the Kotlin custom scripting DSL (`.vl.kts` files) with a YAML-based format (`vulnlog.yaml` files).
+This guide explains what changed, why, and how to migrate.
+
+For the full background on this decision, see the https://github.com/vulnlog/vulnlog/discussions/57[discussion on GitHub].
+
+== Why the Format Changed
+
+The Kotlin DSL approach used in Vulnlog 0.9.4 and earlier had several limitations:
+
+JVM dependency::
+The Kotlin DSL required a Java Virtual Machine, excluding teams working with Go, Rust, Python, or other ecosystems.
+
+Experimental IDE support::
+Kotlin Custom Scripting remains experimental with limited priority from JetBrains.
+Autocompletion and error highlighting were unreliable.
+
+Limited expressiveness::
+Complex vulnerability scenarios were difficult to express in the DSL, and old vulnerabilities could not easily be archived within a growing file.
+
+The YAML-based format addresses these issues:
+
+- No JVM or Gradle required -- the CLI is distributed as a native binary.
+- YAML with JSON Schema validation provides IDE support (autocompletion, inline errors, and documentation) in any editor that speaks JSON Schema.
+- The format is language-agnostic and accessible to any team regardless of their primary programming language.
+
+== What Changed
+
+[cols="1,1,1"]
+|===
+| | Vulnlog 0.9.4 (Kotlin DSL) | Vulnlog 0.10.0+ (YAML)
+
+| File extension
+| `.vl.kts`
+| `vulnlog.yaml` / `.vl.yaml`
+
+| File format
+| Kotlin custom scripting DSL
+| YAML
+
+| IDE support
+| Experimental, requires the Vulnlog DSL JAR on the compile classpath
+| JSON Schema (any YAML-capable editor)
+
+| Runtime
+| JVM required
+| Native binary (no runtime needed)
+
+| Branch strategy
+| Single file on main branch covering one or multiple release branches
+| One file per release branch (see below)
+|===
+
+== From Single File to One File Per Branch
+
+The Vulnlog Kotlin DSL used a single file on the main branch to track all release branches.
+The YAML format uses one file per release branch (see xref:branching-strategy.adoc[Branching Strategy] for the available strategies).
+
+This is the most significant workflow change.
+
+=== Why one file per branch?
+
+Conflicting verdicts::
+The same CVE can have different verdicts on different branches.
+A vulnerability might be `not affected` on version 3.x (where the vulnerable code path was refactored) but `affected` on version 2.x (where it is still present).
+A single file would need per-branch verdict structures, making entries more complex and harder to read.
+Separate files handle this naturally -- each file has its own verdict.
+
+Clean archiving::
+When a release branch reaches end of life, its Vulnlog file is done.
+There is no need to prune old entries from a growing file or mark them as archived.
+The file's lifecycle matches the branch's lifecycle.
+With a single file, old entries accumulate over time, which can impact CLI performance and make the file harder to navigate.
+
+Independent lifecycles::
+Branches move at different speeds.
+A maintenance branch might receive one patch per quarter, while the active development branch gets weekly releases.
+Separate files avoid merge contention and let each branch evolve independently.
+
+=== What about duplication?
+
+When the same vulnerability appears on multiple branches with the same verdict, the entry is duplicated across files.
+The duplicated parts are primarily the findings (CVE ID, packages, reporter) -- the same kind of duplication when each branch has its own dependency- or lock-files with slightly different versions.
+The analysis and resolution may legitimately differ per branch, which is where separate files bring their value in.
+
+// TODO: When `vulnlog copy` is available, add: The `vulnlog copy` command
+// reduces the effort of propagating identical entries across files to a one-liner.
+
+== Migration Steps
+
+There is no automated migration tool to convert `.vl.kts` files to `vulnlog.yaml` format.
+Entries must be recreated manually.
+
+. Install Vulnlog 0.10.0 or later (see xref:installation.adoc[Installation]).
+. For each release branch, create a new Vulnlog file:
++
+[source,bash]
+----
+vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team" -o my-app.vl.yaml
+----
+. Add the releases for that branch to the `releases` section.
+. Recreate the vulnerability entries from the old `.vl.kts` file, translating them to the YAML format.
+Refer to the xref:quickstart.adoc[Quickstart] for common workflow examples.
+. Validate the new file:
++
+[source,bash]
+----
+vulnlog validate my-app.vl.yaml
+----
+. Remove the old `.vl.kts` file once the migration is complete.
+
+TIP: Starting with the most active release branch is recommended.
+Remaining branches can be migrated incrementally.

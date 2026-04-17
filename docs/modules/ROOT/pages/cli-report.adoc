@@ -1,0 +1,48 @@
+= vulnlog report
+
+Generates an HTML report from a Vulnlog file.
+
+[source]
+----
+vulnlog report <file> [filter flags] [--format html] [-o <path>]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <path>`
+| Output file path. Defaults to vulnlog-report.html in the current directory.
+
+| `--reporter <value>`
+| Filter on reporter.
+
+| `--release <text>`
+| Filter on release, include all releases up to and including that release.
+
+| `--tag <text>`
+| Filter on tags. Use multiple times to filter on multiple tags.
+
+|===
+
+.Generate an HTML report
+[source]
+----
+vulnlog report full-example.vl.yaml
+Report written to: vulnlog-report.html
+----
+
+== Example
+
+To generate an HTML report using the Vulnlog Docker container:
+
+[source,subs="attributes"]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report vulnlog.yaml --output report.html
+Report written to: /work/report.html
+----
+
+This renders an example Vulnlog HTML report:
+
+.Example Vulnlog HTML Report
+image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]

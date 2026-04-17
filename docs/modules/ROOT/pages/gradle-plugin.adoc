@@ -1,0 +1,195 @@
+= Gradle Plugin
+
+The Vulnlog Gradle plugin integrates Vulnlog commands into your Gradle build.
+
+== Installation
+
+Apply the plugin in your `build.gradle.kts`:
+
+[source,kotlin,subs="attributes"]
+----
+plugins {
+    id("dev.vulnlog") version "{vulnlog-version}"
+}
+----
+
+== Configuration
+
+The plugin is configured via the `vulnlog` extension block.
+The top-level `files` property is shared across tasks; per-task settings live in nested blocks documented under each task.
+
+[source,kotlin]
+----
+vulnlog {
+    files.from("vulnlog.yaml", "other.vl.yaml")
+}
+----
+
+[cols="2,3"]
+|===
+| Property | Description
+
+| `files`
+| File collection of Vulnlog YAML files to operate on. Used by all tasks except `vulnlogInit`.
+|===
+
+== Tasks
+
+All tasks are registered in the `vulnlog` task group.
+
+=== `vulnlogInit`
+
+Scaffolds a minimal Vulnlog file.
+See xref:cli-init.adoc[`vulnlog init`] for the generated structure.
+
+`vulnlogInit` is configured via project properties (`-P`) since it is a one-shot bootstrapping command.
+
+[cols="2,1,3"]
+|===
+| Property | Required | Description
+
+| `vulnlog.organization`
+| Yes
+| Organization name for the Vulnlog project.
+
+| `vulnlog.name`
+| Yes
+| Project name.
+
+| `vulnlog.author`
+| Yes
+| Author name.
+
+| `vulnlog.output`
+| Yes
+| Output file path, relative to the project directory.
+|===
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogInit \
+  -Pvulnlog.organization="Acme Corp" \
+  -Pvulnlog.name="Widget" \
+  -Pvulnlog.author="Alice" \
+  -Pvulnlog.output=vulnlog.yaml
+----
+
+=== `vulnlogValidate`
+
+Validates the configured Vulnlog files.
+See xref:cli-validate.adoc[`vulnlog validate`] for validation rules.
+
+[source,kotlin]
+----
+vulnlog {
+    validate {
+        strict = true  // optional
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `strict`
+| `false`
+| Treats warnings as errors and fails the build.
+|===
+
+The task uses Gradle's up-to-date checking via `@InputFiles` and `@Input`, so it is skipped when neither the files nor `strict` have changed.
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogValidate
+----
+
+=== `vulnlogSuppress`
+
+Generates suppression files for downstream scanners.
+See xref:cli-suppress.adoc[`vulnlog suppress`] for supported reporters.
+
+[source,kotlin]
+----
+vulnlog {
+    suppress {
+        outputDir = layout.projectDirectory.dir("suppressions")  // optional
+        reporter = "trivy"                                       // optional
+        release = "1.0.0"                                        // optional
+        tags = setOf("frontend")                                 // optional
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `outputDir`
+| `build/vulnlog/suppressions/`
+| Directory where suppression files are written.
+
+| `reporter`
+| All reporters
+| Filter on reporter.
+
+| `release`
+| All releases
+| Filter on release, include all releases up to and including that release.
+
+| `tags`
+| All tags
+| Filter on tags.
+|===
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogSuppress
+----
+
+=== `vulnlogReport`
+
+Generates an HTML report from the configured Vulnlog file.
+See xref:cli-report.adoc[`vulnlog report`] for details.
+
+[source,kotlin]
+----
+vulnlog {
+    report {
+        outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-report.html"))  // optional
+        reporter = "trivy"                                                         // optional
+        release = "1.0.0"                                                          // optional
+        tags = setOf("frontend")                                                   // optional
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `outputFile`
+| `build/vulnlog/vulnlog-report.html`
+| File where the HTML report is written.
+
+| `reporter`
+| All reporters
+| Filter on reporter.
+
+| `release`
+| All releases
+| Filter on release, include all releases up to and including that release.
+
+| `tags`
+| All tags
+| Filter on tags.
+|===
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogReport
+----

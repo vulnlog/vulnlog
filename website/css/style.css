@@ -167,6 +167,36 @@ a:hover {
     color: var(--vl-link-hover);
 }
 
+:focus-visible {
+    outline: 2px solid var(--vl-link);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+.btn:focus-visible {
+    outline-offset: 3px;
+}
+
+/* ===== Skip link ===== */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 0.5rem;
+    background: var(--vl-btn-primary-bg);
+    color: var(--vl-btn-primary-text);
+    padding: 0.6rem 1rem;
+    border-radius: 0 0 6px 6px;
+    font-weight: 600;
+    z-index: 100;
+    transition: top 0.15s;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0;
+    color: var(--vl-btn-primary-text);
+}
+
 code {
     font-family: var(--vl-font-mono);
     font-size: 0.875em;
@@ -317,11 +347,15 @@ code {
 .navbar-toggle {
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 5px;
     background: none;
     border: none;
     cursor: pointer;
-    padding: 4px;
+    padding: 10px;
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .navbar-toggle span {
@@ -373,7 +407,9 @@ code {
     border: 1px solid var(--vl-border);
     border-radius: 6px;
     cursor: pointer;
-    padding: 0.35rem;
+    padding: 0.55rem;
+    min-width: 40px;
+    min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -455,6 +491,15 @@ code {
     font-size: 1.1rem;
     color: var(--vl-text-secondary);
     line-height: 1.7;
+}
+
+.hero .hero-tagline {
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--vl-btn-primary-bg);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
 }
 
 .hero .btn-group {
@@ -593,6 +638,44 @@ code {
 /* ===== Features section ===== */
 .bg-alt {
     background: var(--vl-bg-alt);
+}
+
+/* ===== Install options ===== */
+.install-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    max-width: 720px;
+    margin: 0 auto 1rem;
+}
+
+@media (min-width: 640px) {
+    .install-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.install-option h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--vl-text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.install-option .code-block {
+    padding: 0.9rem 1.1rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.install-more {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--vl-text-secondary);
+    margin: 0 auto 2rem;
+    max-width: 720px;
 }
 
 /* ===== CLI example ===== */

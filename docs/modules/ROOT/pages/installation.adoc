@@ -1,6 +1,98 @@
 = Installation
 
-// TODO: Document installation methods
-// - Docker image (ghcr.io)
-// - Native binary (GraalVM)
-// - Building from source
+Vulnlog can be installed and used in several ways.
+
+== Docker
+
+A container image is published to the GitHub Container Registry on every release.
+The image runs as a non-root user (UID 1000) by default.
+
+.Pull version {vulnlog-version} Vulnlog Docker image and print the version.
+[source,bash,subs="attributes"]
+----
+docker pull ghcr.io/vulnlog/vulnlog:{vulnlog-version}
+docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} --version
+
+vulnlog version {vulnlog-version}
+----
+
+Either use STDOUT, STDIN or Docker volumes to pass files into the container and get them out of it.
+
+.Print the output of vulnlog init to STDOUT with `--output -`.
+[source,bash,subs="attributes"]
+----
+docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} init --organization "Demo Org" --name Demo --author Me --output -
+---
+schemaVersion: "1"
+
+project:
+  organization: "Demo Org"
+  name: "Demo"
+  author: "Me"
+
+releases: []
+
+vulnerabilities: []
+----
+
+.Use the Docker interactive `-i` flag to keep STDIN open to pass the vulnlog.yaml file into the container.
+[source,bash,subs="attributes"]
+----
+docker run --rm -i ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate - < vulnlog.yaml
+Validation OK
+----
+
+.Use Docker volumes to map a local directory into the Docker container.
+[source,bash,subs="attributes"]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
+Suppression file created at: /work/.snyk
+Suppression file created at: /work/.trivyignore.yaml
+----
+
+[NOTE]
+====
+Not all Vulnlog CLI commands support the same set of input (STDIN) and output (STDOUT) capabilities.
+Check the corresponding command documentations for more details.
+====
+
+== Native Binary
+
+Standalone native binaries are built with GraalVM and require no Java runtime.
+They start instantly and are the recommended choice for local use.
+
+. Download the latest Vulnlog archive from https://github.com/vulnlog/vulnlog/releases[releases page].
+. Extract the archive.
+. Move the `vulnlog` binary to a directory on `PATH`, for example `/usr/local/bin`.
+. Verify the installation:
++
+[source,bash,subs="attributes"]
+----
+vulnlog --version
+vulnlog version {vulnlog-version}
+----
+
+== JVM Distribution
+
+A platform-independent JVM distribution is also published on the https://github.com/vulnlog/vulnlog/releases[releases page].
+It requires Java 21 or later to be installed.
+
+== Build from Source
+
+Clone the repository and build with Gradle:
+
+[source,bash]
+----
+git clone https://github.com/vulnlog/vulnlog.git
+cd vulnlog
+./gradlew installDist
+----
+
+The resulting distribution is placed in `build/install/vulnlog`.
+
+// Other ideas:
+// - Snap package (Linux)
+// - Homebrew formula (macOS / Linux)
+// - Scoop or Winget (Windows)
+// - APT / RPM repositories
+// - Nix package

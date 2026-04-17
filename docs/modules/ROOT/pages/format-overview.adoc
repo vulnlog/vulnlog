@@ -1,7 +1,83 @@
 = Vulnlog YAML Format
 
-// TODO: High-level overview of the *.vl.yaml format
-// - Schema version
-// - File naming conventions (vulnlog.yaml, *.vl.yaml, *.vl.yml)
-// - Top-level structure: project, tags, releases, vulnerabilities
-// - JSON Schema validation
+A Vulnlog file is a YAML-based format for tracking, analyzing, and managing software vulnerabilities reported by one or multiple SCA scanners.
+Each Vulnlog file is scoped to a single release branch.
+The lifecycle of the file follows the lifecycle of the release branch -- when a release branch reaches end of life, its Vulnlog file becomes a natural historical archive.
+
+A Vulnlog file serves as a human-authored decision ledger.
+From this file, the Vulnlog CLI generates machine-readable outputs such as SCA scanner suppression files and HTML reports.
+
+== Design Principles
+
+Compact and readable:: The format prioritizes ease of writing and reading over exhaustive detail.
+The common case -- reporting a finding and recording a verdict -- should require minimal boilerplate.
+IDE-supported:: A JSON Schema provides validation, autocompletion, and inline documentation in editors.
+Git-friendly:: The file is designed for version control.
+Changes are tracked through Git history rather than in-file audit trails.
+
+== File Name Convention
+
+Vulnlog files use the naming convention `<project-name>.vl.yaml`.
+The `.vl.` infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
+Simple projects may use `vulnlog.yaml` (see also xref:branching-strategy.adoc[]).
+
+The file location within the repository is not prescribed.
+The CLI requires an explicit file path as a positional argument; it does not search for files automatically.
+
+== Schema Reference
+
+To enable IDE validation and autocompletion, add a schema reference comment as the first line:
+
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+----
+
+The path can point to a local bundled schema file or to the published JSON schema URL.
+
+== File Structure
+
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+schemaVersion: "1"
+
+project:
+  # Project metadata
+
+tags:
+  # Tag definitions (optional)
+
+releases:
+  # Release definitions (chronological order, oldest first)
+
+vulnerabilities:
+  # Vulnerability entries (newest first)
+----
+
+Required top-level sections: `schemaVersion`, `project`, `releases`, `vulnerabilities`.
+Optional top-level sections: `tags`.
+
+`vulnerabilities` may be an empty array.
+
+=== Ordering Rules
+
+Releases:: Must be in chronological order (oldest first).
+This ordering has functional significance -- the CLI uses array position to resolve `--release` range filtering.
+A release at position N includes all releases at positions 0 through N.
+
+Vulnerabilities:: Should be in reverse chronological order (newest first).
+The most recent findings appear at the top of the file for immediate visibility.
+This is a readability convention enforced by the linter, with no functional impact on CLI output.
+
+=== Unique Identifiers
+
+All vulnerability identifiers must be unique within a Vulnlog file.
+No two vulnerability entries may share the same `id`.
+An `id` of one entry must not appear in the `aliases` of another entry, and vice versa.
+This ensures unambiguous lookup by any identifier.
+
+== Branching Strategy
+
+For projects with a single release line, a single `vulnlog.yaml` file is sufficient.
+For projects maintaining multiple release branches in parallel, see the xref:branching-strategy.adoc[Branching Strategy] guide for detailed options and trade-offs.

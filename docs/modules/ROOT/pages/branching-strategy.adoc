@@ -1,0 +1,184 @@
+= Branching Strategy
+
+The organization of Vulnlog files depends on how many release branches a project maintains.
+Vulnlog supports three strategies: **single-file**, **multi-file**, and **per-branch**.
+
+[[single-file]]
+== Single-File Strategy
+
+The simplest setup.
+The project has one continuing line of releases without parallel branches.
+New versions are added linearly.
+
+A single `vulnlog.yaml` file in the repository is sufficient:
+
+[source]
+----
+my-project/
+  vulnlog.yaml
+----
+
+Releases are listed in chronological order inside the file:
+
+[source,yaml]
+----
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+  - id: 1.1.0
+    published_at: 2026-03-01
+  - id: 1.2.0
+----
+
+.One Vulnlog file on the main branch covering the latest release and all the previous releases.
+----
+main  o---o---o---o---o  <- vulnlog.yaml
+      1.0     1.1   1.2
+----
+
+This strategy works well when:
+
+- Only the latest release is supported.
+- Older versions are not patched independently.
+- Minimal setup overhead is desired.
+
+[[multi-file]]
+== Multi-File Strategy
+
+When a project maintains multiple release branches in parallel -- for example, shipping security patches to both version 1.x and 2.x simultaneously -- a single file is no longer sufficient.
+Each release branch has its own lifecycle and may have different vulnerability findings or resolutions.
+
+The multi-file strategy keeps one Vulnlog file per release branch, all on the `main` (or `master`) branch:
+
+[source]
+----
+my-project/
+  my-project-1.vl.yaml    # Release branch 1.x
+  my-project-2.vl.yaml    # Release branch 2.x
+  my-project-3.vl.yaml    # Release branch 3.x
+----
+
+Each file is self-contained and tracks the releases for one branch:
+
+[source,yaml]
+----
+# my-project-2.vl.yaml
+releases:
+  - id: 2.0.0
+    published_at: 2026-01-15
+  - id: 2.0.1
+    published_at: 2026-02-20
+  - id: 2.1.0
+----
+
+.Multiple Vulnlog files on the main branch covering multiple releases.
+----
+main         o---o---o---o---o  <- prod-3.vl.yaml, prod-2.vl.yaml, prod-1.vl.yaml
+            /        3.0   3.1
+v2     o---o---o
+      /    2.0   2.1
+v1   o---o
+     1.0   1.1
+----
+
+All Vulnlog files live on the main branch.
+Changes to vulnerability analysis for any release branch are committed there.
+
+// TODO: When `vulnlog copy` is available, mention it here as a way to propagate
+// entries across multiple files without manual duplication.
+
+Advantages::
+* All vulnerability analysis lives in a single Git branch -- updating multiple files requires only one commit with no cherry-picking.
+* Suppression files for all release branches can be generated from the main branch.
+* Reviewing the overall security posture across all branches is straightforward.
+
+Disadvantages::
+* Bringing Vulnlog artifacts such as suppression files to other branches and their CI pipelines requires additional steps.
+* The vulnerability analysis is not co-located with the branch-specific code.
+* File names need a naming convention to distinguish branches.
+* File format migrations are more likely when new Vulnlog CLI versions are released.
+
+[[per-branch]]
+== Per-Branch Strategy
+
+The per-branch strategy maintains a `vulnlog.yaml` file directly on each release branch:
+
+....
+main         o---o---o---o---o   <- vulnlog.yaml
+            /        3.0   3.1
+v2     o---o---o                 <- vulnlog.yaml
+      /    2.0   2.1
+v1   o---o                       <- vulnlog.yaml
+     1.0   1.1
+....
+
+Each branch carries its own `vulnlog.yaml` with the releases specific to that branch.
+
+Advantages::
+* The vulnerability analysis lives next to the code it describes.
+* Each branch is fully self-contained.
+* Simple file naming -- always `vulnlog.yaml`.
+* Older branches can stay on older Vulnlog versions, with no need to migrate to newer formats.
+
+Disadvantages::
+* Propagating the same analysis to multiple branches requires cherry-picking or merging commits.
+* Reviewing the overall security posture requires checking out multiple branches.
+
+=== Git Worktrees
+
+When using the xref:branching-strategy.adoc#per-branch[per-branch] strategy, https://git-scm.com/docs/git-worktree[Git worktrees] simplify working with multiple branches simultaneously.
+Instead of switching branches, worktrees allow multiple branches to be checked out in separate directories:
+
+[source,bash]
+----
+# Create worktrees for each release branch
+git worktree add ../my-project-v1 release/1.x
+git worktree add ../my-project-v2 release/2.x
+----
+
+This provides direct file system access to each branch's `vulnlog.yaml`, making it straightforward to compare and update entries across branches.
+
+== Combining Strategies
+
+The multi-file and per-branch strategies can coexist.
+For example, multi-file can be used for actively maintained release branches and per-branch for a legacy branch that is rarely updated.
+
+== Choosing a Strategy
+
+[cols="1,1,1,1"]
+|===
+| | Single-File | Multi-File | Per-Branch
+
+| Parallel release support
+| No
+| Yes
+| Yes
+
+| File count
+| 1
+| 1 per release branch (on main)
+| 1 per release branch (on each branch)
+
+| Commits to update analysis
+| 1
+| 1
+| 1 per branch (cherry-pick)
+
+| Suppression generation
+| From main
+| From main (all branches)
+| From each branch separately
+
+| Analysis co-located with code
+| Yes
+| No
+| Yes
+
+| Recommended for
+| Single active version
+| Multiple versions, centralized management
+| Multiple versions, branch autonomy
+|===
+
+The <<single-file,single-file>> strategy is the recommended default.
+It can be migrated to a <<multi-file,multi-file>> setup later by splitting the file when a second release branch is introduced.
