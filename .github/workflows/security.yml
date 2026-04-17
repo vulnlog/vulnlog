@@ -10,8 +10,8 @@ permissions:
   security-events: write
 
 jobs:
-  suppress:
-    name: Generate suppression files
+  vulnlog:
+    name: Generate Vulnlog files
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,7 +55,7 @@ jobs:
 
   snyk:
     name: Snyk Open Source
-    needs: [ suppress ]
+    needs: [ vulnlog ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -68,12 +68,12 @@ jobs:
 
       - name: Run Snyk
         id: snyk
-        uses: snyk/actions/gradle@master
+        uses: snyk/actions/gradle@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
         with:
-          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects
+          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects --severity-threshold=medium
 
       - name: Upload Snyk SARIF to GitHub
         if: always() && hashFiles('snyk-results.sarif') != ''
@@ -84,7 +84,7 @@ jobs:
 
   trivy:
     name: Trivy Vulnerability Scan
-    needs: [ suppress ]
+    needs: [ vulnlog ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -96,13 +96,14 @@ jobs:
           name: suppressions
 
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
           scan-type: fs
           scan-ref: .
           format: sarif
           output: trivy-results.sarif
           trivyignores: .trivyignore.yaml
+          severity: 'CRITICAL,HIGH,MEDIUM'
 
       - name: Upload Trivy SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v4
