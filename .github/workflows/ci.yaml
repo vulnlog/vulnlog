@@ -123,7 +123,7 @@ jobs:
       - name: Build native image
         run: ./gradlew :cli-app:nativeCompile --no-configuration-cache
       - name: Upload native image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vulnlog-linux-amd64
           path: modules/cli-app/build/native/nativeCompile/vulnlog
@@ -141,7 +141,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Download Linux native image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: vulnlog-linux-amd64
           path: modules/cli-app/build/native/nativeCompile
