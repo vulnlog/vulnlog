@@ -80,7 +80,7 @@ jobs:
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Build native image
         shell: bash
         run: |
@@ -111,7 +111,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Build JVM distribution
         run: |
           VERSION="${{ github.ref_name }}"
@@ -245,7 +245,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Publish Gradle plugin
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PLUGIN_KEY }}
