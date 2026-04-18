@@ -48,7 +48,7 @@ private val v1Rules =
 private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
     val usedReleases = file.vulnerabilities.flatMap { vulnerability -> vulnerability.releases }.toSet()
     val usedReleasesInResolutions =
-        file.vulnerabilities.map { vulnerability -> vulnerability?.resolution?.release }.toSet()
+        file.vulnerabilities.map { vulnerability -> vulnerability.resolution?.release }.toSet()
     val allReferencedReleases = usedReleases.union(usedReleasesInResolutions)
     return file.releases
         .filter { release -> release.id !in allReferencedReleases }

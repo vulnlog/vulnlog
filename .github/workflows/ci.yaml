@@ -95,7 +95,7 @@ jobs:
           distribution: 'temurin'
           architecture: x64
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Check
         run: ./gradlew check
 
@@ -119,7 +119,7 @@ jobs:
           distribution: 'graalvm'
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
       - name: Build native image
         run: ./gradlew :cli-app:nativeCompile --no-configuration-cache
       - name: Upload native image
