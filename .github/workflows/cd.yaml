@@ -88,7 +88,7 @@ jobs:
           VERSION="${VERSION#v}"
           ./gradlew :cli-app:nativeCompile --no-configuration-cache -PappVersion="$VERSION"
       - name: Upload native image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact-name }}
           path: modules/cli-app/build/native/nativeCompile/vulnlog${{ runner.os == 'Windows' && '.exe' || '' }}
@@ -118,7 +118,7 @@ jobs:
           VERSION="${VERSION#v}"
           ./gradlew clean :cli-app:distZip -PappVersion="$VERSION"
       - name: Download native images
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: vulnlog-*
           path: native-images
@@ -186,12 +186,12 @@ jobs:
           cp schema/*.json _site/schema/
           echo 'vulnlog.dev' > _site/CNAME
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
   publish-docker:
     name: Publish Docker image
@@ -204,7 +204,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Download Linux native image
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: vulnlog-linux-amd64
           path: modules/cli-app/build/native/nativeCompile

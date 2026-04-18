@@ -31,7 +31,7 @@ jobs:
           [ -f .trivyignore.yaml ] || touch .trivyignore.yaml
 
       - name: Upload suppression files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: suppressions
           include-hidden-files: true
@@ -48,7 +48,7 @@ jobs:
             report vulnlog.yaml
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports
           path: vulnlog-report.html
@@ -62,7 +62,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download suppression files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: suppressions
 
@@ -91,7 +91,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download suppression files
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: suppressions
 
