@@ -2,7 +2,50 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vulnlog.dev/schemas/v1/vulnlog.json",
   "title": "Vulnlog",
-  "description": "Vulnlog YAML format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners. Each file is scoped to a single release branch. See https://vulnlog.dev for the full specification",
+  "description": "Vulnlog YAML format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners. Each file is scoped to a single release branch and serves as a human-authored decision ledger from which the CLI generates scanner suppression files and HTML reports. See https://vulnlog.dev for the full specification",
+  "examples": [
+    {
+      "schemaVersion": "1",
+      "project": {
+        "organization": "Example Org",
+        "name": "demo-project",
+        "author": "Security Team",
+        "contact": "security@example.org"
+      },
+      "tags": [
+        {
+          "id": "container",
+          "description": "Shipped as Docker container"
+        }
+      ],
+      "releases": [
+        {
+          "id": "1.0.0",
+          "published_at": "2026-01-15"
+        },
+        {
+          "id": "1.1.0"
+        }
+      ],
+      "vulnerabilities": [
+        {
+          "id": "CVE-2026-5678",
+          "releases": [ "1.0.0" ],
+          "packages": [ "pkg:npm/image-lib@3.1.0" ],
+          "reports": [
+            {
+              "reporter": "trivy",
+              "at": "2026-02-01"
+            }
+          ],
+          "analysis": "The vulnerable code path requires SVG input. Our application only accepts PNG and JPEG.",
+          "analyzed_at": "2026-02-02",
+          "verdict": "not affected",
+          "justification": "vulnerable code not in execute path"
+        }
+      ]
+    }
+  ],
   "type": "object",
   "required": [ "schemaVersion", "project", "releases", "vulnerabilities" ],
   "properties": {
@@ -14,7 +57,7 @@
       "$ref": "defs/project.json"
     },
     "tags": {
-      "description": "Tags for categorizing and scoping vulnerability entries",
+      "description": "Tag definitions for categorizing and scoping vulnerability entries. Optional",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -22,7 +65,7 @@
       }
     },
     "releases": {
-      "description": "Releases tracked in this Vulnlog file. Must be in chronological order (oldest first)",
+      "description": "Releases tracked in this Vulnlog file. Must be in chronological order (oldest first). Array position is used by the CLI to resolve '--release' range filtering",
       "type": "array",
       "minItems": 1,
       "items": {
@@ -30,7 +73,7 @@
       }
     },
     "vulnerabilities": {
-      "description": "Vulnerability entries. May be empty. Newest entries first",
+      "description": "Vulnerability entries. May be empty. Convention: newest entries first (enforced by the linter, no functional impact)",
       "type": "array",
       "items": {
         "$ref": "defs/vulnerability.json"

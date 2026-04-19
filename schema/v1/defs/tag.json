@@ -2,17 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vulnlog.dev/schemas/v1/defs/tag.json",
   "title": "Vulnlog Tag",
-  "description": "A tag for categorizing and scoping vulnerability entries",
+  "description": "A tag for categorizing and scoping vulnerability entries. Tags can represent customer-facing deliverables ('binary', 'container', 'sdk'), internal usage contexts ('build-dep', 'test-infra'), or any other team-defined categorization",
+  "examples": [
+    {
+      "id": "container",
+      "description": "Shipped as Docker container"
+    }
+  ],
   "type": "object",
   "required": [ "id" ],
   "properties": {
     "id": {
       "description": "Unique identifier for the tag. Referenced by vulnerability entries and release purl entries",
+      "examples": [ "binary", "container", "build-dep", "dev dependency" ],
       "type": "string",
       "minLength": 1
     },
     "description": {
       "description": "Human-readable description of what this tag represents",
+      "examples": [
+        "Shipped as Docker container",
+        "Build-time dependency only"
+      ],
       "type": "string"
     }
   },

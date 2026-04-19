@@ -6,44 +6,125 @@
   "$defs": {
     "date": {
       "description": "Date in ISO 8601 format (YYYY-MM-DD)",
+      "examples": [ "2026-04-07" ],
       "type": "string",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
     "purl": {
-      "description": "Package URL (purl) as defined by the purl specification (https://github.com/package-url/purl-spec)",
+      "description": "Package URL (purl) identifying a package. Follows the format 'pkg:<type>/<namespace>/<name>@<version>'. See https://github.com/package-url/purl-spec",
+      "examples": [
+        "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+        "pkg:npm/image-lib@3.1.0",
+        "pkg:docker/demo-project@8.1.1",
+        "pkg:golang/golang.org/x/net@0.17.0",
+        "pkg:pypi/requests@2.28.0",
+        "pkg:generic/demo-project@8.1.1"
+      ],
       "type": "string",
       "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/"
     },
     "verdict": {
-      "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation",
-      "enum": [ "affected", "not affected", "risk acceptable" ]
+      "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation. 'affected' and 'risk acceptable' require a severity; 'not affected' requires a justification",
+      "oneOf": [
+        {
+          "description": "The vulnerability impacts this release and remediation is expected. Requires 'severity'",
+          "const": "affected"
+        },
+        {
+          "description": "The vulnerability is present in a dependency but does not impact this release. Requires 'justification'. Automatically included in generated suppression files",
+          "const": "not affected"
+        },
+        {
+          "description": "The vulnerability impacts this release but the risk has been assessed and accepted without remediation. Requires 'severity' and an explicit 'suppress' block to suppress the finding",
+          "const": "risk acceptable"
+        }
+      ]
     },
     "severity": {
-      "description": "Severity assessment of a vulnerability",
-      "enum": [ "critical", "high", "medium", "low" ]
+      "description": "Severity assessment of a vulnerability. Required when verdict is 'affected' or 'risk acceptable'",
+      "oneOf": [
+        {
+          "description": "Immediate action required. Exploitable with severe impact",
+          "const": "critical"
+        },
+        {
+          "description": "Action required. Significant impact if exploited",
+          "const": "high"
+        },
+        {
+          "description": "Action recommended. Moderate impact",
+          "const": "medium"
+        },
+        {
+          "description": "Low priority. Minimal impact or difficult to exploit",
+          "const": "low"
+        }
+      ]
     },
     "justification": {
-      "description": "OpenVEX justification for why a vulnerability does not affect the project. Required when verdict is 'not affected'",
-      "enum": [
-        "component not present",
-        "vulnerable code not present",
-        "vulnerable code not in execute path",
-        "vulnerable code cannot be controlled by adversary",
-        "inline mitigations already exist"
+      "description": "Explains why a vulnerability does not affect this release. Values align with the OpenVEX justification vocabulary. Required when verdict is 'not affected'",
+      "oneOf": [
+        {
+          "description": "The vulnerable component is not included in the deliverable",
+          "const": "component not present"
+        },
+        {
+          "description": "The vulnerable code is present but the specific vulnerable function or code path is not included",
+          "const": "vulnerable code not present"
+        },
+        {
+          "description": "The vulnerable code is present but cannot be reached during execution",
+          "const": "vulnerable code not in execute path"
+        },
+        {
+          "description": "The vulnerable code is reachable but cannot be triggered by an attacker",
+          "const": "vulnerable code cannot be controlled by adversary"
+        },
+        {
+          "description": "The vulnerability is mitigated by existing controls (e.g., WAF, input validation)",
+          "const": "inline mitigations already exist"
+        }
       ]
     },
     "reporterType": {
-      "description": "The scanner or source type. Determines the suppression file format for reporters with suppression support",
-      "enum": [
-        "trivy",
-        "snyk",
-        "dependency-check",
-        "grype",
-        "cargo-audit",
-        "semgrep",
-        "npm-audit",
-        "github-advisory",
-        "other"
+      "description": "The scanner or source type that reported the vulnerability. Determines the suppression file format for reporters with suppression support",
+      "oneOf": [
+        {
+          "description": "Trivy. Suppression output: .trivyignore.yaml",
+          "const": "trivy"
+        },
+        {
+          "description": "Snyk. Suppression output: .snyk",
+          "const": "snyk"
+        },
+        {
+          "description": "OWASP Dependency Check. Suppression support planned",
+          "const": "dependency-check"
+        },
+        {
+          "description": "Grype. Suppression support planned",
+          "const": "grype"
+        },
+        {
+          "description": "Cargo Audit (Rust). Suppression support planned",
+          "const": "cargo-audit"
+        },
+        {
+          "description": "Semgrep. No suppression support",
+          "const": "semgrep"
+        },
+        {
+          "description": "npm audit. No suppression support",
+          "const": "npm-audit"
+        },
+        {
+          "description": "GitHub Advisory Database. No suppression support",
+          "const": "github-advisory"
+        },
+        {
+          "description": "Generic or non-scanner source. Requires the 'source' field on the report entry",
+          "const": "other"
+        }
       ]
     }
   }
