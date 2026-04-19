@@ -33,15 +33,15 @@ vulnlog suppress <file> [flags]
 [source]
 ----
 vulnlog suppress full-example.vl.yaml
-Suppression file created at: .snyk
-Suppression file created at: .trivyignore.yaml
+Suppression file created at: /path/to/.snyk
+Suppression file created at: /path/to/.trivyignore.yaml
 ----
 
 .Create suppression for releases up to and including 8.1.1 and reporter snyk
 [source]
 ----
 vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
-Suppression file created at: .snyk
+Suppression file created at: /path/to/.snyk
 ----
 
 .Read from STDIN and write to STDOUT.

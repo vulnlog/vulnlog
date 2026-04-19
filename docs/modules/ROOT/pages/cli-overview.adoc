@@ -34,8 +34,11 @@ Available on `report` and `suppress` commands.
 | `--release <id>`
 | Include vulnerabilities affecting all releases up to and including this release.
 
-| `--tags <id>`
+| `--tag <id>`
 | Filter by tag (repeatable).
+
+| `--reporter <value>`
+| Filter by reporter type.
 |===
 
 == Commands
@@ -69,25 +72,11 @@ Available on `report` and `suppress` commands.
 
 | `1`
 | General error
-| Unexpected error (I/O failure, unhandled exception).
+| Unexpected error (I/O failure, missing argument, invalid flag value, file not found, unhandled exception).
 
 | `2`
 | Validation error
-| The Vulnlog file contains validation errors.
-
-| `3`
-| File not found
-| The specified Vulnlog file does not exist.
-
-| `4`
-| Lint violation (planned for a future release)
-| The file has lint violations (without `--fix`).
-
-| `5`
-| Missing required flag
-| A required flag was not provided.
-
-| `6`
-| Invalid flag value
-| A flag references an unknown entity or unsupported type.
+| The Vulnlog file failed parsing or contains validation errors.
 |===
+
+NOTE: Finer-grained exit codes for specific failure categories (file not found, missing flag, invalid flag value, lint violation) are planned for a future release.

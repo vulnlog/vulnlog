@@ -69,13 +69,14 @@ releases:
 
 == Filtering by Tags
 
-Use the `--tags` flag to filter CLI output by tag.
+Use the `--tag` flag to filter CLI output by tag.
+The flag is repeatable to filter on multiple tags.
 This flag is available on `report` and `suppress` commands.
 
 [source,bash]
 ----
-vulnlog suppress my-app.vl.yaml --reporter trivy --tags container
-vulnlog report my-app.vl.yaml --tags build-dep
+vulnlog suppress my-app.vl.yaml --reporter trivy --tag container
+vulnlog report my-app.vl.yaml --tag build-dep
 ----
 
 == Defaults

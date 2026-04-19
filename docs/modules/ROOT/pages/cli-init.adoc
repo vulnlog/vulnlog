@@ -32,9 +32,9 @@ vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
 schemaVersion: "1"
 
 project:
-  organization: "foo"
-  name: "bar"
-  author: "baz"
+  organization: "Acme Corp"
+  name: "My App"
+  author: "Security Team"
 
 releases: []
 

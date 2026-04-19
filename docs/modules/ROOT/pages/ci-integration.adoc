@@ -94,4 +94,4 @@ Running validation as part of the CI pipeline catches Vulnlog file errors early:
 vulnlog validate my-app.vl.yaml --strict
 ----
 
-`--strict` treats warnings as errors (e.g., missing verdict, missing description).
+`--strict` treats warnings as errors.

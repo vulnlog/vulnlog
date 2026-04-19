@@ -4,7 +4,7 @@ Generates an HTML report from a Vulnlog file.
 
 [source]
 ----
-vulnlog report <file> [filter flags] [--format html] [-o <path>]
+vulnlog report <file> [filter flags] [-o <path>]
 ----
 
 [cols="2,3"]
