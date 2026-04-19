@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-04-19
+
+### Added
+- Add Gradle plugin by @ryru in [#98](https://github.com/vulnlog/vulnlog/pull/98)
+- Run Docker container as default user instead of root by @ryru in [#90](https://github.com/vulnlog/vulnlog/pull/90)
+- Add new copy command to clone vulnerability entries by @ryru in [#89](https://github.com/vulnlog/vulnlog/pull/89)
+- Add new reporting command with a simple HTML report by @ryru in [#85](https://github.com/vulnlog/vulnlog/pull/85)
+
+### Changed
+- Split code into cli and lib by @ryru in [#97](https://github.com/vulnlog/vulnlog/pull/97)
+- Improve JSON schema by @ryru in [#91](https://github.com/vulnlog/vulnlog/pull/91)
+- Introduce VulnlogFilter and FilterOptions by @ryru in [#84](https://github.com/vulnlog/vulnlog/pull/84)
+
+### Documentation
+- Add release 0.12.0 documentation to main branch by @ryru in [#93](https://github.com/vulnlog/vulnlog/pull/93)
+
+### Fixed
+- Hyphen reporter flag support by @ryru in [#113](https://github.com/vulnlog/vulnlog/pull/113)
+- Fix native binary copy command and do not copy null or empty lists by @ryru in [#92](https://github.com/vulnlog/vulnlog/pull/92)
+- Create suppressions for each reporter-specific vulnerability ID by @ryru in [#88](https://github.com/vulnlog/vulnlog/pull/88)
+- Add HTML resource config for native binaries by @ryru in [#87](https://github.com/vulnlog/vulnlog/pull/87)
+- Auto-suppress risk_acceptable verdicts and exclude resolved by @ryru in [#83](https://github.com/vulnlog/vulnlog/pull/83)
+
+### New Contributors
+* @dependabot[bot] made their first contribution in [#107](https://github.com/vulnlog/vulnlog/pull/107)
+
 ## [0.11.0] - 2026-04-06
 
 ### Added
@@ -343,6 +369,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.12.0]: https://github.com/vulnlog/vulnlog/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/vulnlog/vulnlog/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/vulnlog/vulnlog/compare/v0.9.4...v0.10.0
 [0.9.4]: https://github.com/vulnlog/vulnlog/compare/v0.9.3...v0.9.4
