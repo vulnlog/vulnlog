@@ -31,6 +31,7 @@ tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier.set("")
     configurations = listOf(shaded)
     relocate("tools.jackson", "dev.vulnlog.shaded.tools.jackson")
+    relocate("com.fasterxml.jackson.annotation", "dev.vulnlog.shaded.com.fasterxml.jackson.annotation")
     relocate("com.github.packageurl", "dev.vulnlog.shaded.com.github.packageurl")
     mergeServiceFiles()
 }
