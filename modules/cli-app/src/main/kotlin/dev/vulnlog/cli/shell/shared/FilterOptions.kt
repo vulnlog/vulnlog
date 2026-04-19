@@ -11,6 +11,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnlogFile
 
@@ -20,9 +22,9 @@ class FilterOptions : OptionGroup() {
         help =
             """
             Filter on reporter.
-            Supported reporters: ${ReporterType.entries.joinToString(", ") { it.name.lowercase() }}
+            Supported reporters: ${ReporterType.entries.joinToString(", ") { it.canonical() }}
             """.trimIndent(),
-    ).convert { ReporterType.valueOf(it.uppercase()) }
+    ).convert { parseReporter(it) }
 
     val releaseOption: String? by option(
         "--release",

@@ -6,6 +6,7 @@ import com.github.ajalt.clikt.testing.test
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.io.ByteArrayInputStream
 import java.nio.file.Files
 
@@ -136,5 +137,77 @@ class SuppressCommandTest :
             } finally {
                 System.setIn(originalStdin)
             }
+        }
+
+        context("--reporter accepts the same hyphenated names as YAML") {
+            listOf(
+                "trivy",
+                "snyk",
+                "dependency-check",
+                "github-advisory",
+                "grype",
+                "npm-audit",
+                "cargo-audit",
+                "semgrep",
+                "other",
+            ).forEach { reporter ->
+                test("--reporter $reporter is accepted") {
+                    val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+                    val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
+                    try {
+                        tempFile.writeText(VALID_VULNLOG_YAML)
+
+                        val result =
+                            SuppressCommand().test(
+                                "${tempFile.absolutePath} --reporter $reporter -o ${outputDir.toAbsolutePath()}",
+                            )
+
+                        result.statusCode shouldBe 0
+                    } finally {
+                        outputDir.toFile().deleteRecursively()
+                        tempFile.delete()
+                    }
+                }
+            }
+        }
+
+        test("--reporter rejects underscored names with a error") {
+            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
+
+                val result = SuppressCommand().test("${tempFile.absolutePath} --reporter dependency_check")
+
+                result.statusCode shouldBe 1
+                result.stderr shouldContain "Unsupported reporter: dependency_check"
+                result.stderr shouldNotContain "dev.vulnlog"
+                result.stderr shouldNotContain "No enum constant"
+            } finally {
+                tempFile.delete()
+            }
+        }
+
+        test("--reporter rejects unknown values with a error") {
+            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
+            try {
+                tempFile.writeText(VALID_VULNLOG_YAML)
+
+                val result = SuppressCommand().test("${tempFile.absolutePath} --reporter bogus")
+
+                result.statusCode shouldBe 1
+                result.stderr shouldContain "Unsupported reporter: bogus"
+                result.stderr shouldNotContain "dev.vulnlog"
+            } finally {
+                tempFile.delete()
+            }
+        }
+
+        test("--reporter help text lists hyphenated reporter names") {
+            val result = SuppressCommand().test("--help")
+
+            result.stdout shouldContain "dependency-check"
+            result.stdout shouldContain "github-advisory"
+            result.stdout shouldContain "npm-audit"
+            result.stdout shouldContain "cargo-audit"
         }
     })
