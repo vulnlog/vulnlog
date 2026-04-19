@@ -2,12 +2,32 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vulnlog.dev/schemas/v1/defs/release.json",
   "title": "Vulnlog Release",
-  "description": "A release tracked in this Vulnlog file. Releases must be listed in chronological order (oldest first)",
+  "description": "A release tracked in this Vulnlog file. Releases must be listed in chronological order (oldest first) in the parent array. Array position is used by the CLI to resolve '--release' range filtering: a release at position N includes all releases at positions 0 through N",
+  "examples": [
+    {
+      "id": "8.1.1",
+      "published_at": "2026-01-15"
+    },
+    {
+      "id": "2.0.0",
+      "purls": [
+        {
+          "purl": "pkg:generic/demo-project@2.0.0",
+          "tags": [ "binary" ]
+        },
+        {
+          "purl": "pkg:docker/demo-project@2.0.0",
+          "tags": [ "container" ]
+        }
+      ]
+    }
+  ],
   "type": "object",
   "required": [ "id" ],
   "properties": {
     "id": {
-      "description": "Unique release identifier (e.g., '8.1.1', '2.0.0-SNAPSHOT')",
+      "description": "Unique release identifier. Typically a semantic version. Referenced by vulnerability entries",
+      "examples": [ "8.1.1", "2.0.0-SNAPSHOT", "0.12.0" ],
       "type": "string",
       "minLength": 1
     },
@@ -27,7 +47,7 @@
   "additionalProperties": false,
   "$defs": {
     "purlEntry": {
-      "description": "A release artifact identified by its Package URL, optionally tagged for scoping",
+      "description": "A release artifact identified by its Package URL, optionally tagged for scoped VEX generation",
       "type": "object",
       "required": [ "purl" ],
       "properties": {
@@ -36,7 +56,11 @@
           "$ref": "common.json#/$defs/purl"
         },
         "tags": {
-          "description": "Tags associated with this purl. Used to match vulnerability tags for scoped VEX generation",
+          "description": "Tags associated with this purl. Must reference tag IDs defined in the top-level 'tags' section. Used to match vulnerability tags for scoped VEX generation",
+          "examples": [
+            [ "binary" ],
+            [ "container" ]
+          ],
           "type": "array",
           "minItems": 1,
           "items": {

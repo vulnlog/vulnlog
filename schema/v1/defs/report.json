@@ -2,7 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vulnlog.dev/schemas/v1/defs/report.json",
   "title": "Vulnlog Report Entry",
-  "description": "Records that a specific SCA scanner or other source reported a vulnerability",
+  "description": "Records that a specific SCA scanner or other source reported the vulnerability. Each scanner that reported the same finding is listed as a separate report entry, enabling per-scanner suppression configuration",
+  "examples": [
+    {
+      "reporter": "trivy",
+      "at": "2026-04-07"
+    },
+    {
+      "reporter": "snyk",
+      "at": "2026-04-07",
+      "vuln_ids": [ "SNYK-JAVA-CHQOSLOGBACK-6097492" ],
+      "suppress": {
+        "expires_at": "2026-10-01"
+      }
+    }
+  ],
   "type": "object",
   "if": {
     "properties": {
@@ -25,12 +39,17 @@
       "$ref": "common.json#/$defs/date"
     },
     "source": {
-      "description": "Description of the report source. Optional for scanner reporters. Required by the CLI for reporter type 'other'",
+      "description": "Free-text description of the report source. Optional for scanner reporters, required when reporter is 'other'",
+      "examples": [ "Internal security review", "Customer report" ],
       "type": "string",
       "minLength": 1
     },
     "vuln_ids": {
-      "description": "Scanner-specific vulnerability identifiers. Used when generating scanner-specific suppression files",
+      "description": "Scanner-specific vulnerability identifiers. Used instead of the vulnerability's 'id' when generating scanner-specific suppression files. Set this when the scanner uses its own identifier rather than the CVE",
+      "examples": [
+        [ "SNYK-JAVA-CHQOSLOGBACK-6097492" ],
+        [ "GHSA-2m67-wjpj-xhg9" ]
+      ],
       "type": "array",
       "minItems": 1,
       "items": {
@@ -45,11 +64,17 @@
   "additionalProperties": false,
   "$defs": {
     "suppressEntry": {
-      "description": "Suppression configuration for a specific scanner. When present without expires_at, the suppression is permanent",
+      "description": "Scanner-specific suppression configuration. Required to suppress findings with verdict 'affected' (without resolution), 'risk acceptable', or absent verdict. Not required for 'not affected' findings (always included in suppression output) or 'affected' findings with a 'resolution' (never included). When present without 'expires_at', the suppression is permanent",
+      "examples": [
+        {},
+        {
+          "expires_at": "2026-06-01"
+        }
+      ],
       "type": "object",
       "properties": {
         "expires_at": {
-          "description": "Expiration date of the suppression. When omitted, the suppression is permanent",
+          "description": "Expiration date of the suppression. After this date, the entry is excluded from the generated suppression file. Omit for permanent suppression",
           "$ref": "common.json#/$defs/date"
         }
       },

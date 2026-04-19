@@ -14,7 +14,7 @@ vulnlog init [flags]
 | `-o, --output <path>`
 | Output path for the generated file. Defaults to stdout.
 
-| `--project <text>`
+| `--name <text>`
 | Project name. Prompted if not provided.
 
 | `--organization <text>`
@@ -27,14 +27,14 @@ vulnlog init [flags]
 .Create a new Vulnlog project.
 [source]
 ----
-vulnlog init --project "My App" --organization "Acme Corp" --author "Security Team"
+vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
 ---
 schemaVersion: "1"
 
 project:
-  organization: "foo"
-  name: "bar"
-  author: "baz"
+  organization: "Acme Corp"
+  name: "My App"
+  author: "Security Team"
 
 releases: []
 

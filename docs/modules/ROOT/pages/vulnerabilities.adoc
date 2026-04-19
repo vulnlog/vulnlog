@@ -1,9 +1,220 @@
 = Vulnerabilities
 
-// TODO: Document the vulnerability entry structure
-// - id, name, aliases, description
-// - releases, packages
-// - reports (reporter, at, source, suppress, vuln_ids)
-// - analysis, analyzed_at, comment
-// - severity (critical, high, medium, low)
-// - Lifecycle: stub entry -> under investigation -> analysed
+Each entry in the `vulnerabilities` section represents a single vulnerability finding and the human verdict about it.
+
+NOTE: The verdict should reflect the most severe impact across all listed packages.
+If a package appears in multiple contexts, the analysis should focus on the highest-risk context.
+
+== Vulnerability Entry
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `id`
+| String
+| Yes
+| Primary identifier. Preferably a CVE ID. May be a scanner-specific ID if no CVE exists. Must be unique across all entries and aliases.
+
+| `name`
+| String
+| No
+| Common name if one exists (e.g., "Log4Shell", "Heartbleed"). Displayed prominently in reports.
+
+| `aliases`
+| Array of String
+| No
+| Alternative identifiers (e.g., GHSA IDs, scanner-specific IDs). Must not overlap with any `id` or `aliases` in other entries.
+
+| `releases`
+| Array of String
+| Yes
+| Release identifiers affected. Must reference IDs from the `releases` section.
+
+| `description`
+| String
+| No
+| Brief human-readable description. Optional to allow quick stub entries during triage.
+
+| `packages`
+| Array of String (Package URL)
+| Yes
+| Package URLs of affected dependencies. See <<finding-package-urls>>.
+
+| `reports`
+| Array of <<report-entry,Report entries>>
+| Yes
+| Scanner reports that identified this vulnerability.
+
+| `tags`
+| Array of String
+| No
+| Tags for categorizing and scoping. Must reference tags defined in the `tags` section. Used for CLI filtering.
+
+| `analysis`
+| String
+| No
+| Free-text analysis and rationale for the triage decision.
+
+| `analyzed_at`
+| String (date, `YYYY-MM-DD`)
+| No
+| Date the analysis was performed. Must not be before the earliest report date.
+
+| `comment`
+| String
+| No
+| Additional information not related to the analysis itself. Not used in any output generation.
+
+| `severity`
+| String (enum)
+| Conditional
+| Severity assessment. Required when `verdict` is `affected` or `risk acceptable`. See xref:verdicts-and-justifications.adoc#severity-values[Severity Values].
+
+| `verdict`
+| String (enum)
+| No
+| The human triage decision. See xref:verdicts-and-justifications.adoc[Verdicts and Justifications]. Absence indicates under investigation.
+
+| `justification`
+| String (enum)
+| Conditional
+| Required when `verdict` is `not affected`. See xref:verdicts-and-justifications.adoc#justification-values[Justification Values].
+
+| `resolution`
+| <<resolution-entry,Resolution entry>>
+| No
+| Records that the underlying dependency was updated or the vulnerability was otherwise addressed. Independent of the verdict.
+|===
+
+[[finding-package-urls]]
+== Finding Package URLs
+
+The `packages` field requires https://github.com/package-url/purl-spec[Package URLs (PURLs)] identifying the affected dependencies.
+PURLs follow the format `pkg:<type>/<namespace>/<name>@<version>`.
+
+Common sources for obtaining the correct PURL:
+
+Scanner output:: Most SCA scanners (Trivy, Snyk, Grype) include the PURL in their findings.
+This is the most reliable source, as it matches exactly what the scanner reported.
+
+Package registries:: Registries such as https://mvnrepository.com[Maven Central], https://www.npmjs.com[npm], and https://pypi.org[PyPI] list the coordinates needed to construct a PURL.
+
+Lock files:: Dependency lock files (`package-lock.json`, `go.sum`, `Cargo.lock`) contain the exact package coordinates and versions.
+
+.Common PURL types
+[cols="1,2"]
+|===
+| Type | Example
+
+| Maven
+| `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`
+
+| npm
+| `pkg:npm/image-lib@3.1.0`
+
+| Docker
+| `pkg:docker/demo-project@8.1.1`
+
+| Go
+| `pkg:golang/golang.org/x/net@0.17.0`
+
+| PyPI
+| `pkg:pypi/requests@2.28.0`
+
+| Generic
+| `pkg:generic/demo-project@8.1.1`
+|===
+
+== Lifecycle
+
+A vulnerability entry typically goes through the following stages:
+
+Stub entry:: A minimal entry containing only required fields (`id`, `releases`, `packages`, `reports`).
+Typically created during initial triage.
+
+Under investigation:: The implicit state when no `verdict` has been set.
+The finding is still being analyzed.
+
+Analyzed:: The entry has a `verdict`, `analysis`, and any required conditional fields (`severity`, `justification`).
+Optionally includes a `resolution` if the dependency was updated.
+
+[[report-entry]]
+== Report Entry
+
+A record indicating that a specific scanner or source reported the finding.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `reporter`
+| String (enum)
+| Yes
+| The scanner or source type. See xref:suppression.adoc#supported-reporters[Supported Reporters].
+
+| `at`
+| String (date, `YYYY-MM-DD`)
+| No
+| Date the vulnerability was reported. When omitted, the CLI uses the current date during output generation.
+
+| `source`
+| String
+| No
+| Description of the report source. Optional for scanner reporters. Required for reporter type `other`.
+
+| `vuln_ids`
+| Array of String
+| No
+| Scanner-specific vulnerability identifiers. Used for scanner-specific suppression files.
+
+| `suppress`
+| <<suppress-entry,Suppress entry>>
+| No
+| Scanner-specific suppression configuration. When present without `expires_at`, the suppression is permanent.
+|===
+
+[[suppress-entry]]
+=== Suppress Entry
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `expires_at`
+| String (date, `YYYY-MM-DD`)
+| No
+| Expiration date. After this date, the entry is excluded from the generated suppression file. When omitted, the suppression is permanent.
+|===
+
+[[resolution-entry]]
+== Resolution Entry
+
+Records that a dependency update or other corrective action was taken, independent of the verdict.
+A vulnerability may be `not affected` (the verdict) yet still have a `resolution` (the dependency was updated defensively).
+A vulnerability may be `affected` with a `resolution` indicating it was fixed in a subsequent release.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `in`
+| String
+| Yes
+| Release in which the resolution was applied. Must reference a release ID from the `releases` section.
+
+| `at`
+| String (date, `YYYY-MM-DD`)
+| No
+| Date the resolution was applied.
+
+| `ref`
+| String (URI)
+| No
+| Reference to the issue or ticket tracking the resolution.
+
+| `note`
+| String
+| No
+| Brief description of how the vulnerability was resolved.
+|===

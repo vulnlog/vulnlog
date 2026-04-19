@@ -1,6 +1,84 @@
 = Tags and Filtering
 
-// TODO: Document the tagging system
-// - Defining tags (id, description)
-// - Assigning tags to releases (via purls) and vulnerabilities
-// - Filtering by tags in CLI commands
+Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerability entries.
+They can represent customer-facing deliverables (`binary`, `container`, `sdk`), internal usage contexts (`build-dep`, `test-infra`), or any other categorization.
+
+== Defining Tags
+
+Tags are defined in the optional `tags` section of a Vulnlog file.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `id`
+| String
+| Yes
+| Unique identifier for the tag. Referenced by vulnerability entries and release purl entries.
+
+| `description`
+| String
+| No
+| Human-readable description of what this tag represents.
+|===
+
+[source,yaml]
+----
+tags:
+  - id: binary
+    description: Shipped as native binary
+  - id: container
+    description: Shipped as Docker container
+  - id: build-dep
+    description: Build-time dependency only
+----
+
+== Assigning Tags
+
+Tags can be assigned in two places:
+
+=== On Vulnerability Entries
+
+Tags on a vulnerability entry categorize the finding and enable CLI filtering.
+
+[source,yaml]
+----
+vulnerabilities:
+  - id: CVE-2026-5678
+    releases: [ 2.0.0 ]
+    packages: [ "pkg:npm/image-lib@3.1.0" ]
+    reports:
+      - reporter: trivy
+    tags: [ container ]
+----
+
+=== On Release PURLs
+
+Tags on release purl entries enable scoped output generation.
+
+[source,yaml]
+----
+releases:
+  - id: 8.1.1
+    purls:
+      - purl: pkg:generic/demo-project@8.1.1
+        tags: [ binary ]
+      - purl: pkg:docker/demo-project@8.1.1
+        tags: [ container ]
+----
+
+== Filtering by Tags
+
+Use the `--tag` flag to filter CLI output by tag.
+The flag is repeatable to filter on multiple tags.
+This flag is available on `report` and `suppress` commands.
+
+[source,bash]
+----
+vulnlog suppress my-app.vl.yaml --reporter trivy --tag container
+vulnlog report my-app.vl.yaml --tag build-dep
+----
+
+== Defaults
+
+Vulnerability entries without tags are included in all unfiltered outputs.

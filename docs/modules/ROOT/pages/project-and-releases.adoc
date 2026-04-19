@@ -1,6 +1,87 @@
 = Project and Releases
 
-// TODO: Document the project and releases sections
-// - project: organization, name, author, contact
-// - releases: id, published_at, purls (purl + tags)
-// - Package URL (purl) format
+== `project`
+
+Project-level metadata.
+Used in report generation.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `organization`
+| String
+| Yes
+| Name of the organization or vendor.
+
+| `name`
+| String
+| Yes
+| Name of the software project.
+
+| `author`
+| String
+| Yes
+| Name of the responsible security team or author.
+
+| `contact`
+| String (email)
+| No
+| Contact email for the security team.
+|===
+
+== `releases`
+
+Defines the releases tracked in this Vulnlog file.
+Releases must be listed in chronological order (oldest first).
+This ordering is used by the CLI to resolve `--release` filtering.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `id`
+| String
+| Yes
+| Unique release identifier (e.g., `8.1.1`, `2.0.0-SNAPSHOT`).
+
+| `published_at`
+| String (date, `YYYY-MM-DD`)
+| No
+| Publication date of the release. Absence indicates the release is not yet published.
+
+| `purls`
+| Array of <<purl-entry,PURL entries>>
+| No
+| Versioned Package URLs identifying the release artifacts.
+|===
+
+[[purl-entry]]
+=== PURL Entry
+
+A release artifact identified by its https://github.com/package-url/purl-spec[Package URL], optionally tagged for scoping.
+
+[cols="1,1,1,3"]
+|===
+| Field | Type | Required | Description
+
+| `purl`
+| String (Package URL)
+| Yes
+| The versioned Package URL for this artifact in this release.
+
+| `tags`
+| Array of String
+| No
+| Tags associated with this purl. Must reference tags defined in the `tags` section. See xref:tags.adoc[Tags and Filtering].
+|===
+
+=== Package URL Examples
+
+[source]
+----
+pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1
+pkg:docker/demo-project@8.1.1
+pkg:npm/image-lib@3.1.0
+pkg:generic/demo-project@8.1.1
+----

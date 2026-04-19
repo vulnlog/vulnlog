@@ -7,8 +7,58 @@ vulnlog <command> <file...> [flags]
 
 Every command except `init` requires one or more Vulnlog files as positional arguments.
 Read-only commands like `validate` accept multiple files.
-Output-generating commands like `suppress` operate on a single file.
+Output-generating commands like `suppress` and `report` operate on a single file.
 No automatic file detection.
+
+== Global Flags
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--version`
+| Print version and exit.
+
+| `--help`
+| Print help.
+|===
+
+== Filtering Flags
+
+Available on `report` and `suppress` commands.
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--release <id>`
+| Include vulnerabilities affecting all releases up to and including this release.
+
+| `--tag <id>`
+| Filter by tag (repeatable).
+
+| `--reporter <value>`
+| Filter by reporter type.
+|===
+
+== Commands
+
+[cols="1,3"]
+|===
+| Command | Description
+
+| xref:cli-init.adoc[init]
+| Scaffold a new Vulnlog file.
+
+| xref:cli-validate.adoc[validate]
+| Validate files against the schema and all validation rules.
+
+| xref:cli-suppress.adoc[suppress]
+| Generate scanner-specific suppression files.
+
+| xref:cli-report.adoc[report]
+| Generate an HTML vulnerability report.
+|===
 
 == Exit Codes
 
@@ -22,25 +72,11 @@ No automatic file detection.
 
 | `1`
 | General error
-| Unexpected error (I/O failure, unhandled exception).
+| Unexpected error (I/O failure, missing argument, invalid flag value, file not found, unhandled exception).
 
 | `2`
 | Validation error
-| The Vulnlog file contains validation errors.
-
-| `3`
-| File not found
-| The specified Vulnlog file does not exist.
-
-| `4`
-| Lint violation
-| The file has lint violations (without `--fix`).
-
-| `5`
-| Missing required flag
-| A required flag was not provided.
-
-| `6`
-| Invalid flag value
-| A flag references an unknown entity or unsupported type.
+| The Vulnlog file failed parsing or contains validation errors.
 |===
+
+NOTE: Finer-grained exit codes for specific failure categories (file not found, missing flag, invalid flag value, lint violation) are planned for a future release.

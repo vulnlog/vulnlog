@@ -1,0 +1,12 @@
+---
+vulnerabilities:
+- id: GHSA-2m67-wjpj-xhg9
+  statement: The affected `StreamReadConstraints` is not used in the application.
+- id: CVE-2025-11226
+  statement: Logback is a ktlint configuration dependency and not part of the application.
+- id: CVE-2024-12798
+  statement: Logback is a ktlint configuration dependency and not part of the application.
+- id: CVE-2026-1225
+  statement: Logback is a ktlint configuration dependency and not part of the application.
+- id: CVE-2024-12801
+  statement: Logback is a ktlint configuration dependency and not part of the application.

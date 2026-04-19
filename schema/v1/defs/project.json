@@ -3,26 +3,43 @@
   "$id": "https://vulnlog.dev/schemas/v1/defs/project.json",
   "title": "Vulnlog Project",
   "description": "Project-level metadata. Used in report generation and as author information in VEX documents",
+  "examples": [
+    {
+      "organization": "Vulnlog",
+      "name": "Vulnlog",
+      "author": "Vulnlog Dev Team"
+    },
+    {
+      "organization": "Example Org",
+      "name": "demo-project",
+      "author": "Security Team",
+      "contact": "security@example.org"
+    }
+  ],
   "type": "object",
   "required": [ "organization", "name", "author" ],
   "properties": {
     "organization": {
       "description": "Name of the organization or vendor",
+      "examples": [ "Vulnlog" ],
       "type": "string",
       "minLength": 1
     },
     "name": {
       "description": "Name of the software project",
+      "examples": [ "Vulnlog" ],
       "type": "string",
       "minLength": 1
     },
     "author": {
       "description": "Name of the responsible security team or author. Used as the author in VEX documents",
+      "examples": [ "Vulnlog Dev Team" ],
       "type": "string",
       "minLength": 1
     },
     "contact": {
       "description": "Contact email for the security team. Used as the author contact in VEX documents",
+      "examples": [ "security@example.org" ],
       "type": "string",
       "format": "email"
     }

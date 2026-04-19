@@ -1,0 +1,20 @@
+---
+ignore:
+  SNYK-JAVA-TOOLSJACKSONCORE-15907550:
+  - '*':
+      reason: The affected `StreamReadConstraints` is not used in the application.
+  SNYK-JAVA-CHQOSLOGBACK-13169722:
+  - '*':
+      reason: Logback is a ktlint configuration dependency and not part of the application.
+  SNYK-JAVA-CHQOSLOGBACK-8539867:
+  - '*':
+      reason: Logback is a ktlint configuration dependency and not part of the application.
+  SNYK-JAVA-CHQOSLOGBACK-8539866:
+  - '*':
+      reason: Logback is a ktlint configuration dependency and not part of the application.
+  SNYK-JAVA-CHQOSLOGBACK-15062482:
+  - '*':
+      reason: Logback is a ktlint configuration dependency and not part of the application.
+  SNYK-JAVA-CHQOSLOGBACK-8539865:
+  - '*':
+      reason: Logback is a ktlint configuration dependency and not part of the application.
