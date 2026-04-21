@@ -7,32 +7,38 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.cli.shell.shared.DirectoryOutputOption
 import dev.vulnlog.cli.shell.shared.FilterOptions
 import dev.vulnlog.cli.shell.shared.parseFile
 import dev.vulnlog.cli.shell.shared.parseStdin
 import dev.vulnlog.cli.shell.shared.resolveFilter
+import dev.vulnlog.cli.shell.shared.toOutputDirectoryOption
 import dev.vulnlog.cli.shell.shared.validateFiles
 import dev.vulnlog.cli.shell.shared.validateInputPath
+import dev.vulnlog.cli.shell.shared.writeSuppress
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
 import dev.vulnlog.lib.core.mapToSuppression
+import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.lib.result.InputValidationResult
 import dev.vulnlog.lib.result.ParseResult
 import java.io.File
 import java.nio.file.Path
-import kotlin.io.path.writeText
 
 class SuppressCommand : CliktCommand(name = "suppress") {
     override fun help(context: Context): String = "Create suppression files."
 
     val file: String by argument()
-    val output: String? by option(
+    val output: DirectoryOutputOption by option(
         "-o",
         "--output",
         help = "Output directory, or '-' to write to stdout. Defaults to current directory.",
-    )
+    ).convert { toOutputDirectoryOption(it) }
+        .default(DirectoryOutputOption.Directory(Path.of(System.getProperty("user.dir"))))
 
     val filterOptions by FilterOptions()
 
@@ -53,8 +59,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
         val outputSuppressions = mapToSuppression(targetReporters, suppressionVulns)
 
-        val writeToStdout = output == "-"
-        if (writeToStdout && outputSuppressions.size > 1) {
+        if (outputSuppressions.size > 1 && output is DirectoryOutputOption.Stdout) {
             echo(
                 "Error: Cannot write multiple suppression files to stdout. Use --reporter to select a single reporter.",
                 err = true,
@@ -62,27 +67,20 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
 
-        val outputDir =
-            if (!writeToStdout) {
-                val dir = Path.of(output ?: System.getProperty("user.dir"))
-                if (!dir.toFile().isDirectory) {
-                    echo("Error: Output path '$dir' is not a directory.", err = true)
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-                }
-                dir
-            } else {
-                null
-            }
+        val contents: List<SuppressionFile> = outputSuppressions.map(::writeSuppressionOutput)
 
-        outputSuppressions.forEach { suppressionOutput ->
-            val file = writeSuppressionOutput(suppressionOutput)
-            if (writeToStdout) {
-                echo(file.content)
-            } else {
-                val outputPath = outputDir!!.resolve(file.fileName)
-                outputPath.writeText(file.content)
-                echo("Suppression file created at: ${outputPath.toAbsolutePath()}")
-            }
+        when (val target = output) {
+            is DirectoryOutputOption.Directory ->
+                contents.forEach { content ->
+                    writeSuppress(
+                        { echo(it) },
+                        { echo(it, err = true) },
+                        target,
+                        content,
+                    )
+                }
+
+            is DirectoryOutputOption.Stdout -> echo(contents.first().content)
         }
     }
 

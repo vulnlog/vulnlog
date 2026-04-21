@@ -8,15 +8,19 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.cli.shell.shared.FileOutputOption
 import dev.vulnlog.cli.shell.shared.FilterOptions
 import dev.vulnlog.cli.shell.shared.merge
 import dev.vulnlog.cli.shell.shared.parseFiles
 import dev.vulnlog.cli.shell.shared.parseStdin
 import dev.vulnlog.cli.shell.shared.resolveFilter
+import dev.vulnlog.cli.shell.shared.toOutputFileOption
 import dev.vulnlog.cli.shell.shared.validateFiles
 import dev.vulnlog.cli.shell.shared.validateInputPath
+import dev.vulnlog.cli.shell.shared.writeReport
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.validateSharedProject
@@ -27,18 +31,18 @@ import dev.vulnlog.lib.result.ParseResult
 import java.io.File
 import java.nio.file.Path
 import java.time.LocalDate
-import kotlin.io.path.writeText
 
 class ReportCommand : CliktCommand(name = "report") {
     override fun help(context: Context): String = "Generate a vulnerability report."
 
     val args: List<String> by argument().multiple()
 
-    val output: String by option(
+    val output: FileOutputOption by option(
         "-o",
         "--output",
-        help = "Output file path. Defaults to vulnlog-report.html in the current directory.",
-    ).default("vulnlog-report.html")
+        help = "Output file path, or '-' to write to stdout. Defaults to vulnlog-report.html in the current directory.",
+    ).convert { toOutputFileOption(it) }
+        .default(FileOutputOption.File(Path.of("vulnlog-report.html")))
 
     val filterOptions by FilterOptions()
 
@@ -60,11 +64,18 @@ class ReportCommand : CliktCommand(name = "report") {
         val merged = mergeReportingEntries(allEntries)
 
         val reportData = toDto(project, merged, LocalDate.now())
-        val reportContent = renderHtmlReport(reportData)
+        val content = renderHtmlReport(reportData)
 
-        val outputPath = Path.of(output)
-        outputPath.writeText(reportContent)
-        echo("Report written to: ${outputPath.toAbsolutePath()}")
+        when (val target = output) {
+            is FileOutputOption.File ->
+                writeReport(
+                    { echo(it) },
+                    { echo(it, err = true) },
+                    target,
+                    content,
+                )
+            is FileOutputOption.Stdout -> echo(content)
+        }
     }
 
     private fun parseAndValidate(): Map<File, ParseResult.Ok> {
