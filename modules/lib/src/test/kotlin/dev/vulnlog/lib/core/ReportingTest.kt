@@ -130,6 +130,99 @@ class ReportingTest :
                 result shouldHaveSize 1
                 result.first().primaryId shouldBe cve1
             }
+
+            test("derives under investigation state from UnderInvestigation verdict") {
+                val vuln = vulnerability(verdict = Verdict.UnderInvestigation, analysis = null)
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.UNDER_INVESTIGATION
+            }
+
+            test("derives open state from Affected verdict without resolution") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.HIGH))
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.OPEN
+            }
+
+            test("derives dismissed state from NotAffected verdict without resolution") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.DISMISSED
+            }
+
+            test("derives dismissed state from RiskAcceptable verdict without resolution") {
+                val vuln = vulnerability(verdict = Verdict.RiskAcceptable(Severity.LOW))
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.DISMISSED
+            }
+
+            test("resolution overrides Affected verdict to resolved state") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.Affected(Severity.HIGH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.RESOLVED
+            }
+
+            test("NotAffected with resolution moves from dismissed to resolved and populates fixedIn") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.RESOLVED
+                result.first().fixedIn shouldBe setOf(releaseV2)
+            }
+
+            test("UnderInvestigation verdict takes precedence over resolution") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.UnderInvestigation,
+                        analysis = null,
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.UNDER_INVESTIGATION
+            }
+
+            test("resolution overrides RiskAcceptable verdict to resolved state") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.RiskAcceptable(Severity.LOW),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.RESOLVED
+            }
         }
 
         context("mergeReportingEntries") {

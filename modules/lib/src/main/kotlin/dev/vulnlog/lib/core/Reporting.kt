@@ -9,7 +9,6 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.Impact
 import dev.vulnlog.lib.model.report.ReportingEntry
 import dev.vulnlog.lib.model.report.WorkState
-import kotlin.sequences.map
 
 /**
  * Validates that all provided Vulnlog files share the same project metadata.
@@ -84,12 +83,11 @@ private fun mergeTwo(
     )
 
 private fun findWorkState(vulnEntry: VulnerabilityEntry): WorkState =
-    if (vulnEntry.resolution != null) {
-        WorkState.RESOLVED
-    } else if (vulnEntry.analysis == null) {
-        WorkState.UNDER_INVESTIGATION
-    } else {
-        WorkState.OPEN
+    when (vulnEntry.verdict) {
+        Verdict.UnderInvestigation -> WorkState.UNDER_INVESTIGATION
+        is Verdict.Affected -> if (vulnEntry.resolution != null) WorkState.RESOLVED else WorkState.OPEN
+        is Verdict.NotAffected -> if (vulnEntry.resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
+        is Verdict.RiskAcceptable -> if (vulnEntry.resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
     }
 
 private fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
