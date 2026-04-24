@@ -50,7 +50,7 @@ resolution:
 The vulnerable dependency is present but does not impact the project.
 Requires a `justification` explaining why the vulnerability is not exploitable in this context.
 
-Entries with this verdict are always included in generated suppression files without requiring an explicit `suppress` block.
+Because the finding does not reflect a real risk to the project, entries with this verdict are always included in generated suppression files without requiring an explicit `suppress` block.
 
 [source,yaml]
 ----
@@ -67,8 +67,8 @@ The vulnerability is confirmed to impact the project, but a deliberate decision 
 Requires a `severity` assessment.
 
 Unlike `affected`, this verdict signals that no fix is planned.
-The vulnerable dependency remains in place, so the scanner continues to report the finding.
-An explicit `suppress` block on the report entry is required to suppress the finding.
+The vulnerable dependency remains in place and represents a live risk, so the scanner continues to report the finding.
+Suppressing a live risk must be a deliberate decision separate from the verdict, so an explicit `suppress` block on the report entry is required.
 
 [source,yaml]
 ----

@@ -22,15 +22,26 @@ See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dyna
 
 == Suppression Rules
 
-Entries where `verdict` is `not affected` are always included in suppression files.
+Whether an entry appears in the generated suppression file depends on whether the vulnerability still impacts the release and whether the scanner is expected to stop reporting the finding on its own.
 
-Entries where `verdict` is `affected` with a `resolution` are *not* included in suppression files.
-The vulnerable dependency version should no longer be present after the resolution.
-If the scanner still reports the finding, the resolution is incomplete.
+Verdict `not affected`::
+The vulnerability does not impact the release, so the scanner finding is effectively noise.
+These entries are always included in suppression files, no explicit `suppress` block required.
 
-For all other cases (`affected` without resolution, `risk acceptable`, absent verdict), suppression requires an explicit `suppress` block on the report entry.
+Verdict `affected` with a `resolution`::
+The vulnerable dependency version is no longer present after the resolution, so the scanner is expected to stop reporting the finding.
+These entries are *not* included in suppression files.
+If the scanner still reports the finding, the resolution is incomplete and should be investigated rather than suppressed.
+
+All other cases (`affected` without resolution, `risk acceptable`, absent verdict)::
+The vulnerable code is still present and still impacts the release, or the impact has not yet been assessed.
+Suppressing the finding would hide a live or unknown risk, so it must be recorded as a deliberate decision separate from the verdict: an explicit `suppress` block on the report entry is required.
+
 If the `suppress` block includes `expires_at`, the suppression is temporary.
 If `expires_at` is omitted, the suppression is permanent.
+
+NOTE: State and suppression are orthogonal.
+Both `not affected` and `risk acceptable` yield the `dismissed` state (see xref:vulnerability-states.adoc[Vulnerability States]), but their suppression behavior differs: `not affected` represents noise and is always suppressed; `risk acceptable` represents a live risk, so suppression must be an explicit, separate decision.
 
 === Permanent Suppression
 
