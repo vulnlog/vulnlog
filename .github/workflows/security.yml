@@ -82,8 +82,8 @@ jobs:
           sarif_file: snyk-results.sarif
           category: snyk
 
-  trivy:
-    name: Trivy Vulnerability Scan
+  trivy-fs:
+    name: Trivy FS Vulnerability Scan
     needs: [ vulnlog ]
     runs-on: ubuntu-latest
     steps:
@@ -101,12 +101,41 @@ jobs:
           scan-type: fs
           scan-ref: .
           format: sarif
-          output: trivy-results.sarif
+          output: trivy-fs-results.sarif
           trivyignores: .trivyignore.yaml
           severity: 'CRITICAL,HIGH,MEDIUM'
 
       - name: Upload Trivy SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: trivy-results.sarif
-          category: trivy
+          sarif_file: trivy-fs-results.sarif
+          category: trivy-fs
+
+  trivy-image:
+    name: Trivy Image Vulnerability Scan
+    needs: [ vulnlog ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download suppression files
+        uses: actions/download-artifact@v8
+        with:
+          name: suppressions
+
+      - name: Run Trivy Image scan
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+        with:
+          scan-type: image
+          image-ref: 'ghcr.io/vulnlog/vulnlog:latest'
+          format: sarif
+          output: trivy-image-results.sarif
+          trivyignores: .trivyignore.yaml
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Upload Trivy SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-image-results.sarif
+          category: trivy-image
