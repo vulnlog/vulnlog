@@ -6,4 +6,5 @@ enum class WorkState {
     UNDER_INVESTIGATION,
     OPEN,
     RESOLVED,
+    DISMISSED,
 }
