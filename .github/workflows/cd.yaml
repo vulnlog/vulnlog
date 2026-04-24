@@ -129,7 +129,7 @@ jobs:
             (cd "$dir" && zip "../${name}.zip" *)
           done
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           name: "Vulnlog ${{ github.ref_name }}"
