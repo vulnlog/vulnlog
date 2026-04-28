@@ -154,14 +154,26 @@ class ReportCommandTest :
             val result = ReportCommand().test("")
 
             result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldContain "No input provided"
+            result.stderr shouldBe
+                """
+                Usage: report [<options>] <inputs>...
+
+                Error: missing argument <inputs>
+                
+                """.trimIndent()
         }
 
         test("report fails when file does not exist") {
             val result = ReportCommand().test("/nonexistent/vulnlog.vl.yaml")
 
             result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldContain "does not exist"
+            result.stderr shouldBe
+                """
+                Usage: report [<options>] <inputs>...
+
+                Error: invalid value for <inputs>: Input path '/nonexistent/vulnlog.vl.yaml' is a directory or file does not exist.
+                
+                """.trimIndent()
         }
 
         test("report fails when file name does not match expected pattern") {
@@ -172,7 +184,13 @@ class ReportCommandTest :
                 val result = ReportCommand().test(tempFile.absolutePath)
 
                 result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                result.stderr shouldContain "File name must be"
+                result.stderr shouldBe
+                    """
+                    Usage: report [<options>] <inputs>...
+
+                    Error: invalid value for <inputs>: Input '${tempFile.absolutePath}' is not valid: Error: File name must be [vulnlog|*.vl].[yaml|yml]: ${tempFile.absolutePath}
+                    
+                    """.trimIndent()
             } finally {
                 tempFile.delete()
             }

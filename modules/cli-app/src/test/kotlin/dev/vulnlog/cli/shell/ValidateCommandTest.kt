@@ -83,7 +83,13 @@ class ValidateCommandTest :
             val result = ValidateCommand().test("")
 
             result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldContain "No input provided"
+            result.stderr shouldBe
+                """
+                Usage: validate [<options>] <inputs>...
+
+                Error: missing argument <inputs>
+                
+                """.trimIndent()
         }
 
         test("validate fails when file does not exist") {

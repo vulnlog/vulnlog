@@ -44,14 +44,6 @@ fun parseFiles(paths: List<Path>): ParseResults {
     return ParseResults(ok, failure)
 }
 
-fun merge(vararg results: ParseResults?): ParseResults {
-    val all = results.filterNotNull()
-    return ParseResults(
-        success = all.flatMap { it.success.entries }.associate { it.key to it.value },
-        failure = all.flatMap { it.failure.entries }.associate { it.key to it.value },
-    )
-}
-
 private inline fun <reified T : ParseResult> filterByType(fileToResult: Map<File, ParseResult>): Map<File, T> =
     fileToResult
         .filterValues {
