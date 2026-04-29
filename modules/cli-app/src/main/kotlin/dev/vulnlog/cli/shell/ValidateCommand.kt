@@ -12,11 +12,12 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.FileInputOption
-import dev.vulnlog.cli.shell.shared.parseFiles
-import dev.vulnlog.cli.shell.shared.parseStdin
+import dev.vulnlog.cli.shell.shared.parseInputs
 import dev.vulnlog.cli.shell.shared.toInputFileOption
 import dev.vulnlog.cli.shell.shared.validateFiles
+import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.ParseResults
+import java.io.File
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."
@@ -28,27 +29,9 @@ class ValidateCommand : CliktCommand(name = "validate") {
     val strict: Boolean by option("--strict", help = "Treats warnings as errors.").flag(default = false)
 
     override fun run() {
-        val parseResults: ParseResults =
-            if (inputs.size == 1 && inputs.first() is FileInputOption.Stdin) {
-                parseStdin()
-            } else {
-                if (inputs.any { it is FileInputOption.Stdin }) {
-                    echo("Error: Mixing input files with STDIN is not allowed.", err = true)
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-                }
+        val parsedSuccessfully = parseInputOrFail(inputs)
 
-                val inputPaths = (inputs as List<FileInputOption.File>).map(FileInputOption.File::path)
-                parseFiles(inputPaths)
-            }
-        parseResults.onEachFailure { file, result ->
-            echo("Parsing of ${file.name} failed:", err = true)
-            echo(result.error, err = true)
-        }
-        if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        val validationFindings = validateFiles(parseResults.success)
+        val validationFindings = validateFiles(parsedSuccessfully)
         if (validationFindings.renderedFindings.isNotBlank()) {
             echo(validationFindings.renderedFindings, err = true)
         }
@@ -57,5 +40,26 @@ class ValidateCommand : CliktCommand(name = "validate") {
         } else {
             echo("Validation OK")
         }
+    }
+
+    private fun parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
+        val parseResults: ParseResults =
+            try {
+                parseInputs(inputs)
+            } catch (e: IllegalArgumentException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            } catch (e: IllegalStateException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            }
+        parseResults.onEachFailure { file, result ->
+            echo("Parsing of ${file.name} failed:", err = true)
+            echo(result.error, err = true)
+        }
+        if (parseResults.failure.isNotEmpty()) {
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        }
+        return parseResults.success
     }
 }

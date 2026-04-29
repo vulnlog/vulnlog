@@ -15,12 +15,10 @@ import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.DirectoryOutputOption
 import dev.vulnlog.cli.shell.shared.FileInputOption
 import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.parseFile
-import dev.vulnlog.cli.shell.shared.parseStdin
+import dev.vulnlog.cli.shell.shared.parseInputs
 import dev.vulnlog.cli.shell.shared.resolveFilter
 import dev.vulnlog.cli.shell.shared.toInputFileOption
 import dev.vulnlog.cli.shell.shared.toOutputDirectoryOption
-import dev.vulnlog.cli.shell.shared.validateFiles
 import dev.vulnlog.cli.shell.shared.writeSuppress
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
@@ -49,8 +47,9 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     val filterOptions by FilterOptions()
 
     override fun run() {
-        val parseResults = parseAndValidate()
-        val vulnlogFile = parseResults.values.first().content
+        val parsedSuccessfully = parseInputOrFail(listOf(input))
+
+        val vulnlogFile = parsedSuccessfully.values.first().content
 
         val filter = resolveFilter(filterOptions, vulnlogFile)
 
@@ -90,24 +89,23 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         }
     }
 
-    private fun parseAndValidate(): Map<File, ParseResult.Ok> {
+    private fun parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
         val parseResults: ParseResults =
-            when (input) {
-                is FileInputOption.File -> parseFile((input as FileInputOption.File).path)
-                FileInputOption.Stdin -> parseStdin()
+            try {
+                parseInputs(inputs)
+            } catch (e: IllegalArgumentException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            } catch (e: IllegalStateException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
             }
         parseResults.onEachFailure { file, result ->
             echo("Parsing of ${file.name} failed:", err = true)
             echo(result.error, err = true)
         }
         if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        val validationFindings = validateFiles(parseResults.success)
-        if (validationFindings.renderedFindings.isNotBlank() && validationFindings.hasErrors) {
-            echo(validationFindings.renderedFindings, err = true)
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
         return parseResults.success
     }

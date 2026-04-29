@@ -120,7 +120,7 @@ class ValidateCommandTest :
 
                 val result = ValidateCommand().test(tempFile.absolutePath)
 
-                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
                 result.stderr shouldContain "Parsing"
                 result.stderr shouldContain "failed"
             } finally {
@@ -135,7 +135,7 @@ class ValidateCommandTest :
 
                 val result = ValidateCommand().test("-")
 
-                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
                 result.stderr shouldContain "Parsing of <stdin> failed"
             } finally {
                 System.setIn(originalStdin)

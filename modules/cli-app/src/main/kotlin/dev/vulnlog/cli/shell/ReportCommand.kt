@@ -17,12 +17,10 @@ import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.FileInputOption
 import dev.vulnlog.cli.shell.shared.FileOutputOption
 import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.parseFiles
-import dev.vulnlog.cli.shell.shared.parseStdin
+import dev.vulnlog.cli.shell.shared.parseInputs
 import dev.vulnlog.cli.shell.shared.resolveFilter
 import dev.vulnlog.cli.shell.shared.toInputFileOption
 import dev.vulnlog.cli.shell.shared.toOutputFileOption
-import dev.vulnlog.cli.shell.shared.validateFiles
 import dev.vulnlog.cli.shell.shared.writeReport
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
@@ -53,8 +51,9 @@ class ReportCommand : CliktCommand(name = "report") {
     val filterOptions by FilterOptions()
 
     override fun run() {
-        val parseResults = parseAndValidate()
-        val vulnlogFiles = parseResults.values.map { it.content }
+        val parsedSuccessfully = parseInputOrFail(inputs)
+
+        val vulnlogFiles = parsedSuccessfully.values.map { it.content }
 
         val project =
             validateSharedProject(vulnlogFiles)
@@ -85,31 +84,23 @@ class ReportCommand : CliktCommand(name = "report") {
         }
     }
 
-    private fun parseAndValidate(): Map<File, ParseResult.Ok> {
+    private fun parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
         val parseResults: ParseResults =
-            if (inputs.size == 1 && inputs.first() is FileInputOption.Stdin) {
-                parseStdin()
-            } else {
-                if (inputs.any { it is FileInputOption.Stdin }) {
-                    echo("Error: Mixing input files with STDIN is not allowed.", err = true)
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-                }
-
-                val inputPaths = (inputs as List<FileInputOption.File>).map(FileInputOption.File::path)
-                parseFiles(inputPaths)
+            try {
+                parseInputs(inputs)
+            } catch (e: IllegalArgumentException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            } catch (e: IllegalStateException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
             }
         parseResults.onEachFailure { file, result ->
             echo("Parsing of ${file.name} failed:", err = true)
             echo(result.error, err = true)
         }
         if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        val validationFindings = validateFiles(parseResults.success)
-        if (validationFindings.renderedFindings.isNotBlank() && validationFindings.hasErrors) {
-            echo(validationFindings.renderedFindings, err = true)
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
         return parseResults.success
     }

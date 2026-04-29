@@ -13,6 +13,7 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.FileInputOption
 import dev.vulnlog.cli.shell.shared.parseFile
+import dev.vulnlog.cli.shell.shared.parseInputs
 import dev.vulnlog.cli.shell.shared.toInputFile
 import dev.vulnlog.cli.shell.shared.validateFiles
 import dev.vulnlog.lib.core.insertEntryAfterVulnerabilitiesHeader
@@ -21,6 +22,8 @@ import dev.vulnlog.lib.core.serializeEntryYaml
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.result.ParseResults
+import java.io.File
 import java.nio.file.Path
 
 class CopyCommand : CliktCommand(name = "copy") {
@@ -42,8 +45,8 @@ class CopyCommand : CliktCommand(name = "copy") {
     ).multiple(required = true)
 
     override fun run() {
-        val sourceResult = parseAndValidateSingle(source.path)
-        val sourceFile = sourceResult.content
+        val parsedSuccessfully = parseInputOrFail(listOf(source))
+        val sourceFile = parsedSuccessfully.values.first().content
 
         val entries =
             vulnIds.map { vulnId ->
@@ -107,5 +110,26 @@ class CopyCommand : CliktCommand(name = "copy") {
         }
 
         return parseResults.success.values.first()
+    }
+
+    private fun parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
+        val parseResults: ParseResults =
+            try {
+                parseInputs(inputs)
+            } catch (e: IllegalArgumentException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            } catch (e: IllegalStateException) {
+                echo(e.message, err = true)
+                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            }
+        parseResults.onEachFailure { file, result ->
+            echo("Parsing of ${file.name} failed:", err = true)
+            echo(result.error, err = true)
+        }
+        if (parseResults.failure.isNotEmpty()) {
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        }
+        return parseResults.success
     }
 }
