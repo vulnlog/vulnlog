@@ -100,19 +100,3 @@ private fun parseContent(
     parser: YamlParser,
     content: String,
 ): ParseResult = parser.parse(content)
-
-fun parseFile(path: Path): ParseResults {
-    val parser = YamlParser(createYamlMapper())
-
-    val fileToResult = mapOf(path.toFile() to parser.parse(path.readText()))
-
-    val ok = filterByType<ParseResult.Ok>(fileToResult)
-    val failure = filterByType<ParseResult.Error>(fileToResult)
-    return ParseResults(ok, failure)
-}
-
-private inline fun <reified T : ParseResult> filterByType(fileToResult: Map<File, ParseResult>): Map<File, T> =
-    fileToResult
-        .filterValues {
-            it is T
-        }.mapValues { (_, result) -> result as T }
