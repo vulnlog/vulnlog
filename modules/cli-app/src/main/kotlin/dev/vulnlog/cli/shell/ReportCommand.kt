@@ -17,7 +17,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.FileInputOption
 import dev.vulnlog.cli.shell.shared.FileOutputOption
 import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.parseInputs
+import dev.vulnlog.cli.shell.shared.parseInputOrFail
 import dev.vulnlog.cli.shell.shared.resolveFilter
 import dev.vulnlog.cli.shell.shared.toInputFileOption
 import dev.vulnlog.cli.shell.shared.toOutputFileOption
@@ -27,8 +27,6 @@ import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
-import dev.vulnlog.lib.result.ParseResult
-import dev.vulnlog.lib.result.ParseResults
 import java.io.File
 import java.nio.file.Path
 import java.time.LocalDate
@@ -82,26 +80,5 @@ class ReportCommand : CliktCommand(name = "report") {
 
             is FileOutputOption.Stdout -> echo(content)
         }
-    }
-
-    private fun parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
-        val parseResults: ParseResults =
-            try {
-                parseInputs(inputs)
-            } catch (e: IllegalArgumentException) {
-                echo(e.message, err = true)
-                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-            } catch (e: IllegalStateException) {
-                echo(e.message, err = true)
-                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-            }
-        parseResults.onEachFailure { file, result ->
-            echo("Parsing of ${file.name} failed:", err = true)
-            echo(result.error, err = true)
-        }
-        if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        }
-        return parseResults.success
     }
 }

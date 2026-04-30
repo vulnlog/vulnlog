@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.vulnlog.cli.shell.shared
 
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.ProgramResult
+import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.lib.parse.YamlParser
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.result.ParseResult
@@ -10,7 +13,28 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.readText
 
-fun parseInputs(inputs: List<FileInputOption>): ParseResults {
+fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
+    val parseResults: ParseResults =
+        try {
+            parseInputs(inputs)
+        } catch (e: IllegalArgumentException) {
+            echo(e.message, err = true)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        } catch (e: IllegalStateException) {
+            echo(e.message, err = true)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        }
+    parseResults.onEachFailure { file, result ->
+        echo("Parsing of ${file.name} failed:", err = true)
+        echo(result.error, err = true)
+    }
+    if (parseResults.failure.isNotEmpty()) {
+        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+    }
+    return parseResults.success
+}
+
+private fun parseInputs(inputs: List<FileInputOption>): ParseResults {
     require(inputs.isNotEmpty()) { "inputs must not be empty." }
 
     val parser = YamlParser(createYamlMapper())
