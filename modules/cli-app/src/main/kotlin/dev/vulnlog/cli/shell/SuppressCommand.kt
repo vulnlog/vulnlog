@@ -19,6 +19,7 @@ import dev.vulnlog.cli.shell.shared.parseInputOrFail
 import dev.vulnlog.cli.shell.shared.resolveFilter
 import dev.vulnlog.cli.shell.shared.toInputFileOption
 import dev.vulnlog.cli.shell.shared.toOutputDirectoryOption
+import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.cli.shell.shared.writeSuppress
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
@@ -45,6 +46,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
     override fun run() {
         val parsedSuccessfully = parseInputOrFail(listOf(input))
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
         val vulnlogFile = parsedSuccessfully.values.first().content
 

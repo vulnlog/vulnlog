@@ -14,7 +14,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.FileInputOption
 import dev.vulnlog.cli.shell.shared.parseInputOrFail
 import dev.vulnlog.cli.shell.shared.toInputFileOption
-import dev.vulnlog.cli.shell.shared.validateFiles
+import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."
@@ -27,15 +27,11 @@ class ValidateCommand : CliktCommand(name = "validate") {
 
     override fun run() {
         val parsedSuccessfully = parseInputOrFail(inputs)
+        val validationFindings = validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
-        val validationFindings = validateFiles(parsedSuccessfully)
-        if (validationFindings.renderedFindings.isNotBlank()) {
-            echo(validationFindings.renderedFindings, err = true)
-        }
-        if (validationFindings.hasErrors || (validationFindings.hasWarnings && strict)) {
+        if (validationFindings.hasWarnings && strict) {
             throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        } else {
-            echo("Validation OK")
         }
+        echo("Validation OK")
     }
 }

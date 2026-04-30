@@ -21,6 +21,7 @@ import dev.vulnlog.cli.shell.shared.parseInputOrFail
 import dev.vulnlog.cli.shell.shared.resolveFilter
 import dev.vulnlog.cli.shell.shared.toInputFileOption
 import dev.vulnlog.cli.shell.shared.toOutputFileOption
+import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.cli.shell.shared.writeReport
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
@@ -50,6 +51,7 @@ class ReportCommand : CliktCommand(name = "report") {
 
     override fun run() {
         val parsedSuccessfully = parseInputOrFail(inputs)
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
         val vulnlogFiles = parsedSuccessfully.values.map { it.content }
 

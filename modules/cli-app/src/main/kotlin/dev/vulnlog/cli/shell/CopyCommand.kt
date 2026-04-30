@@ -14,7 +14,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.shared.FileInputOption
 import dev.vulnlog.cli.shell.shared.parseInputOrFail
 import dev.vulnlog.cli.shell.shared.toInputFile
-import dev.vulnlog.cli.shell.shared.validateFiles
+import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.insertEntryAfterVulnerabilitiesHeader
 import dev.vulnlog.lib.core.latestPublishedRelease
 import dev.vulnlog.lib.core.serializeEntryYaml
@@ -41,8 +41,9 @@ class CopyCommand : CliktCommand(name = "copy") {
 
     override fun run() {
         val parsedSuccessfully = parseInputOrFail(listOf(source))
-        val sourceFile = parsedSuccessfully.values.first().content
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
+        val sourceFile = parsedSuccessfully.values.first().content
         val entries =
             vulnIds.map { vulnId ->
                 sourceFile.vulnerabilities.find { it.id.id == vulnId }
@@ -55,16 +56,10 @@ class CopyCommand : CliktCommand(name = "copy") {
         val mapper = createYamlMapper()
 
         for (targetPathStr in targets) {
-            val targetResult = parseInputOrFail(listOf(targetPathStr))
+            val parsedTargetSuccessfully = parseInputOrFail(listOf(targetPathStr))
+            validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
-            val validationFindings = validateFiles(targetResult)
-            if (validationFindings.renderedFindings.isNotBlank() && validationFindings.hasErrors) {
-                echo(validationFindings.renderedFindings, err = true)
-                throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-            }
-
-            val content = targetResult.values.first().content
-
+            val content = parsedTargetSuccessfully.values.first().content
             val existingIds = content.vulnerabilities.map { it.id.id }.toSet()
 
             val latestRelease = latestPublishedRelease(content.releases)
