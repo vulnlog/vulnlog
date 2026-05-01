@@ -12,27 +12,29 @@ import kotlin.io.path.readText
 fun parseInputs(inputs: List<FileInputOption>): ParseResults {
     require(inputs.isNotEmpty()) { "inputs must not be empty." }
 
-    val parser = YamlParser(createYamlMapper())
-
-    return if (inputs.size == 1) {
-        val (file, parseResult) = parseInputOption(parser, inputs.first())
-        when (parseResult) {
-            is ParseResult.Error -> ParseResults(failure = mapOf(file to parseResult))
-            is ParseResult.Ok -> ParseResults(success = mapOf(file to parseResult))
-        }
-    } else {
-        val typeToInputOptions = inputs.groupBy { it::class }
-        val stdinCount = typeToInputOptions[FileInputOption.Stdin::class]?.size ?: 0
-        val fileCount = typeToInputOptions[FileInputOption.File::class]?.size ?: 0
-        if (stdinCount > 1) {
-            error("Multiple <stdin> are not supported")
-        }
-        if (stdinCount > 0 && fileCount > 0) {
-            error("Mixing input files with STDIN is not allowed.")
-        }
-        parseInputOptions(parser, inputs)
+    val typeToInputOptions = inputs.groupBy { it::class }
+    val stdinCount = typeToInputOptions[FileInputOption.Stdin::class]?.size ?: 0
+    val fileCount = typeToInputOptions[FileInputOption.File::class]?.size ?: 0
+    if (stdinCount > 1) {
+        error("Multiple <stdin> are not supported")
     }
+    if (stdinCount > 0 && fileCount > 0) {
+        error("Mixing input files with STDIN is not allowed.")
+    }
+
+    val parser = YamlParser(createYamlMapper())
+    return parseInputOptions(parser, inputs)
 }
+
+/**
+ * Renders each failure in [parseResults] as a two-line block: a header naming the file and the
+ * underlying parse error. Centralises the message format so all surfaces (CLI, Gradle) report
+ * parse failures identically.
+ */
+fun renderParseFailures(parseResults: ParseResults): List<String> =
+    parseResults.failure.map { (file, result) ->
+        "Parsing of ${file.name} failed:\n${result.error}"
+    }
 
 private fun parseInputOptions(
     parser: YamlParser,

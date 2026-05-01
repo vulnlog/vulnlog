@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.internal.buildFilter
+import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.SuppressionFilter
@@ -60,7 +60,7 @@ abstract class VulnlogSuppressTask : DefaultTask() {
         validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
         val vulnlogFile = parsedSuccessfully.values.first().content
-        val filter = buildFilter(vulnlogFile, reporter.orNull, release.orNull, tags.get())
+        val filter = buildFilterOrFail(vulnlogFile, reporter.orNull, release.orNull, tags.get())
 
         val targetReporters =
             vulnlogFile.vulnerabilities

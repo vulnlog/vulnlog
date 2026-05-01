@@ -171,7 +171,7 @@ class ReportCommandTest :
                 """
                 Usage: report [<options>] <inputs>...
 
-                Error: invalid value for <inputs>: Input path '/nonexistent/vulnlog.vl.yaml' is a directory or file does not exist.
+                Error: invalid value for <inputs>: Input path '/nonexistent/vulnlog.vl.yaml' does not exist.
                 
                 """.trimIndent()
         }
@@ -188,7 +188,7 @@ class ReportCommandTest :
                     """
                     Usage: report [<options>] <inputs>...
 
-                    Error: invalid value for <inputs>: Input '${tempFile.absolutePath}' is not valid: Error: File name must be [vulnlog|*.vl].[yaml|yml]: ${tempFile.absolutePath}
+                    Error: invalid value for <inputs>: Input '${tempFile.absolutePath}' is not valid: File name must be [vulnlog|*.vl].[yaml|yml]: ${tempFile.absolutePath}
                     
                     """.trimIndent()
             } finally {

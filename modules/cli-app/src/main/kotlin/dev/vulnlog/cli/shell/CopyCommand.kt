@@ -54,7 +54,7 @@ class CopyCommand : CliktCommand(name = "copy") {
 
         for (targetPathStr in targets) {
             val parsedTargetSuccessfully = parseInputOrFail(listOf(targetPathStr))
-            validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+            validateParsedInputOrFailWithFailureOutput(parsedTargetSuccessfully)
 
             val content = parsedTargetSuccessfully.values.first().content
             val existingIds = content.vulnerabilities.map { it.id.id }.toSet()

@@ -18,6 +18,7 @@ import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.parseInputs
+import dev.vulnlog.lib.shell.renderParseFailures
 import dev.vulnlog.lib.shell.resolveReleaseFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateFiles
@@ -32,18 +33,13 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<File, Pars
     val parseResults: ParseResults =
         try {
             parseInputs(inputs)
-        } catch (e: IllegalArgumentException) {
-            echo(e.message, err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        } catch (e: IllegalStateException) {
+        } catch (e: RuntimeException) {
+            if (e !is IllegalArgumentException && e !is IllegalStateException) throw e
             echo(e.message, err = true)
             throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
-    parseResults.onEachFailure { file, result ->
-        echo("Parsing of ${file.name} failed:", err = true)
-        echo(result.error, err = true)
-    }
     if (parseResults.failure.isNotEmpty()) {
+        renderParseFailures(parseResults).forEach { echo(it, err = true) }
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
     }
     return parseResults.success
@@ -93,8 +89,11 @@ fun ArgumentTransformContext.toInputFileOption(input: String): FileInputOption =
 
 fun ArgumentTransformContext.toInputFile(input: String): FileInputOption.File {
     val inputPath = Path.of(input)
-    if (inputPath.isDirectory() || !inputPath.exists()) {
-        fail("Input path '$inputPath' is a directory or file does not exist.")
+    if (!inputPath.exists()) {
+        fail("Input path '$inputPath' does not exist.")
+    }
+    if (inputPath.isDirectory()) {
+        fail("Input path '$inputPath' is a directory, expected a file.")
     }
     val inputFileValidation = validateInputPath(inputPath)
     if (inputFileValidation is InputValidationResult.Error) {

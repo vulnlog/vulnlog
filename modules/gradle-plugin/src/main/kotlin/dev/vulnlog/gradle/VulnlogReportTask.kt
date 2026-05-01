@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.internal.buildFilter
+import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.collectReportingEntries
@@ -63,7 +63,7 @@ abstract class VulnlogReportTask : DefaultTask() {
             validateSharedProject(vulnlogFiles)
                 ?: throw GradleException("All input files must share the same project metadata.")
 
-        val filter = buildFilter(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get())
+        val filter = buildFilterOrFail(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get())
 
         val allEntries = vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
         val merged = mergeReportingEntries(allEntries)

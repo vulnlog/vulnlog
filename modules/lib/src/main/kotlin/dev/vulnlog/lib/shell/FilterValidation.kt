@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.vulnlog.lib.shell
 
+import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 
@@ -77,7 +81,47 @@ fun resolveTagsFilter(
         emptySet()
     }
 
+/**
+ * Resolves and validates a reporter filter option. Accepts the canonical lowercase identifier
+ * (e.g. `"dependency-check"`) and translates it into a [ReporterType] using [parseReporter].
+ *
+ * @param reporterOption The canonical reporter identifier, or null when no reporter filter is requested.
+ * @return The resolved [ReporterType], or null if [reporterOption] is null.
+ * @throws FilterValidationException If [reporterOption] is not a known canonical reporter identifier.
+ */
+fun resolveReporterFilter(reporterOption: String?): ReporterType? =
+    reporterOption?.let { value ->
+        try {
+            parseReporter(value)
+        } catch (e: IllegalArgumentException) {
+            throw FilterValidationException(
+                "Invalid reporter: $value",
+                "Supported reporters: ${ReporterType.entries.joinToString(", ") { it.canonical() }}",
+            )
+        }
+    }
+
+/**
+ * Builds a [VulnlogFilter] from raw option strings, validating each against the given Vulnlog file.
+ * Wraps [resolveReleaseFilter], [resolveTagsFilter], and [resolveReporterFilter] so callers that
+ * receive options as strings (e.g. Gradle tasks) get a single validated entry point with a uniform
+ * error contract.
+ *
+ * @throws FilterValidationException If any of the filter options is invalid.
+ */
+fun buildFilter(
+    vulnlogFile: VulnlogFile,
+    reporterOption: String?,
+    releaseOption: String?,
+    tagsOptions: Set<String>,
+): VulnlogFilter =
+    VulnlogFilter(
+        releases = resolveReleaseFilter(releaseOption, vulnlogFile),
+        tags = resolveTagsFilter(tagsOptions, vulnlogFile),
+        reporter = resolveReporterFilter(reporterOption),
+    )
+
 class FilterValidationException(
-    override val message: String,
+    message: String,
     val detail: String,
 ) : RuntimeException(message)
