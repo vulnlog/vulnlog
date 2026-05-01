@@ -1,40 +1,15 @@
 // Copyright 2024 the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
-package dev.vulnlog.cli.shell.shared
+package dev.vulnlog.lib.shell
 
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.ProgramResult
-import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.lib.parse.YamlParser
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.ParseResults
 import java.io.File
-import java.nio.file.Path
 import kotlin.io.path.readText
 
-fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
-    val parseResults: ParseResults =
-        try {
-            parseInputs(inputs)
-        } catch (e: IllegalArgumentException) {
-            echo(e.message, err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        } catch (e: IllegalStateException) {
-            echo(e.message, err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        }
-    parseResults.onEachFailure { file, result ->
-        echo("Parsing of ${file.name} failed:", err = true)
-        echo(result.error, err = true)
-    }
-    if (parseResults.failure.isNotEmpty()) {
-        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-    }
-    return parseResults.success
-}
-
-private fun parseInputs(inputs: List<FileInputOption>): ParseResults {
+fun parseInputs(inputs: List<FileInputOption>): ParseResults {
     require(inputs.isNotEmpty()) { "inputs must not be empty." }
 
     val parser = YamlParser(createYamlMapper())
@@ -85,16 +60,9 @@ private fun parseInputOption(
     input: FileInputOption,
 ): Pair<File, ParseResult> =
     when (input) {
-        is FileInputOption.File -> Pair(input.path.toFile(), parseFile(parser, input.path))
-        FileInputOption.Stdin -> Pair(File("<stdin>"), parseStdin(parser))
+        is FileInputOption.File -> Pair(input.path.toFile(), parseContent(parser, input.path.readText()))
+        FileInputOption.Stdin -> Pair(File("<stdin>"), parseContent(parser, System.`in`.bufferedReader().readText()))
     }
-
-private fun parseFile(
-    parser: YamlParser,
-    path: Path,
-): ParseResult = parseContent(parser, path.readText())
-
-private fun parseStdin(parser: YamlParser): ParseResult = parseContent(parser, System.`in`.bufferedReader().readText())
 
 private fun parseContent(
     parser: YamlParser,

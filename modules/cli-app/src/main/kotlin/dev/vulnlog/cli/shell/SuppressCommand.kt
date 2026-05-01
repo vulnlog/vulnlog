@@ -12,20 +12,13 @@ import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.DirectoryOutputOption
-import dev.vulnlog.cli.shell.shared.FileInputOption
-import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.parseInputOrFail
-import dev.vulnlog.cli.shell.shared.resolveFilter
-import dev.vulnlog.cli.shell.shared.toInputFileOption
-import dev.vulnlog.cli.shell.shared.toOutputDirectoryOption
-import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
-import dev.vulnlog.cli.shell.shared.writeSuppress
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
 import dev.vulnlog.lib.core.mapToSuppression
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
+import dev.vulnlog.lib.shell.DirectoryOutputOption
+import dev.vulnlog.lib.shell.FileInputOption
 import java.nio.file.Path
 
 class SuppressCommand : CliktCommand(name = "suppress") {

@@ -11,15 +11,12 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.FileInputOption
-import dev.vulnlog.cli.shell.shared.parseInputOrFail
-import dev.vulnlog.cli.shell.shared.toInputFile
-import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.insertEntryAfterVulnerabilitiesHeader
 import dev.vulnlog.lib.core.latestPublishedRelease
 import dev.vulnlog.lib.core.serializeEntryYaml
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.v1.V1Mapper
+import dev.vulnlog.lib.shell.FileInputOption
 
 class CopyCommand : CliktCommand(name = "copy") {
     override val hiddenFromHelp = true

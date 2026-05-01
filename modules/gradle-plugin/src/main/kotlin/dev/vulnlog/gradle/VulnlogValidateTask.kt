@@ -2,12 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.vulnlog.gradle
 
-import dev.vulnlog.lib.core.renderValidation
-import dev.vulnlog.lib.core.validate
-import dev.vulnlog.lib.model.VulnlogFileContext
-import dev.vulnlog.lib.parse.YamlParser
-import dev.vulnlog.lib.parse.createYamlMapper
-import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.gradle.internal.parseInputOrFail
+import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -30,49 +27,15 @@ abstract class VulnlogValidateTask : DefaultTask() {
 
     @TaskAction
     fun validate() {
-        val inputFiles = files.files
+        val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
         if (inputFiles.isEmpty()) {
             throw GradleException("No Vulnlog files configured. Set vulnlog.files in your build script.")
         }
-
-        val parser = YamlParser(createYamlMapper())
-        val parseResults = inputFiles.associateWith { file -> parser.parse(file.readText()) }
-
-        val errors = parseResults.filter { (_, result) -> result is ParseResult.Error }
-        if (errors.isNotEmpty()) {
-            val messages =
-                errors.map { (file, result) ->
-                    "Parsing of ${file.name} failed:\n${(result as ParseResult.Error).error}"
-                }
-            throw GradleException(messages.joinToString("\n\n"))
-        }
-
-        val successResults = parseResults.mapValues { (_, result) -> result as ParseResult.Ok }
-
-        val contextToResults =
-            successResults.map { (file, parseResult) ->
-                val context = VulnlogFileContext(parseResult.validationVersion, file.name, parseResult.content)
-                context to validate(context)
-            }
-
-        val renderedFindings =
-            contextToResults
-                .filter { (_, result) -> result.findings.isNotEmpty() }
-                .joinToString("\n\n") { (context, result) ->
-                    "Validation findings for ${context.fileName}:\n${renderValidation(result)}"
-                }
-
-        val hasErrors = contextToResults.any { (_, result) -> result.errors.isNotEmpty() }
-        val hasWarnings = contextToResults.any { (_, result) -> result.warnings.isNotEmpty() }
-
-        if (renderedFindings.isNotBlank()) {
-            logger.warn(renderedFindings)
-        }
-
-        if (hasErrors || (hasWarnings && strict.get())) {
+        val parsedSuccessfully = parseInputOrFail(inputFiles)
+        val validationFindings = validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        if (validationFindings.hasWarnings && strict.get()) {
             throw GradleException("Vulnlog validation failed.")
-        } else {
-            logger.lifecycle("Vulnlog validation OK")
         }
+        logger.lifecycle("Vulnlog validation OK")
     }
 }

@@ -8,12 +8,10 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
-import dev.vulnlog.cli.shell.shared.FileOutputOption
-import dev.vulnlog.cli.shell.shared.toOutputFileOption
-import dev.vulnlog.cli.shell.shared.writeInit
 import dev.vulnlog.lib.core.init
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.shell.FileOutputOption
 
 class InitCommand : CliktCommand(name = "init") {
     override fun help(context: Context): String =

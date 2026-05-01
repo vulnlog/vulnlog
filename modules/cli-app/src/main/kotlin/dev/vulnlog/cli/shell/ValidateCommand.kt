@@ -11,10 +11,7 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.FileInputOption
-import dev.vulnlog.cli.shell.shared.parseInputOrFail
-import dev.vulnlog.cli.shell.shared.toInputFileOption
-import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.lib.shell.FileInputOption
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."

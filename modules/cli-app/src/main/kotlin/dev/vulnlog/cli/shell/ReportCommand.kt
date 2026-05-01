@@ -14,21 +14,13 @@ import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.FileInputOption
-import dev.vulnlog.cli.shell.shared.FileOutputOption
-import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.parseInputOrFail
-import dev.vulnlog.cli.shell.shared.resolveFilter
-import dev.vulnlog.cli.shell.shared.toInputFileOption
-import dev.vulnlog.cli.shell.shared.toOutputFileOption
-import dev.vulnlog.cli.shell.shared.validateParsedInputOrFailWithFailureOutput
-import dev.vulnlog.cli.shell.shared.writeReport
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
-import java.io.File
+import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.shell.FileOutputOption
 import java.nio.file.Path
 import java.time.LocalDate
 
