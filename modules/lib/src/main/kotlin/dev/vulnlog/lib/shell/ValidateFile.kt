@@ -1,6 +1,6 @@
 // Copyright 2024 the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
-package dev.vulnlog.cli.shell.shared
+package dev.vulnlog.lib.shell
 
 import dev.vulnlog.lib.core.renderValidation
 import dev.vulnlog.lib.core.validate

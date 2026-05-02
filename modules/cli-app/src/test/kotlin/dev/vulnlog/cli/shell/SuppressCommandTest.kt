@@ -7,207 +7,167 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import java.io.ByteArrayInputStream
-import java.nio.file.Files
-
-private val VALID_VULNLOG_YAML =
-    """
-    # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: Acme Web App
-      author: Acme Corp Security Team
-
-    releases:
-      - id: 1.0.0
-        published_at: 2026-01-15
-
-    vulnerabilities:
-
-      - id: CVE-2026-1234
-        releases: [ 1.0.0 ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: trivy
-        analysis: >
-          The vulnerable code path is not reachable in our application
-          because we only use the safe subset of the API.
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
 
 class SuppressCommandTest :
     FunSpec({
 
-        test("suppress writes to file with valid file path") {
-            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-            val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
-            try {
-                tempFile.writeText(VALID_VULNLOG_YAML)
+        context("happy path") {
 
-                val result = SuppressCommand().test("${tempFile.absolutePath} -o ${outputDir.toAbsolutePath()}")
-
-                result.statusCode shouldBe 0
-                result.stdout shouldContain "Suppression file created at:"
-            } finally {
-                outputDir.toFile().deleteRecursively()
-                tempFile.delete()
-            }
-        }
-
-        test("suppress writes to stdout with -o -") {
-            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-            try {
-                tempFile.writeText(VALID_VULNLOG_YAML)
-
-                val result = SuppressCommand().test("${tempFile.absolutePath} -o -")
-
-                result.statusCode shouldBe 0
-                result.stdout shouldContain "CVE-2026-1234"
-            } finally {
-                tempFile.delete()
-            }
-        }
-
-        test("suppress reads from stdin and writes to stdout") {
-            val originalStdin = System.`in`
-            try {
-                System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
-
-                val result = SuppressCommand().test("- -o -")
-
-                result.statusCode shouldBe 0
-                result.stdout shouldContain "CVE-2026-1234"
-            } finally {
-                System.setIn(originalStdin)
-            }
-        }
-
-        test("suppress reads from stdin and writes to directory") {
-            val originalStdin = System.`in`
-            val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
-            try {
-                System.setIn(ByteArrayInputStream(VALID_VULNLOG_YAML.toByteArray()))
-
-                val result = SuppressCommand().test("- -o ${outputDir.toAbsolutePath()}")
-
-                result.statusCode shouldBe 0
-                result.stdout shouldContain "Suppression file created at:"
-            } finally {
-                System.setIn(originalStdin)
-                outputDir.toFile().deleteRecursively()
-            }
-        }
-
-        test("suppress fails when file does not exist") {
-            val result = SuppressCommand().test("/nonexistent/vulnlog.vl.yaml")
-
-            result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldContain "does not exist"
-        }
-
-        test("suppress fails when file name does not match expected pattern") {
-            val tempFile = Files.createTempFile("invalid-name", ".txt").toFile()
-            try {
-                tempFile.writeText(VALID_VULNLOG_YAML)
-
-                val result = SuppressCommand().test(tempFile.absolutePath)
-
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                result.stderr shouldContain "File name must be"
-            } finally {
-                tempFile.delete()
-            }
-        }
-
-        test("suppress fails with invalid vulnlog YAML from stdin") {
-            val originalStdin = System.`in`
-            try {
-                val invalidVulnlog = "---\nproject:\n  organization: Acme\n  name: Test\n  author: Bob\n"
-                System.setIn(ByteArrayInputStream(invalidVulnlog.toByteArray()))
-
-                val result = SuppressCommand().test("-")
-
-                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                result.stderr shouldContain "Parsing of <stdin> failed"
-            } finally {
-                System.setIn(originalStdin)
-            }
-        }
-
-        context("--reporter accepts the same hyphenated names as YAML") {
-            listOf(
-                "trivy",
-                "snyk",
-                "dependency-check",
-                "github-advisory",
-                "grype",
-                "npm-audit",
-                "cargo-audit",
-                "semgrep",
-                "other",
-            ).forEach { reporter ->
-                test("--reporter $reporter is accepted") {
-                    val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-                    val outputDir = Files.createTempDirectory("vulnlog-suppress-output")
-                    try {
-                        tempFile.writeText(VALID_VULNLOG_YAML)
-
+            test("writes a suppression file to the configured directory") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
-                            SuppressCommand().test(
-                                "${tempFile.absolutePath} --reporter $reporter -o ${outputDir.toAbsolutePath()}",
-                            )
+                            SuppressCommand().test("${input.absolutePath} -o ${outputDir.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
-                    } finally {
-                        outputDir.toFile().deleteRecursively()
-                        tempFile.delete()
+                        result.stdout shouldContain "Suppression file created at:"
+                    }
+                }
+            }
+
+            test("writes to stdout when -o is '-'") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "CVE-2026-1234"
+                }
+            }
+
+            test("reads from stdin and writes to stdout") {
+                withStdin(vulnlogYaml()) {
+                    val result = SuppressCommand().test("- -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "CVE-2026-1234"
+                }
+            }
+
+            test("reads from stdin and writes to a directory") {
+                withTempDir(prefix = "suppress-out") { outputDir ->
+                    withStdin(vulnlogYaml()) {
+                        val result = SuppressCommand().test("- -o ${outputDir.toAbsolutePath()}")
+
+                        result.statusCode shouldBe 0
+                        result.stdout shouldContain "Suppression file created at:"
                     }
                 }
             }
         }
 
-        test("--reporter rejects underscored names with a error") {
-            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-            try {
-                tempFile.writeText(VALID_VULNLOG_YAML)
+        context("input validation") {
 
-                val result = SuppressCommand().test("${tempFile.absolutePath} --reporter dependency_check")
+            test("fails when the input file does not exist") {
+                val result = SuppressCommand().test("/nonexistent/vulnlog.vl.yaml")
 
-                result.statusCode shouldBe 1
-                result.stderr shouldContain "Unsupported reporter: dependency_check"
-                result.stderr shouldNotContain "dev.vulnlog"
-                result.stderr shouldNotContain "No enum constant"
-            } finally {
-                tempFile.delete()
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.stderr shouldContain "does not exist"
+            }
+
+            test("fails when the input path is a directory") {
+                withTempDir { dir ->
+                    val result = SuppressCommand().test(dir.toAbsolutePath().toString())
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "is a directory"
+                }
+            }
+
+            test("fails when the input file name does not match the expected pattern") {
+                withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test(input.absolutePath)
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "File name must be"
+                }
+            }
+
+            test("fails on invalid Vulnlog YAML from stdin") {
+                withStdin(INVALID_VULNLOG_YAML) {
+                    val result = SuppressCommand().test("-")
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "Parsing of <stdin> failed"
+                }
             }
         }
 
-        test("--reporter rejects unknown values with a error") {
-            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-            try {
-                tempFile.writeText(VALID_VULNLOG_YAML)
+        context("filter validation") {
 
-                val result = SuppressCommand().test("${tempFile.absolutePath} --reporter bogus")
+            context("--reporter accepts the canonical hyphenated names") {
+                listOf(
+                    "trivy",
+                    "snyk",
+                    "dependency-check",
+                    "github-advisory",
+                    "grype",
+                    "npm-audit",
+                    "cargo-audit",
+                    "semgrep",
+                    "other",
+                ).forEach { reporter ->
+                    test("--reporter $reporter is accepted") {
+                        withTempFile(content = vulnlogYaml()) { input ->
+                            withTempDir(prefix = "suppress-out") { outputDir ->
+                                val result =
+                                    SuppressCommand().test(
+                                        "${input.absolutePath} --reporter $reporter -o ${outputDir.toAbsolutePath()}",
+                                    )
 
-                result.statusCode shouldBe 1
-                result.stderr shouldContain "Unsupported reporter: bogus"
-                result.stderr shouldNotContain "dev.vulnlog"
-            } finally {
-                tempFile.delete()
+                                result.statusCode shouldBe 0
+                            }
+                        }
+                    }
+                }
             }
-        }
 
-        test("--reporter help text lists hyphenated reporter names") {
-            val result = SuppressCommand().test("--help")
+            test("--reporter rejects underscored names without leaking internals") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --reporter dependency_check")
 
-            result.stdout shouldContain "dependency-check"
-            result.stdout shouldContain "github-advisory"
-            result.stdout shouldContain "npm-audit"
-            result.stdout shouldContain "cargo-audit"
+                    result.statusCode shouldBe 1
+                    result.stderr shouldContain "Unsupported reporter: dependency_check"
+                    result.stderr shouldNotContain "dev.vulnlog"
+                    result.stderr shouldNotContain "No enum constant"
+                }
+            }
+
+            test("--reporter rejects unknown values without leaking internals") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --reporter bogus")
+
+                    result.statusCode shouldBe 1
+                    result.stderr shouldContain "Unsupported reporter: bogus"
+                    result.stderr shouldNotContain "dev.vulnlog"
+                }
+            }
+
+            test("fails on an unknown release") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --release 9.9.9")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.stderr shouldContain "Release not found: 9.9.9"
+                    result.stderr shouldContain "Known releases: 1.0.0"
+                }
+            }
+
+            test("fails on an unknown tag") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --tag missing-tag")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.stderr shouldContain "Tag not found: missing-tag"
+                }
+            }
+
+            test("--reporter help text lists the canonical hyphenated names") {
+                val result = SuppressCommand().test("--help")
+
+                result.stdout shouldContain "dependency-check"
+                result.stdout shouldContain "github-advisory"
+                result.stdout shouldContain "npm-audit"
+                result.stdout shouldContain "cargo-audit"
+            }
         }
     })

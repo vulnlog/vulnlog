@@ -1,6 +1,6 @@
 // Copyright 2024 the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
-package dev.vulnlog.cli.shell.shared
+package dev.vulnlog.lib.shell
 
 import dev.vulnlog.lib.result.InputValidationResult
 import java.nio.file.Path
@@ -15,11 +15,11 @@ import java.nio.file.Path
  */
 fun validateInputPath(path: Path): InputValidationResult {
     if (!path.toFile().exists()) {
-        return InputValidationResult.Error("Error: Path '$path' does not exist.")
+        return InputValidationResult.Error("Path '$path' does not exist.")
     }
     val name = path.fileName.toString()
     if (!isVulnlogFileName(name)) {
-        return InputValidationResult.Error("Error: File name must be [vulnlog|*.vl].[yaml|yml]: $path")
+        return InputValidationResult.Error("File name must be [vulnlog|*.vl].[yaml|yml]: $path")
     }
     return InputValidationResult.Ok(path)
 }

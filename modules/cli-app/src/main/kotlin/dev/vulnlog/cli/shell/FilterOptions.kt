@@ -1,20 +1,15 @@
 // Copyright 2024 the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
-package dev.vulnlog.cli.shell.shared
+package dev.vulnlog.cli.shell
 
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
-import dev.vulnlog.cli.shell.ExitCode
-import dev.vulnlog.lib.core.VulnlogFilter
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.model.ReporterType
-import dev.vulnlog.lib.model.VulnlogFile
 
 class FilterOptions : OptionGroup() {
     val reporter: ReporterType? by option(
@@ -37,17 +32,3 @@ class FilterOptions : OptionGroup() {
     ).multiple()
         .unique()
 }
-
-fun CliktCommand.resolveFilter(
-    filterOptions: FilterOptions,
-    vulnlogFile: VulnlogFile,
-): VulnlogFilter =
-    try {
-        val releases = resolveReleaseFilter(filterOptions.releaseOption, vulnlogFile)
-        val tags = resolveTagsFilter(filterOptions.tagsOptions, vulnlogFile)
-        VulnlogFilter(releases, tags, filterOptions.reporter)
-    } catch (e: FilterValidationException) {
-        echo(e.message, err = true)
-        echo(e.detail, err = true)
-        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.ordinal)
-    }

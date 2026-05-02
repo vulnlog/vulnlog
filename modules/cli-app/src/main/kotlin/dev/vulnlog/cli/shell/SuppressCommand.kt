@@ -5,34 +5,29 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.DirectoryOutputOption
-import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.parseFile
-import dev.vulnlog.cli.shell.shared.parseStdin
-import dev.vulnlog.cli.shell.shared.resolveFilter
-import dev.vulnlog.cli.shell.shared.toOutputDirectoryOption
-import dev.vulnlog.cli.shell.shared.validateFiles
-import dev.vulnlog.cli.shell.shared.validateInputPath
-import dev.vulnlog.cli.shell.shared.writeSuppress
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
 import dev.vulnlog.lib.core.mapToSuppression
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
-import dev.vulnlog.lib.result.InputValidationResult
-import dev.vulnlog.lib.result.ParseResult
-import java.io.File
+import dev.vulnlog.lib.shell.DirectoryOutputOption
+import dev.vulnlog.lib.shell.FileInputOption
 import java.nio.file.Path
 
 class SuppressCommand : CliktCommand(name = "suppress") {
     override fun help(context: Context): String = "Create suppression files."
 
-    val file: String by argument()
+    val input: FileInputOption by argument(
+        help = "Vulnlog file, or '-' to read from stdin, to create suppression files from.",
+    ).convert(conversion = ArgumentTransformContext::toInputFileOption)
+
     val output: DirectoryOutputOption by option(
         "-o",
         "--output",
@@ -43,8 +38,10 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     val filterOptions by FilterOptions()
 
     override fun run() {
-        val parseResults = parseAndValidate()
-        val vulnlogFile = parseResults.values.first().content
+        val parsedSuccessfully = parseInputOrFail(listOf(input))
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+
+        val vulnlogFile = parsedSuccessfully.values.first().content
 
         val filter = resolveFilter(filterOptions, vulnlogFile)
 
@@ -82,33 +79,5 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
             is DirectoryOutputOption.Stdout -> echo(contents.first().content)
         }
-    }
-
-    private fun parseAndValidate(): Map<File, ParseResult.Ok> {
-        val parseResults =
-            if (file == "-") {
-                parseStdin()
-            } else {
-                val result = validateInputPath(Path.of(file))
-                if (result is InputValidationResult.Error) {
-                    echo(result.message, err = true)
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-                }
-                parseFile((result as InputValidationResult.Ok).path)
-            }
-        parseResults.onEachFailure { file, result ->
-            echo("Parsing of ${file.name} failed:", err = true)
-            echo(result.error, err = true)
-        }
-        if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        val validationFindings = validateFiles(parseResults.success)
-        if (validationFindings.renderedFindings.isNotBlank() && validationFindings.hasErrors) {
-            echo(validationFindings.renderedFindings, err = true)
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-        return parseResults.success
     }
 }

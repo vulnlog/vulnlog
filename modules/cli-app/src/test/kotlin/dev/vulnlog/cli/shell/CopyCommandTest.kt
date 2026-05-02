@@ -7,7 +7,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import java.nio.file.Files
 
 private val SOURCE_YAML =
     """
@@ -47,195 +46,178 @@ private val SOURCE_YAML =
         justification: component not present
     """.trimIndent()
 
-private val TARGET_YAML =
-    """
-    # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: Acme Web App
-      author: Acme Corp Security Team
-
-    releases:
-      - id: 1.0.0
-        published_at: 2025-06-01
-
-    vulnerabilities:
-
-      - id: CVE-2026-0001
-        releases: [ 1.0.0 ]
-        description: Existing entry
-        packages: [ "pkg:npm/foo@1.0.0" ]
-        reports:
-          - reporter: trivy
-        verdict: not affected
-        justification: component not present
-    """.trimIndent()
+private val TARGET_YAML = vulnlogYaml(releaseId = "1.0.0", cveId = "CVE-2026-0001")
 
 class CopyCommandTest :
     FunSpec({
 
-        test("copy single entry to single target") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            val targetFile = Files.createTempFile("target", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-                targetFile.writeText(TARGET_YAML)
+        context("happy path") {
 
-                val result =
-                    CopyCommand().test(
-                        "${sourceFile.absolutePath} ${targetFile.absolutePath} --vuln-id CVE-2026-1234",
-                    )
+            test("copies a single entry to a single target") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
 
-                result.statusCode shouldBe 0
-                result.stdout shouldContain "Copied 'CVE-2026-1234'"
+                        result.statusCode shouldBe 0
+                        result.stdout shouldContain "Copied 'CVE-2026-1234'"
 
-                val targetContent = targetFile.readText()
-                targetContent shouldContain "CVE-2026-1234"
-                targetContent shouldContain "1.0.0"
-                targetContent shouldNotContain "2.0.0"
-            } finally {
-                sourceFile.delete()
-                targetFile.delete()
+                        val content = target.readText()
+                        content shouldContain "CVE-2026-1234"
+                        content shouldContain "1.0.0"
+                        content shouldNotContain "2.0.0"
+                    }
+                }
+            }
+
+            test("copies a single entry to multiple targets") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target1", content = TARGET_YAML) { target1 ->
+                        withTempFile(prefix = "target2", content = TARGET_YAML) { target2 ->
+                            val result =
+                                CopyCommand().test(
+                                    "${source.absolutePath} ${target1.absolutePath} ${target2.absolutePath} " +
+                                        "--vuln-id CVE-2026-1234",
+                                )
+
+                            result.statusCode shouldBe 0
+                            target1.readText() shouldContain "CVE-2026-1234"
+                            target2.readText() shouldContain "CVE-2026-1234"
+                        }
+                    }
+                }
+            }
+
+            test("copies multiple vuln-ids in one invocation") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} " +
+                                    "--vuln-id CVE-2026-1234 --vuln-id CVE-2026-5678",
+                            )
+
+                        result.statusCode shouldBe 0
+                        val content = target.readText()
+                        content shouldContain "CVE-2026-1234"
+                        content shouldContain "CVE-2026-5678"
+                    }
+                }
+            }
+
+            test("rewrites copied entry's release to the target's latest published release") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        CopyCommand().test(
+                            "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                        )
+
+                        target.readText() shouldContain "\"1.0.0\""
+                    }
+                }
+            }
+
+            test("skips a target that already contains the entry") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    val targetWithEntry = TARGET_YAML.replace("CVE-2026-0001", "CVE-2026-1234")
+                    withTempFile(prefix = "target", content = targetWithEntry) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe 0
+                        result.stderr shouldContain "already exists"
+                    }
+                }
             }
         }
 
-        test("copy single entry to multiple targets") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            val targetFile1 = Files.createTempFile("target1", ".vl.yaml").toFile()
-            val targetFile2 = Files.createTempFile("target2", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-                targetFile1.writeText(TARGET_YAML)
-                targetFile2.writeText(TARGET_YAML)
+        context("input validation") {
 
-                val result =
-                    CopyCommand().test(
-                        "${sourceFile.absolutePath} ${targetFile1.absolutePath} ${targetFile2.absolutePath} --vuln-id CVE-2026-1234",
-                    )
+            test("fails when the source file does not exist") {
+                withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                    val result =
+                        CopyCommand().test(
+                            "/nonexistent/source.vl.yaml ${target.absolutePath} --vuln-id CVE-2026-1234",
+                        )
 
-                result.statusCode shouldBe 0
-                targetFile1.readText() shouldContain "CVE-2026-1234"
-                targetFile2.readText() shouldContain "CVE-2026-1234"
-            } finally {
-                sourceFile.delete()
-                targetFile1.delete()
-                targetFile2.delete()
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "does not exist"
+                }
+            }
+
+            test("fails when a target file does not exist") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    val result =
+                        CopyCommand().test(
+                            "${source.absolutePath} /nonexistent/target.vl.yaml --vuln-id CVE-2026-1234",
+                        )
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "does not exist"
+                }
+            }
+
+            test("fails when the source path is a directory") {
+                withTempDir(prefix = "source-dir") { sourceDir ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${sourceDir.toAbsolutePath()} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.stderr shouldContain "is a directory"
+                    }
+                }
+            }
+
+            test("fails when the source file name does not match the expected pattern") {
+                withTempFile(prefix = "source", suffix = ".txt", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.stderr shouldContain "File name must be"
+                    }
+                }
+            }
+
+            test("fails when a target file name does not match the expected pattern") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", suffix = ".txt", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.stderr shouldContain "File name must be"
+                    }
+                }
             }
         }
 
-        test("copy multiple vuln-ids") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            val targetFile = Files.createTempFile("target", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-                targetFile.writeText(TARGET_YAML)
+        context("argument validation") {
 
-                val result =
-                    CopyCommand().test(
-                        "${sourceFile.absolutePath} ${targetFile.absolutePath} --vuln-id CVE-2026-1234 --vuln-id CVE-2026-5678",
-                    )
+            test("fails when the requested vuln-id is not in the source") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-9999-0000",
+                            )
 
-                result.statusCode shouldBe 0
-                val targetContent = targetFile.readText()
-                targetContent shouldContain "CVE-2026-1234"
-                targetContent shouldContain "CVE-2026-5678"
-            } finally {
-                sourceFile.delete()
-                targetFile.delete()
-            }
-        }
-
-        test("skip target that already contains the entry") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            val targetFile = Files.createTempFile("target", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-                targetFile.writeText(TARGET_YAML.replace("CVE-2026-0001", "CVE-2026-1234"))
-
-                val result =
-                    CopyCommand().test(
-                        "${sourceFile.absolutePath} ${targetFile.absolutePath} --vuln-id CVE-2026-1234",
-                    )
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "already exists"
-            } finally {
-                sourceFile.delete()
-                targetFile.delete()
-            }
-        }
-
-        test("error when vuln-id not found in source") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            val targetFile = Files.createTempFile("target", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-                targetFile.writeText(TARGET_YAML)
-
-                val result =
-                    CopyCommand().test(
-                        "${sourceFile.absolutePath} ${targetFile.absolutePath} --vuln-id CVE-9999-0000",
-                    )
-
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                result.stderr shouldContain "not found in source"
-            } finally {
-                sourceFile.delete()
-                targetFile.delete()
-            }
-        }
-
-        test("error when source file does not exist") {
-            val targetFile = Files.createTempFile("target", ".vl.yaml").toFile()
-            try {
-                val result =
-                    CopyCommand().test(
-                        "/nonexistent/source.vl.yaml ${targetFile.absolutePath} --vuln-id CVE-2026-1234",
-                    )
-
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                result.stderr shouldContain "does not exist"
-            } finally {
-                targetFile.delete()
-            }
-        }
-
-        test("error when target file does not exist") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-
-                val result =
-                    CopyCommand().test(
-                        "${sourceFile.absolutePath} /nonexistent/target.vl.yaml --vuln-id CVE-2026-1234",
-                    )
-
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                result.stderr shouldContain "does not exist"
-            } finally {
-                sourceFile.delete()
-            }
-        }
-
-        test("copy adjusts releases to target latest published release") {
-            val sourceFile = Files.createTempFile("source", ".vl.yaml").toFile()
-            val targetFile = Files.createTempFile("target", ".vl.yaml").toFile()
-            try {
-                sourceFile.writeText(SOURCE_YAML)
-                targetFile.writeText(TARGET_YAML)
-
-                CopyCommand().test(
-                    "${sourceFile.absolutePath} ${targetFile.absolutePath} --vuln-id CVE-2026-1234",
-                )
-
-                val targetContent = targetFile.readText()
-                targetContent shouldContain "\"1.0.0\""
-            } finally {
-                sourceFile.delete()
-                targetFile.delete()
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.stderr shouldContain "not found in source"
+                    }
+                }
             }
         }
     })

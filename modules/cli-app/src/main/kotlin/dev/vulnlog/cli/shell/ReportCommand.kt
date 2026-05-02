@@ -5,50 +5,47 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.FileOutputOption
-import dev.vulnlog.cli.shell.shared.FilterOptions
-import dev.vulnlog.cli.shell.shared.merge
-import dev.vulnlog.cli.shell.shared.parseFiles
-import dev.vulnlog.cli.shell.shared.parseStdin
-import dev.vulnlog.cli.shell.shared.resolveFilter
-import dev.vulnlog.cli.shell.shared.toOutputFileOption
-import dev.vulnlog.cli.shell.shared.validateFiles
-import dev.vulnlog.cli.shell.shared.validateInputPath
-import dev.vulnlog.cli.shell.shared.writeReport
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
-import dev.vulnlog.lib.result.InputValidationResult
-import dev.vulnlog.lib.result.ParseResult
-import java.io.File
+import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.shell.FileOutputOption
 import java.nio.file.Path
 import java.time.LocalDate
 
 class ReportCommand : CliktCommand(name = "report") {
     override fun help(context: Context): String = "Generate a vulnerability report."
 
-    val args: List<String> by argument().multiple()
+    val inputs: List<FileInputOption> by argument(
+        help = "Vulnlog file(s), or '-' to read from stdin, to create the report from.",
+    ).convert(conversion = ArgumentTransformContext::toInputFileOption)
+        .multiple(required = true)
 
     val output: FileOutputOption by option(
         "-o",
         "--output",
         help = "Output file path, or '-' to write to stdout. Defaults to vulnlog-report.html in the current directory.",
-    ).convert { toOutputFileOption(it) }
+    ).convert(conversion = OptionCallTransformContext::toOutputFileOption)
         .default(FileOutputOption.File(Path.of("vulnlog-report.html")))
 
     val filterOptions by FilterOptions()
 
     override fun run() {
-        val parseResults = parseAndValidate()
-        val vulnlogFiles = parseResults.values.map { it.content }
+        val parsedSuccessfully = parseInputOrFail(inputs)
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+
+        val vulnlogFiles = parsedSuccessfully.values.map { it.content }
 
         val project =
             validateSharedProject(vulnlogFiles)
@@ -74,45 +71,8 @@ class ReportCommand : CliktCommand(name = "report") {
                     target,
                     content,
                 )
+
             is FileOutputOption.Stdout -> echo(content)
         }
-    }
-
-    private fun parseAndValidate(): Map<File, ParseResult.Ok> {
-        val hasStdin = args.contains("-")
-        val filePaths = args.filter { it != "-" }.map { Path.of(it) }
-
-        filePaths.forEach { file ->
-            val result = validateInputPath(file)
-            if (result is InputValidationResult.Error) {
-                echo(result.message, err = true)
-                throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-            }
-        }
-
-        if (!hasStdin && filePaths.isEmpty()) {
-            echo("Error: No input provided. Pass file paths or '-' for stdin.", err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        }
-
-        val stdinResults = if (hasStdin) parseStdin() else null
-        val fileResults = if (filePaths.isNotEmpty()) parseFiles(filePaths) else null
-
-        val parseResults = merge(stdinResults, fileResults)
-
-        parseResults.onEachFailure { file, result ->
-            echo("Parsing of ${file.name} failed:", err = true)
-            echo(result.error, err = true)
-        }
-        if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        val validationFindings = validateFiles(parseResults.success)
-        if (validationFindings.renderedFindings.isNotBlank() && validationFindings.hasErrors) {
-            echo(validationFindings.renderedFindings, err = true)
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-        return parseResults.success
     }
 }

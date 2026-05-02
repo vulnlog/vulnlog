@@ -6,215 +6,193 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import java.io.File
-import kotlin.io.path.createTempDirectory
 
-private val SUPPRESSABLE_VULNLOG_YAML =
-    """
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: Acme Web App
-      author: Acme Corp Security Team
-
-    releases:
-      - id: 1.0.0
-        published_at: 2026-01-15
-
-    vulnerabilities:
-      - id: CVE-2026-1234
-        releases: [ 1.0.0 ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: trivy
-        analysis: vulnerable code not in execute path
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
-
-private val MULTI_REPORTER_VULNLOG_YAML =
-    """
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: Acme Web App
-      author: Acme Corp Security Team
-
-    releases:
-      - id: 1.0.0
-        published_at: 2026-01-15
-
-    vulnerabilities:
-      - id: CVE-2026-1234
-        releases: [ 1.0.0 ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: trivy
-          - reporter: grype
-        analysis: vulnerable code not in execute path
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
-
-private fun buildFile(extra: String = "") =
-    """
-    plugins {
-        id("dev.vulnlog.plugin")
-    }
-    $extra
-    """.trimIndent()
-
-private fun projectDir(
-    buildScript: String,
-    vararg yamlFiles: Pair<String, String>,
-): File {
-    val dir = createTempDirectory("vulnlog-suppress-test").toFile()
-    dir.resolve("build.gradle.kts").writeText(buildScript)
-    dir.resolve("settings.gradle.kts").writeText("")
-    for ((name, content) in yamlFiles) {
-        dir.resolve(name).writeText(content)
-    }
-    return dir
-}
-
-private fun runner(
-    projectDir: File,
-    vararg args: String,
-): GradleRunner =
-    GradleRunner
-        .create()
-        .withProjectDir(projectDir)
-        .withPluginClasspath()
-        .withArguments(*args)
+private val FILES_FROM_TEST_YAML =
+    buildFile(
+        """
+        vulnlog {
+            files.from("test.vl.yaml")
+        }
+        """.trimIndent(),
+    )
 
 class VulnlogSuppressTaskTest :
     FunSpec({
 
-        test("writes suppression file to default output directory") {
-            val dir =
-                projectDir(
-                    buildFile(
-                        """
-                        vulnlog {
-                            files.from("test.vl.yaml")
-                        }
-                        """.trimIndent(),
-                    ),
-                    "test.vl.yaml" to SUPPRESSABLE_VULNLOG_YAML,
-                )
+        context("happy path") {
 
-            val result = runner(dir, "vulnlogSuppress").build()
+            test("writes a suppression file to the default output directory") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
 
-            result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
-            result.output shouldContain "Suppression file created at:"
-            val outputDir = dir.resolve("build/vulnlog/suppressions")
-            (outputDir.list()?.toList() ?: emptyList()) shouldContain ".trivyignore.yaml"
-            outputDir.resolve(".trivyignore.yaml").readText() shouldContain "CVE-2026-1234"
-        }
+                val result = runner(dir, "vulnlogSuppress").build()
 
-        test("writes suppression file to configured output directory") {
-            val dir =
-                projectDir(
-                    buildFile(
-                        """
-                        vulnlog {
-                            files.from("test.vl.yaml")
-                            suppress {
-                                outputDir = layout.projectDirectory.dir("out")
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldContain "Suppression file created at:"
+                val outputDir = dir.resolve("build/vulnlog/suppressions")
+                (outputDir.list()?.toList() ?: emptyList()) shouldContain ".trivyignore.yaml"
+                outputDir.resolve(".trivyignore.yaml").readText() shouldContain "CVE-2026-1234"
+            }
+
+            test("writes a suppression file to the configured output directory") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    outputDir = layout.projectDirectory.dir("out")
+                                }
                             }
-                        }
-                        """.trimIndent(),
-                    ),
-                    "test.vl.yaml" to SUPPRESSABLE_VULNLOG_YAML,
-                )
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogYaml(),
+                    )
 
-            val result = runner(dir, "vulnlogSuppress").build()
+                val result = runner(dir, "vulnlogSuppress").build()
 
-            result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
-            dir.resolve("out/.trivyignore.yaml").exists() shouldBe true
-        }
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("out/.trivyignore.yaml").exists() shouldBe true
+            }
 
-        test("filters by reporter") {
-            val dir =
-                projectDir(
-                    buildFile(
-                        """
-                        vulnlog {
-                            files.from("test.vl.yaml")
-                            suppress {
-                                reporter = "trivy"
+            test("filters by reporter") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    reporter = "trivy"
+                                }
                             }
-                        }
-                        """.trimIndent(),
-                    ),
-                    "test.vl.yaml" to MULTI_REPORTER_VULNLOG_YAML,
-                )
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to MULTI_REPORTER_VULNLOG_YAML,
+                    )
 
-            val result = runner(dir, "vulnlogSuppress").build()
+                val result = runner(dir, "vulnlogSuppress").build()
 
-            result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
-            val outputDir = dir.resolve("build/vulnlog/suppressions")
-            val files = outputDir.list()?.toList() ?: emptyList()
-            files shouldContain ".trivyignore.yaml"
-            files.any { it.startsWith("grype") } shouldBe false
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                val outputDir = dir.resolve("build/vulnlog/suppressions")
+                val files = outputDir.list()?.toList() ?: emptyList()
+                files shouldContain ".trivyignore.yaml"
+                files.any { it.startsWith("grype") } shouldBe false
+            }
         }
 
-        test("fails when no files are configured") {
-            val dir = projectDir(buildFile())
+        context("input validation") {
 
-            val result = runner(dir, "vulnlogSuppress").buildAndFail()
+            test("fails when no files are configured") {
+                val dir = gradleProject(buildFile())
 
-            result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-            result.output shouldContain "No Vulnlog files configured"
-        }
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
 
-        test("fails when multiple files are configured") {
-            val dir =
-                projectDir(
-                    buildFile(
-                        """
-                        vulnlog {
-                            files.from("a.vl.yaml", "b.vl.yaml")
-                        }
-                        """.trimIndent(),
-                    ),
-                    "a.vl.yaml" to SUPPRESSABLE_VULNLOG_YAML,
-                    "b.vl.yaml" to SUPPRESSABLE_VULNLOG_YAML,
-                )
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "No Vulnlog files configured"
+            }
 
-            val result = runner(dir, "vulnlogSuppress").buildAndFail()
-
-            result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-            result.output shouldContain "supports a single Vulnlog file"
-        }
-
-        test("fails on invalid reporter value") {
-            val dir =
-                projectDir(
-                    buildFile(
-                        """
-                        vulnlog {
-                            files.from("test.vl.yaml")
-                            suppress {
-                                reporter = "bogus"
+            test("fails when multiple files are configured") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("a.vl.yaml", "b.vl.yaml")
                             }
-                        }
-                        """.trimIndent(),
-                    ),
-                    "test.vl.yaml" to SUPPRESSABLE_VULNLOG_YAML,
-                )
+                            """.trimIndent(),
+                        ),
+                        "a.vl.yaml" to vulnlogYaml(),
+                        "b.vl.yaml" to vulnlogYaml(),
+                    )
 
-            val result = runner(dir, "vulnlogSuppress").buildAndFail()
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
 
-            result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-            result.output shouldContain "Invalid reporter: bogus"
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "supports a single Vulnlog file"
+            }
+        }
+
+        context("parse failures") {
+
+            test("fails on invalid YAML") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to INVALID_VULNLOG_YAML)
+
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Parsing of test.vl.yaml failed"
+            }
+        }
+
+        context("filter validation") {
+
+            test("fails on an unknown reporter") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    reporter = "bogus"
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogYaml(),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Invalid reporter: bogus"
+            }
+
+            test("fails on an unknown release") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    release = "9.9.9"
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogYaml(),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Release not found: 9.9.9"
+                result.output shouldContain "Known releases: 1.0.0"
+            }
+
+            test("fails on an unknown tag") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    tags = setOf("missing-tag")
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogYaml(),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Tag not found: missing-tag"
+            }
         }
     })

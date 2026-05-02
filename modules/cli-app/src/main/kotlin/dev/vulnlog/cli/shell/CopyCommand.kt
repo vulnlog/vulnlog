@@ -5,21 +5,18 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
+import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.cli.shell.shared.parseFile
-import dev.vulnlog.cli.shell.shared.validateFiles
-import dev.vulnlog.cli.shell.shared.validateInputPath
 import dev.vulnlog.lib.core.insertEntryAfterVulnerabilitiesHeader
 import dev.vulnlog.lib.core.latestPublishedRelease
 import dev.vulnlog.lib.core.serializeEntryYaml
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.v1.V1Mapper
-import dev.vulnlog.lib.result.InputValidationResult
-import dev.vulnlog.lib.result.ParseResult
-import java.nio.file.Path
+import dev.vulnlog.lib.shell.FileInputOption
 
 class CopyCommand : CliktCommand(name = "copy") {
     override val hiddenFromHelp = true
@@ -27,8 +24,12 @@ class CopyCommand : CliktCommand(name = "copy") {
     override fun help(context: Context): String =
         "Copy vulnerability entries from a source file into one or more target files."
 
-    val source: String by argument(help = "Source Vulnlog file")
-    val targets: List<String> by argument(help = "Target Vulnlog file(s)").multiple()
+    val source: FileInputOption.File by argument(help = "Source Vulnlog file to copy vulnerabilities from.")
+        .convert(conversion = ArgumentTransformContext::toInputFile)
+
+    val targets: List<FileInputOption.File> by argument(help = "Target Vulnlog file(s) to past vulnerabilities into.")
+        .convert(conversion = ArgumentTransformContext::toInputFile)
+        .multiple(required = true)
 
     val vulnIds: List<String> by option(
         "--vuln-id",
@@ -36,14 +37,10 @@ class CopyCommand : CliktCommand(name = "copy") {
     ).multiple(required = true)
 
     override fun run() {
-        if (targets.isEmpty()) {
-            echo("Error: At least one target file is required.", err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        }
+        val parsedSuccessfully = parseInputOrFail(listOf(source))
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
-        val sourceResult = parseAndValidateSingle(Path.of(source))
-        val sourceFile = sourceResult.content
-
+        val sourceFile = parsedSuccessfully.values.first().content
         val entries =
             vulnIds.map { vulnId ->
                 sourceFile.vulnerabilities.find { it.id.id == vulnId }
@@ -56,13 +53,14 @@ class CopyCommand : CliktCommand(name = "copy") {
         val mapper = createYamlMapper()
 
         for (targetPathStr in targets) {
-            val targetPath = Path.of(targetPathStr)
-            val targetResult = parseAndValidateSingle(targetPath)
-            val targetFile = targetResult.content
+            val parsedTargetSuccessfully = parseInputOrFail(listOf(targetPathStr))
+            validateParsedInputOrFailWithFailureOutput(parsedTargetSuccessfully)
 
-            val existingIds = targetFile.vulnerabilities.map { it.id.id }.toSet()
+            val content = parsedTargetSuccessfully.values.first().content
+            val existingIds = content.vulnerabilities.map { it.id.id }.toSet()
 
-            val latestRelease = latestPublishedRelease(targetFile.releases)
+            val latestRelease = latestPublishedRelease(content.releases)
+            val targetPath = targetPathStr.path
             if (latestRelease == null) {
                 echo("Warning: No published release found in ${targetPath.fileName}. Skipping.", err = true)
                 continue
@@ -87,30 +85,5 @@ class CopyCommand : CliktCommand(name = "copy") {
 
             targetPath.toFile().writeText(fileContent)
         }
-    }
-
-    private fun parseAndValidateSingle(path: Path): ParseResult.Ok {
-        val inputResult = validateInputPath(path)
-        if (inputResult is InputValidationResult.Error) {
-            echo(inputResult.message, err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
-        }
-
-        val parseResults = parseFile(path)
-        parseResults.onEachFailure { file, result ->
-            echo("Parsing of ${file.name} failed:", err = true)
-            echo(result.error, err = true)
-        }
-        if (parseResults.failure.isNotEmpty()) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        val validationFindings = validateFiles(parseResults.success)
-        if (validationFindings.renderedFindings.isNotBlank() && validationFindings.hasErrors) {
-            echo(validationFindings.renderedFindings, err = true)
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
-        }
-
-        return parseResults.success.values.first()
     }
 }

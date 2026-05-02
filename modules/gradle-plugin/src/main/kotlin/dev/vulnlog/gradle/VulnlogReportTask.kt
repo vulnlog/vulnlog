@@ -2,13 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.internal.buildFilter
-import dev.vulnlog.gradle.internal.parseAndValidate
+import dev.vulnlog.gradle.internal.buildFilterOrFail
+import dev.vulnlog.gradle.internal.parseInputOrFail
+import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
+import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -47,18 +50,20 @@ abstract class VulnlogReportTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
-        val inputFiles = files.files
+        val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
         if (inputFiles.isEmpty()) {
             throw GradleException("No Vulnlog files configured. Set vulnlog.files in your build script.")
         }
+        val parsedSuccessfully = parseInputOrFail(inputFiles)
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 
-        val vulnlogFiles = parseAndValidate(inputFiles)
+        val vulnlogFiles = parsedSuccessfully.values.map(ParseResult.Ok::content)
 
         val project =
             validateSharedProject(vulnlogFiles)
                 ?: throw GradleException("All input files must share the same project metadata.")
 
-        val filter = buildFilter(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get())
+        val filter = buildFilterOrFail(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get())
 
         val allEntries = vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
         val merged = mergeReportingEntries(allEntries)

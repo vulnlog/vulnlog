@@ -5,86 +5,65 @@ package dev.vulnlog.gradle
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import java.io.File
-import kotlin.io.path.createTempDirectory
 
-private val BUILD_FILE =
-    """
-    plugins {
-        id("dev.vulnlog.plugin")
-    }
-    """.trimIndent()
-
-private fun projectDir(): File {
-    val dir = createTempDirectory("vulnlog-init-test").toFile()
-    dir.resolve("build.gradle.kts").writeText(BUILD_FILE)
-    dir.resolve("settings.gradle.kts").writeText("")
-    return dir
-}
-
-private fun runner(
-    projectDir: File,
-    vararg args: String,
-): GradleRunner =
-    GradleRunner
-        .create()
-        .withProjectDir(projectDir)
-        .withPluginClasspath()
-        .withArguments(*args)
+private val REQUIRED_PROPS =
+    arrayOf(
+        "-Pvulnlog.organization=Acme Corp",
+        "-Pvulnlog.name=Widget",
+        "-Pvulnlog.author=Alice",
+        "-Pvulnlog.output=vulnlog.yaml",
+    )
 
 class VulnlogInitTaskTest :
     FunSpec({
 
-        test("creates a vulnlog file with configured values") {
-            val dir = projectDir()
+        context("happy path") {
 
-            val result =
-                runner(
-                    dir,
-                    "vulnlogInit",
-                    "-Pvulnlog.organization=Acme Corp",
-                    "-Pvulnlog.name=Widget",
-                    "-Pvulnlog.author=Alice",
-                    "-Pvulnlog.output=vulnlog.yaml",
-                ).build()
+            test("creates a Vulnlog file with the configured values") {
+                val dir = gradleProject(buildFile())
 
-            result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.SUCCESS
-            val content = dir.resolve("vulnlog.yaml").readText()
-            content shouldContain "Acme Corp"
-            content shouldContain "Widget"
-            content shouldContain "Alice"
-            content shouldContain "schemaVersion:"
+                val result = runner(dir, "vulnlogInit", *REQUIRED_PROPS).build()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.SUCCESS
+                val content = dir.resolve("vulnlog.yaml").readText()
+                content shouldContain "Acme Corp"
+                content shouldContain "Widget"
+                content shouldContain "Alice"
+                content shouldContain "schemaVersion:"
+            }
         }
 
-        test("fails when required properties are missing") {
-            val dir = projectDir()
+        context("argument validation") {
 
-            val result =
-                runner(
-                    dir,
-                    "vulnlogInit",
-                    "-Pvulnlog.name=Widget",
-                    "-Pvulnlog.author=Alice",
-                    "-Pvulnlog.output=vulnlog.yaml",
-                ).buildAndFail()
+            test("fails when -Pvulnlog.organization is missing") {
+                val dir = gradleProject(buildFile())
 
-            result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.FAILED
-        }
+                val result =
+                    runner(
+                        dir,
+                        "vulnlogInit",
+                        "-Pvulnlog.name=Widget",
+                        "-Pvulnlog.author=Alice",
+                        "-Pvulnlog.output=vulnlog.yaml",
+                    ).buildAndFail()
 
-        test("fails when output is not specified") {
-            val dir = projectDir()
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.FAILED
+            }
 
-            val result =
-                runner(
-                    dir,
-                    "vulnlogInit",
-                    "-Pvulnlog.organization=Acme Corp",
-                    "-Pvulnlog.name=Widget",
-                    "-Pvulnlog.author=Alice",
-                ).buildAndFail()
+            test("fails when -Pvulnlog.output is missing") {
+                val dir = gradleProject(buildFile())
 
-            result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.FAILED
+                val result =
+                    runner(
+                        dir,
+                        "vulnlogInit",
+                        "-Pvulnlog.organization=Acme Corp",
+                        "-Pvulnlog.name=Widget",
+                        "-Pvulnlog.author=Alice",
+                    ).buildAndFail()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.FAILED
+            }
         }
     })
