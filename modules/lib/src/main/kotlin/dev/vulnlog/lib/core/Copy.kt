@@ -4,19 +4,34 @@ package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReleaseEntry
+import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import tools.jackson.databind.ObjectMapper
 
 /**
+ * Identifies vulnerability IDs from a given list that do not exist in the list of known vulnerabilities.
+ *
+ * @param vulnerabilities A list of known vulnerability entries, where each entry includes metadata and a unique ID.
+ * @param vulnIds A list of vulnerability ID strings to be checked against the known vulnerabilities.
+ * @return A set of parsed `VulnId` objects that are not present in the provided list of known vulnerabilities.
+ */
+fun findNonExistingVulnIds(
+    vulnerabilities: List<VulnerabilityEntry>,
+    vulnIds: Set<VulnId>,
+): Set<VulnId> =
+    vulnIds
+        .filter { vulnId -> vulnId !in vulnerabilities.map(VulnerabilityEntry::id) }
+        .toSet()
+
+/**
  * Finds the latest published release from a list of release entries.
  *
- * @param releases The list of release entries to search. Each entry contains a release identifier, publication date,
- *                 and associated metadata such as package URLs. Releases with a null publication date
- *                 are considered unpublished.
- * @return The most recently published release or null if no release has been published.
+ * @param releases The list of release entries to search. Releases with a null publication date are considered unpublished.
+ * @return The most recently published release or the last entry if no release has been published.
  */
-fun latestPublishedRelease(releases: List<ReleaseEntry>): Release? =
-    releases.lastOrNull { it.publicationDate != null }?.id
+fun latestPublishedRelease(releases: List<ReleaseEntry>): Release =
+    releases.lastOrNull { it.publicationDate != null }?.id ?: releases.last().id
 
 /**
  * Serializes a [VulnerabilityEntryDto] object to a YAML-compatible string representation

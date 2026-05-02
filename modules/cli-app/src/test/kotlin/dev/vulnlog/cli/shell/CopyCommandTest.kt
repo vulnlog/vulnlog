@@ -62,7 +62,7 @@ class CopyCommandTest :
                             )
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldContain "Copied 'CVE-2026-1234'"
+                        result.stdout shouldBe "Copied to ${target.path}: CVE-2026-1234\n"
 
                         val content = target.readText()
                         content shouldContain "CVE-2026-1234"
@@ -129,7 +129,7 @@ class CopyCommandTest :
                             )
 
                         result.statusCode shouldBe 0
-                        result.stderr shouldContain "already exists"
+                        result.stderr shouldBe "Warning: Skipping IDs already exist in ${target.path}: CVE-2026-1234\n"
                     }
                 }
             }

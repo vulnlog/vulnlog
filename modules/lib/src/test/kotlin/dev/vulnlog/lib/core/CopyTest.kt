@@ -34,7 +34,7 @@ class CopyTest :
                     ReleaseEntry(id = Release("1.1.0")),
                 )
 
-            latestPublishedRelease(releases) shouldBe null
+            latestPublishedRelease(releases) shouldBe Release("1.1.0")
         }
 
         test("serializeEntryYaml produces correctly indented YAML list item") {
