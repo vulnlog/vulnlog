@@ -6,193 +6,199 @@ import com.github.ajalt.clikt.testing.test
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import java.io.ByteArrayInputStream
-import java.nio.file.Files
-
-private fun vulnlogYaml(
-    projectName: String = "Acme Web App",
-    releaseId: String = "1.0.0",
-    cveId: String = "CVE-2026-1234",
-) = """
-    # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: $projectName
-      author: Acme Corp Security Team
-
-    releases:
-      - id: $releaseId
-        published_at: 2026-01-15
-
-    vulnerabilities:
-
-      - id: $cveId
-        releases: [ $releaseId ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: trivy
-        analysis: >
-          The vulnerable code path is not reachable in our application
-          because we only use the safe subset of the API.
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
 
 class ReportCommandTest :
     FunSpec({
 
-        test("report generates output for single file") {
-            val tempFile = Files.createTempFile("vulnlog", ".vl.yaml").toFile()
-            val outputFile = Files.createTempFile("report", ".html").toFile()
-            try {
-                tempFile.writeText(vulnlogYaml())
+        context("happy path") {
 
-                val result =
-                    ReportCommand().test("${tempFile.absolutePath} -o ${outputFile.absolutePath}")
+            test("generates an HTML report from a single file") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
 
-                result.statusCode shouldBe 0
-                result.stdout shouldContain "Report written to:"
-                val html = outputFile.readText()
-                html shouldContain "<!DOCTYPE html>"
-                html shouldContain "CVE-2026-1234"
-            } finally {
-                tempFile.delete()
-                outputFile.delete()
+                        result.statusCode shouldBe 0
+                        result.stdout shouldContain "Report written to:"
+                        val html = output.readText()
+                        html shouldContain "<!DOCTYPE html>"
+                        html shouldContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("merges entries from multiple files of the same project") {
+                withTempFile(
+                    prefix = "vulnlog-1x",
+                    content = vulnlogYaml(releaseId = "1.0.0", cveId = "CVE-2026-1234"),
+                ) { f1 ->
+                    withTempFile(
+                        prefix = "vulnlog-2x",
+                        content = vulnlogYaml(releaseId = "2.0.0", cveId = "CVE-2026-5678"),
+                    ) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath}",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldContain "CVE-2026-1234"
+                            html shouldContain "CVE-2026-5678"
+                        }
+                    }
+                }
+            }
+
+            test("merges the same CVE from multiple files into a single entry") {
+                withTempFile(prefix = "vulnlog-1x", content = vulnlogYaml(releaseId = "1.0.0")) { f1 ->
+                    withTempFile(prefix = "vulnlog-2x", content = vulnlogYaml(releaseId = "2.0.0")) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath}",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldContain "CVE-2026-1234"
+                            html shouldContain "1.0.0"
+                            html shouldContain "2.0.0"
+                        }
+                    }
+                }
+            }
+
+            test("reads from stdin when '-' is passed") {
+                withTempFile(prefix = "report", suffix = ".html") { output ->
+                    withStdin(vulnlogYaml()) {
+                        val result = ReportCommand().test("- -o ${output.absolutePath}")
+
+                        result.statusCode shouldBe 0
+                        val html = output.readText()
+                        html shouldContain "<!DOCTYPE html>"
+                        html shouldContain "CVE-2026-1234"
+                    }
+                }
             }
         }
 
-        test("report merges multiple files with shared project") {
-            val file1 = Files.createTempFile("vulnlog-1x", ".vl.yaml").toFile()
-            val file2 = Files.createTempFile("vulnlog-2x", ".vl.yaml").toFile()
-            val outputFile = Files.createTempFile("report", ".html").toFile()
-            try {
-                file1.writeText(vulnlogYaml(releaseId = "1.0.0", cveId = "CVE-2026-1234"))
-                file2.writeText(vulnlogYaml(releaseId = "2.0.0", cveId = "CVE-2026-5678"))
+        context("input validation") {
 
-                val result =
-                    ReportCommand().test(
-                        "${file1.absolutePath} ${file2.absolutePath} -o ${outputFile.absolutePath}",
-                    )
-
-                result.statusCode shouldBe 0
-                val html = outputFile.readText()
-                html shouldContain "CVE-2026-1234"
-                html shouldContain "CVE-2026-5678"
-            } finally {
-                file1.delete()
-                file2.delete()
-                outputFile.delete()
-            }
-        }
-
-        test("report merges same CVE from multiple files into one entry") {
-            val file1 = Files.createTempFile("vulnlog-1x", ".vl.yaml").toFile()
-            val file2 = Files.createTempFile("vulnlog-2x", ".vl.yaml").toFile()
-            val outputFile = Files.createTempFile("report", ".html").toFile()
-            try {
-                file1.writeText(vulnlogYaml(releaseId = "1.0.0"))
-                file2.writeText(vulnlogYaml(releaseId = "2.0.0"))
-
-                val result =
-                    ReportCommand().test(
-                        "${file1.absolutePath} ${file2.absolutePath} -o ${outputFile.absolutePath}",
-                    )
-
-                result.statusCode shouldBe 0
-                val html = outputFile.readText()
-                html shouldContain "CVE-2026-1234"
-                html shouldContain "1.0.0"
-                html shouldContain "2.0.0"
-            } finally {
-                file1.delete()
-                file2.delete()
-                outputFile.delete()
-            }
-        }
-
-        test("report fails when projects differ") {
-            val file1 = Files.createTempFile("vulnlog-1x", ".vl.yaml").toFile()
-            val file2 = Files.createTempFile("vulnlog-2x", ".vl.yaml").toFile()
-            try {
-                file1.writeText(vulnlogYaml(projectName = "Project A"))
-                file2.writeText(vulnlogYaml(projectName = "Project B"))
-
-                val result =
-                    ReportCommand().test("${file1.absolutePath} ${file2.absolutePath}")
-
-                result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                result.stderr shouldContain "same project metadata"
-            } finally {
-                file1.delete()
-                file2.delete()
-            }
-        }
-
-        test("report reads from stdin") {
-            val originalStdin = System.`in`
-            val outputFile = Files.createTempFile("report", ".html").toFile()
-            try {
-                System.setIn(ByteArrayInputStream(vulnlogYaml().toByteArray()))
-
-                val result = ReportCommand().test("- -o ${outputFile.absolutePath}")
-
-                result.statusCode shouldBe 0
-                val html = outputFile.readText()
-                html shouldContain "<!DOCTYPE html>"
-                html shouldContain "CVE-2026-1234"
-            } finally {
-                System.setIn(originalStdin)
-                outputFile.delete()
-            }
-        }
-
-        test("report fails when no input provided") {
-            val result = ReportCommand().test("")
-
-            result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldBe
-                """
-                Usage: report [<options>] <inputs>...
-
-                Error: missing argument <inputs>
-                
-                """.trimIndent()
-        }
-
-        test("report fails when file does not exist") {
-            val result = ReportCommand().test("/nonexistent/vulnlog.vl.yaml")
-
-            result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-            result.stderr shouldBe
-                """
-                Usage: report [<options>] <inputs>...
-
-                Error: invalid value for <inputs>: Input path '/nonexistent/vulnlog.vl.yaml' does not exist.
-                
-                """.trimIndent()
-        }
-
-        test("report fails when file name does not match expected pattern") {
-            val tempFile = Files.createTempFile("invalid-name", ".txt").toFile()
-            try {
-                tempFile.writeText(vulnlogYaml())
-
-                val result = ReportCommand().test(tempFile.absolutePath)
+            test("fails when no input is provided") {
+                val result = ReportCommand().test("")
 
                 result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
                 result.stderr shouldBe
                     """
                     Usage: report [<options>] <inputs>...
 
-                    Error: invalid value for <inputs>: Input '${tempFile.absolutePath}' is not valid: File name must be [vulnlog|*.vl].[yaml|yml]: ${tempFile.absolutePath}
-                    
+                    Error: missing argument <inputs>
+
                     """.trimIndent()
-            } finally {
-                tempFile.delete()
+            }
+
+            test("fails when the input file does not exist") {
+                val result = ReportCommand().test("/nonexistent/vulnlog.vl.yaml")
+
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.stderr shouldBe
+                    """
+                    Usage: report [<options>] <inputs>...
+
+                    Error: invalid value for <inputs>: Input path '/nonexistent/vulnlog.vl.yaml' does not exist.
+
+                    """.trimIndent()
+            }
+
+            test("fails when the input path is a directory") {
+                withTempDir { dir ->
+                    val result = ReportCommand().test(dir.toAbsolutePath().toString())
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "is a directory"
+                }
+            }
+
+            test("fails when the input file name does not match the expected pattern") {
+                withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
+                    val result = ReportCommand().test(input.absolutePath)
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldBe
+                        """
+                        Usage: report [<options>] <inputs>...
+
+                        Error: invalid value for <inputs>: Input '${input.absolutePath}' is not valid: File name must be [vulnlog|*.vl].[yaml|yml]: ${input.absolutePath}
+
+                        """.trimIndent()
+                }
+            }
+
+            test("fails when stdin is mixed with file inputs") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    withStdin(vulnlogYaml()) {
+                        val result = ReportCommand().test("- ${input.absolutePath}")
+
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.stderr shouldContain "Mixing input files with STDIN is not allowed"
+                    }
+                }
+            }
+
+            test("fails when stdin is given more than once") {
+                withStdin(vulnlogYaml()) {
+                    val result = ReportCommand().test("- -")
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "Multiple <stdin> are not supported"
+                }
+            }
+        }
+
+        context("merge validation") {
+
+            test("fails when input files have different project metadata") {
+                withTempFile(prefix = "vulnlog-1x", content = vulnlogYaml(projectName = "Project A")) { f1 ->
+                    withTempFile(prefix = "vulnlog-2x", content = vulnlogYaml(projectName = "Project B")) { f2 ->
+                        val result = ReportCommand().test("${f1.absolutePath} ${f2.absolutePath}")
+
+                        result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                        result.stderr shouldContain "same project metadata"
+                    }
+                }
+            }
+        }
+
+        context("filter validation") {
+
+            test("fails on an unknown reporter") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = ReportCommand().test("${input.absolutePath} --reporter bogus")
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "Unsupported reporter: bogus"
+                }
+            }
+
+            test("fails on an unknown release") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = ReportCommand().test("${input.absolutePath} --release 9.9.9")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.stderr shouldContain "Release not found: 9.9.9"
+                    result.stderr shouldContain "Known releases: 1.0.0"
+                }
+            }
+
+            test("fails on an unknown tag") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = ReportCommand().test("${input.absolutePath} --tag missing-tag")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.stderr shouldContain "Tag not found: missing-tag"
+                }
             }
         }
     })

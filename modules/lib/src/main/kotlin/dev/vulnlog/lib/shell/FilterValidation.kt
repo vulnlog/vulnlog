@@ -93,7 +93,7 @@ fun resolveReporterFilter(reporterOption: String?): ReporterType? =
     reporterOption?.let { value ->
         try {
             parseReporter(value)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             throw FilterValidationException(
                 "Invalid reporter: $value",
                 "Supported reporters: ${ReporterType.entries.joinToString(", ") { it.canonical() }}",
