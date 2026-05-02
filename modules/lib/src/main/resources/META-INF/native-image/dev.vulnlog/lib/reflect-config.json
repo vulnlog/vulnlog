@@ -90,6 +90,12 @@
     "allDeclaredMethods": true
   },
   {
+    "name": "dev.vulnlog.lib.parse.reporting.dto.FilterDataDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
     "name": "dev.vulnlog.lib.parse.reporting.dto.ProjectDataDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,

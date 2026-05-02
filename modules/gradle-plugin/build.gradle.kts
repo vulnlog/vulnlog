@@ -27,6 +27,36 @@ dependencies {
     testImplementation(libs.kotestRunnerJunit5Jvm)
 }
 
+val generateBuildInfo by tasks.registering {
+    val versionValue = project.version.toString()
+    val outputDir = layout.buildDirectory.dir("generated/source/buildInfo")
+
+    inputs.property("version", versionValue)
+    outputs.dir(outputDir)
+
+    doLast {
+        val buildInfoFile = outputDir.get().file("dev/vulnlog/gradle/BuildInfo.kt").asFile
+        buildInfoFile.parentFile.mkdirs()
+        buildInfoFile.writeText(
+            """
+            package dev.vulnlog.gradle
+
+            internal object BuildInfo {
+                const val VERSION = "$versionValue"
+            }
+            """.trimIndent() + "\n",
+        )
+    }
+}
+
+kotlin {
+    sourceSets {
+        main {
+            kotlin.srcDir(generateBuildInfo)
+        }
+    }
+}
+
 tasks.named<ShadowJar>("shadowJar") {
     archiveClassifier.set("")
     configurations = listOf(shaded)
