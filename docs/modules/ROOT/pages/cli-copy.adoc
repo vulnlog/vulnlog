@@ -1,11 +1,11 @@
-= vulnlog copy
+= vulnlog modify copy
 
-Copies a complete vulnerability entry from a source file into one or more target files.
+Copies one or more vulnerability entries from a source file into one or more target files.
 This propagates an existing analysis across multiple branch files.
 
 [source]
 ----
-vulnlog copy <source-file> <target-file...> [flags]
+vulnlog modify copy <source-file> <target-file...> --vuln-id <id> [--vuln-id <id>...]
 ----
 
 [cols="2,3"]
@@ -13,27 +13,33 @@ vulnlog copy <source-file> <target-file...> [flags]
 | Flag | Description
 
 | `--vuln-id <id>`
-| Vulnerability ID to copy (required). Must exist in the source file.
+| Vulnerability ID to copy. Required and repeatable. Each ID must exist in the source file.
 |===
 
 The first positional argument is the source file.
 All subsequent positional arguments are target files.
-The entry is copied with all fields intact (analysis, verdict, justification, resolution, etc.).
-The `releases` field is adjusted to reference the latest published release that exist in each target file.
+At least one `--vuln-id` is required; repeat the flag to copy multiple entries in one invocation.
 
-If an entry with the same `id` already exists in a target file, the command skips that file and reports a warning.
+For each target file, the `releases` field on the copied entry is rewritten to the latest release of the target, favoring releases with a publication date over unpublished ones.
+
+If an entry with the same `id` already exists in a target file, the existing entry is merged with the source entry rather than overwritten:
+
+* Scalar fields (`name`, `description`, `analysis`, `analyzed_at`, `verdict`, `justification`, `resolution`, `comment`) keep the existing value when set; otherwise the source value is used.
+* List fields (`aliases`, `packages`, `tags`) are unioned, preserving the existing order.
+* `reports` are merged by reporter: an existing report is kept, with the source's `vuln_ids` appended and missing scalars filled in from the source.
+* `releases` is replaced with the target's latest release, as for new entries.
 
 == Example
 
-In this example the vulnerability `CVE-2026-002` is copied from link:{examplesdir}/before/source.vl.yml[source.vl.yml] to link:{examplesdir}/after/target1.vl.yml[target1.vl.yml] and link:{examplesdir}/after/target2.vl.yml[target2.vl.yml].
+In this example the vulnerability `CVE-2026-002` is copied from link:{examplesdir}/copy/before/source.vl.yml[source.vl.yml] to link:{examplesdir}/copy/after/target1.vl.yml[target1.vl.yml] and link:{examplesdir}/copy/after/target2.vl.yml[target2.vl.yml].
 
-.Copy the vulnerability with the ID `CVE-2026-002` from source.vl.yml to targe1.vl.yml and target2.vl.yml.
+.Copy `CVE-2026-002` from source.vl.yml to target1.vl.yml and target2.vl.yml.
 [source,bash]
 ----
-vulnlog copy source.vl.yml target1.vl.yml target2.vl.yml --vuln-id CVE-2026-002
+vulnlog modify copy source.vl.yml target1.vl.yml target2.vl.yml --vuln-id CVE-2026-002
 
-Copied 'CVE-2026-002' to target1.vl.yml
-Copied 'CVE-2026-002' to target2.vl.yml
+Copied to target1.vl.yml: CVE-2026-002
+Copied to target2.vl.yml: CVE-2026-002
 ----
 
 The command adds the vulnerability entry to the previously empty `vulnerabilities` list.
@@ -45,7 +51,7 @@ This copies `CVE-2026-002` from before:
 include::{examplesdir}/copy/before/target1.vl.yml[lines=14..15]
 ----
 
-After the operation, the vulnerability entry is added:
+After the operation, the vulnerability entry is added with `releases` pointing to the target's latest release:
 
 [source,yaml]
 ----

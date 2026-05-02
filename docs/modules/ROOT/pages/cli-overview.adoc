@@ -58,6 +58,9 @@ Available on `report` and `suppress` commands.
 
 | xref:cli-report.adoc[report]
 | Generate an HTML vulnerability report.
+
+| xref:cli-copy.adoc[modify copy]
+| Copy vulnerability entries from one Vulnlog file into one or more others.
 |===
 
 == Exit Codes

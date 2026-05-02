@@ -84,8 +84,7 @@ v1   o---o
 All Vulnlog files live on the main branch.
 Changes to vulnerability analysis for any release branch are committed there.
 
-// TODO: When `vulnlog copy` is available, mention it here as a way to propagate
-// entries across multiple files without manual duplication.
+When the same vulnerability needs to be tracked in multiple files, the xref:cli-copy.adoc[`vulnlog modify copy`] command propagates an entry from one file to others without manual duplication.
 
 Advantages::
 * All vulnerability analysis lives in a single Git branch -- updating multiple files requires only one commit with no cherry-picking.

@@ -84,8 +84,7 @@ When the same vulnerability appears on multiple branches with the same verdict, 
 The duplicated parts are primarily the findings (CVE ID, packages, reporter) -- the same kind of duplication when each branch has its own dependency- or lock-files with slightly different versions.
 The analysis and resolution may legitimately differ per branch, which is where separate files bring their value in.
 
-// TODO: When `vulnlog copy` is available, add: The `vulnlog copy` command
-// reduces the effort of propagating identical entries across files to a one-liner.
+The xref:cli-copy.adoc[`vulnlog modify copy`] command reduces the effort of propagating identical entries across files to a one-liner.
 
 == Migration Steps
 
