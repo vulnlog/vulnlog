@@ -17,6 +17,23 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import java.io.File
 
+fun requireNonEmptyVulnlogFiles(inputFiles: List<FileInputOption.File>) {
+    if (inputFiles.isEmpty()) {
+        throw GradleException("No Vulnlog files configured. Set vulnlog.files in your build script.")
+    }
+}
+
+fun requireSingleVulnlogFile(
+    taskName: String,
+    inputFiles: List<FileInputOption.File>,
+): FileInputOption.File {
+    requireNonEmptyVulnlogFiles(inputFiles)
+    if (inputFiles.size > 1) {
+        throw GradleException("$taskName supports a single Vulnlog file, but ${inputFiles.size} are configured.")
+    }
+    return inputFiles.single()
+}
+
 fun parseInputOrFail(inputFiles: List<FileInputOption.File>): Map<File, ParseResult.Ok> {
     val parseResults: ParseResults =
         try {

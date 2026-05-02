@@ -24,7 +24,7 @@ class CopyTest :
                     ReleaseEntry(id = Release("1.2.0")),
                 )
 
-            latestPublishedRelease(releases) shouldBe Release("1.1.0")
+            lastReleaseFavoringPublished(releases) shouldBe Release("1.1.0")
         }
 
         test("latestPublishedRelease returns null when no releases are published") {
@@ -34,7 +34,7 @@ class CopyTest :
                     ReleaseEntry(id = Release("1.1.0")),
                 )
 
-            latestPublishedRelease(releases) shouldBe Release("1.1.0")
+            lastReleaseFavoringPublished(releases) shouldBe Release("1.1.0")
         }
 
         test("serializeEntryYaml produces correctly indented YAML list item") {

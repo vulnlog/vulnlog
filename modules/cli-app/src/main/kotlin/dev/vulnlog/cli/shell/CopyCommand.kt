@@ -13,14 +13,14 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
+import dev.vulnlog.lib.core.copyVulnerabilities
 import dev.vulnlog.lib.core.findNonExistingVulnIds
-import dev.vulnlog.lib.core.insertEntryAfterVulnerabilitiesHeader
-import dev.vulnlog.lib.core.latestPublishedRelease
+import dev.vulnlog.lib.core.formatCopiedMessage
+import dev.vulnlog.lib.core.formatSkippedExistingMessage
+import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
-import dev.vulnlog.lib.core.serializeEntryYaml
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
-import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.shell.FileInputOption
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -49,55 +49,35 @@ class CopyCommand : CliktCommand(name = "copy") {
         .unique()
 
     override fun run() {
-        val parsedSuccessfully = parseInputOrFail(listOf(source))
-        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        val parsedSource = parseInputOrFail(listOf(source))
+        validateParsedInputOrFailWithFailureOutput(parsedSource)
+        val sourceVulnlogFile = parsedSource.values.first().content
 
-        val sourceVulnlogFile = parsedSuccessfully.values.first().content
-        val vulnIdsNotInSourceContent = findNonExistingVulnIds(sourceVulnlogFile.vulnerabilities, vulnIds)
-        if (vulnIdsNotInSourceContent.isNotEmpty()) {
-            echo(
-                "Error: Vulnerability IDs not found in source file: ${vulnIdsNotInSourceContent.joinToString(", ")}",
-                err = true,
-            )
+        val missing = findNonExistingVulnIds(sourceVulnlogFile.vulnerabilities, vulnIds)
+        if (missing.isNotEmpty()) {
+            echo(formatVulnIdsNotInSourceMessage(missing), err = true)
             throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
 
         val mapper = createYamlMapper()
-
         for (destination in destinations) {
-            val parsedTargetSuccessfully = parseInputOrFail(listOf(destination))
-            validateParsedInputOrFailWithFailureOutput(parsedTargetSuccessfully)
+            val parsedDestination = parseInputOrFail(listOf(destination))
+            validateParsedInputOrFailWithFailureOutput(parsedDestination)
+            val destinationVulnlogFile = parsedDestination.values.first().content
 
-            val destinationVulnlogFile = parsedTargetSuccessfully.values.first().content
-            val vulnIdsNotInTargetContent = findNonExistingVulnIds(destinationVulnlogFile.vulnerabilities, vulnIds)
-            val vulnIdsToIgnore = vulnIds.minus(vulnIdsNotInTargetContent)
-            if (vulnIdsToIgnore.isNotEmpty()) {
-                echo(
-                    "Warning: Skipping IDs already exist in ${destination.path}: ${
-                        vulnIdsToIgnore.joinToString(
-                            ", ",
-                        ) { it.id }
-                    }",
-                    err = true,
+            val outcome =
+                copyVulnerabilities(
+                    source = sourceVulnlogFile,
+                    destination = destinationVulnlogFile,
+                    destinationContent = destination.path.readText(),
+                    vulnIds = vulnIds,
+                    mapper = mapper,
                 )
+            if (outcome.skippedAlreadyExisting.isNotEmpty()) {
+                echo(formatSkippedExistingMessage(destination.path, outcome.skippedAlreadyExisting), err = true)
             }
-            val latestRelease = latestPublishedRelease(destinationVulnlogFile.releases)
-
-            val vulnEntries =
-                sourceVulnlogFile.vulnerabilities
-                    .filter { it.id in vulnIdsNotInTargetContent }
-                    // to maintain order when inserting entries as the first one in insertEntryAfterVulnerabilitiesHeader
-                    .reversed()
-
-            var destinationContent = destination.path.readText()
-            for (entry in vulnEntries) {
-                val dto = V1Mapper.vulnerabilityToDto(entry)
-                val adjustedDto = dto.copy(releases = listOf(latestRelease.value))
-                val entryYaml = serializeEntryYaml(adjustedDto, mapper)
-                destinationContent = insertEntryAfterVulnerabilitiesHeader(destinationContent, entryYaml)
-            }
-            destination.path.writeText(destinationContent)
-            echo("Copied to ${destination.path}: ${vulnIdsNotInTargetContent.joinToString(", ") { it.id }}")
+            destination.path.writeText(outcome.newContent)
+            echo(formatCopiedMessage(destination.path, outcome.copied))
         }
     }
 }

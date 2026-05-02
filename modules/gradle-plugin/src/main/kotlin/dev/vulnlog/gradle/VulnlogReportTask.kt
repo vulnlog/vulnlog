@@ -4,6 +4,7 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.parseInputOrFail
+import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
@@ -51,9 +52,7 @@ abstract class VulnlogReportTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
-        if (inputFiles.isEmpty()) {
-            throw GradleException("No Vulnlog files configured. Set vulnlog.files in your build script.")
-        }
+        requireNonEmptyVulnlogFiles(inputFiles)
         val parsedSuccessfully = parseInputOrFail(inputFiles)
         validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 

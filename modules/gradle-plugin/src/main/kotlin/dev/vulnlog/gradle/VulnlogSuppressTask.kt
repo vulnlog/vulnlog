@@ -4,6 +4,7 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.parseInputOrFail
+import dev.vulnlog.gradle.internal.requireSingleVulnlogFile
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
@@ -11,7 +12,6 @@ import dev.vulnlog.lib.core.mapToSuppression
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -48,14 +48,7 @@ abstract class VulnlogSuppressTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
-        if (inputFiles.isEmpty()) {
-            throw GradleException("No Vulnlog files configured. Set vulnlog.files in your build script.")
-        }
-        if (inputFiles.size > 1) {
-            throw GradleException(
-                "vulnlogSuppress supports a single Vulnlog file, but ${inputFiles.size} are configured.",
-            )
-        }
+        requireSingleVulnlogFile("vulnlogSuppress", inputFiles)
         val parsedSuccessfully = parseInputOrFail(inputFiles)
         validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 

@@ -6,8 +6,65 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
+import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import tools.jackson.databind.ObjectMapper
+import java.nio.file.Path
+
+data class CopyOutcome(
+    val copied: List<VulnId>,
+    val skippedAlreadyExisting: Set<VulnId>,
+    val newContent: String,
+)
+
+/**
+ * Copies the requested vulnerability entries from [source] into [destinationContent], skipping IDs that
+ * already exist in [destination]. The release of each copied entry is rewritten to the destination's
+ * latest release (favoring published).
+ */
+fun copyVulnerabilities(
+    source: VulnlogFile,
+    destination: VulnlogFile,
+    destinationContent: String,
+    vulnIds: Set<VulnId>,
+    mapper: ObjectMapper = createYamlMapper(),
+): CopyOutcome {
+    val toCopy = findNonExistingVulnIds(destination.vulnerabilities, vulnIds)
+    val skipped = vulnIds - toCopy
+    val release = lastReleaseFavoringPublished(destination.releases)
+    // insertEntryAfterVulnerabilitiesHeader prepends; reverse so first source entry ends up first
+    val entriesReversed = source.vulnerabilities.filter { it.id in toCopy }.reversed()
+    val newContent =
+        entriesReversed.fold(destinationContent) { acc, entry ->
+            val dto = V1Mapper.vulnerabilityToDto(entry).copy(releases = listOf(release.value))
+            insertEntryAfterVulnerabilitiesHeader(acc, serializeEntryYaml(dto, mapper))
+        }
+    return CopyOutcome(
+        copied = entriesReversed.asReversed().map { it.id },
+        skippedAlreadyExisting = skipped,
+        newContent = newContent,
+    )
+}
+
+fun formatVulnIdsNotInSourceMessage(missing: Set<VulnId>): String =
+    "Error: Vulnerability IDs not found in source file: ${missing.joinToString(", ") { it.id }}"
+
+fun formatSkippedExistingMessage(
+    destinationPath: Path,
+    ids: Set<VulnId>,
+): String = "Warning: Skipping IDs already exist in $destinationPath: ${ids.joinToString(", ") { it.id }}"
+
+fun formatCopiedMessage(
+    destinationPath: Path,
+    ids: List<VulnId>,
+): String =
+    if (ids.isEmpty()) {
+        "No new vulnerabilities to copy to $destinationPath"
+    } else {
+        "Copied to $destinationPath: ${ids.joinToString(", ") { it.id }}"
+    }
 
 /**
  * Identifies vulnerability IDs from a given list that do not exist in the list of known vulnerabilities.
@@ -30,7 +87,7 @@ fun findNonExistingVulnIds(
  * @param releases The list of release entries to search. Releases with a null publication date are considered unpublished.
  * @return The most recently published release or the last entry if no release has been published.
  */
-fun latestPublishedRelease(releases: List<ReleaseEntry>): Release =
+fun lastReleaseFavoringPublished(releases: List<ReleaseEntry>): Release =
     releases.lastOrNull { it.publicationDate != null }?.id ?: releases.last().id
 
 /**
