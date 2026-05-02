@@ -16,7 +16,6 @@ import com.github.ajalt.clikt.parameters.options.unique
 import dev.vulnlog.lib.core.copyVulnerabilities
 import dev.vulnlog.lib.core.findNonExistingVulnIds
 import dev.vulnlog.lib.core.formatCopiedMessage
-import dev.vulnlog.lib.core.formatSkippedExistingMessage
 import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.model.VulnId
@@ -25,7 +24,6 @@ import dev.vulnlog.lib.shell.FileInputOption
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-// TODO move copy after modify command: vulnlog modify copy ...
 class CopyCommand : CliktCommand(name = "copy") {
     override fun help(context: Context): String =
         """
@@ -73,9 +71,6 @@ class CopyCommand : CliktCommand(name = "copy") {
                     vulnIds = vulnIds,
                     mapper = mapper,
                 )
-            if (outcome.skippedAlreadyExisting.isNotEmpty()) {
-                echo(formatSkippedExistingMessage(destination.path, outcome.skippedAlreadyExisting), err = true)
-            }
             destination.path.writeText(outcome.newContent)
             echo(formatCopiedMessage(destination.path, outcome.copied))
         }

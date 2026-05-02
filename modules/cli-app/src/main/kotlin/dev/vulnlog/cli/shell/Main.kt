@@ -14,7 +14,7 @@ fun main(args: Array<String>) =
         .subcommands(ValidateCommand())
         .subcommands(SuppressCommand())
         .subcommands(ReportCommand())
-        .subcommands(CopyCommand())
+        .subcommands(ModifyCommand())
         .main(args)
 
 class VulnlogCli : CliktCommand(name = "vulnlog") {

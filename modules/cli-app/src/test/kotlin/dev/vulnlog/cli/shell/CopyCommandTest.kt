@@ -119,7 +119,7 @@ class CopyCommandTest :
                 }
             }
 
-            test("skips a target that already contains the entry") {
+            test("merges into a target that already contains the entry") {
                 withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
                     val targetWithEntry = TARGET_YAML.replace("CVE-2026-0001", "CVE-2026-1234")
                     withTempFile(prefix = "target", content = targetWithEntry) { target ->
@@ -129,7 +129,13 @@ class CopyCommandTest :
                             )
 
                         result.statusCode shouldBe 0
-                        result.stderr shouldBe "Warning: Skipping IDs already exist in ${target.path}: CVE-2026-1234\n"
+                        val content = target.readText()
+                        // Existing entry's release was rewritten to the destination's latest release
+                        content shouldContain "\"1.0.0\""
+                        content shouldNotContain "2.0.0"
+                        // Only one CVE-2026-1234 entry remains (no duplicate prepended)
+                        val occurrences = "CVE-2026-1234".toRegex().findAll(content).count()
+                        occurrences shouldBe 1
                     }
                 }
             }

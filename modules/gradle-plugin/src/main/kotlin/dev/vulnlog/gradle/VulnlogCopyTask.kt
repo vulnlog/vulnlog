@@ -7,7 +7,6 @@ import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.copyVulnerabilities
 import dev.vulnlog.lib.core.findNonExistingVulnIds
 import dev.vulnlog.lib.core.formatCopiedMessage
-import dev.vulnlog.lib.core.formatSkippedExistingMessage
 import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.parse.createYamlMapper
@@ -20,20 +19,21 @@ import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+@DisableCachingByDefault
 abstract class VulnlogCopyTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceFile: RegularFileProperty
 
     @get:InputFiles
-    @get:OutputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val destinationFiles: ConfigurableFileCollection
 
     @get:Input
@@ -67,9 +67,6 @@ abstract class VulnlogCopyTask : DefaultTask() {
                     vulnIds = vulnIdSet,
                     mapper = mapper,
                 )
-            if (outcome.skippedAlreadyExisting.isNotEmpty()) {
-                logger.warn(formatSkippedExistingMessage(destination.path, outcome.skippedAlreadyExisting))
-            }
             destination.path.writeText(outcome.newContent)
             logger.lifecycle(formatCopiedMessage(destination.path, outcome.copied))
         }
