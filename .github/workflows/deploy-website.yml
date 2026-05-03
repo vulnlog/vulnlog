@@ -2,11 +2,16 @@ name: Deploy website and docs to GitHub Pages
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Security Scanning"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  actions: read
 
 concurrency:
   group: pages
@@ -14,6 +19,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -29,13 +35,50 @@ jobs:
           node-version: 'lts/*'
       - name: Build Antora docs
         run: npx antora antora-playbook.yml
+      - name: Resolve security report run id
+        id: report-run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "run-id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          else
+            run_id=$(gh run list \
+              --repo "${{ github.repository }}" \
+              --workflow=security.yml \
+              --status=success \
+              --branch=main \
+              --limit=1 \
+              --json databaseId \
+              -q '.[0].databaseId' || true)
+            if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+              echo "No successful security run found; skipping report bundle."
+              echo "run-id=" >> "$GITHUB_OUTPUT"
+            else
+              echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+      - name: Download latest security report
+        if: steps.report-run.outputs.run-id != ''
+        uses: actions/download-artifact@v8
+        with:
+          name: reports
+          path: _report
+          run-id: ${{ steps.report-run.outputs.run-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compose site
         run: |
           mkdir -p _site/docs _site/schema
           cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
           cp -r build/docs/* _site/docs/
           cp schema/*.json _site/schema/
+          if [ -f _report/vulnlog-report.html ]; then
+            cp _report/vulnlog-report.html _site/security-report.html
+          else
+            echo "Skipping security report bundle (no artifact downloaded)."
+          fi
           echo 'vulnlog.dev' > _site/CNAME
+          touch _site/.nojekyll
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
