@@ -1,18 +1,21 @@
 = vulnlog report
 
-Generates an HTML report from a Vulnlog file.
+Generates an HTML report from one or more Vulnlog files.
 
 [source]
 ----
-vulnlog report <file> [filter flags] [-o <path>]
+vulnlog report <file...> [filter flags] [-o <path>]
 ----
+
+Multiple files are merged and must share the same project metadata.
+Use `-` as a file argument to read from stdin and `-o -` to write the report to stdout.
 
 [cols="2,3"]
 |===
 | Flag | Description
 
 | `-o, --output <path>`
-| Output file path. Defaults to vulnlog-report.html in the current directory.
+| Output file path, or `-` to write to stdout. Defaults to `vulnlog-report.html` in the current directory.
 
 | `--reporter <value>`
 | Filter on reporter.
@@ -23,7 +26,24 @@ vulnlog report <file> [filter flags] [-o <path>]
 | `--tag <text>`
 | Filter on tags. Use multiple times to filter on multiple tags.
 
+| `-`
+| Use as the file argument to read from stdin.
+
 |===
+
+== Report contents
+
+The rendered HTML is a single, self-contained document.
+It contains the following sections:
+
+* *Header* — project organization, name, and author; the ISO-8601 UTC generation timestamp; the list of input file names (visible when several files are merged); and the applied filter (release, tags, reporter).
+* *Summary* — total entry count, breakdown by state, and breakdown of open entries by severity.
+* *Entry table* — four columns (IDs, State, Details, Releases) sorted by state (open first), then severity (critical to low), then primary ID. Each row carries a coloured left stripe: green for resolved, grey for dismissed, severity-coloured for open entries, and uncoloured for entries under investigation. The Details cell shows the verdict, severity (where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
+* *Footer* — Vulnlog version and a link to vulnlog.dev.
+
+The report is fully offline (no network requests), CSP-locked, print-friendly, and adapts to the reader's light or dark system theme.
+
+== Examples
 
 .Generate an HTML report
 [source]
@@ -32,7 +52,12 @@ vulnlog report full-example.vl.yaml
 Report written to: vulnlog-report.html
 ----
 
-== Example
+.Generate a merged report from multiple Vulnlog files
+[source]
+----
+vulnlog report frontend.vl.yaml backend.vl.yaml
+Report written to: vulnlog-report.html
+----
 
 To generate an HTML report using the Vulnlog Docker container:
 
