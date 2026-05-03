@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2026-05-03
+
+### Added
+- Refine HTML report and add more infromation by @ryru in [#126](https://github.com/vulnlog/vulnlog/pull/126)
+- Add copy command and Gradle task by @ryru in [#124](https://github.com/vulnlog/vulnlog/pull/124)
+- Introduce the dismissed state in reports by @ryru in [#117](https://github.com/vulnlog/vulnlog/pull/117)
+- Add STDOUT in report command by @ryru
+
+### Changed
+- Share parsing and validation logic between the commands and the Gradle task by @ryru in [#123](https://github.com/vulnlog/vulnlog/pull/123)
+
+### Documentation
+- Add documentation updates for version 0.13.0 by @ryru in [#127](https://github.com/vulnlog/vulnlog/pull/127)
+
+### Fixed
+- Add relocation for Jackson annotation in Gradle plugin by @ryru in [#115](https://github.com/vulnlog/vulnlog/pull/115)
+
 ## [0.12.0] - 2026-04-19
 
 ### Added
@@ -369,6 +386,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.13.0]: https://github.com/vulnlog/vulnlog/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/vulnlog/vulnlog/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/vulnlog/vulnlog/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/vulnlog/vulnlog/compare/v0.9.4...v0.10.0
