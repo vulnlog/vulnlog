@@ -6,11 +6,14 @@ import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
+import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
+import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
@@ -27,7 +30,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import java.time.LocalDate
+import java.time.Instant
 
 @CacheableTask
 abstract class VulnlogReportTask : DefaultTask() {
@@ -67,7 +70,23 @@ abstract class VulnlogReportTask : DefaultTask() {
         val allEntries = vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
         val merged = mergeReportingEntries(allEntries)
 
-        val reportData = HtmlReportMapper.toDto(project, merged, LocalDate.now())
+        val filterData =
+            FilterDataDto(
+                release = release.orNull,
+                tags = tags.get().sorted(),
+                reporter = reporter.orNull?.let { parseReporter(it).canonical() },
+            )
+        val inputNames = parsedSuccessfully.keys.map { it.name }
+
+        val reportData =
+            HtmlReportMapper.toDto(
+                project = project,
+                entries = merged,
+                generatedAt = Instant.now(),
+                vulnlogVersion = BuildInfo.VERSION,
+                inputs = inputNames,
+                filter = filterData,
+            )
         val reportContent = HtmlReportWriter.renderHtmlReport(reportData)
 
         val out = outputFile.get().asFile

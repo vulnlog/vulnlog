@@ -14,15 +14,18 @@ import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.cli.BuildInfo
+import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
+import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import java.nio.file.Path
-import java.time.LocalDate
+import java.time.Instant
 
 class ReportCommand : CliktCommand(name = "report") {
     override fun help(context: Context): String = "Generate a vulnerability report."
@@ -60,7 +63,23 @@ class ReportCommand : CliktCommand(name = "report") {
             vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
         val merged = mergeReportingEntries(allEntries)
 
-        val reportData = toDto(project, merged, LocalDate.now())
+        val filterData =
+            FilterDataDto(
+                release = filterOptions.releaseOption,
+                tags = filterOptions.tagsOptions.sorted(),
+                reporter = filterOptions.reporter?.canonical(),
+            )
+        val inputNames = parsedSuccessfully.keys.map { it.name }
+
+        val reportData =
+            toDto(
+                project = project,
+                entries = merged,
+                generatedAt = Instant.now(),
+                vulnlogVersion = BuildInfo.VERSION,
+                inputs = inputNames,
+                filter = filterData,
+            )
         val content = renderHtmlReport(reportData)
 
         when (val target = output) {

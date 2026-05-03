@@ -3,19 +3,24 @@
 package dev.vulnlog.lib.parse.reporting
 
 import dev.vulnlog.lib.model.Project
+import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.report.Impact
 import dev.vulnlog.lib.model.report.ReportingEntry
+import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.parse.reporting.dto.ProjectDataDto
 import dev.vulnlog.lib.parse.reporting.dto.ReportDataDto
 import dev.vulnlog.lib.parse.reporting.dto.ReportEntryDataDto
-import java.time.LocalDate
-import kotlin.collections.map
+import java.time.Instant
 
 object HtmlReportMapper {
     fun toDto(
         project: Project,
         entries: List<ReportingEntry>,
-        generatedAt: LocalDate,
+        generatedAt: Instant,
+        vulnlogVersion: String,
+        inputs: List<String>,
+        filter: FilterDataDto,
     ): ReportDataDto =
         ReportDataDto(
             project =
@@ -25,8 +30,16 @@ object HtmlReportMapper {
                     author = project.author,
                 ),
             generatedAt = generatedAt.toString(),
-            entries = entries.map(::toReportEntryData),
+            vulnlogVersion = vulnlogVersion,
+            inputs = inputs,
+            filter = filter,
+            entries = entries.sortedWith(entrySortComparator).map(::toReportEntryData),
         )
+
+    private val entrySortComparator: Comparator<ReportingEntry> =
+        compareBy<ReportingEntry> { stateOrder(it.state) }
+            .thenBy { severityOrder(severityOf(it.impact)) }
+            .thenBy { it.primaryId.id }
 
     private fun toReportEntryData(entry: ReportingEntry): ReportEntryDataDto =
         ReportEntryDataDto(
@@ -50,19 +63,38 @@ object HtmlReportMapper {
             is Impact.Unknown -> "under_investigation"
         }
 
-    private fun severityLabel(impact: Impact): String? =
+    private fun severityOf(impact: Impact): Severity? =
         when (impact) {
-            is Impact.Affected -> impact.severity.name.lowercase()
-            is Impact.AcceptableRisk -> impact.severity.name.lowercase()
+            is Impact.Affected -> impact.severity
+            is Impact.AcceptableRisk -> impact.severity
             is Impact.NotAffected -> null
             is Impact.Unknown -> null
         }
 
+    private fun severityLabel(impact: Impact): String? = severityOf(impact)?.name?.lowercase()
+
     private fun verdictDetail(impact: Impact): String? =
         when (impact) {
             is Impact.NotAffected -> impact.reason
-            is Impact.AcceptableRisk -> impact.severity.name.lowercase()
-            is Impact.Affected -> impact.severity.name.lowercase()
+            is Impact.AcceptableRisk -> null
+            is Impact.Affected -> null
             is Impact.Unknown -> null
+        }
+
+    private fun stateOrder(state: WorkState): Int =
+        when (state) {
+            WorkState.OPEN -> 0
+            WorkState.UNDER_INVESTIGATION -> 1
+            WorkState.RESOLVED -> 2
+            WorkState.DISMISSED -> 3
+        }
+
+    private fun severityOrder(severity: Severity?): Int =
+        when (severity) {
+            Severity.CRITICAL -> 0
+            Severity.HIGH -> 1
+            Severity.MEDIUM -> 2
+            Severity.LOW -> 3
+            null -> 4
         }
 }

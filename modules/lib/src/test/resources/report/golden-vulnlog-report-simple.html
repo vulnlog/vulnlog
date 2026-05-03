@@ -549,7 +549,7 @@
 </footer>
 
 <script>
-    var VULNLOG_DATA = /*VULNLOG_DATA_PLACEHOLDER*/;
+    var VULNLOG_DATA = {"project":{"organization":"Acme Corp","name":"Acme Web App","author":"Security Team"},"generatedAt":"2026-05-02T10:30:00Z","vulnlogVersion":"1.2.3-test","inputs":["frontend.vl","backend.vl"],"filter":{"release":"1.1.0","tags":["production"],"reporter":"trivy"},"entries":[{"primaryId":"CVE-2026-1111","ids":["CVE-2026-1111","GHSA-aaaa-bbbb-cccc"],"state":"open","verdict":"affected","severity":"critical","verdictDetail":null,"shortDescription":"Critical RCE in example-lib","analysis":"Confirmed exploitable on the public ingress path; patch in progress.","releases":["1.0.0","1.1.0"],"fixedIn":["1.2.0"]},{"primaryId":"CVE-2026-2222","ids":["CVE-2026-2222"],"state":"open","verdict":"not affected","severity":null,"verdictDetail":"vulnerable code not in execute path","shortDescription":null,"analysis":null,"releases":["1.1.0"],"fixedIn":[]},{"primaryId":"CVE-2026-3333","ids":["CVE-2026-3333"],"state":"resolved","verdict":"affected","severity":"medium","verdictDetail":null,"shortDescription":"DoS via large payload","analysis":"Mitigated by request size limits at the edge.","releases":["1.0.0"],"fixedIn":["1.0.1"]}]};
     (function () {
         var COLUMN_META = {
             ids: {label: 'IDs', width: '16%', tooltip: 'Vulnerability identifiers (CVE, GHSA, SNYK)'},
