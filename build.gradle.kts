@@ -1,3 +1,7 @@
+plugins {
+    id("dev.vulnlog.plugin") version "0.13.0"
+}
+
 val gitHash: String = try {
     providers.exec {
         commandLine("git", "rev-parse", "--short", "HEAD")
@@ -42,4 +46,8 @@ tasks.register("installGitHooks") {
         hook.setExecutable(true)
         logger.lifecycle("Installed pre-commit hook at ${hook.path}")
     }
+}
+
+vulnlog {
+    files = files.from("vulnlog.yaml")
 }
