@@ -17,7 +17,7 @@
 ** xref:cli-validate.adoc[validate]
 ** xref:cli-suppress.adoc[suppress]
 ** xref:cli-report.adoc[report]
-// ** xref:cli-copy.adoc[copy]
+** xref:cli-copy.adoc[modify copy]
 * Guides
 ** xref:branching-strategy.adoc[Branching Strategy]
 ** xref:ci-integration.adoc[CI/CD Integration]

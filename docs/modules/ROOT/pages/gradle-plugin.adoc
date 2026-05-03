@@ -193,3 +193,44 @@ vulnlog {
 ----
 ./gradlew vulnlogReport
 ----
+
+=== `VulnlogCopyTask`
+
+Copies vulnerability entries from a source Vulnlog file into one or more target files.
+See xref:cli-copy.adoc[`vulnlog modify copy`] for the underlying behavior, including merge semantics for entries that already exist in a target.
+
+The task type is provided but no task is registered by default, since the source, targets, and IDs to copy depend on the project.
+Register a task in your build script for each propagation you want to perform:
+
+[source,kotlin]
+----
+import dev.vulnlog.gradle.VulnlogCopyTask
+
+tasks.register<VulnlogCopyTask>("vulnlogCopyToBranches") {
+    group = "vulnlog"
+    description = "Copy a vulnerability analysis into branch files."
+    sourceFile.set(layout.projectDirectory.file("source.vl.yaml"))
+    destinationFiles.from("target1.vl.yaml", "target2.vl.yaml")
+    vulnIds.set(setOf("CVE-2026-002"))
+}
+----
+
+[cols="2,3"]
+|===
+| Property | Description
+
+| `sourceFile`
+| Vulnlog file to copy entries from.
+
+| `destinationFiles`
+| File collection of target Vulnlog files to copy entries into.
+
+| `vulnIds`
+| Set of vulnerability IDs to copy. Each ID must exist in the source file.
+|===
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogCopyToBranches
+----

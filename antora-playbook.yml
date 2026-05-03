@@ -7,15 +7,17 @@ content:
   sources:
     - url: .
       branches:
-        - HEAD
-        - release/0.11.0
+        - docs/0.13
+        - docs/0.12.0
       start_path: docs
 
-# Only use this for local testing
+## Only use this for local testing
 #content:
 #  sources:
 #    - url: ../vulnlog
-#      branches: docs/0.12.0
+#      branches:
+#        - docs/0.13
+#        - docs/0.12.0
 #      start_path: docs
 
 ui:
