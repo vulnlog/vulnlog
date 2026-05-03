@@ -22,7 +22,7 @@ jobs:
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:v0.12.0-rc2 \
+            ghcr.io/${{ github.repository }}:v0.13.0 \
             suppress vulnlog.yaml -o /work
 
       - name: Ensure suppression files exist
@@ -44,7 +44,7 @@ jobs:
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:v0.12.0-rc2 \
+            ghcr.io/${{ github.repository }}:v0.13.0 \
             report vulnlog.yaml
 
       - name: Upload HTML report

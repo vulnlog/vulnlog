@@ -15,10 +15,15 @@ releases:
   - id: "0.11.0"
     published_at: "2026-04-06"
   - id: "0.12.0"
+    published_at: "2026-04-19"
+  - id: "0.13.0"
+    published_at: "2026-05-03"
+  - id: "0.14.0"
 
 vulnerabilities:
 
   - id: "SNYK-JAVA-TOOLSJACKSONCORE-15907550"
+    description: "Allocation of resources without limits or throttling vulnerability in Jackson"
     aliases: [ "GHSA-2m67-wjpj-xhg9" ]
     releases: [ "0.11.0" ]
     packages: [ "pkg:maven/tools.jackson.core/jackson-core@3.1.0" ]
@@ -38,6 +43,7 @@ vulnerabilities:
     comment: "Fix will be in 3.1.1"
 
   - id: "CVE-2023-6481"
+    description: "Uncontrolled resource consumption (resource exhaustion) vulnerability in logback"
     aliases: [ "SNYK-JAVA-CHQOSLOGBACK-6097492",  "SNYK-JAVA-CHQOSLOGBACK-6097493" ]
     releases: [ "0.11.0" ]
     tags: [ "dev dependency" ]
@@ -58,6 +64,7 @@ vulnerabilities:
       note: "Update ktlint to 14.2.0 also updates logback to 1.3.14"
 
   - id: "CVE-2020-29582"
+    description: "Information exposure vulnerability in Kotlin stdlib"
     aliases: [ "SNYK-JAVA-ORGJETBRAINSKOTLIN-2393744" ]
     releases: [ "0.11.0" ]
     packages: [ "pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@1.9.10" ]
@@ -76,6 +83,7 @@ vulnerabilities:
       note: "Update ktlint to 14.2.0 also updates kotlin-stdlib to 2.1.0"
 
   - id: "CVE-2023-6378"
+    description: "Denial of service (DoS) vulnerability in logback"
     aliases: [ "SNYK-JAVA-CHQOSLOGBACK-6094942", "SNYK-JAVA-CHQOSLOGBACK-6094943" ]
     releases: [ "0.11.0" ]
     packages:
@@ -98,6 +106,7 @@ vulnerabilities:
       note: "Update ktlint to 14.2.0 also updates logback to 1.3.14"
 
   - id: "CVE-2025-11226"
+    description: "External initialization of trusted variables or data stores vulnerability in Logback"
     aliases: [ "SNYK-JAVA-CHQOSLOGBACK-13169722" ]
     releases: [ "0.11.0" ]
     packages: [ "pkg:maven/ch.qos.logback/logback-core@1.3.14" ]
@@ -114,9 +123,10 @@ vulnerabilities:
     analyzed_at: "2026-04-07"
     verdict: risk acceptable
     severity: low
-    comment: "This is fixed in logback-core 1.3.16"
+    comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
 
   - id: "CVE-2024-12798"
+    description: "Improper neutralization of special elements vulnerability in Logback"
     aliases: [ "SNYK-JAVA-CHQOSLOGBACK-8539867", "SNYK-JAVA-CHQOSLOGBACK-8539866" ]
     releases: [ "0.11.0" ]
     packages: [ "pkg:maven/ch.qos.logback/logback-core@1.3.14" ]
@@ -133,9 +143,10 @@ vulnerabilities:
     analyzed_at: "2026-04-07"
     verdict: risk acceptable
     severity: low
-    comment: "This is fixed in logback-core 1.3.15"
+    comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
 
   - id: "CVE-2026-1225"
+    description: "External initialization of trusted variables or data stores vulnerability in Logback"
     aliases: [ "SNYK-JAVA-CHQOSLOGBACK-15062482" ]
     releases: [ "0.11.0" ]
     packages: [ "pkg:maven/ch.qos.logback/logback-core@1.3.14" ]
@@ -152,9 +163,10 @@ vulnerabilities:
     analyzed_at: "2026-04-06"
     verdict: risk acceptable
     severity: low
-    comment: "Fix will be in 1.5.25"
+    comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
 
   - id: "CVE-2024-12801"
+    description: "Server-side request forgery (SSRF) vulnerability in Logback"
     aliases: [ "SNYK-JAVA-CHQOSLOGBACK-8539865" ]
     releases: [ "0.11.0" ]
     packages: [ "pkg:maven/ch.qos.logback/logback-core@1.3.14" ]
@@ -171,4 +183,4 @@ vulnerabilities:
     analyzed_at: "2026-04-06"
     verdict: risk acceptable
     severity: low
-    comment: "Fix will be in 1.3.15"
+    comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
