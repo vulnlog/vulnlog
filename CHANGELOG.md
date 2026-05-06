@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.13.0] - 2026-05-03
 
 ### Added
-- Refine HTML report and add more infromation by @ryru in [#126](https://github.com/vulnlog/vulnlog/pull/126)
+- Refine HTML report and add more information by @ryru in [#126](https://github.com/vulnlog/vulnlog/pull/126)
 - Add copy command and Gradle task by @ryru in [#124](https://github.com/vulnlog/vulnlog/pull/124)
 - Introduce the dismissed state in reports by @ryru in [#117](https://github.com/vulnlog/vulnlog/pull/117)
 - Add STDOUT in report command by @ryru

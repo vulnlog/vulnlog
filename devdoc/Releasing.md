@@ -105,7 +105,7 @@ The website and docs site will be deployed automatically from the CD pipeline.
 
 ### Manual deployment
 
-Whenever a manuall depolyment is required from the current version of the main branch:
+Whenever a manual deployment is required from the current version of the main branch:
 
 1. **Deploy the website** by manually triggering the `deploy-website.yml` workflow
    from the GitHub Actions UI (on `main`).
