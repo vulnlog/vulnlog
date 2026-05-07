@@ -87,7 +87,7 @@ vulnlog suppress vulnlog.yaml --reporter trivy -o -
 
 ## Documentation
 
-- [Getting Started](https://vulnlog.dev/docs/vulnlog/0.11.0/quickstart.html)
+- [Getting Started](https://vulnlog.dev/docs/vulnlog/0.13.0/quickstart.html)
 - [Project Website](https://vulnlog.dev/)
 - [Documentation](https://vulnlog.dev/docs/)
 - [Changelog](CHANGELOG.md)
