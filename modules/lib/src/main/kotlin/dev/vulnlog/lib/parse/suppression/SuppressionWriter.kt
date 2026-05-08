@@ -3,6 +3,7 @@
 package dev.vulnlog.lib.parse.suppression
 
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.parse.suppression.cargoaudit.CargoAuditSuppressionWriter
 import dev.vulnlog.lib.parse.suppression.generic.GenericSuppressionWriter
 import dev.vulnlog.lib.parse.suppression.snyk.SnykSuppressionWriter
 import dev.vulnlog.lib.parse.suppression.trivy.TrivySuppressionWriter
@@ -31,6 +32,12 @@ object SuppressionWriter {
                 SuppressionFile(
                     fileName = output.fileName,
                     content = SnykSuppressionWriter.write(output),
+                )
+
+            is SuppressionOutput.CargoAuditSuppression ->
+                SuppressionFile(
+                    fileName = output.fileName,
+                    content = CargoAuditSuppressionWriter.write(output),
                 )
         }
 }

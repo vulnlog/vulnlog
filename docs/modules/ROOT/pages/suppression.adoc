@@ -128,8 +128,8 @@ The CLI determines which identifiers to write into the suppression file using th
 
 | `cargo-audit`
 | Cargo Audit (Rust)
-| `.cargo-audit.toml`
-| Planned
+| `audit.toml`
+| Yes (RUSTSEC IDs only)
 
 | `semgrep`
 | Semgrep
