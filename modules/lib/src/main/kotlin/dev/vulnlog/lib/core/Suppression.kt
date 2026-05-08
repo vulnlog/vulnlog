@@ -102,7 +102,7 @@ private fun getDefaultSettingsForReporter(reporter: ReporterType): Suppression =
         ReporterType.GRYPE -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.NPM_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.OTHER -> NotSuppressable
-        ReporterType.CARGO_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.CARGO_AUDIT -> Suppressable.NativeFormat.CargoAudit
         ReporterType.SEMGREP -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.SNYK -> Suppressable.NativeFormat.Snyk
         ReporterType.TRIVY -> Suppressable.NativeFormat.Trivy
@@ -116,6 +116,7 @@ private fun createSuppression(
         is Suppressable.GenericFormat.Generic -> createGenericSuppression(defaults, suppressions)
         is Suppressable.NativeFormat.Trivy -> createTrivySuppression(defaults, suppressions)
         is Suppressable.NativeFormat.Snyk -> createSnykSuppression(defaults, suppressions)
+        is Suppressable.NativeFormat.CargoAudit -> createCargoAuditSuppression(defaults, suppressions)
     }
 
 private fun createGenericSuppression(
@@ -153,6 +154,18 @@ private fun createTrivySuppression(
                 )
             }.toSet()
     return SuppressionOutput.TrivySuppression(entries = entries)
+}
+
+private fun createCargoAuditSuppression(
+    defaults: Suppressable.NativeFormat.CargoAudit,
+    suppressions: List<SuppressedVulnerability>,
+): SuppressionOutput {
+    val entries =
+        suppressions
+            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .map { suppression -> SuppressionVuln.CargoAuditSuppressionEntry(id = suppression.id) }
+            .toSet()
+    return SuppressionOutput.CargoAuditSuppression(entries = entries)
 }
 
 private fun createSnykSuppression(

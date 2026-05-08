@@ -66,3 +66,9 @@ include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..5]
 ----
 include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..4]
 ----
+
+.Generated Cargo Audit suppression file
+[source,toml]
+----
+include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
+----
