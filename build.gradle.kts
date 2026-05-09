@@ -1,5 +1,13 @@
 plugins {
     id("dev.vulnlog.plugin") version "0.13.0"
+    id("com.github.node-gradle.node") version "7.1.0"
+}
+
+node {
+    download.set(true)
+    version.set("22.11.0")
+    workDir.set(layout.buildDirectory.dir("nodejs"))
+    npmWorkDir.set(layout.buildDirectory.dir("npm"))
 }
 
 val gitHash: String = try {
@@ -46,6 +54,16 @@ tasks.register("installGitHooks") {
         hook.setExecutable(true)
         logger.lifecycle("Installed pre-commit hook at ${hook.path}")
     }
+}
+
+tasks.register<com.github.gradle.node.npm.task.NpxTask>("docsBuild") {
+    group = "documentation"
+    description = "Builds the docs site locally into build/docs using Antora"
+    command.set("antora")
+    args.set(listOf("antora-local-playbook.yml"))
+    inputs.dir("docs")
+    inputs.file("antora-local-playbook.yml")
+    outputs.dir(layout.buildDirectory.dir("docs"))
 }
 
 vulnlog {
