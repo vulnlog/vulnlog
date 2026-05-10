@@ -78,11 +78,11 @@ jobs:
             echo "Skipping security report bundle (no artifact downloaded)."
           fi
           echo 'vulnlog.dev' > _site/CNAME
-          touch _site/.nojekyll
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+          include-hidden-files: 'true'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
