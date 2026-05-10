@@ -1,14 +1,14 @@
 site:
-  title: Vulnlog Documentation
+  title: Vulnlog Documentation (local)
   url: https://vulnlog.dev/docs
   start_page: vulnlog::index.adoc
 
 content:
   sources:
-    - url: .
+    - url: ../vulnlog
       branches:
-        - docs/0.13
-        - docs/0.12.0
+        - HEAD
+      worktrees: '.'
       start_path: docs
 
 ui:
