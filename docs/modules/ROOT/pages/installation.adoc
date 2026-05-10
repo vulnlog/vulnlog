@@ -56,6 +56,37 @@ Not all Vulnlog CLI commands support the same set of input (STDIN) and output (S
 Check the corresponding command documentations for more details.
 ====
 
+== Install Script
+
+A POSIX install script is attached to every release.
+It detects the current OS and architecture, downloads the matching native binary,
+and installs it to `~/.local/bin` (or `~/bin` if `~/.local/bin` does not exist).
+Platforms without a native build (`linux-aarch64`, `macos-amd64`) automatically
+fall back to the JVM distribution and require Java 21 or later.
+
+.Install the latest Vulnlog release.
+[source,bash]
+----
+curl -fsSL vulnlog.dev/install | sh
+----
+
+To force the JVM distribution, pass `--jvm`:
+
+[source,bash]
+----
+curl -fsSL vulnlog.dev/install | sh -s -- --jvm
+----
+
+To uninstall, run:
+
+[source,bash]
+----
+curl -fsSL vulnlog.dev/uninstall | sh
+----
+
+A versioned copy of the same script is also attached to each GitHub release as
+`install-vulnlog.sh` and `uninstall-vulnlog.sh`.
+
 == Native Binary
 
 Standalone native binaries are built with GraalVM and require no Java runtime.

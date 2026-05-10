@@ -1,0 +1,129 @@
+#!/usr/bin/env sh
+set -eu
+
+# -------------------------------------------------
+# Configuration
+# -------------------------------------------------
+VERSION="0.13.0"
+REPO="vulnlog/vulnlog"
+BIN_NAME="vulnlog"
+
+INSTALL_DIR="${HOME}/.local/bin"
+FALLBACK_DIR="${HOME}/bin"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/vulnlog"
+
+USE_JVM=false
+[ "${1:-}" = "--jvm" ] && USE_JVM=true
+
+# -------------------------------------------------
+# Helpers
+# -------------------------------------------------
+info() { printf "✓ %s\n" "$1"; }
+warn() { printf "⚠ %s\n" "$1" >&2; }
+error() { printf "✗ %s\n" "$1" >&2; exit 1; }
+
+command -v curl >/dev/null 2>&1 || error "curl is required"
+command -v unzip >/dev/null 2>&1 || error "unzip is required"
+
+# Ensure install dir
+if [ ! -d "$INSTALL_DIR" ]; then
+  INSTALL_DIR="$FALLBACK_DIR"
+fi
+mkdir -p "$INSTALL_DIR"
+
+# -------------------------------------------------
+# Detect OS / ARCH
+# -------------------------------------------------
+OS="$(uname -s)"
+ARCH="$(uname -m)"
+
+case "$OS" in
+  Linux)   OS="linux" ;;
+  Darwin)  OS="macos" ;;
+  MINGW*|MSYS*|CYGWIN*)
+    OS="windows"
+    BIN_NAME="${BIN_NAME}.exe"
+    ;;
+  *)
+    error "Unsupported OS: $OS"
+    ;;
+esac
+
+case "$ARCH" in
+  x86_64|amd64) ARCH="amd64" ;;
+  arm64|aarch64) ARCH="aarch64" ;;
+  *)
+    error "Unsupported architecture: $ARCH"
+    ;;
+esac
+
+PLATFORM="${OS}-${ARCH}"
+info "Detected platform: ${PLATFORM}"
+
+# -------------------------------------------------
+# Pick distribution
+# -------------------------------------------------
+SUPPORTED_NATIVE="linux-amd64 macos-aarch64 windows-amd64"
+case " $SUPPORTED_NATIVE " in
+  *" $PLATFORM "*) ;;
+  *)
+    if [ "$USE_JVM" = false ]; then
+      warn "No native build for ${PLATFORM}; falling back to JVM distribution"
+      USE_JVM=true
+    fi
+    ;;
+esac
+
+if [ "$USE_JVM" = true ]; then
+  command -v java >/dev/null 2>&1 || error "Java 21+ is required for the JVM distribution"
+  ASSET="vulnlog-${VERSION}.zip"
+  info "Using JVM distribution"
+else
+  ASSET="vulnlog-${PLATFORM}.zip"
+  info "Using native distribution"
+fi
+
+DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${ASSET}"
+
+# -------------------------------------------------
+# Download & extract
+# -------------------------------------------------
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+ZIP_FILE="${TMP_DIR}/vulnlog.zip"
+
+info "Downloading ${DOWNLOAD_URL}"
+curl -fL --progress-bar "$DOWNLOAD_URL" -o "$ZIP_FILE"
+
+info "Extracting"
+unzip -q "$ZIP_FILE" -d "$TMP_DIR"
+
+# -------------------------------------------------
+# Install
+# -------------------------------------------------
+if [ "$USE_JVM" = true ]; then
+  rm -rf "$DATA_DIR"
+  mkdir -p "$DATA_DIR"
+  mv "$TMP_DIR"/vulnlog-*/* "$DATA_DIR/"
+  ln -sf "${DATA_DIR}/bin/vulnlog" "${INSTALL_DIR}/${BIN_NAME}"
+  info "Installed JVM distribution to ${DATA_DIR}"
+  info "Linked ${INSTALL_DIR}/${BIN_NAME} → ${DATA_DIR}/bin/vulnlog"
+else
+  mv "$TMP_DIR/${BIN_NAME}" "${INSTALL_DIR}/${BIN_NAME}"
+  chmod +x "${INSTALL_DIR}/${BIN_NAME}"
+  info "Installed native binary to ${INSTALL_DIR}/${BIN_NAME}"
+fi
+
+# -------------------------------------------------
+# PATH hint
+# -------------------------------------------------
+case ":$PATH:" in
+  *":$INSTALL_DIR:"*) ;;
+  *)
+    printf "\n⚠️  %s is not in your PATH\n" "$INSTALL_DIR"
+    printf "Add this to your shell config:\n\n"
+    printf "  export PATH=\"%s:\$PATH\"\n\n" "$INSTALL_DIR"
+    ;;
+esac
+
+info "vulnlog ${VERSION} installation complete"

@@ -241,6 +241,13 @@
             <h2 class="section-title">Get started in seconds</h2>
             <div class="install-grid">
                 <div class="install-option">
+                    <h3>Install Script</h3>
+                    <div class="code-block" id="install-script"></div>
+                    <script id="install-script-src" type="text/plain">
+                        curl -fsSL vulnlog.dev/install | sh
+                    </script>
+                </div>
+                <div class="install-option">
                     <h3>Docker</h3>
                     <div class="code-block" id="install-docker"></div>
                     <script id="install-docker-src" type="text/plain">
@@ -459,6 +466,7 @@
 
     renderExample('hero-example', 'hero-example-src', highlightYaml);
     renderExample('cli-example', 'cli-example-src', highlightCli);
+    renderExample('install-script', 'install-script-src', highlightPlain);
     renderExample('install-docker', 'install-docker-src', highlightPlain);
     renderExample('install-gradle', 'install-gradle-src', highlightPlain);
 </script>
