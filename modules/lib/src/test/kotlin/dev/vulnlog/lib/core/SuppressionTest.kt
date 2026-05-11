@@ -205,6 +205,37 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
+            test("includes affected vulnerability whose resolution targets a release outside the filter") {
+                val vuln =
+                    vulnerability(
+                        releases = listOf(releaseV1),
+                        verdict = Verdict.Affected(Severity.HIGH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val filter = SuppressionFilter(VulnlogFilter(releases = setOf(releaseV1)), today)
+                val result = collectSuppressedVulnerabilities(file, filter)
+
+                result[ReporterType.TRIVY]!! shouldHaveSize 1
+                result[ReporterType.TRIVY]!!.first().id shouldBe VulnId.Cve("CVE-2024-0001")
+            }
+
+            test("excludes affected vulnerability whose resolution shipped within the filter releases") {
+                val vuln =
+                    vulnerability(
+                        releases = listOf(releaseV1, releaseV2),
+                        verdict = Verdict.Affected(Severity.HIGH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val filter = SuppressionFilter(VulnlogFilter(releases = setOf(releaseV1, releaseV2)), today)
+                val result = collectSuppressedVulnerabilities(file, filter)
+
+                result.shouldBeEmpty()
+            }
+
             test("includes affected vulnerability without resolution when suppress present") {
                 val vuln = vulnerability(verdict = Verdict.Affected(Severity.HIGH))
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))

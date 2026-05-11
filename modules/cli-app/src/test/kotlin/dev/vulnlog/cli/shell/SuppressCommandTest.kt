@@ -170,4 +170,25 @@ class SuppressCommandTest :
                 result.stdout shouldContain "cargo-audit"
             }
         }
+
+        context("pending fix at deployed release") {
+
+            test("--release including only the deployed release suppresses an affected CVE whose fix is unshipped") {
+                withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --release 1.0.0 -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "CVE-2026-9999"
+                }
+            }
+
+            test("without --release the affected CVE with a resolution is dropped") {
+                withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldNotContain "CVE-2026-9999"
+                }
+            }
+        }
     })

@@ -223,6 +223,63 @@ class ReportingTest :
 
                 result.first().state shouldBe WorkState.RESOLVED
             }
+
+            test("Affected with resolution outside filter releases stays OPEN") {
+                val vuln =
+                    vulnerability(
+                        releases = listOf(releaseV1),
+                        verdict = Verdict.Affected(Severity.HIGH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
+
+                result.first().state shouldBe WorkState.OPEN
+            }
+
+            test("Affected with resolution inside filter releases is RESOLVED") {
+                val vuln =
+                    vulnerability(
+                        releases = listOf(releaseV1, releaseV2),
+                        verdict = Verdict.Affected(Severity.HIGH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result =
+                    collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1, releaseV2)))
+
+                result.first().state shouldBe WorkState.RESOLVED
+            }
+
+            test("NotAffected with resolution outside filter releases falls back to DISMISSED") {
+                val vuln =
+                    vulnerability(
+                        releases = listOf(releaseV1),
+                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
+
+                result.first().state shouldBe WorkState.DISMISSED
+            }
+
+            test("RiskAcceptable with resolution outside filter releases falls back to DISMISSED") {
+                val vuln =
+                    vulnerability(
+                        releases = listOf(releaseV1),
+                        verdict = Verdict.RiskAcceptable(Severity.LOW),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
+
+                result.first().state shouldBe WorkState.DISMISSED
+            }
         }
 
         context("mergeReportingEntries") {

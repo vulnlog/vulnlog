@@ -22,6 +22,7 @@ Use `-` as a file argument to read from stdin and `-o -` to write the report to 
 
 | `--release <text>`
 | Filter on release, include all releases up to and including that release.
+A vulnerability whose `resolution` targets a release outside this range is rendered under its pre-resolution state (`open` for `affected`, `dismissed` for `not affected` and `risk acceptable`), so the report reflects what is actually shipped at the chosen release.
 
 | `--tag <text>`
 | Filter on tags. Use multiple times to filter on multiple tags.
@@ -38,7 +39,9 @@ It contains the following sections:
 
 * *Header* — project organization, name, and author; the ISO-8601 UTC generation timestamp; the list of input file names (visible when several files are merged); and the applied filter (release, tags, reporter).
 * *Summary* — total entry count, breakdown by state, and breakdown of open entries by severity.
-* *Entry table* — four columns (IDs, State, Details, Releases) sorted by state (open first), then severity (critical to low), then primary ID. Each row carries a coloured left stripe: green for resolved, grey for dismissed, severity-coloured for open entries, and uncoloured for entries under investigation. The Details cell shows the verdict, severity (where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
+* *Entry table* — four columns (IDs, State, Details, Releases) sorted by state (open first), then severity (critical to low), then primary ID.
+Each row carries a coloured left stripe: green for resolved, grey for dismissed, severity-coloured for open entries, and uncoloured for entries under investigation.
+The Details cell shows the verdict, severity (where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
 * *Footer* — Vulnlog version and a link to vulnlog.dev.
 
 The report is fully offline (no network requests), CSP-locked, print-friendly, and adapts to the reader's light or dark system theme.
