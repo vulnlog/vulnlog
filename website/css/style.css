@@ -653,6 +653,10 @@ code {
     .install-grid {
         grid-template-columns: 1fr 1fr;
     }
+
+    .install-option:first-child {
+        grid-column: 1 / -1;
+    }
 }
 
 .install-option h3 {

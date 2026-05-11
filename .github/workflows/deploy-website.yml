@@ -68,6 +68,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compose site
         run: |
+          VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
           mkdir -p _site/docs _site/schema
           cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
           cp -r build/docs/* _site/docs/
@@ -77,6 +78,10 @@ jobs:
           else
             echo "Skipping security report bundle (no artifact downloaded)."
           fi
+          sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
+              install/install.sh.template > _site/install
+          cp install/uninstall.sh.template _site/uninstall
+          sed -i "s/0\.13\.0/${VERSION}/g" _site/index.html
           echo 'vulnlog.dev' > _site/CNAME
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

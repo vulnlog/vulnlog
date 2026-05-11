@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+set -eu
+
+INSTALL_DIR="${HOME}/.local/bin"
+FALLBACK_DIR="${HOME}/bin"
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/vulnlog"
+
+remove_from() {
+  rm -f "$1/vulnlog" \
+        "$1/vulnlog.exe"
+}
+
+remove_from "$INSTALL_DIR"
+remove_from "$FALLBACK_DIR"
+rm -rf "$DATA_DIR"
+
+printf "✓ vulnlog uninstalled\n"
