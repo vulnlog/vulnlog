@@ -49,6 +49,49 @@ internal fun vulnlogYaml(
     """.trimIndent()
 
 /**
+ * Builds a Vulnlog YAML document for the "pending fix" scenario: an `Affected` CVE present in a
+ * published release whose resolution targets a later release that has not been published yet
+ * (no `published_at`).
+ */
+internal fun vulnlogYamlWithPendingFix(
+    publishedRelease: String = "1.0.0",
+    publishedAt: String = "2026-01-15",
+    pendingRelease: String = "1.0.1",
+    cveId: String = "CVE-2026-9999",
+    reporter: String = "trivy",
+): String =
+    """
+    ---
+    schemaVersion: "1"
+
+    project:
+      organization: Acme Corp
+      name: Acme Web App
+      author: Acme Corp Security Team
+
+    releases:
+      - id: $publishedRelease
+        published_at: $publishedAt
+      - id: $pendingRelease
+
+    vulnerabilities:
+
+      - id: $cveId
+        releases: [ $publishedRelease ]
+        description: Remote code execution in tomcat
+        packages: [ "pkg:maven/org.apache.tomcat/tomcat-core@10.1.0" ]
+        reports:
+          - reporter: $reporter
+            suppress: { }
+        analysis: Fix landed on dev but no release has been cut yet.
+        analyzed_at: $publishedAt
+        severity: high
+        verdict: affected
+        resolution:
+          in: $pendingRelease
+    """.trimIndent()
+
+/**
  * A YAML document missing required fields — used to exercise parse-failure paths.
  */
 internal val INVALID_VULNLOG_YAML: String =

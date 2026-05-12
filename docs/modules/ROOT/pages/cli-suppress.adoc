@@ -20,6 +20,7 @@ vulnlog suppress <file> [flags]
 
 | `--release <text>`
 | Filter on release, include all releases up to and including that release.
+A vulnerability whose `resolution` targets a release outside this range is treated as still unresolved and a suppression entry is emitted, so scanners running against the deployed release stay quiet until the fix actually ships.
 
 | `--tag <text>`
 | Filter on tags. Use multiple times to filter on multiple tags.
@@ -43,6 +44,18 @@ Suppression file created at: /path/to/.trivyignore.yaml
 vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
 Suppression file created at: /path/to/.snyk
 ----
+
+.Suppress a not-yet-shipped fix when scanning the currently deployed release
+[source]
+----
+vulnlog suppress vulnlog.yaml --release 8.0.0 --reporter trivy
+----
+
+The CVE is fixed on the `dev` branch and the resolution targets the next, unpublished release.
+Until that release ships, the scanner running against the deployed `8.0.0` image keeps flagging the CVE.
+Generating the suppression file with `--release 8.0.0` includes the entry, so CI stays green.
+The vulnerability still appears as `open` in the HTML report under the same release.
+The pending-fix report needs an empty `suppress: { }` block on the relevant report so the entry is eligible for suppression.
 
 .Read from STDIN and write to STDOUT.
 [source]

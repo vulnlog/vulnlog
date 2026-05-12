@@ -30,7 +30,7 @@ fun collectSuppressedVulnerabilities(
 ): Map<ReporterType, List<SuppressedVulnerability>> =
     vulnlogFile.vulnerabilities
         .asSequence()
-        .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today) }
+        .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today, filter.filter) }
         .applyFilter(filter)
         .groupBy { it.reporter }
         .filter { filter.filter.reporter == null || it.key == filter.filter.reporter }
@@ -38,9 +38,14 @@ fun collectSuppressedVulnerabilities(
 private fun explodeAndMapToSuppressedVulnerabilities(
     vulnerability: VulnerabilityEntry,
     today: LocalDate,
+    filter: VulnlogFilter,
 ): List<SuppressedVulnerability> {
     if (vulnerability.verdict is Verdict.Affected && vulnerability.resolution != null) {
-        return emptyList()
+        // When --release X is given, treat the resolution as effective only if it shipped at-or-before X.
+        // Without a release context, fall back to dropping unconditionally (the fix is the canonical answer).
+        val resolutionShipped =
+            filter.releases.isEmpty() || vulnerability.resolution.release in filter.releases
+        if (resolutionShipped) return emptyList()
     }
     return vulnerability.reports.flatMap { report ->
         if (!isReportEligible(vulnerability.verdict, report.suppress, today)) {

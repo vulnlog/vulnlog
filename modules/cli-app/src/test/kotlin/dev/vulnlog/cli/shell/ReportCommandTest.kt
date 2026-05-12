@@ -201,4 +201,36 @@ class ReportCommandTest :
                 }
             }
         }
+
+        context("pending fix at deployed release") {
+
+            test("--release including only the deployed release renders an unshipped fix as open") {
+                withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ReportCommand().test(
+                                "${input.absolutePath} --release 1.0.0 -o ${output.absolutePath}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        val html = output.readText()
+                        html shouldContain "CVE-2026-9999"
+                        html shouldContain "\"state\":\"open\""
+                    }
+                }
+            }
+
+            test("without --release the unshipped fix is rendered as resolved") {
+                withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result = ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
+
+                        result.statusCode shouldBe 0
+                        val html = output.readText()
+                        html shouldContain "CVE-2026-9999"
+                        html shouldContain "\"state\":\"resolved\""
+                    }
+                }
+            }
+        }
     })

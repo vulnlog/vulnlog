@@ -3,6 +3,7 @@
 package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Project
+import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
@@ -38,7 +39,7 @@ fun collectReportingEntries(
         .applyFilter(filter)
         .map { vuln ->
             ReportingEntry(
-                state = findWorkState(vuln),
+                state = findWorkState(vuln, filter.releases),
                 primaryId = vuln.id,
                 ids = vuln.aliases.toSet(),
                 shortDescription = vuln.description,
@@ -82,13 +83,23 @@ private fun mergeTwo(
         fixedIn = a.fixedIn + b.fixedIn,
     )
 
-private fun findWorkState(vulnEntry: VulnerabilityEntry): WorkState =
-    when (vulnEntry.verdict) {
+private fun findWorkState(
+    vulnEntry: VulnerabilityEntry,
+    filterReleases: Set<Release>,
+): WorkState {
+    // Under --release X, a resolution counts only when its target release has shipped at-or-before X.
+    // Without a release context, every resolution counts (the historical default).
+    val resolution =
+        vulnEntry.resolution?.takeIf {
+            filterReleases.isEmpty() || it.release in filterReleases
+        }
+    return when (vulnEntry.verdict) {
         Verdict.UnderInvestigation -> WorkState.UNDER_INVESTIGATION
-        is Verdict.Affected -> if (vulnEntry.resolution != null) WorkState.RESOLVED else WorkState.OPEN
-        is Verdict.NotAffected -> if (vulnEntry.resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
-        is Verdict.RiskAcceptable -> if (vulnEntry.resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
+        is Verdict.Affected -> if (resolution != null) WorkState.RESOLVED else WorkState.OPEN
+        is Verdict.NotAffected -> if (resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
+        is Verdict.RiskAcceptable -> if (resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
     }
+}
 
 private fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
     when (vulnEntry.verdict) {
