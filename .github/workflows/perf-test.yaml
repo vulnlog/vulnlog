@@ -1,0 +1,52 @@
+name: Performance test
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: "Name of the native-image artifact the caller already uploaded."
+        type: string
+        default: vulnlog-linux-amd64
+      threshold-ms:
+        description: "Maximum allowed mean runtime per command, in milliseconds."
+        type: number
+        default: 1000
+  workflow_dispatch:
+    inputs:
+      threshold-ms:
+        description: "Maximum allowed mean runtime per command, in milliseconds."
+        type: number
+        default: 1000
+
+jobs:
+  build:
+    if: ${{ inputs.artifact-name == '' }}
+    uses: ./.github/workflows/build-native.yaml
+
+  perf:
+    needs: [ build ]
+    if: ${{ !cancelled() && needs.build.result != 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Fetch native binary
+        uses: ./.github/actions/fetch-native-binary
+        with:
+          artifact-name: ${{ inputs.artifact-name || 'vulnlog-linux-amd64' }}
+      - name: Install hyperfine
+        run: |
+          wget -q https://github.com/sharkdp/hyperfine/releases/download/v1.19.0/hyperfine_1.19.0_amd64.deb
+          sudo dpkg -i hyperfine_1.19.0_amd64.deb
+      - name: Run perf test
+        env:
+          THRESHOLD_MS: ${{ inputs.threshold-ms }}
+        run: ./perf/perf-test.sh
+      - name: Upload perf results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: perf-results
+          path: perf/results/*.json
+          retention-days: 30
