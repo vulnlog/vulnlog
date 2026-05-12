@@ -1,0 +1,20 @@
+name: Fetch native binary
+description: Download the native binary artifact and mark it executable.
+
+inputs:
+  artifact-name:
+    description: Name of the uploaded native-image artifact.
+    required: false
+    default: vulnlog-linux-amd64
+
+runs:
+  using: composite
+  steps:
+    - name: Download native binary
+      uses: actions/download-artifact@v8
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: modules/cli-app/build/native/nativeCompile
+    - name: Mark binary as executable
+      shell: bash
+      run: chmod +x modules/cli-app/build/native/nativeCompile/vulnlog
