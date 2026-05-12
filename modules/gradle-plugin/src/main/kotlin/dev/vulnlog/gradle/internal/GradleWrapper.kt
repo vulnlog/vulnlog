@@ -1,5 +1,6 @@
-// Copyright 2024 the Vulnlog contributors
+// Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
+
 package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.core.VulnlogFilter

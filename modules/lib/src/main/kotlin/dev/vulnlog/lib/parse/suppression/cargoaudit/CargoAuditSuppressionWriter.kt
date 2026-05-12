@@ -1,5 +1,6 @@
-// Copyright 2024 the Vulnlog contributors
+// Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
+
 package dev.vulnlog.lib.parse.suppression.cargoaudit
 
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
