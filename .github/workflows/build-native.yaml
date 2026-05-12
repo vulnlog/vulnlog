@@ -1,0 +1,54 @@
+name: Build native image
+
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: "Runner OS for the native build."
+        type: string
+        default: ubuntu-latest
+      artifact-name:
+        description: "Name to give the uploaded native-image artifact."
+        type: string
+        default: vulnlog-linux-amd64
+      app-version:
+        description: "Version passed as -PappVersion. Accepts a leading 'v' (e.g. github.ref_name) and strips it."
+        type: string
+        default: ''
+      retention-days:
+        description: "Artifact retention in days."
+        type: number
+        default: 7
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+      - name: Build native image
+        shell: bash
+        env:
+          APP_VERSION_INPUT: ${{ inputs.app-version }}
+        run: |
+          VERSION="${APP_VERSION_INPUT#v}"
+          if [ -n "$VERSION" ]; then
+            ./gradlew :cli-app:nativeCompile --no-configuration-cache -PappVersion="$VERSION"
+          else
+            ./gradlew :cli-app:nativeCompile --no-configuration-cache
+          fi
+      - name: Upload native image
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: modules/cli-app/build/native/nativeCompile/vulnlog${{ runner.os == 'Windows' && '.exe' || '' }}
+          retention-days: ${{ inputs.retention-days }}

@@ -59,7 +59,6 @@ jobs:
 
   build-native-images:
     name: Build native image (${{ matrix.artifact-name }})
-    timeout-minutes: 30
     strategy:
       matrix:
         include:
@@ -69,29 +68,11 @@ jobs:
             artifact-name: vulnlog-macos-aarch64
           - os: windows-latest
             artifact-name: vulnlog-windows-amd64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '25'
-          distribution: 'graalvm'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
-      - name: Build native image
-        shell: bash
-        run: |
-          VERSION="${{ github.ref_name }}"
-          VERSION="${VERSION#v}"
-          ./gradlew :cli-app:nativeCompile --no-configuration-cache -PappVersion="$VERSION"
-      - name: Upload native image
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ matrix.artifact-name }}
-          path: modules/cli-app/build/native/nativeCompile/vulnlog${{ runner.os == 'Windows' && '.exe' || '' }}
+    uses: ./.github/workflows/build-native.yaml
+    with:
+      os: ${{ matrix.os }}
+      artifact-name: ${{ matrix.artifact-name }}
+      app-version: ${{ github.ref_name }}
 
   publish-release:
     name: Publish release
@@ -104,14 +85,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          architecture: x64
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
       - name: Build JVM distribution
         run: |
           VERSION="${{ github.ref_name }}"
@@ -256,13 +231,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Download Linux native image
-        uses: actions/download-artifact@v8
-        with:
-          name: vulnlog-linux-amd64
-          path: modules/cli-app/build/native/nativeCompile
-      - name: Mark binary as executable
-        run: chmod +x modules/cli-app/build/native/nativeCompile/vulnlog
+      - name: Fetch native binary
+        uses: ./.github/actions/fetch-native-binary
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
         with:
@@ -291,14 +261,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Set up Java
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          architecture: x64
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
       - name: Publish Gradle plugin
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PLUGIN_KEY }}

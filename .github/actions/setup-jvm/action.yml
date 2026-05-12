@@ -1,0 +1,14 @@
+name: Set up JVM toolchain
+description: Set up Java 21 Temurin and Gradle for building.
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Java
+      uses: actions/setup-java@v5
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        architecture: x64
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v6
