@@ -1,13 +1,17 @@
 [![Vulnlog](assets/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
 
+**Supply chain security, as code. Track vulnerability findings in your repository.**
+
 [![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog?color=%23f405c5)](https://github.com/vulnlog/vulnlog/releases)
 [![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 Vulnlog is an open-source tool for tracking, documenting and communicating vulnerability analysis directly in your
 source code repository. It uses a simple YAML format for recording your findings and a CLI for generating suppression
 files for common SCA scanners.
 
-> **Note:** Vulnlog is in active development. The YAML format, CLI commands and Gradle plugin may still change.
+> [!NOTE]
+> Vulnlog is in active development. The YAML format, CLI commands and Gradle plugin may still change.
 > Feedback and contributions are very welcome!
 
 ## Why Vulnlog?
@@ -15,17 +19,20 @@ files for common SCA scanners.
 SCA scanners find vulnerabilities, but the analysis, triage and reasoning usually live in tickets, spreadsheets or
 someone's head. Vulnlog gives that context a home right next to your code:
 
-- **One place for your analysis** -- document verdicts, justifications and resolution plans in version-controlled YAML.
-- **Suppression file generation** -- feed your analysis back into scanners like Trivy, Snyk, Dependency-Check, Grype
-  and others so they stop flagging what you have already reviewed.
-- **Works with your workflow** -- use the CLI locally, in CI, or via the Gradle plugin.
+- **One place for your analysis**: Document verdicts and justifications in version-controlled YAML, with VEX-aligned
+  terminology and per-release tracking.
+- **Suppression file generation**: Feed your analysis back into scanners like Trivy, Snyk, Dependency-Check, Grype and
+  others so they stop flagging what you have already reviewed.
+- **HTML report generation**: Produce a shareable report of your analysis for stakeholders, audits or teammates who
+  do not work in the repository.
+- **Works with your workflow**: Use the CLI locally, in CI, or via the Gradle plugin.
 
 ## Quick Start
 
 ### Install the CLI
 
-Download a native binary from the [latest release](https://github.com/vulnlog/vulnlog/releases), or pull the
-Docker image:
+Download a native binary from the [latest release](https://github.com/vulnlog/vulnlog/releases), or pull the Docker
+image:
 
 ```sh
 docker pull ghcr.io/vulnlog/vulnlog:latest
@@ -72,17 +79,17 @@ vulnerabilities:
     justification: vulnerable code not in execute path
 ```
 
-### Validate and generate suppression files
+### Validate and generate suppression files and an HTML report
 
 ```sh
 # Check the file for errors
 vulnlog validate vulnlog.yaml
 
 # Generate suppression files for all reporters
-vulnlog suppress vulnlog.yaml -o ./suppressions/
+vulnlog suppress vulnlog.yaml
 
-# Or for a single reporter, written to stdout
-vulnlog suppress vulnlog.yaml --reporter trivy -o -
+# Generate a HTML report
+vulnlog report vulnlog.yaml
 ```
 
 ## Documentation
@@ -105,7 +112,7 @@ labelled **good first issue**.
 
 :star: If you find Vulnlog useful, giving it a star on GitHub helps others discover the project.
 
-Thanks go to all contributors:
+The Vulnlog contributors:
 
 <a href="https://github.com/vulnlog/vulnlog/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=vulnlog/vulnlog" alt="Contributors" />
