@@ -48,10 +48,6 @@ tasks.named<Test>("test") {
     useJUnitPlatform()
 }
 
-dependencyLocking {
-    lockAllConfigurations()
-}
-
 tasks.register("resolveAndLockAll") {
     notCompatibleWithConfigurationCache("Filters configurations at execution time")
     doFirst {
@@ -69,9 +65,9 @@ spotless {
         targetExclude("build/**")
         licenseHeader(
             """
-            // Copyright 2024 the Vulnlog contributors
+            // Copyright the Vulnlog contributors
             // SPDX-License-Identifier: Apache-2.0
-            """.trimIndent(),
+            """.trimIndent() + "\n\n",
         )
     }
 }
