@@ -103,6 +103,10 @@ jobs:
       )
     uses: ./.github/workflows/build-native.yaml
 
+  perf-test:
+    needs: [ native-image ]
+    uses: ./.github/workflows/perf-test.yaml
+
   publish-docker:
     name: Publish snapshot Docker image
     needs: [ native-image ]
