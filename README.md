@@ -1,4 +1,7 @@
-[![Vulnlog](assets/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="website/img/vulnlog-overview-dark.svg">
+  <img alt="How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files." src="website/img/vulnlog-overview.svg">
+</picture>
 
 **Supply chain security, as code. Track vulnerability findings in your repository.**
 
