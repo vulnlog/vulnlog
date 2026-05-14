@@ -1,4 +1,9 @@
-[![Vulnlog](assets/banner-1500x500-light-grey.png)](https://github.com/vulnlog/vulnlog)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="website/img/vulnlog-overview-dark.svg">
+  <img alt="How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files." src="website/img/vulnlog-overview.svg">
+</picture>
+
+# Vulnlog
 
 **Supply chain security, as code. Track vulnerability findings in your repository.**
 
@@ -31,12 +36,22 @@ someone's head. Vulnlog gives that context a home right next to your code:
 
 ### Install the CLI
 
-Download a native binary from the [latest release](https://github.com/vulnlog/vulnlog/releases), or pull the Docker
-image:
+Pull the Docker image:
 
 ```sh
 docker pull ghcr.io/vulnlog/vulnlog:latest
 ```
+
+Or add the Gradle plugin to your build:
+
+```kotlin
+plugins {
+    id("dev.vulnlog") version "<version>"
+}
+```
+
+Native binaries and JVM distributions are available on the
+[releases page](https://github.com/vulnlog/vulnlog/releases).
 
 ### Scaffold a new Vulnlog file
 
@@ -85,18 +100,17 @@ vulnerabilities:
 # Check the file for errors
 vulnlog validate vulnlog.yaml
 
-# Generate suppression files for all reporters
-vulnlog suppress vulnlog.yaml
+# Generate a Trivy suppression file for release 1.0.0
+vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
 
-# Generate a HTML report
+# Generate an HTML report
 vulnlog report vulnlog.yaml
 ```
 
 ## Documentation
 
-- [Getting Started](https://vulnlog.dev/docs/vulnlog/0.13.0/quickstart.html)
-- [Project Website](https://vulnlog.dev/)
 - [Documentation](https://vulnlog.dev/docs/)
+- [Project Website](https://vulnlog.dev/)
 - [Changelog](CHANGELOG.md)
 
 ## Community
@@ -110,7 +124,7 @@ Contributions are welcome! Whether it is a bug report, a docs fix, or a new feat
 [CONTRIBUTING.md](CONTRIBUTING.md) to get started. If you are looking for something to pick up, look for issues
 labelled **good first issue**.
 
-:star: If you find Vulnlog useful, giving it a star on GitHub helps others discover the project.
+⭐ If you find Vulnlog useful, giving it a star on GitHub helps others discover the project.
 
 The Vulnlog contributors:
 
