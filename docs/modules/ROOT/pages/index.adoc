@@ -5,6 +5,8 @@ It uses a YAML-based format that lives in the repository alongside the code, pro
 
 == What Vulnlog does
 
+image::vulnlog-overview.svg[How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files]
+
 * Track SCA vulnerability findings in the repository
 * Record analysis verdicts and justifications per vulnerability
 * Generate suppression files for scanners (Trivy, Snyk, and generic format)
