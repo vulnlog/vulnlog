@@ -9,6 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
 
 class SuppressCommandTest :
     FunSpec({
@@ -295,6 +296,28 @@ class SuppressCommandTest :
                 result.stdout shouldContain "github-advisory"
                 result.stdout shouldContain "npm-audit"
                 result.stdout shouldContain "cargo-audit"
+            }
+        }
+
+        context("uniform output formatting") {
+
+            test("prints a leading blank line on stderr to separate the output from the typed command") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldStartWith "\n"
+                }
+            }
+
+            test("does not print INFO-level validation findings") {
+                withTempFile(content = vulnlogYamlWithInfoFinding()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldNotContain "Validation findings for"
+                    result.stderr shouldNotContain "[INFO ]"
+                }
             }
         }
 

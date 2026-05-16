@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.testing.test
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
 
 class ValidateCommandTest :
     FunSpec({
@@ -44,6 +45,27 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test("-")
 
                     result.statusCode shouldBe 0
+                    result.stdout shouldContain "Validation OK"
+                }
+            }
+
+            test("prints a leading blank line on stderr to separate the output from the typed command") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = ValidateCommand().test(input.absolutePath)
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldStartWith "\n"
+                }
+            }
+
+            test("prints INFO-level findings for files with informational observations") {
+                withTempFile(content = vulnlogYamlWithInfoFinding()) { input ->
+                    val result = ValidateCommand().test(input.absolutePath)
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldContain "Validation findings for"
+                    result.stderr shouldContain "[INFO ]"
+                    result.stderr shouldContain "Unreferenced release ID"
                     result.stdout shouldContain "Validation OK"
                 }
             }

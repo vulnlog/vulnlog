@@ -157,6 +157,39 @@ internal fun vulnlogYamlOtherReporterOnly(): String =
     """.trimIndent()
 
 /**
+ * A Vulnlog YAML with a release that is not referenced by any vulnerability. Triggers a single
+ * INFO-severity validation finding (UNREFERENCED_RELEASE_ID) and no warnings or errors.
+ */
+internal fun vulnlogYamlWithInfoFinding(): String =
+    """
+    ---
+    schemaVersion: "1"
+
+    project:
+      organization: Acme Corp
+      name: Acme Web App
+      author: Acme Corp Security Team
+
+    releases:
+      - id: 1.0.0
+        published_at: 2026-01-15
+      - id: 2.0.0
+        published_at: 2026-06-01
+
+    vulnerabilities:
+
+      - id: CVE-2026-1234
+        releases: [ 1.0.0 ]
+        description: Remote code execution in example-lib
+        packages: [ "pkg:npm/example-lib@2.3.0" ]
+        reports:
+          - reporter: trivy
+        analysis: not reachable
+        verdict: not affected
+        justification: vulnerable code not in execute path
+    """.trimIndent()
+
+/**
  * A YAML document missing required fields — used to exercise parse-failure paths.
  */
 internal val INVALID_VULNLOG_YAML: String =

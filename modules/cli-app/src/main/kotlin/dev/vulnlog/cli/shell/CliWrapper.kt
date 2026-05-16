@@ -13,6 +13,7 @@ import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.result.InputValidationResult
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.ParseResults
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.result.ValidationResults
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
@@ -48,8 +49,9 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<File, Pars
 
 fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     fileToResult: Map<File, ParseResult.Ok>,
+    renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
 ): ValidationResults {
-    val validationFindings = validateFiles(fileToResult)
+    val validationFindings = validateFiles(fileToResult, renderedSeverities)
     if (validationFindings.renderedFindings.isNotBlank()) {
         echo(validationFindings.renderedFindings, err = true)
     }
@@ -58,6 +60,8 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     }
     return validationFindings
 }
+
+fun CliktCommand.printOutputSeparator() = echo("", err = true)
 
 fun OptionCallTransformContext.toOutputFileOption(output: String): FileOutputOption =
     if (output == "-") {
