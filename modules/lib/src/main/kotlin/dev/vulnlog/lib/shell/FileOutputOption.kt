@@ -5,7 +5,9 @@ package dev.vulnlog.lib.shell
 
 import java.nio.file.Path
 
-sealed interface FileOutputOption {
+sealed interface OutputOption
+
+sealed interface FileOutputOption : OutputOption {
     data object Stdout : FileOutputOption
 
     data class File(
@@ -13,9 +15,7 @@ sealed interface FileOutputOption {
     ) : FileOutputOption
 }
 
-sealed interface DirectoryOutputOption {
-    data object Stdout : DirectoryOutputOption
-
+sealed interface DirectoryOutputOption : OutputOption {
     data class Directory(
         val path: Path,
     ) : DirectoryOutputOption

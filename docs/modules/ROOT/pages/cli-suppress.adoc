@@ -12,8 +12,14 @@ vulnlog suppress <file> [flags]
 |===
 | Flag | Description
 
-| `-o, --output <path>`
-| Output directory, or `-` to write to stdout. Defaults to current directory.
+| `-o, --output <file>`
+| Output file path, or `-` to write to stdout.
+Requires a single reporter (either set `--reporter`, or the input must apply to only one reporter).
+Mutually exclusive with `--output-dir`.
+
+| `--output-dir <dir>`
+| Output directory for the suppression files. Defaults to the current directory.
+Mutually exclusive with `-o, --output`.
 
 | `--reporter <value>`
 | Filter on reporter.
@@ -45,6 +51,13 @@ vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
 Suppression file created at: /path/to/.snyk
 ----
 
+.Write a single reporter's suppression file under a custom name
+[source]
+----
+vulnlog suppress full-example.vl.yaml --reporter trivy -o .myTrivy
+Suppression file created at: /path/to/.myTrivy
+----
+
 .Suppress a not-yet-shipped fix when scanning the currently deployed release
 [source]
 ----
@@ -63,8 +76,9 @@ The pending-fix report needs an empty `suppress: { }` block on the relevant repo
 vulnlog suppress --reporter trivy - -o - < full-example.vl.yaml > .myTrivy
 ----
 
-NOTE: Writing to stdout with `-o -` requires `--reporter` to select a single reporter.
-Multiple suppression files cannot be written to stdout simultaneously.
+NOTE: `-o` (including `-o -` for stdout) requires a single reporter.
+Set `--reporter` to pick one, or use an input that only applies to one reporter.
+To write all applicable suppression files in one go, use `--output-dir <dir>` instead.
 
 == Output Examples
 

@@ -50,6 +50,38 @@ internal fun vulnlogYaml(
     """.trimIndent()
 
 /**
+ * Builds a Vulnlog YAML with reports from multiple reporters, so that suppress would emit more
+ * than one file unless filtered.
+ */
+internal fun vulnlogYamlMultiReporter(): String =
+    """
+    ---
+    schemaVersion: "1"
+
+    project:
+      organization: Acme Corp
+      name: Acme Web App
+      author: Acme Corp Security Team
+
+    releases:
+      - id: 1.0.0
+        published_at: 2026-01-15
+
+    vulnerabilities:
+
+      - id: CVE-2026-1234
+        releases: [ 1.0.0 ]
+        description: Remote code execution in example-lib
+        packages: [ "pkg:npm/example-lib@2.3.0" ]
+        reports:
+          - reporter: trivy
+          - reporter: snyk
+        analysis: not reachable
+        verdict: not affected
+        justification: vulnerable code not in execute path
+    """.trimIndent()
+
+/**
  * Builds a Vulnlog YAML document for the "pending fix" scenario: an `Affected` CVE present in a
  * published release whose resolution targets a later release that has not been published yet
  * (no `published_at`).
@@ -90,6 +122,38 @@ internal fun vulnlogYamlWithPendingFix(
         verdict: affected
         resolution:
           in: $pendingRelease
+    """.trimIndent()
+
+/**
+ * Builds a Vulnlog YAML whose only report uses the `other` reporter, which is not suppressible
+ * — used to exercise the empty-output path of suppress.
+ */
+internal fun vulnlogYamlOtherReporterOnly(): String =
+    """
+    ---
+    schemaVersion: "1"
+
+    project:
+      organization: Acme Corp
+      name: Acme Web App
+      author: Acme Corp Security Team
+
+    releases:
+      - id: 1.0.0
+        published_at: 2026-01-15
+
+    vulnerabilities:
+
+      - id: CVE-2026-1234
+        releases: [ 1.0.0 ]
+        description: Remote code execution in example-lib
+        packages: [ "pkg:npm/example-lib@2.3.0" ]
+        reports:
+          - reporter: other
+            source: in-house-scanner
+        analysis: not reachable
+        verdict: not affected
+        justification: vulnerable code not in execute path
     """.trimIndent()
 
 /**
@@ -137,6 +201,24 @@ internal inline fun <R> withTempDir(
         block(dir)
     } finally {
         dir.toFile().deleteRecursively()
+    }
+}
+
+/**
+ * Overrides the `user.dir` system property for the duration of [block]. The CLI commands read this
+ * to resolve their default output directory, so tests that exercise the default destination must
+ * set it to a temp path rather than polluting the real cwd.
+ */
+internal inline fun <R> withCwd(
+    cwd: Path,
+    block: () -> R,
+): R {
+    val original = System.getProperty("user.dir")
+    return try {
+        System.setProperty("user.dir", cwd.toAbsolutePath().toString())
+        block()
+    } finally {
+        System.setProperty("user.dir", original)
     }
 }
 
