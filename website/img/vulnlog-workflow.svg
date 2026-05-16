@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630"
      role="img" aria-labelledby="title desc"
      font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-    <title id="title">How Vulnlog works</title>
-    <desc id="desc">Three steps: a vulnerability scanner reports a finding, an engineer analyses the impact, and Vulnlog generates a vulnerability report.</desc>
+    <title id="title">Vulnlog workflow with SCA scanners</title>
+    <desc id="desc">Three steps: one or more SCA scanners report findings, the engineer analyses the impact and documents a verdict in vulnlog.yaml, and the Vulnlog CLI generates one ignore file per scanner. The ignore files feed back to the scanners so reviewed findings stay quiet until a fix ships in the next release.</desc>
 
     <defs>
         <linearGradient id="pink" x1="0" x2="1" y1="0" y2="0">
@@ -15,6 +15,11 @@
             <stop offset="1" stop-color="#fce4f3"/>
         </linearGradient>
 
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#d6249f"/>
+        </marker>
+
         <symbol id="logo" viewBox="0 0 154.64 49.784">
             <g stroke-width="5" transform="translate(-29.478 -47.388)">
                 <path d="m44.734 74.91-4.2824 10.581h6.305l10.516-25.4h-6.5024z" fill="url(#pink)"/>
@@ -24,7 +29,7 @@
             </g>
         </symbol>
 
-        <!-- Step icons (same as on the website) — stroked, 24x24 -->
+        <!-- Step icons — stroked, 24x24, same family as on the website -->
         <symbol id="ic-doc" viewBox="0 0 24 24">
             <g fill="none" stroke="#d6249f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -54,43 +59,50 @@
     <!-- Header -->
     <use href="#logo" x="60" y="50" width="200" height="64"/>
     <text x="1140" y="92" text-anchor="end" font-size="20" font-weight="700" fill="#d6249f" letter-spacing="2">
-        SUPPLY CHAIN SECURITY, AS CODE
+        WORKFLOW WITH SCA SCANNERS
     </text>
 
     <!-- Three steps at x = 200, 600, 1000 -->
 
     <!-- Step 1 -->
-    <use href="#ic-doc" x="140" y="200" width="120" height="120"/>
-    <!-- CVE overlay badge on the lower part of the document, mostly on top -->
-    <g transform="translate(168, 282)">
+    <use href="#ic-doc" x="140" y="170" width="120" height="120"/>
+    <g transform="translate(168, 252)">
         <rect x="0" y="0" width="78" height="34" rx="17" fill="#d6249f" stroke="#fdf2f8" stroke-width="4"/>
         <text x="39" y="23" text-anchor="middle" font-size="18" font-weight="800"
               fill="#ffffff" letter-spacing="1.5">CVE</text>
     </g>
-    <text x="200" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 1</text>
-    <text x="200" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Scanner</text>
-    <text x="200" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">reports a finding</text>
+    <text x="200" y="355" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 1</text>
+    <text x="200" y="398" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">SCA scanners</text>
+    <text x="200" y="428" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">report findings</text>
+    <text x="200" y="455" text-anchor="middle" font-size="15" font-weight="500" fill="#555570">Snyk · Trivy · Cargo Audit</text>
 
     <!-- Connector 1 → 2 -->
-    <line x1="320" y1="260" x2="480" y2="260" stroke="#d6249f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <line x1="320" y1="230" x2="480" y2="230" stroke="url(#pink)" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
 
     <!-- Step 2 -->
-    <use href="#ic-search" x="540" y="200" width="120" height="120"/>
-    <text x="600" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 2</text>
-    <text x="600" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Engineer analyses</text>
-    <text x="600" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">the impact</text>
+    <use href="#ic-search" x="540" y="170" width="120" height="120"/>
+    <text x="600" y="355" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 2</text>
+    <text x="600" y="398" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Engineer analyses</text>
+    <text x="600" y="428" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">&amp; documents verdict</text>
+    <text x="600" y="455" text-anchor="middle" font-size="15" font-weight="500" fill="#555570">in vulnlog.yaml</text>
 
     <!-- Connector 2 → 3 -->
-    <line x1="720" y1="260" x2="880" y2="260" stroke="#d6249f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <line x1="720" y1="230" x2="880" y2="230" stroke="url(#pink)" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
 
     <!-- Step 3 -->
-    <use href="#ic-terminal" x="940" y="200" width="120" height="120"/>
-    <text x="1000" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 3</text>
-    <text x="1000" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Vulnlog generates</text>
-    <text x="1000" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">report &amp; ignore files</text>
+    <use href="#ic-terminal" x="940" y="170" width="120" height="120"/>
+    <text x="1000" y="355" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 3</text>
+    <text x="1000" y="398" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Vulnlog generates</text>
+    <text x="1000" y="428" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">ignore files</text>
+    <text x="1000" y="455" text-anchor="middle" font-size="15" font-weight="500" fill="#555570">one per scanner</text>
 
-    <!-- Bottom tagline -->
-    <text x="600" y="575" text-anchor="middle" font-size="22" font-weight="600" fill="#555570">
-        Streamline your vulnerability tracking — from developers, for developers.
-    </text>
+    <!-- Feedback loop: ignore files feed back from step 3 to step 1 (angled trapezoidal path) -->
+    <path d="M 1000 480 L 880 532 L 320 532 L 200 480"
+          fill="none" stroke="url(#pink)" stroke-width="5"
+          stroke-linecap="round" stroke-linejoin="round"
+          stroke-dasharray="2 12" marker-end="url(#arrow)"/>
+    <text x="600" y="568" text-anchor="middle" font-size="17" font-weight="700"
+          fill="#d6249f" letter-spacing="1.5">IGNORE FILES FED BACK TO THE SCANNERS</text>
+    <text x="600" y="598" text-anchor="middle" font-size="17" font-weight="500"
+          fill="#555570">Reviewed findings stay quiet — until a fix ships in the next release</text>
 </svg>

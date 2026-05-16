@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630"
      role="img" aria-labelledby="title desc"
      font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif">
-    <title id="title">How Vulnlog works</title>
-    <desc id="desc">Three steps: a vulnerability scanner reports a finding, an engineer analyses the impact, and Vulnlog generates a vulnerability report.</desc>
+    <title id="title">Vulnlog vulnerability reporting</title>
+    <desc id="desc">Three steps: the engineer maintains the vulnlog.yaml file, the Vulnlog CLI generates a shareable vulnerability report from it, and peers and customers consume the report to learn what is affected, the impact, and which release ships the fix.</desc>
 
     <defs>
         <linearGradient id="pink" x1="0" x2="1" y1="0" y2="0">
@@ -24,7 +24,7 @@
             </g>
         </symbol>
 
-        <!-- Step icons (same as on the website) — stroked, 24x24 -->
+        <!-- Step icons — stroked, 24x24, same family as on the website -->
         <symbol id="ic-doc" viewBox="0 0 24 24">
             <g fill="none" stroke="#d6249f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -34,16 +34,23 @@
                 <polyline points="10 9 9 9 8 9"/>
             </g>
         </symbol>
-        <symbol id="ic-search" viewBox="0 0 24 24">
+        <symbol id="ic-report" viewBox="0 0 24 24">
             <g fill="none" stroke="#d6249f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" x2="16.65" y1="21" y2="16.65"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="8" x2="13" y1="12" y2="12"/>
+                <line x1="8" x2="8" y1="18" y2="16"/>
+                <line x1="11" x2="11" y1="18" y2="14"/>
+                <line x1="14" x2="14" y1="18" y2="15"/>
+                <line x1="17" x2="17" y1="18" y2="13"/>
             </g>
         </symbol>
-        <symbol id="ic-terminal" viewBox="0 0 24 24">
-            <g fill="none" stroke="#d6249f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="4 17 10 11 4 5"/>
-                <line x1="12" x2="20" y1="19" y2="19"/>
+        <symbol id="ic-users" viewBox="0 0 24 24">
+            <g fill="none" stroke="#d6249f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </g>
         </symbol>
     </defs>
@@ -54,43 +61,39 @@
     <!-- Header -->
     <use href="#logo" x="60" y="50" width="200" height="64"/>
     <text x="1140" y="92" text-anchor="end" font-size="20" font-weight="700" fill="#d6249f" letter-spacing="2">
-        SUPPLY CHAIN SECURITY, AS CODE
+        VULNERABILITY REPORTING
     </text>
 
     <!-- Three steps at x = 200, 600, 1000 -->
 
     <!-- Step 1 -->
     <use href="#ic-doc" x="140" y="200" width="120" height="120"/>
-    <!-- CVE overlay badge on the lower part of the document, mostly on top -->
-    <g transform="translate(168, 282)">
-        <rect x="0" y="0" width="78" height="34" rx="17" fill="#d6249f" stroke="#fdf2f8" stroke-width="4"/>
-        <text x="39" y="23" text-anchor="middle" font-size="18" font-weight="800"
-              fill="#ffffff" letter-spacing="1.5">CVE</text>
-    </g>
     <text x="200" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 1</text>
-    <text x="200" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Scanner</text>
-    <text x="200" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">reports a finding</text>
+    <text x="200" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Engineer maintains</text>
+    <text x="200" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">vulnlog.yaml</text>
 
-    <!-- Connector 1 → 2 -->
-    <line x1="320" y1="260" x2="480" y2="260" stroke="#d6249f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <!-- Connector 1 → 2 (vulnlog.yaml feeds the report) -->
+    <path d="M 320 260 L 478 260" fill="none" stroke="#d6249f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <path d="M 478 251 L 494 260 L 478 269 Z" fill="#d6249f"/>
 
     <!-- Step 2 -->
-    <use href="#ic-search" x="540" y="200" width="120" height="120"/>
+    <use href="#ic-report" x="540" y="200" width="120" height="120"/>
     <text x="600" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 2</text>
-    <text x="600" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Engineer analyses</text>
-    <text x="600" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">the impact</text>
+    <text x="600" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Vulnlog generates</text>
+    <text x="600" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">a vulnerability report</text>
 
-    <!-- Connector 2 → 3 -->
-    <line x1="720" y1="260" x2="880" y2="260" stroke="#d6249f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <!-- Connector 3 → 2 (peers and customers fetch the report) -->
+    <path d="M 880 260 L 722 260" fill="none" stroke="#d6249f" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
+    <path d="M 722 251 L 706 260 L 722 269 Z" fill="#d6249f"/>
 
     <!-- Step 3 -->
-    <use href="#ic-terminal" x="940" y="200" width="120" height="120"/>
+    <use href="#ic-users" x="940" y="200" width="120" height="120"/>
     <text x="1000" y="385" text-anchor="middle" font-size="22" font-weight="700" fill="#d6249f" letter-spacing="2">STEP 3</text>
-    <text x="1000" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Vulnlog generates</text>
-    <text x="1000" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">report &amp; ignore files</text>
+    <text x="1000" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">Peers &amp; customers</text>
+    <text x="1000" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#1a1a2e">stay informed</text>
 
     <!-- Bottom tagline -->
-    <text x="600" y="575" text-anchor="middle" font-size="22" font-weight="600" fill="#555570">
-        Streamline your vulnerability tracking — from developers, for developers.
+    <text x="600" y="575" text-anchor="middle" font-size="20" font-weight="600" fill="#555570">
+        What is affected, the impact, and the release that ships the fix — all in one shareable report.
     </text>
 </svg>
