@@ -30,7 +30,7 @@ jobs:
             -v "${{ github.workspace }}:/work" \
             -w /work \
             ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
-            suppress --reporter trivy vulnlog.yaml -o /work
+            suppress --reporter trivy vulnlog.yaml --output-dir /work
 
       - name: Ensure suppression file exists
         run: |

@@ -23,7 +23,7 @@ jobs:
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
             ghcr.io/${{ github.repository }}:0.13.0 \
-            suppress vulnlog.yaml -o /work
+            suppress vulnlog.yaml --output-dir /work
 
       - name: Ensure suppression files exist
         run: |

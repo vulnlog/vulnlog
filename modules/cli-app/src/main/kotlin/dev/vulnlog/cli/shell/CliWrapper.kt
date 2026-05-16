@@ -70,16 +70,13 @@ fun OptionCallTransformContext.toOutputFileOption(output: String): FileOutputOpt
         FileOutputOption.File(outputPath)
     }
 
-fun OptionCallTransformContext.toOutputDirectoryOption(output: String): DirectoryOutputOption =
-    if (output == "-") {
-        DirectoryOutputOption.Stdout
-    } else {
-        val outputPath = Path.of(output)
-        if (!outputPath.isDirectory()) {
-            fail("Output path '$outputPath' is not a directory.")
-        }
-        DirectoryOutputOption.Directory(outputPath)
+fun OptionCallTransformContext.toOutputDirectoryOption(output: String): DirectoryOutputOption {
+    val outputPath = Path.of(output)
+    if (!outputPath.isDirectory()) {
+        fail("Output path '$outputPath' is not a directory.")
     }
+    return DirectoryOutputOption.Directory(outputPath)
+}
 
 fun ArgumentTransformContext.toInputFileOption(input: String): FileInputOption =
     if (input == "-") {
@@ -132,15 +129,14 @@ fun writeInit(
     }
 }
 
-fun writeSuppress(
+fun writeSuppressionFile(
     out: (String) -> Unit,
     err: (String) -> Unit,
-    outputDir: DirectoryOutputOption.Directory,
-    content: SuppressionFile,
+    outputPath: Path,
+    suppressionFile: SuppressionFile,
 ) {
-    val outputPath = outputDir.path.resolve(content.fileName)
     try {
-        outputPath.writeText(content.content)
+        outputPath.writeText(suppressionFile.content)
         out("Suppression file created at: ${outputPath.toAbsolutePath()}")
     } catch (e: Exception) {
         err("Error writing file: ${e.message}")

@@ -111,7 +111,7 @@ flowchart TD
 
 ### Job details
 
-- **suppress**: runs `ghcr.io/<repo>:latest suppress vulnlog.yaml -o /work` to produce `.snyk` and `.trivyignore.yaml`,
+- **suppress**: runs `ghcr.io/<repo>:latest suppress vulnlog.yaml --output-dir /work` to produce `.snyk` and `.trivyignore.yaml`,
   then uploads them as the `suppressions` artifact. `continue-on-error: true` so a missing image or empty Vulnlog config
   does not fail the whole run.
 - **snyk**: runs `snyk/actions/gradle@master` with `--policy-path=.snyk --all-sub-projects`; uploads results as SARIF
