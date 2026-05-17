@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+      pull-requests: write
     outputs:
       release_notes_body: ${{ steps.release-notes.outputs.content || steps.release-notes-rc.outputs.content }}
     steps:
@@ -24,22 +25,37 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: Generate a changelog
+          ref: main
+      - name: Prepend new changelog section
         uses: orhun/git-cliff-action@v4
         with:
           config: .github/changelog.toml
-          args: --tag ${{ github.ref_name }} --github-repo ${{ github.repository }}
-        env:
-          OUTPUT: CHANGELOG.md
-      - name: Commit CHANGELOG.md
+          args: --unreleased --prepend CHANGELOG.md --tag ${{ github.ref_name }} --github-repo ${{ github.repository }}
+      - name: Open CHANGELOG.md pull request
         if: ${{ !contains(github.ref_name, '-') }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "docs(changelog): update for ${{ github.ref_name }}" || echo "No changes to commit"
-          git pull --rebase origin main
-          git push origin HEAD:main
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/changelog-${{ github.ref_name }}
+          base: main
+          title: "docs(changelog): update for ${{ github.ref_name }}"
+          commit-message: "docs(changelog): update for ${{ github.ref_name }}"
+          body: |
+            Auto-generated changelog update for release `${{ github.ref_name }}`.
+
+            Before merging:
+            - Review the prepended section and fix any typos. `git-cliff` renders
+              squashed PR-title commit subjects verbatim, so PR-title typos surface
+              here.
+            - Add a compare-link entry at the top of the footer block, following the
+              existing convention (label without `v` prefix, URL tags with `v`):
+              `[<new-version>]: https://github.com/${{ github.repository }}/compare/<prev-tag>...${{ github.ref_name }}`.
+              `--prepend` does not regenerate the footer.
+
+            Merging is non-blocking for the rest of the release pipeline.
+          labels: |
+            changelog
+            automated
+          delete-branch: true
       - name: Generate release notes
         if: ${{ !contains(github.ref_name, '-') }}
         uses: orhun/git-cliff-action@v4

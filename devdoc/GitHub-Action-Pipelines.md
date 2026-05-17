@@ -76,8 +76,10 @@ level inside their jobs.
 
 ### Job details
 
-- **generate-changelog**: runs `git-cliff` twice: once to update `CHANGELOG.md` (committed to `main` only on final tags)
-  and once to produce the release-notes body for the GitHub release.
+- **generate-changelog**: runs `git-cliff` twice: once with `--unreleased --prepend` to add the new section to
+  `CHANGELOG.md` (opened as a PR against `main` on final tags via `peter-evans/create-pull-request`, skipped on RC tags)
+  and once to produce the release-notes body for the GitHub release. The PR is non-blocking — downstream release jobs
+  run in parallel and do not wait for it to merge.
 - **build-native-images**: matrix call of [`build-native.yaml`](../.github/workflows/build-native.yaml) for
   `ubuntu-latest`, `macos-latest`, and `windows-latest`. The tag (`github.ref_name`) is passed as `app-version`; the
   reusable workflow strips the leading `v` before invoking `-PappVersion=...`.
@@ -111,7 +113,8 @@ flowchart TD
 
 ### Job details
 
-- **suppress**: runs `ghcr.io/<repo>:latest suppress vulnlog.yaml --output-dir /work` to produce `.snyk` and `.trivyignore.yaml`,
+- **suppress**: runs `ghcr.io/<repo>:latest suppress vulnlog.yaml --output-dir /work` to produce `.snyk` and
+  `.trivyignore.yaml`,
   then uploads them as the `suppressions` artifact. `continue-on-error: true` so a missing image or empty Vulnlog config
   does not fail the whole run.
 - **snyk**: runs `snyk/actions/gradle@master` with `--policy-path=.snyk --all-sub-projects`; uploads results as SARIF

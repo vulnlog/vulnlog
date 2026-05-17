@@ -26,7 +26,7 @@ git push origin v0.12.0
 
 The pipeline will:
 
-1. Generate and commit an updated `CHANGELOG.md` to `main`
+1. Open a pull request against `main` with the new `CHANGELOG.md` section prepended
 2. Build native images for Linux, macOS, and Windows in parallel
 3. Build the JVM distribution zip
 4. Create a GitHub release (marked as pre-release) with all four artifacts attached
@@ -37,6 +37,49 @@ The pipeline will:
 
 Once you are satisfied with the release notes, publish the release manually from the GitHub UI
 to remove the pre-release flag.
+
+### Reviewing the changelog pull request
+
+Step 1 above opens a PR named `chore/changelog-v<version>` instead of pushing directly to `main`.
+This is a review gate, not a release blocker — the rest of the pipeline (builds, GitHub release,
+deploys) continues in parallel and does not wait for the PR to merge.
+
+`git-cliff` renders the squashed PR-title commit subject verbatim, so any typo in a PR title
+surfaces in the changelog (see [Pull Requests](Pull-Requests.md) for PR-title conventions).
+On the changelog PR:
+
+1. Skim the prepended `## [<version>]` section and fix any typos.
+2. Add a new compare-link entry at the top of the footer block, following the existing
+   convention (label without `v` prefix, URL tags with `v`):
+   `[<new-version>]: https://github.com/vulnlog/vulnlog/compare/<prev-tag>...v<new-version>`.
+   `git-cliff --prepend` only updates release sections; it does not regenerate the footer.
+3. Merge when it looks good.
+
+Only the new section is added on each release — prior sections are never regenerated, so any
+manual edits you make in the PR (or on `main` after the fact) are preserved across future
+releases.
+
+### Dry-run the changelog update locally
+
+To preview what the next release would prepend without pushing a tag, run `git-cliff` against
+a temporary copy of `CHANGELOG.md` and diff:
+
+```terminal
+cp CHANGELOG.md /tmp/CHANGELOG.preview.md
+git-cliff --config .github/changelog.toml --unreleased --tag v0.99.0-dryrun --github-repo vulnlog/vulnlog --prepend /tmp/CHANGELOG.preview.md
+diff -u CHANGELOG.md /tmp/CHANGELOG.preview.md
+rm /tmp/CHANGELOG.preview.md
+```
+
+or
+
+```terminal
+git-cliff --config .github/changelog.toml --unreleased --tag v0.99.0-dryrun --github-repo vulnlog/vulnlog --prepend CHANGELOG.md
+```
+
+The diff shows the new release section that the pipeline would prepend. The footer compare-link
+entry is intentionally not in the diff — that line is added manually in the changelog PR
+(see step 2 above).
 
 ## Release candidates
 
@@ -51,16 +94,16 @@ git push origin v0.12.0-rc1
 The CD pipeline detects RC tags via the `-` in the tag name and skips the steps that should
 only run for a final release:
 
-| Step                            | Final tag | RC tag    |
-|---------------------------------|-----------|-----------|
-| Native images (Linux/macOS/Win) | ✓         | ✓         |
-| GitHub release (pre-release)    | ✓         | ✓         |
-| Docker image `:<version>` tag   | ✓         | ✓         |
-| Gradle plugin publication       | ✓         | ✓         |
-| `CHANGELOG.md` commit to `main` | ✓         | *skipped* |
-| Docker image `:latest` tag      | ✓         | *skipped* |
-| Website and docs deploy         | ✓         | *skipped* |
-| GitHub Discussions announcement | ✓         | *skipped* |
+| Step                                    | Final tag | RC tag    |
+|-----------------------------------------|-----------|-----------|
+| Native images (Linux/macOS/Win)         | ✓         | ✓         |
+| GitHub release (pre-release)            | ✓         | ✓         |
+| Docker image `:<version>` tag           | ✓         | ✓         |
+| Gradle plugin publication               | ✓         | ✓         |
+| `CHANGELOG.md` PR opened against `main` | ✓         | *skipped* |
+| Docker image `:latest` tag              | ✓         | *skipped* |
+| Website and docs deploy                 | ✓         | *skipped* |
+| GitHub Discussions announcement         | ✓         | *skipped* |
 
 When the manual tests against the RC artifacts pass, tag the *same commit* with the final version
 and push it — the pipeline runs again and performs the steps that were skipped for the RC:
