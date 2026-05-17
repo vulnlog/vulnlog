@@ -6,6 +6,7 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -32,7 +33,11 @@ abstract class VulnlogValidateTask : DefaultTask() {
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
         requireNonEmptyVulnlogFiles(inputFiles)
         val parsedSuccessfully = parseInputOrFail(inputFiles)
-        val validationFindings = validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        val validationFindings =
+            validateParsedInputOrFailWithFailureOutput(
+                parsedSuccessfully,
+                renderedSeverities = Severity.entries.toSet(),
+            )
         if (validationFindings.hasWarnings && strict.get()) {
             throw GradleException("Vulnlog validation failed.")
         }

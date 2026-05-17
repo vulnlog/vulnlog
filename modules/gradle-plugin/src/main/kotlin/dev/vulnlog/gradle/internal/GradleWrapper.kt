@@ -7,6 +7,7 @@ import dev.vulnlog.lib.core.VulnlogFilter
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.ParseResults
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.result.ValidationResults
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FilterValidationException
@@ -61,8 +62,11 @@ fun buildFilterOrFail(
         throw GradleException("${e.message}. ${e.detail}")
     }
 
-fun DefaultTask.validateParsedInputOrFailWithFailureOutput(fileToResult: Map<File, ParseResult.Ok>): ValidationResults {
-    val validationFindings = validateFiles(fileToResult)
+fun DefaultTask.validateParsedInputOrFailWithFailureOutput(
+    fileToResult: Map<File, ParseResult.Ok>,
+    renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
+): ValidationResults {
+    val validationFindings = validateFiles(fileToResult, renderedSeverities)
     if (validationFindings.renderedFindings.isNotBlank()) {
         logger.warn(validationFindings.renderedFindings)
     }

@@ -12,6 +12,7 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.FileInputOption
 
 class ValidateCommand : CliktCommand(name = "validate") {
@@ -24,8 +25,13 @@ class ValidateCommand : CliktCommand(name = "validate") {
     val strict: Boolean by option("--strict", help = "Treats warnings as errors.").flag(default = false)
 
     override fun run() {
+        printOutputSeparator()
         val parsedSuccessfully = parseInputOrFail(inputs)
-        val validationFindings = validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        val validationFindings =
+            validateParsedInputOrFailWithFailureOutput(
+                parsedSuccessfully,
+                renderedSeverities = Severity.entries.toSet(),
+            )
 
         if (validationFindings.hasWarnings && strict) {
             throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)

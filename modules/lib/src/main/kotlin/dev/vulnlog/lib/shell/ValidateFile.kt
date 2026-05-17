@@ -7,17 +7,25 @@ import dev.vulnlog.lib.core.renderValidation
 import dev.vulnlog.lib.core.validate
 import dev.vulnlog.lib.model.VulnlogFileContext
 import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.result.ValidationResult
 import dev.vulnlog.lib.result.ValidationResults
 import java.io.File
 
-fun validateFiles(fileToResult: Map<File, ParseResult.Ok>): ValidationResults {
+fun validateFiles(
+    fileToResult: Map<File, ParseResult.Ok>,
+    renderedSeverities: Set<Severity> = Severity.entries.toSet(),
+): ValidationResults {
     val contextToResults = validateEachFile(fileToResult)
     val renderedFindings =
         contextToResults
-            .filter { (_, findings) -> findings.findings.isNotEmpty() }
-            .map { (context, findings) -> context.fileName to renderValidation(findings) }
-            .joinToString("\n\n") { (filename, results) -> "Validation findings for $filename:\n$results" }
+            .map { (context, findings) ->
+                context.fileName to
+                    findings.copy(findings = findings.findings.filter { it.severity in renderedSeverities })
+            }.filter { (_, findings) -> findings.findings.isNotEmpty() }
+            .joinToString("\n\n") { (filename, findings) ->
+                "Validation findings for $filename:\n${renderValidation(findings)}"
+            }
     return ValidationResults(
         renderedFindings = renderedFindings,
         hasErrors = contextToResults.values.any { it.errors.isNotEmpty() },

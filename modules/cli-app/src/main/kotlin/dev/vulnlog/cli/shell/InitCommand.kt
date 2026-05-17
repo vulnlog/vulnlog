@@ -40,6 +40,7 @@ class InitCommand : CliktCommand(name = "init") {
     private val mapper = createYamlMapper()
 
     override fun run() {
+        printOutputSeparator()
         val vulnlogFile = init(CURRENT_VERSION, organization, project, author)
         val content = YamlWriter.write(vulnlogFile, mapper)
 
