@@ -5,6 +5,7 @@ package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
@@ -16,7 +17,9 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.unique
 import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.AddVulnerabilityOptions
+import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
+import dev.vulnlog.lib.core.formatAddedMessage
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -25,7 +28,10 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
     override fun help(context: Context): String =
@@ -99,11 +105,24 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
 
         if (destinations.isEmpty()) {
             echo(createVulnerabilityEntry(commandOption))
-        } else {
-            // TODO add vulnerability to Vulnlog files
-            // Verify the entry (vuln id) is not already present in file
-            // Verify release and tags are defined in Vulnlog file
-            // If release is not defined, find the latest release
+            return
+        }
+
+        val mapper = createYamlMapper()
+        for (destination in destinations) {
+            val parsedDestination = parseInputOrFail(listOf(destination))
+            validateParsedInputOrFailWithFailureOutput(parsedDestination)
+            val vulnlogFile = parsedDestination.values.first().content
+
+            val outcome =
+                try {
+                    addVulnerabilityToFile(vulnlogFile, destination.path.readText(), commandOption, mapper)
+                } catch (e: IllegalArgumentException) {
+                    echo("Error: ${e.message} (${destination.path})", err = true)
+                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+                }
+            destination.path.writeText(outcome.newContent)
+            echo(formatAddedMessage(destination.path, outcome.vulnId))
         }
     }
 }

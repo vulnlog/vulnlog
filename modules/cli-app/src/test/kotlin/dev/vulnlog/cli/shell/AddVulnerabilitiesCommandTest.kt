@@ -65,4 +65,89 @@ class AddVulnerabilitiesCommandTest :
                 result.stderr shouldContain "--vuln-id"
             }
         }
+
+        context("file write") {
+
+            test("inserts the entry into the destination file and prints a success message") {
+                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                    val result =
+                        AddVulnerabilitiesCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-9999 --release 1.0.0",
+                        )
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldBe "Added to ${target.toPath()}: CVE-2026-9999\n"
+
+                    val content = target.readText()
+                    content shouldContain "CVE-2026-9999"
+                    content shouldContain "CVE-2026-1234"
+                }
+            }
+
+            test("falls back to the latest published release when --release is omitted") {
+                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                    val result =
+                        AddVulnerabilitiesCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-9999",
+                        )
+
+                    result.statusCode shouldBe 0
+                    val content = target.readText()
+                    content shouldContain "CVE-2026-9999"
+                    content shouldContain "\"1.0.0\""
+                }
+            }
+
+            test("writes the entry to multiple destinations") {
+                withTempFile(prefix = "target1", content = vulnlogYaml()) { target1 ->
+                    withTempFile(prefix = "target2", content = vulnlogYaml()) { target2 ->
+                        val result =
+                            AddVulnerabilitiesCommand().test(
+                                "${target1.absolutePath} ${target2.absolutePath} " +
+                                    "--vuln-id CVE-2026-9999",
+                            )
+
+                        result.statusCode shouldBe 0
+                        target1.readText() shouldContain "CVE-2026-9999"
+                        target2.readText() shouldContain "CVE-2026-9999"
+                    }
+                }
+            }
+
+            test("fails when the vuln id already exists in the file") {
+                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                    val result =
+                        AddVulnerabilitiesCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-1234",
+                        )
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "already exists"
+                }
+            }
+
+            test("fails when --release is not defined in the file") {
+                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                    val result =
+                        AddVulnerabilitiesCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-9999 --release 9.9.9",
+                        )
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "not defined"
+                }
+            }
+
+            test("fails when --tag is not defined in the file") {
+                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                    val result =
+                        AddVulnerabilitiesCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-9999 --tag unknown",
+                        )
+
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.stderr shouldContain "not defined"
+                }
+            }
+        }
     })
