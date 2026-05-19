@@ -11,68 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  generate-changelog:
-    name: Generate changelog
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-    outputs:
-      release_notes_body: ${{ steps.release-notes.outputs.content || steps.release-notes-rc.outputs.content }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          ref: main
-      - name: Prepend new changelog section
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: .github/changelog.toml
-          args: --unreleased --prepend CHANGELOG.md --tag ${{ github.ref_name }} --github-repo ${{ github.repository }}
-      - name: Open CHANGELOG.md pull request
-        if: ${{ !contains(github.ref_name, '-') }}
-        uses: peter-evans/create-pull-request@v7
-        with:
-          branch: chore/changelog-${{ github.ref_name }}
-          base: main
-          title: "docs(changelog): update for ${{ github.ref_name }}"
-          commit-message: "docs(changelog): update for ${{ github.ref_name }}"
-          body: |
-            Auto-generated changelog update for release `${{ github.ref_name }}`.
-
-            Before merging:
-            - Review the prepended section and fix any typos. `git-cliff` renders
-              squashed PR-title commit subjects verbatim, so PR-title typos surface
-              here.
-            - Add a compare-link entry at the top of the footer block, following the
-              existing convention (label without `v` prefix, URL tags with `v`):
-              `[<new-version>]: https://github.com/${{ github.repository }}/compare/<prev-tag>...${{ github.ref_name }}`.
-              `--prepend` does not regenerate the footer.
-
-            Merging is non-blocking for the rest of the release pipeline.
-          labels: |
-            changelog
-            automated
-          delete-branch: true
-      - name: Generate release notes
-        if: ${{ !contains(github.ref_name, '-') }}
-        uses: orhun/git-cliff-action@v4
-        id: release-notes
-        with:
-          config: .github/release-notes.toml
-          args: --latest --github-repo ${{ github.repository }}
-      - name: Release notes for RC
-        if: ${{ contains(github.ref_name, '-') }}
-        id: release-notes-rc
-        run: |
-          {
-            echo 'content<<EOF'
-            echo '🚧 Release candidate. Final release notes will be published with the final version.'
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-
   build-native-images:
     name: Build native image (${{ matrix.artifact-name }})
     strategy:
@@ -92,7 +30,7 @@ jobs:
 
   publish-release:
     name: Publish release
-    needs: [ generate-changelog, build-native-images ]
+    needs: [ build-native-images ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -133,9 +71,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "Vulnlog ${{ github.ref_name }}"
           prerelease: true
+          generate_release_notes: true
           body: |
-            ${{needs.generate-changelog.outputs.release_notes_body}}
-
             👉 Full Changelog: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
           files: |
             modules/cli-app/build/distributions/*.zip
@@ -271,7 +208,6 @@ jobs:
 
   publish-gradle-plugin:
     name: Publish Gradle plugin
-    needs: [ generate-changelog ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
