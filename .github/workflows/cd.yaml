@@ -163,7 +163,7 @@ jobs:
           sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
               install/install.sh.template > _site/install
           cp install/uninstall.sh.template _site/uninstall
-          sed -i "s/0\.13\.0/${VERSION}/g" _site/index.html
+          sed -i "s/0\.14\.0/${VERSION}/g" _site/index.html
           echo 'vulnlog.dev' > _site/CNAME
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
