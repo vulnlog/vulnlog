@@ -56,19 +56,19 @@ flowchart TD
 ## CD
 
 Triggered by version tags. Release Candidate tags (e.g. `v0.12.0-rc1`) are detected via the `-` in the tag name; for
-those, the changelog commit, GitHub discussion, the `:latest` Docker tag, and the docs/website deploy are skipped, while
-native binaries, the (pre-)release, the versioned Docker tag, and the Gradle plugin publication still run.
+those, the GitHub discussion, the `:latest` Docker tag, and the docs/website deploy are skipped, while native binaries,
+the (pre-)release, the versioned Docker tag, and the Gradle plugin publication still run. The pipeline does not touch
+`CHANGELOG.md` and does not render the GitHub-release body — both are prepared manually by the maintainer (see
+[Releasing](Releasing.md)).
 
 ```mermaid
 flowchart TD
     TAG{{Tag vx.y.z or vx.y.z-rcN}}
-    TAG --> GC[generate-changelog<br/>git-cliff]
     TAG --> BNI[build-native-images<br/>matrix: linux / macos / windows]
-    GC --> PR2[publish-release<br/>GitHub release + discussion]
-    BNI --> PR2
+    BNI --> PR2[publish-release<br/>GitHub release + discussion]
     PR2 --> DP[deploy-pages<br/>Antora docs + website]
     BNI --> PDR[publish-docker<br/>ghcr.io :version + :latest]
-    GC --> PGP[publish-gradle-plugin<br/>plugins.gradle.org]
+    TAG --> PGP[publish-gradle-plugin<br/>plugins.gradle.org]
 ```
 
 Steps marked with dashed borders run only on final tags (no `-` in the tag name); other RC-aware gates apply at the step
@@ -76,14 +76,13 @@ level inside their jobs.
 
 ### Job details
 
-- **generate-changelog**: runs `git-cliff` twice: once to update `CHANGELOG.md` (committed to `main` only on final tags)
-  and once to produce the release-notes body for the GitHub release.
 - **build-native-images**: matrix call of [`build-native.yaml`](../.github/workflows/build-native.yaml) for
   `ubuntu-latest`, `macos-latest`, and `windows-latest`. The tag (`github.ref_name`) is passed as `app-version`; the
   reusable workflow strips the leading `v` before invoking `-PappVersion=...`.
 - **publish-release**: builds the JVM distribution zip, downloads and re-zips the three native binaries, and creates a
-  GitHub release marked `prerelease: true`. On final tags also opens an Announcement discussion via
-  `abirismyname/create-discussion` (pinned to v2.1.0 by SHA).
+  GitHub release marked `prerelease: true`. The body is GitHub's auto-generated "What's Changed" (`generate_release_notes: true`)
+  plus a link to `CHANGELOG.md`; the maintainer refines it in the UI before un-flagging the pre-release. On final tags
+  also opens an Announcement discussion via `abirismyname/create-discussion` (pinned to v2.1.0 by SHA).
 - **deploy-pages**: builds the Antora documentation, composes the static site, and deploys to GitHub Pages (
   `vulnlog.dev`). Skipped entirely on RC tags.
 - **publish-docker**: downloads the Linux native binary via the
@@ -111,7 +110,8 @@ flowchart TD
 
 ### Job details
 
-- **suppress**: runs `ghcr.io/<repo>:latest suppress vulnlog.yaml --output-dir /work` to produce `.snyk` and `.trivyignore.yaml`,
+- **suppress**: runs `ghcr.io/<repo>:latest suppress vulnlog.yaml --output-dir /work` to produce `.snyk` and
+  `.trivyignore.yaml`,
   then uploads them as the `suppressions` artifact. `continue-on-error: true` so a missing image or empty Vulnlog config
   does not fail the whole run.
 - **snyk**: runs `snyk/actions/gradle@master` with `--policy-path=.snyk --all-sub-projects`; uploads results as SARIF

@@ -11,52 +11,6 @@ permissions:
   contents: read
 
 jobs:
-  generate-changelog:
-    name: Generate changelog
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    outputs:
-      release_notes_body: ${{ steps.release-notes.outputs.content || steps.release-notes-rc.outputs.content }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: .github/changelog.toml
-          args: --tag ${{ github.ref_name }} --github-repo ${{ github.repository }}
-        env:
-          OUTPUT: CHANGELOG.md
-      - name: Commit CHANGELOG.md
-        if: ${{ !contains(github.ref_name, '-') }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add CHANGELOG.md
-          git commit -m "docs(changelog): update for ${{ github.ref_name }}" || echo "No changes to commit"
-          git pull --rebase origin main
-          git push origin HEAD:main
-      - name: Generate release notes
-        if: ${{ !contains(github.ref_name, '-') }}
-        uses: orhun/git-cliff-action@v4
-        id: release-notes
-        with:
-          config: .github/release-notes.toml
-          args: --latest --github-repo ${{ github.repository }}
-      - name: Release notes for RC
-        if: ${{ contains(github.ref_name, '-') }}
-        id: release-notes-rc
-        run: |
-          {
-            echo 'content<<EOF'
-            echo '🚧 Release candidate. Final release notes will be published with the final version.'
-            echo 'EOF'
-          } >> "$GITHUB_OUTPUT"
-
   build-native-images:
     name: Build native image (${{ matrix.artifact-name }})
     strategy:
@@ -76,7 +30,7 @@ jobs:
 
   publish-release:
     name: Publish release
-    needs: [ generate-changelog, build-native-images ]
+    needs: [ build-native-images ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -117,9 +71,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: "Vulnlog ${{ github.ref_name }}"
           prerelease: true
+          generate_release_notes: true
           body: |
-            ${{needs.generate-changelog.outputs.release_notes_body}}
-
             👉 Full Changelog: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
           files: |
             modules/cli-app/build/distributions/*.zip
@@ -255,7 +208,6 @@ jobs:
 
   publish-gradle-plugin:
     name: Publish Gradle plugin
-    needs: [ generate-changelog ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

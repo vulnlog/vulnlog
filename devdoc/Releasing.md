@@ -13,30 +13,89 @@ The version is `SNAPSHOT+<git-short-hash>`, so it is always traceable to a speci
 
 ## Release builds (next CLI)
 
-Releases are automated via the [CD pipeline](../.github/workflows/cd.yaml).
-Tag a commit on `main` with the version (without the `v` prefix in the build, but with it in the tag),
-then push the tag. The pipeline triggers on tags matching `v[0-9]+.[0-9]+.[0-9]+`
-(e.g. `v0.10.0`, `v0.11.2`, `v1.0.0`); maintenance tags `v0.9.*` are excluded and handled by
-[`cd-0.9.yaml`](../.github/workflows/cd-0.9.yaml).
+Releases are driven by version tags. The pipeline triggers on tags matching
+`v[0-9]+.[0-9]+.[0-9]+` (e.g. `v0.10.0`, `v0.11.2`, `v1.0.0`); maintenance tags `v0.9.*` are
+excluded and handled by [`cd-0.9.yaml`](../.github/workflows/cd-0.9.yaml). The pipeline builds
+and publishes artifacts only — it does not write `CHANGELOG.md` and does not generate the
+GitHub-release body. Both are prepared by the maintainer.
+
+### 1. Tag and push
+
+Tag a commit on `main` with the version (with the `v` prefix on the tag, without it in the
+build) and push:
 
 ```terminal
 git tag v0.12.0
 git push origin v0.12.0
 ```
 
-The pipeline will:
+The pipeline runs the following jobs, parallelised where dependencies allow:
 
-1. Generate and commit an updated `CHANGELOG.md` to `main`
-2. Build native images for Linux, macOS, and Windows in parallel
-3. Build the JVM distribution zip
-4. Create a GitHub release (marked as pre-release) with all four artifacts attached
-5. Publish the Gradle plugin to the Gradle Plugin Portal
-6. Push the Docker image to `ghcr.io` with both `:<version>` and `:latest` tags
-7. Deploy the website and Antora docs to GitHub Pages
-8. Post a release announcement in GitHub Discussions
+- **`build-native-images`** — Linux, macOS, and Windows native images in parallel
+- **`publish-gradle-plugin`** — publishes to the Gradle Plugin Portal (independent of the native build)
+- **`publish-release`** (after `build-native-images`) — builds the JVM distribution zip, creates a GitHub release
+  marked as pre-release with all four artifacts attached and a body containing GitHub's auto-generated "What's
+  Changed" list plus a link to `CHANGELOG.md`, and posts a release announcement in GitHub Discussions
+- **`publish-docker`** (after `build-native-images`) — pushes `ghcr.io` images with both `:<version>` and `:latest` tags
+- **`deploy-pages`** (after `publish-release`) — deploys the website and Antora docs to GitHub Pages
 
-Once you are satisfied with the release notes, publish the release manually from the GitHub UI
-to remove the pre-release flag.
+### 2. Fill in the GitHub-release body
+
+The release lands as pre-release with the auto-generated GitHub "What's Changed" list (from PR
+titles) plus a link to `CHANGELOG.md`. Review it in the GitHub UI and refine as needed.
+
+To start from a richer draft based on conventional-commit grouping (`Features`, `Bug Fixes`, …),
+generate it locally with the release-notes config and paste it in:
+
+```terminal
+git-cliff --config .github/release-notes.toml \
+  --latest --github-repo vulnlog/vulnlog \
+  --github-token "$(gh auth token)"
+```
+
+The `--github-token` keeps the call authenticated and avoids GitHub's unauthenticated API rate
+limit. Edit the body (fix PR-title typos, add highlights, link to docs) and save. Then un-flag
+the pre-release toggle to publish.
+
+### 3. Update `CHANGELOG.md`
+
+On a branch off `main`, prepend the new release section with `git-cliff` and update the
+footer compare-link list:
+
+```terminal
+git checkout -b chore/changelog-v0.12.0 main
+git-cliff --config .github/changelog.toml \
+  --unreleased --tag v0.12.0 \
+  --github-repo vulnlog/vulnlog \
+  --prepend CHANGELOG.md
+```
+
+`git-cliff --prepend` rewrites `CHANGELOG.md` in place: it strips the existing `# Changelog`
+header, prepends the new `## [<version>]` section, and re-emits the header on top. It does
+**not** regenerate the footer compare-link block — add the new entry yourself at the top of
+that block, following the existing convention (label without `v` prefix, URL tags with `v`):
+
+```
+[<version>]: https://github.com/vulnlog/vulnlog/compare/<prev-tag>...v<version>
+```
+
+`git-cliff` renders the squashed PR-title commit subject verbatim, so any PR-title typo lands
+in the new section. Fix it here (see [Pull Requests](Pull-Requests.md) for the title
+conventions). Commit, open a PR against `main`, and merge it.
+
+This step can be done before tagging or after the release lands — the pipeline is independent.
+
+To preview the result before committing, prepend into a copy and diff:
+
+```terminal
+cp CHANGELOG.md /tmp/CHANGELOG.preview.md
+git-cliff --config .github/changelog.toml \
+  --unreleased --tag v0.12.0 \
+  --github-repo vulnlog/vulnlog \
+  --prepend /tmp/CHANGELOG.preview.md
+diff -u CHANGELOG.md /tmp/CHANGELOG.preview.md
+rm /tmp/CHANGELOG.preview.md
+```
 
 ## Release candidates
 
@@ -57,7 +116,6 @@ only run for a final release:
 | GitHub release (pre-release)    | ✓         | ✓         |
 | Docker image `:<version>` tag   | ✓         | ✓         |
 | Gradle plugin publication       | ✓         | ✓         |
-| `CHANGELOG.md` commit to `main` | ✓         | *skipped* |
 | Docker image `:latest` tag      | ✓         | *skipped* |
 | Website and docs deploy         | ✓         | *skipped* |
 | GitHub Discussions announcement | ✓         | *skipped* |
