@@ -1,4 +1,6 @@
 * xref:index.adoc[Overview]
+** xref:overview-report.adoc[Report]
+** xref:overview-suppress.adoc[Suppression]
 * Getting Started
 ** xref:installation.adoc[Installation]
 ** xref:quickstart.adoc[Quickstart]

@@ -24,6 +24,25 @@ See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dyna
 
 Whether an entry appears in the generated suppression file depends on whether the vulnerability still impacts the release and whether the scanner is expected to stop reporting the finding on its own.
 
+The following table summarises every combination.
+The cases are explained in prose below.
+
+[cols="2,2,2,3"]
+|===
+| Verdict | Resolution | `suppress` block | In suppression file?
+
+| `not affected`           | any     | not required | *Yes*
+| `affected`               | present | ignored      | *No* -- scanner stops reporting after the fix
+| `affected`               | absent  | absent       | *No* -- live risk, no deliberate decision
+| `affected`               | absent  | present      | *Yes* ^*^
+| `risk acceptable`        | any     | absent       | *No* -- live risk, no deliberate decision
+| `risk acceptable`        | any     | present      | *Yes* ^*^
+| _(absent, under investigation)_ | n/a | absent  | *No*
+| _(absent, under investigation)_ | n/a | present | *Yes* ^*^
+|===
+
+^*^ Excluded once `suppress.expires_at` is in the past.
+
 Verdict `not affected`::
 The vulnerability does not impact the release, so the scanner finding is effectively noise.
 These entries are always included in suppression files, no explicit `suppress` block required.

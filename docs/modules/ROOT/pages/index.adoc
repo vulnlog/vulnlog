@@ -1,22 +1,27 @@
-= Vulnlog Documentation
+= Vulnlog Overview
 
-Vulnlog is a developer-oriented CLI tool for supply chain security: tracking and documenting software vulnerability findings reported by SCA scanners.
-It uses a YAML-based format that lives in the repository alongside the code, providing a single source of truth for vulnerability management.
+Vulnlog is a developer-oriented approach to software supply chain security.
+It pairs a YAML file format with a CLI that turns the file into software composition analysis (SCA) scanner ignore files and vulnerability reports.
+The CLI is designed to run in CI pipelines and on developer machines.
 
-== What Vulnlog does
+image::vulnlog-overview.svg[alt="How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files"]
 
-image::vulnlog-overview.svg[How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files]
-
-* Track SCA vulnerability findings in the repository
-* Record analysis verdicts and justifications per vulnerability
-* Generate suppression files for scanners (Trivy, Snyk, and generic format)
-* Validate Vulnlog files against the schema
-* Filter by release, tag, or reporter
-
-== Open Source
-
-Vulnlog is open source and hosted on https://github.com/vulnlog/vulnlog[GitHub].
+Vulnlog is open source, hosted on https://github.com/vulnlog/vulnlog[GitHub] and licensed under Apache 2.0.
 Contributions, bug reports, and feature requests are welcome.
+
+== Vulnlog Workflow
+
+Vulnlog is designed around the SCA scanning process:
+
+1. An SCA scanner -- for example, xref:overview-suppress.adoc#_cargo_audit[Cargo Audit], xref:overview-suppress.adoc#_snyk[Snyk], or xref:overview-suppress.adoc#_trivy[Trivy] -- scans the project and reports one or more vulnerabilities.
+2. An engineer analyses each report, decides whether it affects the project, and records the analysis, verdict, and next steps in the Vulnlog YAML file.
++
+.Vulnerability entry for CVE-2026-1234 that was reported by Trivy but does not affect the product.
+[source,yaml]
+----
+include::{examplesdir}/quickstart.vl.yaml[lines=16..26]
+----
+3. The Vulnlog CLI reads the YAML file, validates it, and generates xref:overview-report.adoc[reports], xref:overview-suppress.adoc[suppression files], or both.
 
 == Next steps
 

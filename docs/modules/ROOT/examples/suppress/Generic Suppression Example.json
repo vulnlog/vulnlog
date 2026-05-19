@@ -1,0 +1,9 @@
+{
+  "vulnerabilities" : [ {
+    "id" : "CVE-2024-5535",
+    "statement" : "Vulnerable OpenSSL is present in the container base image but the affected NPN/ALPN negotiation code path is never invoked by our application.\n"
+  }, {
+    "id" : "CVE-2021-002",
+    "statement" : "Demo project does not utilize some-dependency and therefore is not affected.\n"
+  } ]
+}
