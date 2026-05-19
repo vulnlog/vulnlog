@@ -99,3 +99,8 @@ include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..4]
 ----
 include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
 ----
+
+== See also
+
+- xref:overview-suppress.adoc[Vulnlog Suppression]
+- xref:suppression.adoc[Suppression Format and Rules]
