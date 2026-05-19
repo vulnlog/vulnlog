@@ -59,43 +59,28 @@ the pre-release toggle to publish.
 
 ### 3. Update `CHANGELOG.md`
 
-On a branch off `main`, prepend the new release section with `git-cliff` and update the
-footer compare-link list:
+After the tag is pushed, on `main`, run:
 
 ```terminal
-git checkout -b chore/changelog-v0.12.0 main
 git-cliff --config .github/changelog.toml \
-  --unreleased --tag v0.12.0 \
+  --latest \
   --github-repo vulnlog/vulnlog \
+  --github-token "$(gh auth token)" \
   --prepend CHANGELOG.md
 ```
 
-`git-cliff --prepend` rewrites `CHANGELOG.md` in place: it strips the existing `# Changelog`
-header, prepends the new `## [<version>]` section, and re-emits the header on top. It does
-**not** regenerate the footer compare-link block — add the new entry yourself at the top of
-that block, following the existing convention (label without `v` prefix, URL tags with `v`):
+`--latest` picks up the just-pushed tag and prepends its `## [<version>]` section to
+`CHANGELOG.md` (re-emitting the `# Changelog` header on top). The footer compare-link block is
+**not** regenerated — add the new entry yourself at the top of that block, following the
+existing convention (label without `v` prefix, URL tags with `v`):
 
 ```
 [<version>]: https://github.com/vulnlog/vulnlog/compare/<prev-tag>...v<version>
 ```
 
 `git-cliff` renders the squashed PR-title commit subject verbatim, so any PR-title typo lands
-in the new section. Fix it here (see [Pull Requests](Pull-Requests.md) for the title
-conventions). Commit, open a PR against `main`, and merge it.
-
-This step can be done before tagging or after the release lands — the pipeline is independent.
-
-To preview the result before committing, prepend into a copy and diff:
-
-```terminal
-cp CHANGELOG.md /tmp/CHANGELOG.preview.md
-git-cliff --config .github/changelog.toml \
-  --unreleased --tag v0.12.0 \
-  --github-repo vulnlog/vulnlog \
-  --prepend /tmp/CHANGELOG.preview.md
-diff -u CHANGELOG.md /tmp/CHANGELOG.preview.md
-rm /tmp/CHANGELOG.preview.md
-```
+in the new section. Fix typos here (see [Pull Requests](Pull-Requests.md) for the title
+conventions), `git diff CHANGELOG.md` to review, and commit directly to `main`.
 
 ## Release candidates
 
