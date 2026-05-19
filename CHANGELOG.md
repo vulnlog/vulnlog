@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0] - 2026-05-19
+
+### Added
+- Switch suppress -o from directory to file path by @ryru in [#148](https://github.com/vulnlog/vulnlog/pull/148)
+- Add release-aware filtering for suppress and report commands by @ryru in [#142](https://github.com/vulnlog/vulnlog/pull/142)
+- Add POSIX install scripts by @ryru in [#141](https://github.com/vulnlog/vulnlog/pull/141)
+- Add cargo-audit native suppression file generation by @rogkne in [#137](https://github.com/vulnlog/vulnlog/pull/137)
+
+### Changed
+- Remove info level validation output in non-validate commands by @ryru in [#149](https://github.com/vulnlog/vulnlog/pull/149)
+
+### Documentation
+- Add Vulnlog explanation visual to website and documentation by @ryru in [#147](https://github.com/vulnlog/vulnlog/pull/147)
+- Update README.md and update usage examples by @ryru in [#144](https://github.com/vulnlog/vulnlog/pull/144)
+- Simplify and update contributing guide by @ryru in [#139](https://github.com/vulnlog/vulnlog/pull/139)
+- Fix typos in CHANGELOG and Releasing docs by @rogkne in [#135](https://github.com/vulnlog/vulnlog/pull/135)
+
+### Fixed
+- Remove the year in the license header in each file by @ryru in [#143](https://github.com/vulnlog/vulnlog/pull/143)
+- Correct the quick start link in README.md by @ryru in [#136](https://github.com/vulnlog/vulnlog/pull/136)
+
+### New Contributors
+* @rogkne made their first contribution in [#137](https://github.com/vulnlog/vulnlog/pull/137)
+
 ## [0.13.0] - 2026-05-03
 
 ### Added
@@ -386,6 +410,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.14.0]: https://github.com/vulnlog/vulnlog/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/vulnlog/vulnlog/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/vulnlog/vulnlog/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/vulnlog/vulnlog/compare/v0.10.0...v0.11.0
