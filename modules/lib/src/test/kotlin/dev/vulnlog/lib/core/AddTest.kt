@@ -7,8 +7,10 @@ import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReleaseEntry
+import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.SchemaVersion
+import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.TagEntry
 import dev.vulnlog.lib.model.Verdict
@@ -19,6 +21,7 @@ import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -39,6 +42,34 @@ private fun vulnlogFile(
     )
 
 private fun renderContent(file: VulnlogFile): String = YamlWriter.write(file, createYamlMapper())
+
+/**
+ * Builds a Vulnlog YAML content string with list items indented by 2 spaces (matching real
+ * Vulnlog files). [YamlWriter] currently emits zero-indent list items, which doesn't match the
+ * regex used by `replaceEntryById`. Real CLI flows read 2-space-indented files from disk, so for
+ * upsert tests we hand-craft content here. [entriesYaml] is appended verbatim (no re-indent), so
+ * callers control the entry block indentation directly.
+ */
+private fun yamlWithEntries(entriesYaml: String): String {
+    val header =
+        """
+        |---
+        |schemaVersion: "1"
+        |
+        |project:
+        |  organization: "acme"
+        |  name: "widget"
+        |  author: "alice"
+        |
+        |releases:
+        |  - id: "1.0.0"
+        |    published_at: "2026-01-15"
+        |
+        |vulnerabilities:
+        |
+        """.trimMargin()
+    return header + entriesYaml + "\n"
+}
 
 private val DEFAULT_OPTIONS =
     AddVulnerabilityOptions(
@@ -113,7 +144,62 @@ class AddTest :
                 outcome.newContent shouldContain "\"1.0.0\""
             }
 
-            test("throws when the vuln id already exists") {
+            test("updates an existing entry in place, preserving unspecified fields") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-1234"),
+                        name = "Existing Name",
+                        description = "Existing description.",
+                        releases = listOf(Release("1.0.0")),
+                        packages = listOf(Purl.Npm("pkg:npm/old-lib@1.0.0")),
+                        reports = emptyList(),
+                        tags = listOf(Tag("frontend")),
+                        verdict = Verdict.Affected(Severity.HIGH),
+                        comment = "Existing comment.",
+                    )
+                val file =
+                    vulnlogFile(
+                        tags = listOf(TagEntry(Tag("frontend"))),
+                        vulnerabilities = listOf(existing),
+                    )
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-1234"
+                        |    name: "Existing Name"
+                        |    description: "Existing description."
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages:
+                        |      - "pkg:npm/old-lib@1.0.0"
+                        |    reports: []
+                        |    tags:
+                        |      - "frontend"
+                        |    verdict: affected
+                        |    severity: high
+                        |    comment: "Existing comment."
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        content,
+                        DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/new-lib@2.0.0"))),
+                    )
+
+                outcome.updated shouldBe true
+                outcome.newContent shouldContain "pkg:npm/new-lib@2.0.0"
+                outcome.newContent shouldNotContain "pkg:npm/old-lib@1.0.0"
+                outcome.newContent shouldContain "Existing Name"
+                outcome.newContent shouldContain "Existing description."
+                outcome.newContent shouldContain "frontend"
+                outcome.newContent shouldContain "affected"
+                outcome.newContent shouldContain "high"
+                outcome.newContent shouldContain "Existing comment."
+            }
+
+            test("update with no --release keeps existing releases (no fallback to latest)") {
                 val existing =
                     VulnerabilityEntry(
                         id = VulnId.Cve("CVE-2026-1234"),
@@ -122,11 +208,170 @@ class AddTest :
                         reports = emptyList(),
                         verdict = Verdict.UnderInvestigation,
                     )
-                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                ReleaseEntry(Release("1.0.0"), publicationDate = LocalDate.of(2026, 1, 15)),
+                                ReleaseEntry(Release("2.0.0"), publicationDate = LocalDate.of(2026, 3, 1)),
+                            ),
+                        vulnerabilities = listOf(existing),
+                    )
+                val content =
+                    """
+                    |---
+                    |schemaVersion: "1"
+                    |
+                    |project:
+                    |  organization: "acme"
+                    |  name: "widget"
+                    |  author: "alice"
+                    |
+                    |releases:
+                    |  - id: "1.0.0"
+                    |    published_at: "2026-01-15"
+                    |  - id: "2.0.0"
+                    |    published_at: "2026-03-01"
+                    |
+                    |vulnerabilities:
+                    |
+                    |  - id: "CVE-2026-1234"
+                    |    releases:
+                    |      - "1.0.0"
+                    |    packages: []
+                    |    reports: []
+                    """.trimMargin()
 
-                shouldThrow<IllegalArgumentException> {
-                    addVulnerabilityToFile(file, renderContent(file), DEFAULT_OPTIONS)
-                }.message shouldContain "already exists"
+                val outcome = addVulnerabilityToFile(file, content, DEFAULT_OPTIONS)
+
+                outcome.updated shouldBe true
+                val entryStart = outcome.newContent.indexOf("- id: \"CVE-2026-1234\"")
+                val entryBody = outcome.newContent.substring(entryStart)
+                entryBody shouldContain "\"1.0.0\""
+                entryBody shouldNotContain "\"2.0.0\""
+            }
+
+            test("update with --reporter appends a new ReportEntry when reporter is new") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-1234"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = listOf(ReportEntry(reporter = ReporterType.TRIVY, at = LocalDate.of(2026, 1, 10))),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-1234"
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports:
+                        |      - reporter: trivy
+                        |        at: "2026-01-10"
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        content,
+                        DEFAULT_OPTIONS.copy(reporter = ReporterType.SNYK),
+                    )
+
+                outcome.updated shouldBe true
+                outcome.newContent shouldContain "trivy"
+                outcome.newContent shouldContain "2026-01-10"
+                outcome.newContent shouldContain "snyk"
+                outcome.newContent shouldContain "${LocalDate.now()}"
+            }
+
+            test("update with --reporter updates the date when the reporter already has a report") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-1234"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = listOf(ReportEntry(reporter = ReporterType.TRIVY, at = LocalDate.of(2026, 1, 10))),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-1234"
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports:
+                        |      - reporter: trivy
+                        |        at: "2026-01-10"
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        content,
+                        DEFAULT_OPTIONS.copy(reporter = ReporterType.TRIVY),
+                    )
+
+                outcome.updated shouldBe true
+                outcome.newContent shouldContain "trivy"
+                outcome.newContent shouldContain "${LocalDate.now()}"
+                outcome.newContent shouldNotContain "2026-01-10"
+            }
+
+            test("update preserves the position of the entry in the file") {
+                val first =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-0001"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val second =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-1234"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(first, second))
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-0001"
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports: []
+                        |
+                        |  - id: "CVE-2026-1234"
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports: []
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        content,
+                        DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/lib@1.0.0"))),
+                    )
+
+                val firstIndex = outcome.newContent.indexOf("CVE-2026-0001")
+                val secondIndex = outcome.newContent.indexOf("CVE-2026-1234")
+                firstIndex shouldBeLessThan secondIndex
+                // Each id should appear exactly once (not duplicated by accidental insert)
+                outcome.newContent.split("CVE-2026-1234").size - 1 shouldBe 1
+                outcome.newContent.split("CVE-2026-0001").size - 1 shouldBe 1
             }
 
             test("throws when --release is not defined in the file") {

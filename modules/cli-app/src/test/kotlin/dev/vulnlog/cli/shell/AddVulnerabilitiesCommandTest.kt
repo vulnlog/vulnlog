@@ -114,15 +114,23 @@ class AddVulnerabilitiesCommandTest :
                 }
             }
 
-            test("fails when the vuln id already exists in the file") {
+            test("updates an existing entry in place and prints an 'Updated' message") {
                 withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
                     val result =
                         AddVulnerabilitiesCommand().test(
-                            "${target.absolutePath} --vuln-id CVE-2026-1234",
+                            "${target.absolutePath} --vuln-id CVE-2026-1234 " +
+                                "--package pkg:npm/example-lib@9.9.9",
                         )
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
-                    result.stderr shouldContain "already exists"
+                    result.statusCode shouldBe 0
+                    result.stdout shouldBe "Updated in ${target.toPath()}: CVE-2026-1234\n"
+
+                    val content = target.readText()
+                    content.split("CVE-2026-1234").size - 1 shouldBe 1
+                    content shouldContain "pkg:npm/example-lib@9.9.9"
+                    content shouldNotContain "pkg:npm/example-lib@2.3.0"
+                    content shouldContain "not affected"
+                    content shouldContain "Remote code execution in example-lib"
                 }
             }
 

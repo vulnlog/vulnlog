@@ -20,6 +20,7 @@ import dev.vulnlog.lib.core.AddVulnerabilityOptions
 import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
 import dev.vulnlog.lib.core.formatAddedMessage
+import dev.vulnlog.lib.core.formatUpdatedMessage
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -122,7 +123,13 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
                     throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
                 }
             destination.path.writeText(outcome.newContent)
-            echo(formatAddedMessage(destination.path, outcome.vulnId))
+            val message =
+                if (outcome.updated) {
+                    formatUpdatedMessage(destination.path, outcome.vulnId)
+                } else {
+                    formatAddedMessage(destination.path, outcome.vulnId)
+                }
+            echo(message)
         }
     }
 }
