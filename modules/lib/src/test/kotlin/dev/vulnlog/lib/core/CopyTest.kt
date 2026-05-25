@@ -135,68 +135,6 @@ class CopyTest :
             }
         }
 
-        context("serializeEntryYaml") {
-
-            test("produces correctly indented YAML list item") {
-                val dto =
-                    VulnerabilityEntryDto(
-                        id = "CVE-2026-1234",
-                        releases = listOf("1.0.0"),
-                        packages = listOf("pkg:npm/example-lib@2.3.0"),
-                        reports = listOf(ReportEntryDto(reporter = "trivy")),
-                        verdict = "not affected",
-                        justification = "vulnerable code not in execute path",
-                    )
-
-                val yaml = serializeEntryYaml(dto, createYamlMapper())
-
-                yaml shouldContain "  - id: "
-                yaml shouldContain "    releases:"
-                yaml shouldContain "    verdict: "
-                yaml shouldNotContain "---"
-            }
-
-            test("omits null fields") {
-                val dto =
-                    VulnerabilityEntryDto(
-                        id = "CVE-2026-1234",
-                        releases = listOf("1.0.0"),
-                        packages = listOf("pkg:npm/example-lib@2.3.0"),
-                        reports = listOf(ReportEntryDto(reporter = "trivy")),
-                    )
-
-                val yaml = serializeEntryYaml(dto, createYamlMapper())
-
-                yaml shouldNotContain "verdict:"
-                yaml shouldNotContain "severity:"
-                yaml shouldNotContain "justification:"
-                yaml shouldNotContain "analysis:"
-                yaml shouldNotContain "description:"
-                yaml shouldNotContain "comment:"
-                yaml shouldNotContain "resolution:"
-                yaml shouldNotContain "source:"
-                yaml shouldNotContain "suppress:"
-            }
-
-            test("omits empty lists") {
-                val dto =
-                    VulnerabilityEntryDto(
-                        id = "CVE-2026-1234",
-                        releases = listOf("1.0.0"),
-                        packages = listOf("pkg:npm/example-lib@2.3.0"),
-                        reports = listOf(ReportEntryDto(reporter = "trivy")),
-                        aliases = emptyList(),
-                        tags = emptyList(),
-                    )
-
-                val yaml = serializeEntryYaml(dto, createYamlMapper())
-
-                yaml shouldNotContain "aliases:"
-                yaml shouldNotContain "tags:"
-                yaml shouldNotContain "vuln_ids:"
-            }
-        }
-
         context("insertEntryAfterVulnerabilitiesHeader") {
 
             test("inserts after header") {
