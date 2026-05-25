@@ -15,7 +15,6 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import tools.jackson.databind.ObjectMapper
-import java.nio.file.Path
 import java.time.LocalDate
 
 data class AddVulnerabilityOptions(
@@ -64,50 +63,66 @@ fun addVulnerabilityToFile(
     options: AddVulnerabilityOptions,
     mapper: ObjectMapper = createYamlMapper(),
 ): AddOutcome {
-    val knownReleases = destination.releases.map { it.id }.toSet()
+    val knownReleases = knownReleases(destination)
     val missingReleases = options.releases - knownReleases
     require(missingReleases.isEmpty()) {
         "Releases not defined in file: ${missingReleases.joinToString(", ") { it.value }}"
     }
 
-    val knownTags = destination.tags.map { it.id }.toSet()
-    val missingTags = options.tags - knownTags
+    val missingTags = options.tags - knownTags(destination)
     require(missingTags.isEmpty()) {
         "Tags not defined in file: ${missingTags.joinToString(", ") { it.value }}"
     }
 
     val existing = destination.vulnerabilities.firstOrNull { it.id == options.vulnId }
-
-    if (existing != null) {
-        val merged = applyOptionsToExisting(existing, options)
-        val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper)
-        val newContent = replaceEntryById(destinationContent, options.vulnId, entryYaml)
-        return AddOutcome(newContent, options.vulnId, updated = true)
-    }
-
-    val effectiveReleases =
-        options.releases.ifEmpty {
-            require(destination.releases.isNotEmpty()) {
-                "File has no releases defined; cannot determine default release"
+    return if (existing != null) {
+        updateExistingVulnerabilityEntry(existing, options, mapper, destinationContent)
+    } else {
+        // When the destination file does not have defined any releases
+        // the new vulnerability entry has an empty releases field to be more tolerant.
+        val effectiveReleases =
+            options.releases.ifEmpty {
+                val hasNoKnownReleases = knownReleases.isEmpty()
+                if (hasNoKnownReleases) emptySet() else setOf(lastReleaseFavoringPublished(destination.releases))
             }
-            setOf(lastReleaseFavoringPublished(destination.releases))
-        }
+        addNewVulnerabilityEntryAtTop(effectiveReleases, options, mapper, destinationContent)
+    }
+}
 
+private fun updateExistingVulnerabilityEntry(
+    existing: VulnerabilityEntry,
+    options: AddVulnerabilityOptions,
+    mapper: ObjectMapper,
+    destinationContent: String,
+): AddOutcome {
+    val merged = applyOptionsToExisting(existing, options)
+    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper)
+    val newContent = replaceEntryById(destinationContent, options.vulnId, entryYaml)
+    return AddOutcome(newContent, options.vulnId, updated = true)
+}
+
+private fun applyOptionsToExisting(
+    existing: VulnerabilityEntry,
+    options: AddVulnerabilityOptions,
+): VulnerabilityEntry =
+    existing.copy(
+        releases = if (options.releases.isNotEmpty()) options.releases.toList() else existing.releases,
+        packages = if (options.packages.isNotEmpty()) options.packages.toList() else existing.packages,
+        tags = if (options.tags.isNotEmpty()) options.tags.toList() else existing.tags,
+        reports = options.reporter?.let { mergeReporterIntoReports(existing.reports, it) } ?: existing.reports,
+    )
+
+private fun addNewVulnerabilityEntryAtTop(
+    effectiveReleases: Set<Release>,
+    options: AddVulnerabilityOptions,
+    mapper: ObjectMapper,
+    destinationContent: String,
+): AddOutcome {
     val entry = buildVulnerabilityEntry(options.copy(releases = effectiveReleases))
     val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(entry), mapper)
     val newContent = insertEntryAfterVulnerabilitiesHeader(destinationContent, entryYaml)
     return AddOutcome(newContent, options.vulnId, updated = false)
 }
-
-fun formatAddedMessage(
-    destinationPath: Path,
-    vulnId: VulnId,
-): String = "Added to $destinationPath: ${vulnId.id}"
-
-fun formatUpdatedMessage(
-    destinationPath: Path,
-    vulnId: VulnId,
-): String = "Updated in $destinationPath: ${vulnId.id}"
 
 private fun buildVulnerabilityEntry(options: AddVulnerabilityOptions): VulnerabilityEntry =
     VulnerabilityEntry(
@@ -119,17 +134,6 @@ private fun buildVulnerabilityEntry(options: AddVulnerabilityOptions): Vulnerabi
                 ?: emptyList(),
         tags = options.tags.toList(),
         verdict = Verdict.UnderInvestigation,
-    )
-
-private fun applyOptionsToExisting(
-    existing: VulnerabilityEntry,
-    options: AddVulnerabilityOptions,
-): VulnerabilityEntry =
-    existing.copy(
-        releases = if (options.releases.isNotEmpty()) options.releases.toList() else existing.releases,
-        packages = if (options.packages.isNotEmpty()) options.packages.toList() else existing.packages,
-        tags = if (options.tags.isNotEmpty()) options.tags.toList() else existing.tags,
-        reports = options.reporter?.let { mergeReporterIntoReports(existing.reports, it) } ?: existing.reports,
     )
 
 private fun mergeReporterIntoReports(

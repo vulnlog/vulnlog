@@ -19,8 +19,6 @@ import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.AddVulnerabilityOptions
 import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
-import dev.vulnlog.lib.core.formatAddedMessage
-import dev.vulnlog.lib.core.formatUpdatedMessage
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -31,6 +29,7 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
+import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
@@ -132,4 +131,14 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
             echo(message)
         }
     }
+
+    private fun formatAddedMessage(
+        destinationPath: Path,
+        vulnId: VulnId,
+    ): String = "Added to $destinationPath: ${vulnId.id}"
+
+    private fun formatUpdatedMessage(
+        destinationPath: Path,
+        vulnId: VulnId,
+    ): String = "Updated in $destinationPath: ${vulnId.id}"
 }

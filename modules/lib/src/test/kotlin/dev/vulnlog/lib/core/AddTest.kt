@@ -144,6 +144,15 @@ class AddTest :
                 outcome.newContent shouldContain "\"1.0.0\""
             }
 
+            test("inserts the entry and falls back to the empty release when non exist in the Vulnlog file") {
+                val file = vulnlogFile(releases = emptyList())
+                val outcome = addVulnerabilityToFile(file, renderContent(file), DEFAULT_OPTIONS)
+
+                outcome.vulnId shouldBe VulnId.Cve("CVE-2026-1234")
+                outcome.newContent shouldContain "CVE-2026-1234"
+                outcome.newContent shouldNotContain "\"1.0.0\""
+            }
+
             test("updates an existing entry in place, preserving unspecified fields") {
                 val existing =
                     VulnerabilityEntry(
@@ -396,14 +405,6 @@ class AddTest :
                         DEFAULT_OPTIONS.copy(tags = setOf(Tag("unknown"))),
                     )
                 }.message shouldContain "not defined"
-            }
-
-            test("throws when no releases are defined and none supplied") {
-                val file = vulnlogFile(releases = emptyList())
-
-                shouldThrow<IllegalArgumentException> {
-                    addVulnerabilityToFile(file, renderContent(file), DEFAULT_OPTIONS)
-                }.message shouldContain "no releases"
             }
         }
     })
