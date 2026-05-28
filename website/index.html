@@ -269,6 +269,13 @@
                     </script>
                 </div>
                 <div class="install-option">
+                    <h3>Homebrew (macOS)</h3>
+                    <div class="code-block" id="install-brew"></div>
+                    <script id="install-brew-src" type="text/plain">
+                        brew install vulnlog/vulnlog/vulnlog
+                    </script>
+                </div>
+                <div class="install-option">
                     <h3>Docker</h3>
                     <div class="code-block" id="install-docker"></div>
                     <script id="install-docker-src" type="text/plain">
@@ -488,6 +495,7 @@
     renderExample('hero-example', 'hero-example-src', highlightYaml);
     renderExample('cli-example', 'cli-example-src', highlightCli);
     renderExample('install-script', 'install-script-src', highlightPlain);
+    renderExample('install-brew', 'install-brew-src', highlightPlain);
     renderExample('install-docker', 'install-docker-src', highlightPlain);
     renderExample('install-gradle', 'install-gradle-src', highlightPlain);
 </script>
