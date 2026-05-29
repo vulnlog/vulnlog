@@ -92,6 +92,23 @@ jobs:
           category-name: Announcements
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+  notify-homebrew:
+    name: Trigger Homebrew formula bump
+    needs: [ publish-release ]
+    if: ${{ !contains(github.ref_name, '-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger homebrew formula bump
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_DISPATCH_TOKEN }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          gh api repos/vulnlog/homebrew-vulnlog/dispatches \
+            -f event_type=vulnlog-release \
+            -f client_payload[version]="$VERSION"
+
   deploy-pages:
     name: Deploy website and docs to GitHub Pages
     needs: [ publish-release ]

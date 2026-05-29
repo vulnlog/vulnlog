@@ -87,6 +87,32 @@ curl -fsSL vulnlog.dev/uninstall | sh
 A versioned copy of the same script is also attached to each GitHub release as
 `install-vulnlog.sh` and `uninstall-vulnlog.sh`.
 
+== Homebrew (macOS)
+
+On macOS, install Vulnlog from the https://github.com/vulnlog/homebrew-vulnlog[Vulnlog tap].
+On Apple Silicon (`arm64`) the formula installs the native binary.
+On Intel (`x86_64`) there is no native build, so it installs the JVM distribution and pulls in `openjdk@21`
+as a dependency automatically.
+
+.Install in one step.
+[source,bash]
+----
+brew install vulnlog/vulnlog/vulnlog
+----
+
+.Or tap once, then install and upgrade with the bare name.
+[source,bash]
+----
+brew tap vulnlog/vulnlog
+brew install vulnlog
+----
+
+.Upgrade to the latest release.
+[source,bash]
+----
+brew update && brew upgrade vulnlog
+----
+
 == Native Binary
 
 Standalone native binaries are built with GraalVM and require no Java runtime.
@@ -123,7 +149,6 @@ The resulting distribution is placed in `build/install/vulnlog`.
 
 // Other ideas:
 // - Snap package (Linux)
-// - Homebrew formula (macOS / Linux)
 // - Scoop or Winget (Windows)
 // - APT / RPM repositories
 // - Nix package

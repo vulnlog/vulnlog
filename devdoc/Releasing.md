@@ -38,6 +38,9 @@ The pipeline runs the following jobs, parallelised where dependencies allow:
   Changed" list plus a link to `CHANGELOG.md`, and posts a release announcement in GitHub Discussions
 - **`publish-docker`** (after `build-native-images`) — pushes `ghcr.io` images with both `:<version>` and `:latest` tags
 - **`deploy-pages`** (after `publish-release`) — deploys the website and Antora docs to GitHub Pages
+- **`notify-homebrew`** (after `publish-release`) — dispatches a `vulnlog-release` event to
+  [`vulnlog/homebrew-vulnlog`](https://github.com/vulnlog/homebrew-vulnlog) so the tap bumps its formula and opens a
+  PR; runs only on final tags
 
 ### 2. Fill in the GitHub-release body
 
@@ -104,6 +107,7 @@ only run for a final release:
 | Docker image `:latest` tag      | ✓         | *skipped* |
 | Website and docs deploy         | ✓         | *skipped* |
 | GitHub Discussions announcement | ✓         | *skipped* |
+| Homebrew formula bump dispatch  | ✓         | *skipped* |
 
 When the manual tests against the RC artifacts pass, tag the *same commit* with the final version
 and push it — the pipeline runs again and performs the steps that were skipped for the RC:

@@ -67,6 +67,7 @@ flowchart TD
     TAG --> BNI[build-native-images<br/>matrix: linux / macos / windows]
     BNI --> PR2[publish-release<br/>GitHub release + discussion]
     PR2 --> DP[deploy-pages<br/>Antora docs + website]
+    PR2 --> NHB[notify-homebrew<br/>dispatch tap formula bump]
     BNI --> PDR[publish-docker<br/>ghcr.io :version + :latest]
     TAG --> PGP[publish-gradle-plugin<br/>plugins.gradle.org]
 ```
@@ -85,6 +86,11 @@ level inside their jobs.
   also opens an Announcement discussion via `abirismyname/create-discussion` (pinned to v2.1.0 by SHA).
 - **deploy-pages**: builds the Antora documentation, composes the static site, and deploys to GitHub Pages (
   `vulnlog.dev`). Skipped entirely on RC tags.
+- **notify-homebrew**: after the release assets are public, calls `POST /repos/vulnlog/homebrew-vulnlog/dispatches`
+  with `event_type=vulnlog-release` and `client_payload[version]=<tag without v>` (authenticated via the
+  `HOMEBREW_DISPATCH_TOKEN` secret). The tap's `bump-formula.yml` then recomputes the SHA256s, patches `vulnlog.rb`,
+  and opens a bump PR. Depends on `publish-release` so the zip URLs are live before the tap fetches them; skipped
+  entirely on RC tags.
 - **publish-docker**: downloads the Linux native binary via the
   [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) composite action and pushes
   `ghcr.io/<repo>:<tag>`; the floating `:latest` tag is added only on final releases.
