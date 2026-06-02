@@ -514,7 +514,7 @@ class CopyTest :
                         vulnIds = setOf(cve1),
                     )
 
-                outcome.newContent shouldContain "\"1.0.0\""
+                outcome.newContent shouldContain "releases: [1.0.0]"
                 outcome.newContent shouldNotContain "1.5.0"
                 outcome.newContent shouldNotContain "2.0.0"
             }

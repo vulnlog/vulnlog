@@ -55,5 +55,5 @@ After the operation, the vulnerability entry is added with `releases` pointing t
 
 [source,yaml]
 ----
-include::{examplesdir}/copy/after/target1.vl.yml[lines=14..32]
+include::{examplesdir}/copy/after/target1.vl.yml[lines=14..26]
 ----

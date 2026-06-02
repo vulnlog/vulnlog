@@ -103,6 +103,8 @@ object V1Mapper {
                 reporter = it.reporter.canonical(),
                 at = it.at,
                 source = it.source,
+                vulnIds = it.vulnIds.map { vulnId -> vulnId.id }.toSet(),
+                suppress = it.suppress?.let { suppression -> SuppressionDto(expiresAt = suppression.expiresAt) },
             )
         }
 

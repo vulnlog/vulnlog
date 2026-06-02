@@ -23,9 +23,9 @@ class InitYamlTest :
             |schemaVersion: "1"
             |
             |project:
-            |  organization: "acme"
-            |  name: "widget"
-            |  author: "alice"
+            |  organization: acme
+            |  name: widget
+            |  author: alice
             |
             |releases: []
             |

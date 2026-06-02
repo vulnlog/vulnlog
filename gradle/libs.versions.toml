@@ -3,12 +3,14 @@
 #detektVersion = "1.23.7"
 cliktVersion = "5.1.0"
 graalvmNativeBuildToolsVersion = "0.10.4"
-jacksonVersion = "3.1.1"
+jacksonVersion = "3.1.1" # Keep in-sync with snakeYamlEngineVersion
 kotestVersion = "6.1.0"
 kotlinVersion = "2.3.0"
 ktlintVersion = "14.2.0"
-spotlessVersion = "8.4.0"
 packageUrlVersion = "1.5.0"
+# Add explicit SnakeYAML dependency because it is used to for formatting
+snakeYamlEngineVersion = "3.0.1" # Keep in-sync with jacksonVersion
+spotlessVersion = "8.4.0"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
@@ -20,8 +22,9 @@ kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", ver
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
-spotlessGradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotlessVersion" }
 packageUrl = { module = "com.github.package-url:packageurl-java", version.ref = "packageUrlVersion"}
+snakeyamlEngine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeYamlEngineVersion" }
+spotlessGradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotlessVersion" }
 
 [bundles]
 

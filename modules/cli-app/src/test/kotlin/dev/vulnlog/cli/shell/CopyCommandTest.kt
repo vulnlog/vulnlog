@@ -115,7 +115,7 @@ class CopyCommandTest :
                             "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
                         )
 
-                        target.readText() shouldContain "\"1.0.0\""
+                        target.readText() shouldContain "releases: [1.0.0]"
                     }
                 }
             }
@@ -132,7 +132,7 @@ class CopyCommandTest :
                         result.statusCode shouldBe 0
                         val content = target.readText()
                         // Existing entry's release was rewritten to the destination's latest release
-                        content shouldContain "\"1.0.0\""
+                        content shouldContain "releases: [1.0.0]"
                         content shouldNotContain "2.0.0"
                         // Only one CVE-2026-1234 entry remains (no duplicate prepended)
                         val occurrences = "CVE-2026-1234".toRegex().findAll(content).count()

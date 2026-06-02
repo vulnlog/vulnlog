@@ -24,7 +24,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
-import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 @DisableCachingByDefault
@@ -64,7 +63,7 @@ abstract class VulnlogCopyTask : DefaultTask() {
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
                     destination = destinationVulnlogFile,
-                    destinationContent = destination.path.readText(),
+                    destinationContent = parsedDestination.values.first().rawContent,
                     vulnIds = vulnIdSet,
                     mapper = mapper,
                 )

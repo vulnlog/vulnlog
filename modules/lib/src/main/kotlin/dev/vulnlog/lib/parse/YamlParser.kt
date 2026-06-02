@@ -28,9 +28,11 @@ class YamlParser(
                 )
             }
 
-        return when (parseAndValidationVersion) {
-            ParseValidationVersion.V1 -> parseV1(yaml, ParseValidationVersion.V1, schemaVersion)
-        }
+        val result =
+            when (parseAndValidationVersion) {
+                ParseValidationVersion.V1 -> parseV1(yaml, ParseValidationVersion.V1, schemaVersion)
+            }
+        return if (result is ParseResult.Ok) result.copy(rawContent = yaml) else result
     }
 
     private fun detectVersion(yaml: String): SchemaVersion? {

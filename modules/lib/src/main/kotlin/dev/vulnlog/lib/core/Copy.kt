@@ -10,6 +10,7 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
@@ -155,7 +156,7 @@ fun serializeEntryYaml(
     entry: VulnerabilityEntryDto,
     mapper: ObjectMapper,
 ): String {
-    val raw = mapper.writeValueAsString(entry)
+    val raw = CanonicalYaml.renderEntry(entry, mapper)
     val lines =
         raw
             .lines()
@@ -198,7 +199,7 @@ fun insertEntryAfterVulnerabilitiesHeader(
     return lines.joinToString("\n")
 }
 
-private val ENTRY_ID_LINE = Regex("""^  - id:\s+["']?(\S+?)["']?\s*$""")
+private val ENTRY_ID_LINE = Regex("""^\s*- id:\s+["']?(\S+?)["']?\s*$""")
 
 /**
  * Replaces the YAML block of the entry whose `id` matches [vulnId] with [newEntryYaml].
@@ -227,8 +228,9 @@ fun replaceEntryById(
             endIndex = i
             break
         }
-        // top-level YAML key (non-indented, non-blank, non-comment) ends the vulnerabilities section
-        if (line.isNotBlank() && !line.startsWith(" ") && !line.startsWith("#")) {
+        // top-level YAML key (non-indented, non-blank, non-comment, not a column-0 sequence item)
+        // ends the vulnerabilities section
+        if (line.isNotBlank() && !line.startsWith(" ") && !line.startsWith("#") && !line.startsWith("-")) {
             endIndex = i
             break
         }

@@ -22,7 +22,6 @@ import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
-import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 class CopyCommand : CliktCommand(name = "copy") {
@@ -69,7 +68,7 @@ class CopyCommand : CliktCommand(name = "copy") {
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
                     destination = destinationVulnlogFile,
-                    destinationContent = destination.path.readText(),
+                    destinationContent = parsedDestination.values.first().rawContent,
                     vulnIds = vulnIds,
                     mapper = mapper,
                 )

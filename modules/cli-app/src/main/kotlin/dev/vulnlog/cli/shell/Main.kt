@@ -13,6 +13,7 @@ fun main(args: Array<String>) =
     VulnlogCli()
         .subcommands(InitCommand())
         .subcommands(ValidateCommand())
+        .subcommands(FmtCommand())
         .subcommands(SuppressCommand())
         .subcommands(ReportCommand())
         .subcommands(ModifyCommand())

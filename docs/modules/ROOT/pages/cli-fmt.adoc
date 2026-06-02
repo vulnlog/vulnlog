@@ -1,0 +1,44 @@
+= vulnlog fmt
+
+Formats one or more Vulnlog files to the canonical style, keeping files consistent and reviewable across branches.
+Only files that parse and validate without errors are formatted.
+
+[source]
+----
+vulnlog fmt <file...> [--check]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--check`
+| Do not write changes. Exit non-zero and list the files that are not already formatted.
+
+| `-`
+| Read from STDIN and write the formatted document to STDOUT.
+
+|===
+
+NOTE: `-` reads a single document from STDIN and writes the formatted result to STDOUT; the input is never formatted in place. STDIN cannot be combined with file arguments, and only one STDIN input is accepted.
+
+.Format multiple files in place.
+[source]
+----
+vulnlog fmt web-app-1.vl.yaml web-app-2.vl.yaml
+Formatted: web-app-1.vl.yaml
+Already formatted: web-app-2.vl.yaml
+----
+
+.Check formatting in CI without writing changes.
+[source]
+----
+vulnlog fmt --check vulnlog.yaml
+Can be reformatted: vulnlog.yaml
+----
+
+.Format from STDIN to STDOUT.
+[source]
+----
+vulnlog fmt - < vulnlog.yaml
+----

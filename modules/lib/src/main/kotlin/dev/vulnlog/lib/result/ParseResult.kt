@@ -11,6 +11,7 @@ sealed interface ParseResult {
     data class Ok(
         val validationVersion: ParseValidationVersion,
         val content: VulnlogFile,
+        val rawContent: String = "",
     ) : ParseResult
 
     data class Error(
@@ -21,6 +22,4 @@ sealed interface ParseResult {
 data class ParseResults(
     val success: Map<File, ParseResult.Ok> = emptyMap(),
     val failure: Map<File, ParseResult.Error> = emptyMap(),
-) {
-    fun onEachFailure(action: (File, ParseResult.Error) -> Unit) = failure.forEach(action)
-}
+)

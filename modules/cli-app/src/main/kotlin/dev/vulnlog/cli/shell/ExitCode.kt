@@ -20,14 +20,14 @@ enum class ExitCode {
     VALIDATION_ERROR,
 
     /**
+     * The file has formatting violations.
+     */
+    FORMAT_ERROR,
+
+    /**
      * The specified Vulnlog file does not exist.
      */
     FILE_NOT_FOUND,
-
-    /**
-     * The file has lint violations
-     */
-    LINT_ERROR,
 
     /**
      * A flag references an unknown entity or unsupported type.

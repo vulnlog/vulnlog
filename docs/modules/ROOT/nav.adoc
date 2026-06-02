@@ -17,6 +17,7 @@
 ** xref:cli-overview.adoc[CLI Overview]
 ** xref:cli-init.adoc[init]
 ** xref:cli-validate.adoc[validate]
+** xref:cli-fmt.adoc[fmt]
 ** xref:cli-suppress.adoc[suppress]
 ** xref:cli-report.adoc[report]
 ** xref:cli-copy.adoc[modify copy]

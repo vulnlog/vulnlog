@@ -61,11 +61,14 @@ private fun parseInputOptions(
 private fun parseInputOption(
     parser: YamlParser,
     input: FileInputOption,
-): Pair<File, ParseResult> =
-    when (input) {
-        is FileInputOption.File -> Pair(input.path.toFile(), parseContent(parser, input.path.readText()))
-        FileInputOption.Stdin -> Pair(File("<stdin>"), parseContent(parser, System.`in`.bufferedReader().readText()))
-    }
+): Pair<File, ParseResult> {
+    val content =
+        when (input) {
+            is FileInputOption.File -> input.path.readText()
+            FileInputOption.Stdin -> System.`in`.bufferedReader().readText()
+        }
+    return input.sourceFile() to parseContent(parser, content)
+}
 
 private fun parseContent(
     parser: YamlParser,
