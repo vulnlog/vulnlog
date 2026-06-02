@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.parse.v1.dto
 
 import com.fasterxml.jackson.annotation.JsonFormat
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
@@ -11,6 +12,8 @@ data class ReleaseEntryDto(
     val id: String,
     @param:JsonProperty("published_at")
     @param:JsonFormat(pattern = "yyyy-MM-dd")
+    @param:JsonInclude(JsonInclude.Include.NON_NULL)
     val publishedAt: LocalDate? = null,
+    @param:JsonInclude(JsonInclude.Include.NON_NULL)
     val purls: List<ReleasePurlEntryDto>? = null,
 )
