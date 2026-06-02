@@ -11,6 +11,7 @@ import java.time.LocalDate
 data class ReportEntryDto(
     val reporter: String,
     @param:JsonFormat(pattern = "yyyy-MM-dd")
+    @param:JsonInclude(JsonInclude.Include.NON_NULL)
     val at: LocalDate? = null,
     @param:JsonInclude(JsonInclude.Include.NON_NULL)
     val source: String? = null,
