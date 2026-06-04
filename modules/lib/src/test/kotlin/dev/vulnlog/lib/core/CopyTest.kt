@@ -72,30 +72,6 @@ private fun vulnlogFile(
 class CopyTest :
     FunSpec({
 
-        context("lastReleaseFavoringPublished") {
-
-            test("returns last published release") {
-                val releases =
-                    listOf(
-                        ReleaseEntry(id = Release("1.0.0"), publicationDate = LocalDate.of(2025, 1, 1)),
-                        ReleaseEntry(id = Release("1.1.0"), publicationDate = LocalDate.of(2025, 6, 1)),
-                        ReleaseEntry(id = Release("1.2.0")),
-                    )
-
-                lastReleaseFavoringPublished(releases) shouldBe Release("1.1.0")
-            }
-
-            test("falls back to last release when none is published") {
-                val releases =
-                    listOf(
-                        ReleaseEntry(id = Release("1.0.0")),
-                        ReleaseEntry(id = Release("1.1.0")),
-                    )
-
-                lastReleaseFavoringPublished(releases) shouldBe Release("1.1.0")
-            }
-        }
-
         context("findNonExistingVulnIds") {
 
             test("returns the requested ids that are not present") {

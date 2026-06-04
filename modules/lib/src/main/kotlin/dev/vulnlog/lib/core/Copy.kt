@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
@@ -34,7 +33,7 @@ fun copyVulnerabilities(
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
 ): CopyOutcome {
-    val release = lastReleaseFavoringPublished(destination.releases)
+    val release = destination.releases.last().id
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
     val existingById = destination.vulnerabilities.associateBy { it.id }
 
@@ -130,15 +129,6 @@ fun findNonExistingVulnIds(
     vulnIds
         .filter { vulnId -> vulnId !in vulnerabilities.map(VulnerabilityEntry::id) }
         .toSet()
-
-/**
- * Finds the latest published release from a list of release entries.
- *
- * @param releases The list of release entries to search. Releases with a null publication date are considered unpublished.
- * @return The most recently published release or the last entry if no release has been published.
- */
-fun lastReleaseFavoringPublished(releases: List<ReleaseEntry>): Release =
-    releases.lastOrNull { it.publicationDate != null }?.id ?: releases.last().id
 
 /**
  * Serializes a [VulnerabilityEntryDto] object to a YAML-compatible string representation
