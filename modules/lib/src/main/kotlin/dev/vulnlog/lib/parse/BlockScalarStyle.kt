@@ -35,8 +35,8 @@ enum class BlockScalarStyle(
 
 /**
  * Maps each block scalar's value to the style it was written with, by composing [raw] with snakeyaml-engine
- * (which keeps scalar styles, unlike the Jackson DTO path). The value is keyed trailing-newline-trimmed because
- * both parsers fold scalars to the same logical text, making it a stable join key against rendered DTO values.
+ * (which keeps scalar styles, unlike the Jackson DTO path). The value is keyed whitespace-trimmed to match the
+ * representer (which trims values before rendering) and because both parsers fold scalars to the same text.
  *
  * If the same text appears both as a block scalar and a plain scalar, the block style wins for both — rare and
  * acceptable. Plain and quoted scalars are ignored.
@@ -55,7 +55,7 @@ fun detectBlockScalarStyles(raw: VulnlogFileRaw): Map<String, BlockScalarStyle> 
                     walk(it.valueNode)
                 }
             is SequenceNode -> node.value.forEach(::walk)
-            is ScalarNode -> BlockScalarStyle.fromNode(node)?.let { styles[node.value.trimEnd('\n')] = it }
+            is ScalarNode -> BlockScalarStyle.fromNode(node)?.let { styles[node.value.trim()] = it }
         }
     }
     walk(root)

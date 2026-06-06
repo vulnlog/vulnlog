@@ -122,4 +122,34 @@ class CanonicalYamlTest :
 
             yaml shouldContain "analysis: >"
         }
+
+        test("a spaced string that would overflow its line is folded, not wrapped as a plain scalar") {
+            val wouldWrap = "Time-of-check Time-of-use (TOCTOU) Race Condition (CWE-367) in the rsync daemon."
+            val yaml = CanonicalYaml.renderEntry(entry(description = wouldWrap), mapper)
+
+            yaml shouldContain "description: >-"
+        }
+
+        test("a short spaced string stays an inline plain scalar") {
+            val yaml = CanonicalYaml.renderEntry(entry(description = "Remote code execution in example-lib"), mapper)
+
+            yaml shouldContain "description: Remote code execution in example-lib"
+            yaml shouldNotContain "description: >"
+        }
+
+        test("surrounding whitespace is trimmed, so a trailing space no longer forces double-quoting") {
+            val trailingSpace =
+                "Integer overflow vulnerability (CWE-125, CWE-190) in rsync allowing to disclose process memory. "
+            val yaml = CanonicalYaml.renderEntry(entry(description = trailingSpace), mapper)
+
+            yaml shouldContain "description: >-"
+            yaml shouldNotContain "memory. \""
+        }
+
+        test("leading and trailing whitespace is stripped from a short value") {
+            val yaml = CanonicalYaml.renderEntry(entry(description = "  padded  "), mapper)
+
+            yaml shouldContain "description: padded\n"
+            yaml shouldNotContain "padded  "
+        }
     })

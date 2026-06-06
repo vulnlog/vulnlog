@@ -32,11 +32,18 @@ object CanonicalYaml {
     /** Indentation (spaces) for YAML blocks; entry splicing derives its list-item indent from this. */
     const val INDENTATION: Int = 2
 
-    /** Strings longer than this many characters are rendered as folded block scalars. */
-    const val FOLD_THRESHOLD: Int = 80
-
     /** Folded/plain scalars are wrapped to fit within this column width. */
     private const val LINE_WIDTH: Int = 80
+
+    /**
+     * Headroom for the widest `key:` prefix a value sits behind (e.g. `    description: `). Folding spaced
+     * strings beyond [LINE_WIDTH] minus this headroom stops the emitter from wrapping a plain scalar across
+     * lines, so every break carries a `>`/`|` indicator instead of a bare wrapped plain scalar.
+     */
+    private const val KEY_PREFIX_HEADROOM: Int = 17
+
+    /** Spaced strings longer than this become folded block scalars; space-less tokens (purls, ids) never do. */
+    const val FOLD_THRESHOLD: Int = LINE_WIDTH - KEY_PREFIX_HEADROOM
 
     /** Settings for a full document: emits the `---` start marker. */
     private val documentSettings: DumpSettings = settings(explicitStart = true)
@@ -107,8 +114,9 @@ private class VulnlogRepresenter(
         parentClassRepresenters[List::class.java] = RepresentToNode { data -> representList(data as List<*>) }
     }
 
-    private fun representString(value: String): Node {
-        preservedStyles[value.trimEnd('\n')]?.let { return representBlock(value, it) }
+    private fun representString(rawValue: String): Node {
+        val value = rawValue.trim()
+        preservedStyles[value]?.let { return representBlock(value, it) }
         return when {
             value.contains('\n') -> representBlock(value, BlockScalarStyle.FOLDED_STRIP)
             value.length > FOLD_THRESHOLD && value.contains(' ') -> representBlock(value, BlockScalarStyle.FOLDED_STRIP)
