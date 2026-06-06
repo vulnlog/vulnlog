@@ -19,6 +19,7 @@ import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.AddVulnerabilityOptions
 import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
+import dev.vulnlog.lib.core.formatAddOutcomeMessage
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -29,16 +30,14 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
-import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
     override fun help(context: Context): String =
         """
-        |Add a new vulnerability entry to a Vulnlog file.
-        |The created entry release is set to the latest published release in the Vulnlog file.
-        |If not Vulnlog file is specified, the entry is printed to STDOUT.
+        |Add a new vulnerability entry to one or more Vulnlog files.
+        |If no Vulnlog file is specified, the entry is printed to STDOUT.
         """.trimMargin()
 
     val destinations: List<FileInputOption.File> by argument(
@@ -49,9 +48,9 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
     ).convert(conversion = ArgumentTransformContext::toInputFile)
         .multiple(required = false)
 
-    val vulnIds: VulnId by option(
+    val vulnId: VulnId by option(
         "--vuln-id",
-        help = "Vulnerability ID to copy (repeatable)",
+        help = "Vulnerability ID for the new entry.",
     ).convert { parseVulnId(it) }
         .required()
 
@@ -67,36 +66,27 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
 
     val packages: Set<Purl> by option(
         "--package",
-        help =
-            """
-            Package URL (PURL) the vulnerability affects (repeatable).
-            """.trimIndent(),
+        help = "Package URL (PURL) the vulnerability affects (repeatable).",
     ).convert { parsePurl(PackageURL(it)) }
         .multiple(required = false)
         .unique()
 
     val tags: Set<Tag> by option(
         "--tag",
-        help =
-            """
-            Tag to add to the vulnerability entry (repeatable).
-            """.trimIndent(),
+        help = "Tag to add to the vulnerability entry (repeatable).",
     ).convert { Tag(it) }
         .multiple(required = false)
         .unique()
 
     val reporter: ReporterType? by option(
         "--reporter",
-        help =
-            """
-            Reporter of the vulnerability. The report date is set to the current date.
-            """.trimIndent(),
+        help = "Reporter of the vulnerability. The report date is set to the current date.",
     ).convert { parseReporter(it) }
 
     override fun run() {
         val commandOption =
             AddVulnerabilityOptions(
-                vulnId = vulnIds,
+                vulnId = vulnId,
                 releases = releases,
                 packages = packages,
                 tags = tags,
@@ -122,23 +112,7 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
                     throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
                 }
             destination.path.writeText(outcome.newContent)
-            val message =
-                if (outcome.updated) {
-                    formatUpdatedMessage(destination.path, outcome.vulnId)
-                } else {
-                    formatAddedMessage(destination.path, outcome.vulnId)
-                }
-            echo(message)
+            echo(formatAddOutcomeMessage(destination.path, outcome))
         }
     }
-
-    private fun formatAddedMessage(
-        destinationPath: Path,
-        vulnId: VulnId,
-    ): String = "Added to $destinationPath: ${vulnId.id}"
-
-    private fun formatUpdatedMessage(
-        destinationPath: Path,
-        vulnId: VulnId,
-    ): String = "Updated in $destinationPath: ${vulnId.id}"
 }

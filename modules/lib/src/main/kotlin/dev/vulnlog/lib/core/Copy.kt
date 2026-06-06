@@ -11,12 +11,9 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
-import dev.vulnlog.lib.parse.BlockScalarStyle
-import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.detectBlockScalarStyles
 import dev.vulnlog.lib.parse.v1.V1Mapper
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 
@@ -136,27 +133,6 @@ fun findNonExistingVulnIds(
 /** Latest published release, or the last entry when none is published. */
 fun lastReleaseFavoringPublished(releases: List<ReleaseEntry>): Release =
     releases.lastOrNull { it.publicationDate != null }?.id ?: releases.last().id
-
-/** Renders an entry as a `vulnerabilities` list item: `- ` on the first line, the rest indented to match. */
-fun serializeEntryYaml(
-    entry: VulnerabilityEntryDto,
-    mapper: ObjectMapper,
-    preservedStyles: Map<String, BlockScalarStyle> = emptyMap(),
-): String {
-    val raw = CanonicalYaml.renderEntry(entry, mapper, preservedStyles)
-    val lines =
-        raw
-            .lines()
-            .dropWhile { it.trimStart().startsWith("---") || it.isBlank() }
-            .dropLastWhile { it.isBlank() }
-
-    val itemPrefix = " ".repeat(CanonicalYaml.INDENTATION) + "- "
-    val continuationPrefix = " ".repeat(CanonicalYaml.INDENTATION + 2)
-    return lines
-        .mapIndexed { index, line ->
-            if (index == 0) "$itemPrefix$line" else "$continuationPrefix$line"
-        }.joinToString("\n")
-}
 
 /**
  * Inserts [entryYaml] after the `vulnerabilities:` header, rewriting an empty `vulnerabilities: []`

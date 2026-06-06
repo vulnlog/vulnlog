@@ -8,7 +8,7 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.subcommands
 
 class AddCommand : CliktCommand(name = "add") {
-    override fun help(context: Context): String = "Add new a vulnerability entry to Vulnlog files."
+    override fun help(context: Context): String = "Add a new vulnerability entry to Vulnlog files."
 
     init {
         subcommands(AddVulnerabilitiesCommand())

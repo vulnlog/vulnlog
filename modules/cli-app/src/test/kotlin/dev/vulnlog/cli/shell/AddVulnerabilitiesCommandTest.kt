@@ -19,7 +19,7 @@ class AddVulnerabilitiesCommandTest :
                 val result = AddVulnerabilitiesCommand().test("--vuln-id CVE-2026-1234")
 
                 result.statusCode shouldBe 0
-                result.stdout shouldContain "  - id: \"CVE-2026-1234\""
+                result.stdout shouldContain "  - id: CVE-2026-1234"
                 result.stdout shouldContain "releases: []"
                 result.stdout shouldContain "packages: []"
                 result.stdout shouldNotContain "verdict"
@@ -36,8 +36,8 @@ class AddVulnerabilitiesCommandTest :
                     )
 
                 result.statusCode shouldBe 0
-                result.stdout shouldContain "\"1.0.0\""
-                result.stdout shouldContain "\"1.1.0\""
+                result.stdout shouldContain "- 1.0.0"
+                result.stdout shouldContain "- 1.1.0"
                 result.stdout shouldContain "pkg:npm/example-lib@2.3.0"
                 result.stdout shouldContain "pkg:npm/other-lib@1.0.0"
                 result.stdout shouldContain "frontend"
@@ -51,8 +51,8 @@ class AddVulnerabilitiesCommandTest :
                     )
 
                 result.statusCode shouldBe 0
-                result.stdout shouldContain "reporter: \"trivy\""
-                result.stdout shouldContain "at: \"${LocalDate.now()}\""
+                result.stdout shouldContain "reporter: trivy"
+                result.stdout shouldContain "at: ${LocalDate.now()}"
             }
         }
 
@@ -94,7 +94,7 @@ class AddVulnerabilitiesCommandTest :
                     result.statusCode shouldBe 0
                     val content = target.readText()
                     content shouldContain "CVE-2026-9999"
-                    content shouldContain "\"1.0.0\""
+                    content shouldContain "releases: [1.0.0]"
                 }
             }
 
@@ -131,6 +131,41 @@ class AddVulnerabilitiesCommandTest :
                     content shouldNotContain "pkg:npm/example-lib@2.3.0"
                     content shouldContain "not affected"
                     content shouldContain "Remote code execution in example-lib"
+                }
+            }
+
+            test("attaches a tag that is defined in the file") {
+                val withTag =
+                    """
+                    ---
+                    schemaVersion: "1"
+
+                    project:
+                      organization: Acme Corp
+                      name: Acme Web App
+                      author: Acme Corp Security Team
+
+                    tags:
+                      - id: frontend
+                        description: Frontend components
+
+                    releases:
+                      - id: 1.0.0
+                        published_at: 2026-01-15
+
+                    vulnerabilities: []
+                    """.trimIndent()
+
+                withTempFile(prefix = "target", content = withTag) { target ->
+                    val result =
+                        AddVulnerabilitiesCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-9999 --tag frontend",
+                        )
+
+                    result.statusCode shouldBe 0
+                    val content = target.readText()
+                    content shouldContain "CVE-2026-9999"
+                    content shouldContain "tags: [frontend]"
                 }
             }
 

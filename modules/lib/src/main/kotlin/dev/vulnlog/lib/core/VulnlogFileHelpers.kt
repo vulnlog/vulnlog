@@ -7,12 +7,8 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 
-/**
- * Collects all defined and therefore known releaes in [vulnlog].
- */
+/** The release identifiers defined in [vulnlog]. */
 fun knownReleases(vulnlog: VulnlogFile): Set<Release> = vulnlog.releases.map { it.id }.toSet()
 
-/**
- * Collects all defined and therefore known tags in [vulnlog].
- */
+/** The tag identifiers defined in [vulnlog]. */
 fun knownTags(vulnlog: VulnlogFile): Set<Tag> = vulnlog.tags.map { it.id }.toSet()

@@ -1,0 +1,82 @@
+= vulnlog modify add vulnerability
+
+Adds a new vulnerability entry to one or more Vulnlog files, or prints the entry to STDOUT when no file is given.
+This records a finding from the command line instead of editing the YAML by hand.
+
+[source]
+----
+vulnlog modify add vulnerability [<file...>] --vuln-id <id> [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--vuln-id <id>`
+| Vulnerability ID for the new entry. Required.
+
+| `--release <id>`
+| Release the vulnerability affects. Repeatable. On insert, defaults to the latest release of the file, favoring releases with a publication date over unpublished ones. Must be defined in the file.
+
+| `--package <purl>`
+| Package URL (PURL) the vulnerability affects. Repeatable.
+
+| `--tag <id>`
+| Tag to attach to the entry. Repeatable. Must be defined in the file.
+
+| `--reporter <value>`
+| Reporter that surfaced the vulnerability. Adds a report dated today.
+|===
+
+The positional arguments are the target files; repeat them to add the same entry to several files in one invocation.
+When no file is given, the entry is written to STDOUT instead, ready to paste under a `vulnerabilities` list.
+A new entry carries no `verdict`, so it starts under investigation until you record a verdict.
+
+Entries are written in the canonical style, identical to xref:cli-fmt.adoc[fmt], so adding an entry never introduces formatting churn.
+
+If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated:
+
+* Only the fields you supply (`--release`, `--package`, `--tag`, `--reporter`) are replaced; every other field (`name`, `description`, `analysis`, `analyzed_at`, `verdict`, `justification`, `resolution`, `comment`, `aliases`) keeps its existing value.
+* The entry keeps its position in the file.
+* `reports` are merged by reporter: `--reporter` appends a report for a new reporter or sets the date to today for one that already exists.
+* Omitting `--release` keeps the existing releases instead of falling back to the latest.
+
+Releases and tags must already be defined in the file; otherwise the command fails without writing changes.
+
+== Example
+
+.Add a new entry, letting the release default to the latest published release.
+[source]
+----
+vulnlog modify add vulnerability vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
+Added to vulnlog.yaml: CVE-2026-1234
+----
+
+The entry is inserted at the top of the `vulnerabilities` list:
+
+[source,yaml]
+----
+  - id: CVE-2026-1234
+    releases: [1.0.0]
+    packages: []
+    reports:
+      - reporter: trivy
+        at: 2026-06-02
+----
+
+.Re-run with new fields to update the existing entry in place.
+[source]
+----
+vulnlog modify add vulnerability vulnlog.yaml --vuln-id CVE-2026-1234 --package pkg:npm/example-lib@2.3.0
+Updated in vulnlog.yaml: CVE-2026-1234
+----
+
+.Print an entry to STDOUT without writing a file.
+[source]
+----
+vulnlog modify add vulnerability --vuln-id CVE-2026-1234
+  - id: CVE-2026-1234
+    releases: []
+    packages: []
+    reports: []
+----

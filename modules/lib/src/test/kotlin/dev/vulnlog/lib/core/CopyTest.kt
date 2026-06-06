@@ -17,9 +17,6 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
-import dev.vulnlog.lib.parse.createYamlMapper
-import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe

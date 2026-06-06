@@ -12,9 +12,13 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.parse.BlockScalarStyle
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.detectBlockScalarStyles
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import tools.jackson.databind.ObjectMapper
+import java.nio.file.Path
 import java.time.LocalDate
 
 data class AddVulnerabilityOptions(
@@ -32,30 +36,23 @@ data class AddOutcome(
 )
 
 /**
- * Builds a [VulnerabilityEntry] from [options] and serializes it as a YAML list item suitable for
- * pasting under a Vulnlog file's `vulnerabilities:` section. The verdict defaults to
- * [Verdict.UnderInvestigation]; if a reporter is supplied, a single report entry is added with the
- * current date.
+ * Builds a [VulnerabilityEntry] from [options] and serializes it as a `vulnerabilities:` list item for
+ * printing to STDOUT. The verdict defaults to [Verdict.UnderInvestigation]; a supplied reporter adds a
+ * single report dated today.
  */
 fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String =
     serializeEntryYaml(V1Mapper.vulnerabilityToDto(buildVulnerabilityEntry(options)), createYamlMapper())
 
 /**
- * Inserts or updates a vulnerability entry in [destinationContent].
+ * Inserts or updates the [options].vulnId entry in [destinationContent], preserving the file's layout and
+ * block-scalar styles (`|`/`>`) so reformatting stays a no-op.
  *
- * If no entry with [options.vulnId] exists in [destination], a new entry is inserted. In that
- * case an empty [options.releases] defaults to the latest published release of [destination]
- * (see [lastReleaseFavoringPublished]).
+ * On insert, an empty [options].releases defaults to the latest published release (see
+ * [lastReleaseFavoringPublished]), or stays empty when [destination] defines no releases. On update, the
+ * entry is overwritten in place: only fields backing a supplied option are replaced, all others are kept,
+ * and an empty [options].releases keeps the existing releases.
  *
- * If an entry with [options.vulnId] already exists, it is overwritten in place: only the fields
- * corresponding to options the user supplied are replaced; all other fields (including verdict,
- * name, description, analysis, resolution, comment, and aliases) are preserved. Position in the
- * file is preserved. On update an empty [options.releases] means "keep existing releases" — no
- * fallback to the latest release.
- *
- * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in
- * [destination], or — on insert only — if [options.releases] is empty and [destination] has no
- * releases at all.
+ * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in [destination].
  */
 fun addVulnerabilityToFile(
     destination: VulnlogFile,
@@ -74,29 +71,39 @@ fun addVulnerabilityToFile(
         "Tags not defined in file: ${missingTags.joinToString(", ") { it.value }}"
     }
 
+    val preservedStyles = detectBlockScalarStyles(VulnlogFileRaw(destinationContent))
     val existing = destination.vulnerabilities.firstOrNull { it.id == options.vulnId }
     return if (existing != null) {
-        updateExistingVulnerabilityEntry(existing, options, mapper, destinationContent)
+        updateExistingVulnerabilityEntry(existing, options, mapper, destinationContent, preservedStyles)
     } else {
-        // When the destination file does not have defined any releases
-        // the new vulnerability entry has an empty releases field to be more tolerant.
         val effectiveReleases =
             options.releases.ifEmpty {
-                val hasNoKnownReleases = knownReleases.isEmpty()
-                if (hasNoKnownReleases) emptySet() else setOf(lastReleaseFavoringPublished(destination.releases))
+                if (knownReleases.isEmpty()) emptySet() else setOf(destination.releases.last().id)
             }
-        addNewVulnerabilityEntryAtTop(effectiveReleases, options, mapper, destinationContent)
+        addNewVulnerabilityEntryAtTop(effectiveReleases, options, mapper, destinationContent, preservedStyles)
     }
 }
+
+/** Message stating whether [outcome] added a new entry to [destinationPath] or updated an existing one. */
+fun formatAddOutcomeMessage(
+    destinationPath: Path,
+    outcome: AddOutcome,
+): String =
+    if (outcome.updated) {
+        "Updated in $destinationPath: ${outcome.vulnId.id}"
+    } else {
+        "Added to $destinationPath: ${outcome.vulnId.id}"
+    }
 
 private fun updateExistingVulnerabilityEntry(
     existing: VulnerabilityEntry,
     options: AddVulnerabilityOptions,
     mapper: ObjectMapper,
     destinationContent: String,
+    preservedStyles: Map<String, BlockScalarStyle>,
 ): AddOutcome {
     val merged = applyOptionsToExisting(existing, options)
-    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper)
+    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper, preservedStyles)
     val newContent = replaceEntryById(destinationContent, options.vulnId, entryYaml)
     return AddOutcome(newContent, options.vulnId, updated = true)
 }
@@ -117,9 +124,10 @@ private fun addNewVulnerabilityEntryAtTop(
     options: AddVulnerabilityOptions,
     mapper: ObjectMapper,
     destinationContent: String,
+    preservedStyles: Map<String, BlockScalarStyle>,
 ): AddOutcome {
     val entry = buildVulnerabilityEntry(options.copy(releases = effectiveReleases))
-    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(entry), mapper)
+    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(entry), mapper, preservedStyles)
     val newContent = insertEntryAfterVulnerabilitiesHeader(destinationContent, entryYaml)
     return AddOutcome(newContent, options.vulnId, updated = false)
 }

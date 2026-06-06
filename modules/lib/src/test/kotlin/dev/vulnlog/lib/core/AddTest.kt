@@ -17,6 +17,7 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.assertions.throwables.shouldThrow
@@ -26,6 +27,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
+import java.nio.file.Path
 import java.time.LocalDate
 
 private fun vulnlogFile(
@@ -86,7 +88,7 @@ class AddTest :
         test("createVulnerabilityEntry with only a vuln-id emits empty list fields and no verdict") {
             val yaml = createVulnerabilityEntry(DEFAULT_OPTIONS)
 
-            yaml shouldStartWith "  - id: \"CVE-2026-1234\""
+            yaml shouldStartWith "  - id: CVE-2026-1234"
             yaml shouldContain "releases: []"
             yaml shouldContain "packages: []"
             yaml shouldContain "reports: []"
@@ -107,11 +109,11 @@ class AddTest :
                 )
 
             yaml shouldContain "CVE-2026-5678"
-            yaml shouldContain "\"1.0.0\""
+            yaml shouldContain "releases: [1.0.0]"
             yaml shouldContain "pkg:npm/example-lib@2.3.0"
             yaml shouldContain "frontend"
-            yaml shouldContain "reporter: \"trivy\""
-            yaml shouldContain "at: \"${LocalDate.now()}\""
+            yaml shouldContain "reporter: trivy"
+            yaml shouldContain "at: ${LocalDate.now()}"
         }
 
         context("addVulnerabilityToFile") {
@@ -122,7 +124,7 @@ class AddTest :
 
                 outcome.vulnId shouldBe VulnId.Cve("CVE-2026-1234")
                 outcome.newContent shouldContain "CVE-2026-1234"
-                outcome.newContent shouldContain "\"1.0.0\""
+                outcome.newContent shouldContain "releases: [1.0.0]"
             }
 
             test("uses an explicitly supplied release") {
@@ -141,7 +143,7 @@ class AddTest :
                         DEFAULT_OPTIONS.copy(releases = setOf(Release("1.0.0"))),
                     )
 
-                outcome.newContent shouldContain "\"1.0.0\""
+                outcome.newContent shouldContain "releases: [1.0.0]"
             }
 
             test("inserts the entry and falls back to the empty release when non exist in the Vulnlog file") {
@@ -150,7 +152,65 @@ class AddTest :
 
                 outcome.vulnId shouldBe VulnId.Cve("CVE-2026-1234")
                 outcome.newContent shouldContain "CVE-2026-1234"
-                outcome.newContent shouldNotContain "\"1.0.0\""
+                outcome.newContent shouldNotContain "1.0.0"
+            }
+
+            test("attaches a tag that is defined in the file") {
+                val file = vulnlogFile(tags = listOf(TagEntry(Tag("frontend"))))
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        renderContent(file),
+                        DEFAULT_OPTIONS.copy(tags = setOf(Tag("frontend"))),
+                    )
+
+                outcome.updated shouldBe false
+                outcome.newContent shouldContain "tags: [frontend]"
+            }
+
+            test("inserts the entry in the canonical fmt style, so re-formatting is a no-op") {
+                val file = vulnlogFile()
+                val mapper = createYamlMapper()
+                val outcome = addVulnerabilityToFile(file, renderContent(file), DEFAULT_OPTIONS, mapper)
+
+                formatYaml(VulnlogFileRaw(outcome.newContent), mapper).content shouldBe outcome.newContent
+            }
+
+            test("update preserves a literal block scalar from the destination file") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-1234"),
+                        description = "First line.\nSecond line.",
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-1234"
+                        |    description: |-
+                        |      First line.
+                        |      Second line.
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports: []
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        content,
+                        DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/lib@1.0.0"))),
+                    )
+
+                outcome.updated shouldBe true
+                outcome.newContent shouldContain "description: |-"
+                outcome.newContent shouldNotContain "description: >"
             }
 
             test("updates an existing entry in place, preserving unspecified fields") {
@@ -254,10 +314,10 @@ class AddTest :
                 val outcome = addVulnerabilityToFile(file, content, DEFAULT_OPTIONS)
 
                 outcome.updated shouldBe true
-                val entryStart = outcome.newContent.indexOf("- id: \"CVE-2026-1234\"")
+                val entryStart = outcome.newContent.indexOf("- id: CVE-2026-1234")
                 val entryBody = outcome.newContent.substring(entryStart)
-                entryBody shouldContain "\"1.0.0\""
-                entryBody shouldNotContain "\"2.0.0\""
+                entryBody shouldContain "releases: [1.0.0]"
+                entryBody shouldNotContain "2.0.0"
             }
 
             test("update with --reporter appends a new ReportEntry when reporter is new") {
@@ -405,6 +465,23 @@ class AddTest :
                         DEFAULT_OPTIONS.copy(tags = setOf(Tag("unknown"))),
                     )
                 }.message shouldContain "not defined"
+            }
+        }
+
+        context("formatAddOutcomeMessage") {
+
+            test("renders an added message on insert") {
+                val outcome = AddOutcome(newContent = "", vulnId = VulnId.Cve("CVE-2026-1234"), updated = false)
+
+                formatAddOutcomeMessage(Path.of("/tmp/x.vl.yaml"), outcome) shouldBe
+                    "Added to /tmp/x.vl.yaml: CVE-2026-1234"
+            }
+
+            test("renders an updated message on update") {
+                val outcome = AddOutcome(newContent = "", vulnId = VulnId.Cve("CVE-2026-1234"), updated = true)
+
+                formatAddOutcomeMessage(Path.of("/tmp/x.vl.yaml"), outcome) shouldBe
+                    "Updated in /tmp/x.vl.yaml: CVE-2026-1234"
             }
         }
     })
