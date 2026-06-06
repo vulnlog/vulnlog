@@ -17,6 +17,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.v1.dto.ProjectDto
 import dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
@@ -45,7 +46,8 @@ private fun minimalDto(
     tags = tags,
 )
 
-private fun toDomain(dto: VulnlogFileV1Dto) = V1Mapper.toDomain(ParseValidationVersion.V1, defaultSchemaVersion, dto)
+private fun toDomain(dto: VulnlogFileV1Dto) =
+    V1Mapper.toDomain(ParseValidationVersion.V1, defaultSchemaVersion, dto, rawContent = VulnlogFileRaw(""))
 
 private fun vulnlogFile(
     schemaVersion: SchemaVersion = SchemaVersion(1, 0),

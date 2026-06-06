@@ -16,6 +16,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
@@ -356,9 +357,11 @@ class CopyTest :
                 |vulnerabilities:
                 """.trimMargin()
             val destinationContentEmpty =
-                """
-                |vulnerabilities:
-                """.trimMargin()
+                VulnlogFileRaw(
+                    """
+                    |vulnerabilities:
+                    """.trimMargin(),
+                )
 
             test("inserts an entry that does not exist in the destination") {
                 val source =
@@ -376,11 +379,11 @@ class CopyTest :
                     )
 
                 outcome.copied shouldContainExactly listOf(cve1)
-                outcome.newContent shouldContain "CVE-2026-1234"
-                outcome.newContent shouldContain "from source"
+                outcome.newContent.content shouldContain "CVE-2026-1234"
+                outcome.newContent.content shouldContain "from source"
                 // release rewritten to destination's latest published release (1.0.0)
-                outcome.newContent shouldContain "1.0.0"
-                outcome.newContent shouldNotContain "2.0.0"
+                outcome.newContent.content shouldContain "1.0.0"
+                outcome.newContent.content shouldNotContain "2.0.0"
             }
 
             test("merges with existing entry: existing scalars win, source fills nulls") {
@@ -410,18 +413,20 @@ class CopyTest :
                             ),
                     )
                 val destinationContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-1234
-                    |    releases: [ 1.0.0 ]
-                    |    description: existing description
-                    |    packages: [ "pkg:npm/example-lib@2.3.0" ]
-                    |    reports:
-                    |      - reporter: trivy
-                    |    verdict: not affected
-                    |    justification: vulnerable code not in execute path
-                    """.trimMargin()
+                    VulnlogFileRaw(
+                        """
+                        |vulnerabilities:
+                        |
+                        |  - id: CVE-2026-1234
+                        |    releases: [ 1.0.0 ]
+                        |    description: existing description
+                        |    packages: [ "pkg:npm/example-lib@2.3.0" ]
+                        |    reports:
+                        |      - reporter: trivy
+                        |    verdict: not affected
+                        |    justification: vulnerable code not in execute path
+                        """.trimMargin(),
+                    )
 
                 val outcome =
                     copyVulnerabilities(
@@ -432,12 +437,12 @@ class CopyTest :
                     )
 
                 outcome.copied shouldContainExactly listOf(cve1)
-                outcome.newContent shouldContain "existing description"
-                outcome.newContent shouldNotContain "source description"
-                outcome.newContent shouldContain "source analysis"
-                outcome.newContent shouldContain "source name"
+                outcome.newContent.content shouldContain "existing description"
+                outcome.newContent.content shouldNotContain "source description"
+                outcome.newContent.content shouldContain "source analysis"
+                outcome.newContent.content shouldContain "source name"
                 // exactly one entry — replace, not duplicate
-                "CVE-2026-1234".toRegex().findAll(outcome.newContent).count() shouldBe 1
+                "CVE-2026-1234".toRegex().findAll(outcome.newContent.content).count() shouldBe 1
             }
 
             test("merges lists by union (aliases, packages, tags)") {
@@ -465,17 +470,19 @@ class CopyTest :
                             ),
                     )
                 val destinationContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-1234
-                    |    releases: [ 1.0.0 ]
-                    |    packages: [ "pkg:npm/dest-only@1.0" ]
-                    |    reports:
-                    |      - reporter: trivy
-                    |    verdict: not affected
-                    |    justification: vulnerable code not in execute path
-                    """.trimMargin()
+                    VulnlogFileRaw(
+                        """
+                        |vulnerabilities:
+                        |
+                        |  - id: CVE-2026-1234
+                        |    releases: [ 1.0.0 ]
+                        |    packages: [ "pkg:npm/dest-only@1.0" ]
+                        |    reports:
+                        |      - reporter: trivy
+                        |    verdict: not affected
+                        |    justification: vulnerable code not in execute path
+                        """.trimMargin(),
+                    )
 
                 val outcome =
                     copyVulnerabilities(
@@ -486,10 +493,10 @@ class CopyTest :
                     )
 
                 // packages: union (existing first, then unique additions)
-                outcome.newContent shouldContain "pkg:npm/dest-only@1.0"
-                outcome.newContent shouldContain "pkg:npm/source-only@1.0"
+                outcome.newContent.content shouldContain "pkg:npm/dest-only@1.0"
+                outcome.newContent.content shouldContain "pkg:npm/source-only@1.0"
                 // aliases: source's alias appears
-                outcome.newContent shouldContain "GHSA-1234-5678-abcd"
+                outcome.newContent.content shouldContain "GHSA-1234-5678-abcd"
             }
 
             test("rewrites releases to destination's latest published release") {
@@ -514,9 +521,9 @@ class CopyTest :
                         vulnIds = setOf(cve1),
                     )
 
-                outcome.newContent shouldContain "releases: [1.0.0]"
-                outcome.newContent shouldNotContain "1.5.0"
-                outcome.newContent shouldNotContain "2.0.0"
+                outcome.newContent.content shouldContain "releases: [1.0.0]"
+                outcome.newContent.content shouldNotContain "1.5.0"
+                outcome.newContent.content shouldNotContain "2.0.0"
             }
 
             test("ignores ids in vulnIds that are not present in the source") {
@@ -531,7 +538,7 @@ class CopyTest :
                     )
 
                 outcome.copied shouldBe emptyList()
-                outcome.newContent shouldNotContain "CVE-2026-5678"
+                outcome.newContent.content shouldNotContain "CVE-2026-5678"
             }
         }
     })

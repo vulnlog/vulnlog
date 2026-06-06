@@ -26,7 +26,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 import kotlin.io.path.writeText
 
-@DisableCachingByDefault
+@DisableCachingByDefault(because = "Rewrites Vulnlog files in place")
 abstract class VulnlogCopyTask : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -67,7 +67,7 @@ abstract class VulnlogCopyTask : DefaultTask() {
                     vulnIds = vulnIdSet,
                     mapper = mapper,
                 )
-            destination.path.writeText(outcome.newContent)
+            destination.path.writeText(outcome.newContent.content)
             logger.lifecycle(formatCopiedMessage(destination.path, outcome.copied))
         }
     }

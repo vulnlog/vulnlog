@@ -72,7 +72,7 @@ class CopyCommand : CliktCommand(name = "copy") {
                     vulnIds = vulnIds,
                     mapper = mapper,
                 )
-            destination.path.writeText(outcome.newContent)
+            destination.path.writeText(outcome.newContent.content)
             echo(formatCopiedMessage(destination.path, outcome.copied))
         }
     }

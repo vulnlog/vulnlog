@@ -3,29 +3,41 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
 
 /**
- * Formats a Vulnlog v1 document to the canonical house style ([CanonicalYaml]) while preserving the
- * leading `# $schema:` header and any comments that sit between top-level blocks.
+ * Reformats a parsed, validated schema-v1 document to the canonical style ([CanonicalYaml]), splicing each
+ * re-rendered section (`schemaVersion`, `project`, `tags`, `releases`) and vulnerability entry back in place.
+ * The `# $schema:` header, blank-line layout and inter-block comments survive; comments *inside* a block do not.
  *
- * Each known section (`schemaVersion`, `project`, `tags`, `releases`) and every vulnerability entry
- * is re-rendered and spliced back in place; the surrounding text — header comment, blank-line layout
- * and inter-block comments — is left untouched. Comments *inside* a re-rendered block are not kept.
- *
- * Rendering goes through the schema DTO ([VulnlogFileV1Dto]), which is a faithful 1:1 of the YAML,
- * so no field is dropped on the round-trip. The caller is expected to have parsed and validated
- * [rawContent] already; this assumes a schema v1 document.
+ * Rendering round-trips through [VulnlogFileV1Dto], a 1:1 image of the YAML, so no field is dropped.
  */
 fun formatYaml(
-    rawContent: String,
+    rawContent: VulnlogFileRaw,
     mapper: ObjectMapper,
-): String {
-    val dto = mapper.readValue<VulnlogFileV1Dto>(rawContent)
-    return formatContent(rawContent, dto, mapper)
+): VulnlogFileRaw {
+    val dto = mapper.readValue<VulnlogFileV1Dto>(rawContent.content)
+    return VulnlogFileRaw(formatContent(rawContent.content, dto, mapper))
+}
+
+sealed interface FormatOutcome {
+    data object Unchanged : FormatOutcome
+
+    data class Reformatted(
+        val formatted: VulnlogFileRaw,
+    ) : FormatOutcome
+}
+
+fun formatYamlOutcome(
+    rawContent: VulnlogFileRaw,
+    mapper: ObjectMapper,
+): FormatOutcome {
+    val formatted = formatYaml(rawContent, mapper)
+    return if (formatted == rawContent) FormatOutcome.Unchanged else FormatOutcome.Reformatted(formatted)
 }
 
 private fun formatContent(
@@ -46,7 +58,8 @@ private fun formatContent(
     }
     content = replaceTopLevelBlock(content, "releases", CanonicalYaml.renderSection("releases", dto.releases, mapper))
     for (entry in dto.vulnerabilities) {
-        content = replaceEntryById(content, parseVulnId(entry.id), serializeEntryYaml(entry, mapper))
+        content =
+            replaceEntryById(content, parseVulnId(entry.id), serializeEntryYaml(entry, mapper), insertIfMissing = false)
     }
     return content
 }
@@ -65,9 +78,6 @@ private fun replaceTopLevelBlock(
     val startIndex = lines.indexOfFirst { it.startsWith("$key:") }
     if (startIndex == -1) return content
 
-    // A block ends at the next top-level mapping key (a column-0, non-blank line). Indented lines and
-    // column-0 block-sequence items ("- ...", the style where the indicator is not indented under the
-    // key) belong to the current block; a column-0 comment separating sections ends it and is kept.
     var endIndex = lines.size
     for (i in startIndex + 1 until lines.size) {
         val line = lines[i]
@@ -76,7 +86,6 @@ private fun replaceTopLevelBlock(
             break
         }
     }
-    // Keep blank separators between this block and whatever follows.
     while (endIndex > startIndex + 1 && lines[endIndex - 1].isBlank()) {
         endIndex--
     }

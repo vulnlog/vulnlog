@@ -5,13 +5,14 @@ package dev.vulnlog.lib.result
 
 import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import java.io.File
 
 sealed interface ParseResult {
     data class Ok(
         val validationVersion: ParseValidationVersion,
         val content: VulnlogFile,
-        val rawContent: String = "",
+        val rawContent: VulnlogFileRaw,
     ) : ParseResult
 
     data class Error(

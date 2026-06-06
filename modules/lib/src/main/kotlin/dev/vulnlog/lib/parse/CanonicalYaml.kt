@@ -29,8 +29,8 @@ import tools.jackson.databind.ObjectMapper
  * with a [VulnlogRepresenter] that applies the per-node flow and scalar-style rules.
  */
 object CanonicalYaml {
-    /** Default indentation for all YAML blocks. */
-    private const val INDENTATION: Int = 2
+    /** Indentation (spaces) for YAML blocks; entry splicing derives its list-item indent from this. */
+    const val INDENTATION: Int = 2
 
     /** Strings longer than this many characters are rendered as folded block scalars. */
     const val FOLD_THRESHOLD: Int = 80
@@ -47,12 +47,19 @@ object CanonicalYaml {
     private fun settings(explicitStart: Boolean): DumpSettings =
         DumpSettings
             .builder()
+            // Default style for collections without an explicit style: indented block, not inline flow ({ }/[ ]).
             .setDefaultFlowStyle(FlowStyle.BLOCK)
+            // Spaces added per nesting level for block mappings and sequences.
             .setIndent(INDENTATION)
+            // Spaces the block-sequence "-" indicator is indented from its parent key.
             .setIndicatorIndent(INDENTATION)
+            // Stack indicatorIndent on top of the block indent (vs. absorbing it), so list items nest under their key.
             .setIndentWithIndicator(true)
+            // Preferred max column; plain and folded scalars are wrapped to stay within it (best-effort, not hard).
             .setWidth(LINE_WIDTH)
+            // Line separator written between lines: force LF instead of the platform default.
             .setBestLineBreak("\n")
+            // Emit the leading "---" document-start marker only when true.
             .setExplicitStart(explicitStart)
             .build()
 

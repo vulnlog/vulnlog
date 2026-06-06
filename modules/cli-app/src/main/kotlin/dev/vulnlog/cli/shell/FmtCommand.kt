@@ -12,7 +12,8 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import dev.vulnlog.lib.core.formatYaml
+import dev.vulnlog.lib.core.FormatOutcome
+import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.sourceFile
@@ -46,20 +47,30 @@ class FmtCommand : CliktCommand(name = "fmt") {
         var anyUnformatted = false
         for (input in inputs) {
             val raw = parsed.getValue(input.sourceFile()).rawContent
-            val formatted = formatYaml(raw, mapper)
-            val alreadyFormatted = formatted == raw
-            if (!alreadyFormatted) anyUnformatted = true
+            val outcome = formatYamlOutcome(raw, mapper)
+            if (outcome is FormatOutcome.Reformatted) anyUnformatted = true
 
             when (input) {
-                FileInputOption.Stdin -> if (!isCheck) echo(formatted, trailingNewline = false)
+                FileInputOption.Stdin ->
+                    when (outcome) {
+                        is FormatOutcome.Unchanged -> if (!isCheck) echo(raw.content, trailingNewline = false)
+                        is FormatOutcome.Reformatted ->
+                            if (isCheck) {
+                                echo("Can be reformatted: <stdin>", err = true)
+                            } else {
+                                echo(outcome.formatted.content, trailingNewline = false)
+                            }
+                    }
                 is FileInputOption.File ->
-                    when {
-                        isCheck && !alreadyFormatted -> echo("Can be reformatted: ${input.path}")
-                        alreadyFormatted -> echo("Already formatted: ${input.path}")
-                        else -> {
-                            input.path.writeText(formatted)
-                            echo("Formatted: ${input.path}")
-                        }
+                    when (outcome) {
+                        is FormatOutcome.Unchanged -> echo("Already formatted: ${input.path}")
+                        is FormatOutcome.Reformatted ->
+                            if (isCheck) {
+                                echo("Can be reformatted: ${input.path}")
+                            } else {
+                                input.path.writeText(outcome.formatted.content)
+                                echo("Formatted: ${input.path}")
+                            }
                     }
             }
         }

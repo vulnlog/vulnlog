@@ -6,7 +6,8 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
-import dev.vulnlog.lib.core.formatYaml
+import dev.vulnlog.lib.core.FormatOutcome
+import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.sourceFile
@@ -49,17 +50,16 @@ abstract class VulnlogFmtTask : DefaultTask() {
         val unformatted = mutableListOf<Path>()
         for (input in inputFiles) {
             val raw = parsed.getValue(input.sourceFile()).rawContent
-            val formatted = formatYaml(raw, mapper)
-            when {
-                formatted == raw -> logger.lifecycle("Already formatted: ${input.path}")
-                checkOnly -> {
-                    unformatted.add(input.path)
-                    logger.lifecycle("Can be reformatted: ${input.path}")
-                }
-                else -> {
-                    input.path.writeText(formatted)
-                    logger.lifecycle("Formatted: ${input.path}")
-                }
+            when (val outcome = formatYamlOutcome(raw, mapper)) {
+                is FormatOutcome.Unchanged -> logger.lifecycle("Already formatted: ${input.path}")
+                is FormatOutcome.Reformatted ->
+                    if (checkOnly) {
+                        unformatted.add(input.path)
+                        logger.lifecycle("Can be reformatted: ${input.path}")
+                    } else {
+                        input.path.writeText(outcome.formatted.content)
+                        logger.lifecycle("Formatted: ${input.path}")
+                    }
             }
         }
         if (checkOnly && unformatted.isNotEmpty()) {
