@@ -54,6 +54,35 @@ class AddVulnerabilitiesCommandTest :
                 result.stdout shouldContain "reporter: trivy"
                 result.stdout shouldContain "at: ${LocalDate.now()}"
             }
+
+            test("adds a report for every --reporter") {
+                val result =
+                    AddVulnerabilitiesCommand().test(
+                        "--vuln-id CVE-2026-1234 --reporter trivy --reporter snyk",
+                    )
+
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "reporter: trivy"
+                result.stdout shouldContain "reporter: snyk"
+            }
+
+            test("emits the scalar and metadata fields") {
+                val result =
+                    AddVulnerabilitiesCommand().test(
+                        "--vuln-id CVE-2026-1234 --name Log4Shell " +
+                            "--description \"Remote code execution.\" " +
+                            "--verdict \"not affected\" " +
+                            "--justification \"vulnerable code not in execute path\" " +
+                            "--comment \"Revisit later.\"",
+                    )
+
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "name: Log4Shell"
+                result.stdout shouldContain "description: Remote code execution."
+                result.stdout shouldContain "verdict: not affected"
+                result.stdout shouldContain "justification: vulnerable code not in execute path"
+                result.stdout shouldContain "comment: Revisit later."
+            }
         }
 
         context("argument validation") {
@@ -63,6 +92,13 @@ class AddVulnerabilitiesCommandTest :
 
                 result.statusCode shouldBe 1
                 result.stderr shouldContain "--vuln-id"
+            }
+
+            test("fails on an unknown --verdict value") {
+                val result = AddVulnerabilitiesCommand().test("--vuln-id CVE-2026-1234 --verdict bogus")
+
+                result.statusCode shouldBe 1
+                result.stderr shouldContain "--verdict"
             }
         }
 
@@ -128,7 +164,7 @@ class AddVulnerabilitiesCommandTest :
                     val content = target.readText()
                     content.split("CVE-2026-1234").size - 1 shouldBe 1
                     content shouldContain "pkg:npm/example-lib@9.9.9"
-                    content shouldNotContain "pkg:npm/example-lib@2.3.0"
+                    content shouldContain "pkg:npm/example-lib@2.3.0"
                     content shouldContain "not affected"
                     content shouldContain "Remote code execution in example-lib"
                 }

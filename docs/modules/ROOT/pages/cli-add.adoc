@@ -15,8 +15,14 @@ vulnlog modify add vulnerability [<file...>] --vuln-id <id> [flags]
 | `--vuln-id <id>`
 | Vulnerability ID for the new entry. Required.
 
+| `--name <text>`
+| Common name for the vulnerability (e.g. Log4Shell).
+
+| `--alias <id>`
+| Alternative identifier for the entry. Repeatable.
+
 | `--release <id>`
-| Release the vulnerability affects. Repeatable. On insert, defaults to the latest release of the file, favoring releases with a publication date over unpublished ones. Must be defined in the file.
+| Release the vulnerability affects. Repeatable. On insert, defaults to the latest release defined in the file. Must be defined in the file.
 
 | `--package <purl>`
 | Package URL (PURL) the vulnerability affects. Repeatable.
@@ -25,21 +31,45 @@ vulnlog modify add vulnerability [<file...>] --vuln-id <id> [flags]
 | Tag to attach to the entry. Repeatable. Must be defined in the file.
 
 | `--reporter <value>`
-| Reporter that surfaced the vulnerability. Adds a report dated today.
+| Reporter that surfaced the vulnerability. Repeatable. Adds a report dated today for each value.
+
+| `--description <text>`
+| Short description of the vulnerability.
+
+| `--analysis <text>`
+| Analysis and rationale for the triage decision.
+
+| `--analyzed-at <date>`
+| Date the analysis was performed, formatted `yyyy-MM-dd`.
+
+| `--verdict <value>`
+| Triage verdict. One of `affected`, `not affected`, `risk acceptable`.
+
+| `--severity <value>`
+| Severity. One of `low`, `medium`, `high`, `critical`.
+
+| `--justification <value>`
+| VEX justification for a `not affected` verdict (e.g. `vulnerable code not in execute path`).
+
+| `--comment <text>`
+| Free-text comment stored with the entry.
 |===
 
 The positional arguments are the target files; repeat them to add the same entry to several files in one invocation.
 When no file is given, the entry is written to STDOUT instead, ready to paste under a `vulnerabilities` list.
-A new entry carries no `verdict`, so it starts under investigation until you record a verdict.
+A new entry carries no `verdict` unless you pass `--verdict`, so it starts under investigation by default.
 
 Entries are written in the canonical style, identical to xref:cli-fmt.adoc[fmt], so adding an entry never introduces formatting churn.
 
-If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated:
+The `--verdict`, `--severity`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:cli-validate.adoc[validate].
 
-* Only the fields you supply (`--release`, `--package`, `--tag`, `--reporter`) are replaced; every other field (`name`, `description`, `analysis`, `analyzed_at`, `verdict`, `justification`, `resolution`, `comment`, `aliases`) keeps its existing value.
+If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated. The update favours adding over replacing:
+
+* List fields (`--alias`, `--release`, `--package`, `--tag`) are added to the existing values; nothing is removed.
+* `reports` are merged by reporter: each `--reporter` appends a report for a new reporter or sets the date to today for one that already exists.
+* Scalar fields (`--name`, `--description`, `--analysis`, `--analyzed-at`, `--verdict`, `--severity`, `--justification`, `--comment`) overwrite the existing value when supplied, and are left untouched when omitted.
+* `resolution` is never changed by this command.
 * The entry keeps its position in the file.
-* `reports` are merged by reporter: `--reporter` appends a report for a new reporter or sets the date to today for one that already exists.
-* Omitting `--release` keeps the existing releases instead of falling back to the latest.
 
 Releases and tags must already be defined in the file; otherwise the command fails without writing changes.
 

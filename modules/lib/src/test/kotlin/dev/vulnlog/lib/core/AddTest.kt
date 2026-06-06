@@ -73,14 +73,7 @@ private fun yamlWithEntries(entriesYaml: String): String {
     return header + entriesYaml + "\n"
 }
 
-private val DEFAULT_OPTIONS =
-    AddVulnerabilityOptions(
-        vulnId = VulnId.Cve("CVE-2026-1234"),
-        releases = emptySet(),
-        packages = emptySet(),
-        tags = emptySet(),
-        reporter = null,
-    )
+private val DEFAULT_OPTIONS = AddVulnerabilityOptions(vulnId = VulnId.Cve("CVE-2026-1234"))
 
 class AddTest :
     FunSpec({
@@ -104,7 +97,7 @@ class AddTest :
                         releases = setOf(Release("1.0.0")),
                         packages = setOf(Purl.Npm("pkg:npm/example-lib@2.3.0")),
                         tags = setOf(Tag("frontend")),
-                        reporter = ReporterType.TRIVY,
+                        reporters = setOf(ReporterType.TRIVY),
                     ),
                 )
 
@@ -114,6 +107,48 @@ class AddTest :
             yaml shouldContain "frontend"
             yaml shouldContain "reporter: trivy"
             yaml shouldContain "at: ${LocalDate.now()}"
+        }
+
+        test("createVulnerabilityEntry serializes the scalar metadata fields") {
+            val yaml =
+                createVulnerabilityEntry(
+                    AddVulnerabilityOptions(
+                        vulnId = VulnId.Cve("CVE-2026-5678"),
+                        name = "Log4Shell",
+                        aliases = setOf(VulnId.Ghsa("GHSA-1234-5678-abcd")),
+                        description = "Remote code execution.",
+                        analysis = "Not reachable in our usage.",
+                        analyzedAt = LocalDate.of(2026, 2, 1),
+                        verdict = "not affected",
+                        justification = "vulnerable code not in execute path",
+                        comment = "Revisit after the next upgrade.",
+                    ),
+                )
+
+            yaml shouldContain "name: Log4Shell"
+            yaml shouldContain "GHSA-1234-5678-abcd"
+            yaml shouldContain "description: Remote code execution."
+            yaml shouldContain "analysis: Not reachable in our usage."
+            yaml shouldContain "analyzed_at: 2026-02-01"
+            yaml shouldContain "verdict: not affected"
+            yaml shouldContain "justification: vulnerable code not in execute path"
+            yaml shouldContain "comment: Revisit after the next upgrade."
+        }
+
+        test("createVulnerabilityEntry accepts an inconsistent verdict and justification combination") {
+            val yaml =
+                createVulnerabilityEntry(
+                    AddVulnerabilityOptions(
+                        vulnId = VulnId.Cve("CVE-2026-5678"),
+                        verdict = "affected",
+                        severity = "high",
+                        justification = "vulnerable code not in execute path",
+                    ),
+                )
+
+            yaml shouldContain "verdict: affected"
+            yaml shouldContain "severity: high"
+            yaml shouldContain "justification: vulnerable code not in execute path"
         }
 
         context("addVulnerabilityToFile") {
@@ -168,6 +203,20 @@ class AddTest :
                 outcome.newContent shouldContain "tags: [frontend]"
             }
 
+            test("inserts a report for every supplied reporter") {
+                val file = vulnlogFile()
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        renderContent(file),
+                        DEFAULT_OPTIONS.copy(reporters = setOf(ReporterType.TRIVY, ReporterType.SNYK)),
+                    )
+
+                outcome.newContent shouldContain "reporter: trivy"
+                outcome.newContent shouldContain "reporter: snyk"
+                outcome.newContent shouldContain "at: ${LocalDate.now()}"
+            }
+
             test("inserts the entry in the canonical fmt style, so re-formatting is a no-op") {
                 val file = vulnlogFile()
                 val mapper = createYamlMapper()
@@ -213,7 +262,7 @@ class AddTest :
                 outcome.newContent shouldNotContain "description: >"
             }
 
-            test("updates an existing entry in place, preserving unspecified fields") {
+            test("updates an existing entry in place, adding to list fields and preserving the rest") {
                 val existing =
                     VulnerabilityEntry(
                         id = VulnId.Cve("CVE-2026-1234"),
@@ -259,7 +308,7 @@ class AddTest :
 
                 outcome.updated shouldBe true
                 outcome.newContent shouldContain "pkg:npm/new-lib@2.0.0"
-                outcome.newContent shouldNotContain "pkg:npm/old-lib@1.0.0"
+                outcome.newContent shouldContain "pkg:npm/old-lib@1.0.0"
                 outcome.newContent shouldContain "Existing Name"
                 outcome.newContent shouldContain "Existing description."
                 outcome.newContent shouldContain "frontend"
@@ -347,7 +396,7 @@ class AddTest :
                     addVulnerabilityToFile(
                         file,
                         content,
-                        DEFAULT_OPTIONS.copy(reporter = ReporterType.SNYK),
+                        DEFAULT_OPTIONS.copy(reporters = setOf(ReporterType.SNYK)),
                     )
 
                 outcome.updated shouldBe true
@@ -384,7 +433,7 @@ class AddTest :
                     addVulnerabilityToFile(
                         file,
                         content,
-                        DEFAULT_OPTIONS.copy(reporter = ReporterType.TRIVY),
+                        DEFAULT_OPTIONS.copy(reporters = setOf(ReporterType.TRIVY)),
                     )
 
                 outcome.updated shouldBe true

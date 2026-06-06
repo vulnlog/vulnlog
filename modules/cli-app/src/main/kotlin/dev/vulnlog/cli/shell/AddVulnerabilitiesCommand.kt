@@ -15,6 +15,7 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.unique
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.AddVulnerabilityOptions
 import dev.vulnlog.lib.core.addVulnerabilityToFile
@@ -30,6 +31,7 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileInputOption
+import java.time.LocalDate
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
@@ -54,11 +56,23 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
     ).convert { parseVulnId(it) }
         .required()
 
+    val name: String? by option(
+        "--name",
+        help = "Common name for the vulnerability (e.g. Log4Shell).",
+    )
+
+    val aliases: Set<VulnId> by option(
+        "--alias",
+        help = "Alternative identifier for the entry (repeatable).",
+    ).convert { parseVulnId(it) }
+        .multiple(required = false)
+        .unique()
+
     val releases: Set<Release> by option(
         "--release",
         help =
             """
-            Release to set for the vulnerability entry (repeatable). If not specified, the latest published release is used.
+            Release to set for the vulnerability entry (repeatable). If not specified, the latest release is used.
             """.trimIndent(),
     ).convert { Release(it) }
         .multiple(required = false)
@@ -78,19 +92,71 @@ class AddVulnerabilitiesCommand : CliktCommand(name = "vulnerability") {
         .multiple(required = false)
         .unique()
 
-    val reporter: ReporterType? by option(
+    val reporters: Set<ReporterType> by option(
         "--reporter",
-        help = "Reporter of the vulnerability. The report date is set to the current date.",
+        help = "Reporter of the vulnerability (repeatable). Each report date is set to the current date.",
     ).convert { parseReporter(it) }
+        .multiple(required = false)
+        .unique()
+
+    val description: String? by option(
+        "--description",
+        help = "Short description of the vulnerability.",
+    )
+
+    val analysis: String? by option(
+        "--analysis",
+        help = "Analysis and rationale for the triage decision.",
+    )
+
+    val analyzedAt: LocalDate? by option(
+        "--analyzed-at",
+        help = "Date the analysis was performed (yyyy-MM-dd).",
+    ).convert { LocalDate.parse(it) }
+
+    val verdict: String? by option(
+        "--verdict",
+        help = "Triage verdict for the entry.",
+    ).choice("affected", "not affected", "risk acceptable")
+
+    val severity: String? by option(
+        "--severity",
+        help = "Severity of an affected or risk-acceptable verdict.",
+    ).choice("low", "medium", "high", "critical")
+
+    val justification: String? by option(
+        "--justification",
+        help = "VEX justification for a 'not affected' verdict.",
+    ).choice(
+        "component not present",
+        "inline mitigations already exist",
+        "vulnerable code cannot be controlled by adversary",
+        "vulnerable code not in execute path",
+        "vulnerable code not present",
+    )
+
+    val comment: String? by option(
+        "--comment",
+        help = "Free-text comment stored with the entry.",
+    )
 
     override fun run() {
         val commandOption =
             AddVulnerabilityOptions(
                 vulnId = vulnId,
+                name = name,
+                aliases = aliases,
                 releases = releases,
                 packages = packages,
                 tags = tags,
-                reporter = reporter,
+                reporters = reporters,
+                description = description,
+                analysis = analysis,
+                analyzedAt = analyzedAt,
+                verdict = verdict,
+                severity = severity,
+                justification = justification,
+                comment = comment,
             )
 
         if (destinations.isEmpty()) {

@@ -5,10 +5,8 @@ package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
-import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
@@ -17,16 +15,34 @@ import dev.vulnlog.lib.parse.BlockScalarStyle
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.detectBlockScalarStyles
 import dev.vulnlog.lib.parse.v1.V1Mapper
+import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
+import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 import java.time.LocalDate
 
+/**
+ * The values an `add` invocation contributes to an entry. List-valued options are added to whatever an
+ * existing entry already has; scalar options overwrite the existing value when supplied. `resolution` is
+ * intentionally not settable here. The verdict, severity and justification are kept as raw strings and are
+ * not cross-checked, so an inconsistent combination (e.g. `affected` with a justification) is accepted and
+ * left for the validate command to flag.
+ */
 data class AddVulnerabilityOptions(
     val vulnId: VulnId,
-    val releases: Set<Release>,
-    val packages: Set<Purl>,
-    val tags: Set<Tag>,
-    val reporter: ReporterType?,
+    val name: String? = null,
+    val aliases: Set<VulnId> = emptySet(),
+    val releases: Set<Release> = emptySet(),
+    val packages: Set<Purl> = emptySet(),
+    val tags: Set<Tag> = emptySet(),
+    val reporters: Set<ReporterType> = emptySet(),
+    val description: String? = null,
+    val analysis: String? = null,
+    val analyzedAt: LocalDate? = null,
+    val verdict: String? = null,
+    val severity: String? = null,
+    val justification: String? = null,
+    val comment: String? = null,
 )
 
 data class AddOutcome(
@@ -36,21 +52,21 @@ data class AddOutcome(
 )
 
 /**
- * Builds a [VulnerabilityEntry] from [options] and serializes it as a `vulnerabilities:` list item for
- * printing to STDOUT. The verdict defaults to [Verdict.UnderInvestigation]; a supplied reporter adds a
- * single report dated today.
+ * Builds an entry from [options] and serializes it as a `vulnerabilities:` list item for printing to STDOUT.
+ * Absent options leave their fields empty; a reporter adds a report dated today.
  */
-fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String =
-    serializeEntryYaml(V1Mapper.vulnerabilityToDto(buildVulnerabilityEntry(options)), createYamlMapper())
+fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
+    val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, options.releases), options)
+    return serializeEntryYaml(entry, createYamlMapper())
+}
 
 /**
  * Inserts or updates the [options].vulnId entry in [destinationContent], preserving the file's layout and
  * block-scalar styles (`|`/`>`) so reformatting stays a no-op.
  *
- * On insert, an empty [options].releases defaults to the latest published release (see
- * [lastReleaseFavoringPublished]), or stays empty when [destination] defines no releases. On update, the
- * entry is overwritten in place: only fields backing a supplied option are replaced, all others are kept,
- * and an empty [options].releases keeps the existing releases.
+ * On insert, an empty [options].releases defaults to the latest release of [destination], or stays empty when
+ * [destination] defines no releases. On update, the entry is rewritten in place keeping its position: list
+ * options are added to the existing values, scalar options overwrite them, and omitted options are kept.
  *
  * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in [destination].
  */
@@ -102,22 +118,11 @@ private fun updateExistingVulnerabilityEntry(
     destinationContent: String,
     preservedStyles: Map<String, BlockScalarStyle>,
 ): AddOutcome {
-    val merged = applyOptionsToExisting(existing, options)
-    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper, preservedStyles)
+    val merged = mergeOptionsIntoEntry(V1Mapper.vulnerabilityToDto(existing), options)
+    val entryYaml = serializeEntryYaml(merged, mapper, preservedStyles)
     val newContent = replaceEntryById(destinationContent, options.vulnId, entryYaml)
     return AddOutcome(newContent, options.vulnId, updated = true)
 }
-
-private fun applyOptionsToExisting(
-    existing: VulnerabilityEntry,
-    options: AddVulnerabilityOptions,
-): VulnerabilityEntry =
-    existing.copy(
-        releases = if (options.releases.isNotEmpty()) options.releases.toList() else existing.releases,
-        packages = if (options.packages.isNotEmpty()) options.packages.toList() else existing.packages,
-        tags = if (options.tags.isNotEmpty()) options.tags.toList() else existing.tags,
-        reports = options.reporter?.let { mergeReporterIntoReports(existing.reports, it) } ?: existing.reports,
-    )
 
 private fun addNewVulnerabilityEntryAtTop(
     effectiveReleases: Set<Release>,
@@ -126,32 +131,64 @@ private fun addNewVulnerabilityEntryAtTop(
     destinationContent: String,
     preservedStyles: Map<String, BlockScalarStyle>,
 ): AddOutcome {
-    val entry = buildVulnerabilityEntry(options.copy(releases = effectiveReleases))
-    val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(entry), mapper, preservedStyles)
+    val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options)
+    val entryYaml = serializeEntryYaml(entry, mapper, preservedStyles)
     val newContent = insertEntryAfterVulnerabilitiesHeader(destinationContent, entryYaml)
     return AddOutcome(newContent, options.vulnId, updated = false)
 }
 
-private fun buildVulnerabilityEntry(options: AddVulnerabilityOptions): VulnerabilityEntry =
-    VulnerabilityEntry(
-        id = options.vulnId,
-        releases = options.releases.toList(),
-        packages = options.packages.toList(),
-        reports =
-            options.reporter?.let { listOf(ReportEntry(reporter = it, at = LocalDate.now())) }
-                ?: emptyList(),
-        tags = options.tags.toList(),
-        verdict = Verdict.UnderInvestigation,
+private fun emptyEntryDto(
+    vulnId: VulnId,
+    releases: Collection<Release>,
+): VulnerabilityEntryDto =
+    VulnerabilityEntryDto(
+        id = vulnId.id,
+        releases = releases.map { it.value },
+        packages = emptyList(),
+        reports = emptyList(),
     )
 
-private fun mergeReporterIntoReports(
-    existing: List<ReportEntry>,
-    reporter: ReporterType,
-): List<ReportEntry> {
+/** Adds [options] onto [base]: lists are unioned, scalars overwrite when supplied, reports merge by reporter. */
+private fun mergeOptionsIntoEntry(
+    base: VulnerabilityEntryDto,
+    options: AddVulnerabilityOptions,
+): VulnerabilityEntryDto =
+    base.copy(
+        name = options.name ?: base.name,
+        description = options.description ?: base.description,
+        aliases = addDistinct(base.aliases, options.aliases.map { it.id }),
+        releases = addDistinct(base.releases, options.releases.map { it.value }),
+        packages = addDistinct(base.packages, options.packages.map { it.value }),
+        reports = mergeReporters(base.reports, options.reporters),
+        tags = addDistinct(base.tags, options.tags.map { it.value }),
+        analysis = options.analysis ?: base.analysis,
+        analyzedAt = options.analyzedAt ?: base.analyzedAt,
+        verdict = options.verdict ?: base.verdict,
+        severity = options.severity ?: base.severity,
+        justification = options.justification ?: base.justification,
+        comment = options.comment ?: base.comment,
+    )
+
+private fun addDistinct(
+    existing: List<String>,
+    added: List<String>,
+): List<String> {
+    val result = existing.toMutableList()
+    added.forEach { if (it !in result) result.add(it) }
+    return result
+}
+
+/** Sets the date to today for each already-present reporter and appends a today-dated report for each new one. */
+private fun mergeReporters(
+    existing: List<ReportEntryDto>,
+    reporters: Set<ReporterType>,
+): List<ReportEntryDto> {
+    if (reporters.isEmpty()) return existing
     val today = LocalDate.now()
-    val index = existing.indexOfFirst { it.reporter == reporter }
-    if (index == -1) {
-        return existing + ReportEntry(reporter = reporter, at = today)
+    val byReporter = existing.associateByTo(LinkedHashMap()) { it.reporter }
+    reporters.forEach { reporter ->
+        val name = reporter.canonical()
+        byReporter[name] = byReporter[name]?.copy(at = today) ?: ReportEntryDto(reporter = name, at = today)
     }
-    return existing.mapIndexed { i, entry -> if (i == index) entry.copy(at = today) else entry }
+    return byReporter.values.toList()
 }
