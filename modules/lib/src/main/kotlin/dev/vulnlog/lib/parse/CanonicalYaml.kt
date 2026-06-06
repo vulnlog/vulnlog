@@ -67,34 +67,40 @@ object CanonicalYaml {
     fun renderDocument(
         dto: VulnlogFileV1Dto,
         mapper: ObjectMapper,
-    ): String = dump(mapper.convertValue(dto, Map::class.java), documentSettings)
+        preservedStyles: Map<String, BlockScalarStyle> = emptyMap(),
+    ): String = dump(mapper.convertValue(dto, Map::class.java), documentSettings, preservedStyles)
 
     /** Renders a single vulnerability entry as a top-level mapping (no `---`, no list indicator). */
     fun renderEntry(
         dto: VulnerabilityEntryDto,
         mapper: ObjectMapper,
-    ): String = dump(mapper.convertValue(dto, Map::class.java), fragmentSettings)
+        preservedStyles: Map<String, BlockScalarStyle> = emptyMap(),
+    ): String = dump(mapper.convertValue(dto, Map::class.java), fragmentSettings, preservedStyles)
 
     /** Renders a single top-level section (e.g. `project:`, `releases:`) as a fragment. */
     fun renderSection(
         key: String,
         value: Any?,
         mapper: ObjectMapper,
-    ): String = dump(mapper.convertValue(mapOf(key to value), Map::class.java), fragmentSettings)
+        preservedStyles: Map<String, BlockScalarStyle> = emptyMap(),
+    ): String = dump(mapper.convertValue(mapOf(key to value), Map::class.java), fragmentSettings, preservedStyles)
 
     private fun dump(
         tree: Any?,
         settings: DumpSettings,
-    ): String = Dump(settings, VulnlogRepresenter(settings)).dumpToString(tree)
+        preservedStyles: Map<String, BlockScalarStyle>,
+    ): String = Dump(settings, VulnlogRepresenter(settings, preservedStyles)).dumpToString(tree)
 }
 
 /**
  * Applies Vulnlog's per-node style rules on top of [StandardRepresenter]: single-element sequences
  * become flow arrays, long or multi-line strings become folded block scalars, and type-coercible
- * strings are double-quoted so they round-trip as strings.
+ * strings are double-quoted so they round-trip as strings. A string whose value matches an entry in
+ * [preservedStyles] keeps that source block style (`|`/`>`) instead of the default folded one.
  */
 private class VulnlogRepresenter(
     settings: DumpSettings,
+    private val preservedStyles: Map<String, BlockScalarStyle>,
 ) : StandardRepresenter(settings) {
     init {
         representers[String::class.java] = RepresentToNode { data -> representString(data as String) }
@@ -102,16 +108,23 @@ private class VulnlogRepresenter(
     }
 
     private fun representString(value: String): Node {
-        val style =
-            when {
-                value.contains('\n') -> ScalarStyle.FOLDED
-                value.length > FOLD_THRESHOLD && value.contains(' ') -> ScalarStyle.FOLDED
-                settings.schema.scalarResolver.resolve(value, true) != Tag.STR -> ScalarStyle.DOUBLE_QUOTED
-                value.contains(':') -> ScalarStyle.DOUBLE_QUOTED
-                else -> ScalarStyle.PLAIN
-            }
-        return representScalar(Tag.STR, value, style)
+        preservedStyles[value.trimEnd('\n')]?.let { return representBlock(value, it) }
+        return when {
+            value.contains('\n') -> representBlock(value, BlockScalarStyle.FOLDED_STRIP)
+            value.length > FOLD_THRESHOLD && value.contains(' ') -> representBlock(value, BlockScalarStyle.FOLDED_STRIP)
+            settings.schema.scalarResolver.resolve(
+                value,
+                true,
+            ) != Tag.STR -> representScalar(Tag.STR, value, ScalarStyle.DOUBLE_QUOTED)
+            value.contains(':') -> representScalar(Tag.STR, value, ScalarStyle.DOUBLE_QUOTED)
+            else -> representScalar(Tag.STR, value, ScalarStyle.PLAIN)
+        }
     }
+
+    private fun representBlock(
+        value: String,
+        style: BlockScalarStyle,
+    ): Node = representScalar(Tag.STR, value.trimEnd('\n') + if (style.clip) "\n" else "", style.scalarStyle)
 
     private fun representList(value: List<*>): Node {
         val scalarOnly = value.all { it !is Map<*, *> && it !is List<*> }

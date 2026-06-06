@@ -3,6 +3,9 @@
 Formats one or more Vulnlog files to the canonical style, keeping files consistent and reviewable across branches.
 Only files that parse and validate without errors are formatted.
 
+Existing block scalars are preserved: a value written as `|` (literal) or `>` (folded) keeps that style.
+A long string with no explicit style is wrapped as a folded (`>`) block.
+
 [source]
 ----
 vulnlog fmt <file...> [--check]

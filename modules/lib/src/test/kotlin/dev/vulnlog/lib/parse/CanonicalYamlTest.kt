@@ -89,4 +89,37 @@ class CanonicalYamlTest :
 
             keys shouldBe listOf("id", "description", "releases", "packages", "reports")
         }
+
+        test("a preserved literal style overrides the default folded rendering") {
+            val long = "The vulnerable code path is not reachable in our application because we are safe."
+            val yaml =
+                CanonicalYaml.renderEntry(
+                    entry(analysis = long),
+                    mapper,
+                    mapOf(long to BlockScalarStyle.LITERAL),
+                )
+
+            yaml shouldContain "analysis: |"
+            yaml shouldNotContain "analysis: >"
+        }
+
+        test("a preserved block style is applied even to a short string") {
+            val short = "ok"
+            val yaml =
+                CanonicalYaml.renderEntry(
+                    entry(analysis = short),
+                    mapper,
+                    mapOf(short to BlockScalarStyle.FOLDED),
+                )
+
+            yaml shouldContain "analysis: >"
+            yaml shouldNotContain "analysis: ok"
+        }
+
+        test("an unstyled long string still defaults to a folded block scalar") {
+            val long = "The vulnerable code path is not reachable in our application because we are safe."
+            val yaml = CanonicalYaml.renderEntry(entry(analysis = long), mapper)
+
+            yaml shouldContain "analysis: >"
+        }
     })

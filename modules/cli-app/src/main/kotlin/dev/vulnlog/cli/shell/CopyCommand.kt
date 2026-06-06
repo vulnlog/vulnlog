@@ -68,6 +68,7 @@ class CopyCommand : CliktCommand(name = "copy") {
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
                     destination = destinationVulnlogFile,
+                    sourceContent = parsedSource.values.first().rawContent,
                     destinationContent = parsedDestination.values.first().rawContent,
                     vulnIds = vulnIds,
                     mapper = mapper,

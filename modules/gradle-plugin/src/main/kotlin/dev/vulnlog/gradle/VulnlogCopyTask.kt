@@ -63,6 +63,7 @@ abstract class VulnlogCopyTask : DefaultTask() {
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
                     destination = destinationVulnlogFile,
+                    sourceContent = parsedSource.values.first().rawContent,
                     destinationContent = parsedDestination.values.first().rawContent,
                     vulnIds = vulnIdSet,
                     mapper = mapper,

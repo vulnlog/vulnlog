@@ -526,6 +526,38 @@ class CopyTest :
                 outcome.newContent.content shouldNotContain "2.0.0"
             }
 
+            test("preserves the source entry's literal block style") {
+                val analysisText = "Affected paths:\n  - decode()\nNone reachable."
+                val source =
+                    vulnlogFile(
+                        vulnerabilities = listOf(vulnerability(id = cve1, analysis = analysisText)),
+                    )
+                val sourceContent =
+                    VulnlogFileRaw(
+                        """
+                        |vulnerabilities:
+                        |
+                        |  - id: CVE-2026-1234
+                        |    analysis: |
+                        |      Affected paths:
+                        |        - decode()
+                        |      None reachable.
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    copyVulnerabilities(
+                        source = source,
+                        destination = vulnlogFile(),
+                        sourceContent = sourceContent,
+                        destinationContent = destinationContentEmpty,
+                        vulnIds = setOf(cve1),
+                    )
+
+                outcome.newContent.content shouldContain "analysis: |"
+                outcome.newContent.content shouldNotContain "analysis: >"
+            }
+
             test("ignores ids in vulnIds that are not present in the source") {
                 val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1)))
 

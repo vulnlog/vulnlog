@@ -9,6 +9,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 // Uses column-0 block sequences (the `- id:` indicator at the key's indent) under tags and releases.
 // This is valid YAML and must be normalised to the indented style without duplicating entries.
@@ -75,6 +76,40 @@ private val ENTRIES_YAML =
         justification: "vulnerable code not in execute path"
     """.trimIndent() + "\n"
 
+// A literal (|) analysis and a long folded (>) comment whose styles must survive formatting.
+private val STYLED_YAML =
+    """
+    # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
+    ---
+    schemaVersion: "1"
+
+    project:
+      organization: Acme
+      name: App
+      author: Sec
+
+    releases:
+      - id: 1.0.0
+        published_at: 2026-01-01
+
+    vulnerabilities:
+
+      - id: CVE-2026-0001
+        releases: [1.0.0]
+        packages: ["pkg:npm/example-lib@2.3.0"]
+        reports:
+          - reporter: trivy
+        analysis: |
+          Affected paths:
+            - parser.decode()
+          None are reachable from our entry points.
+        comment: >
+          This is a sufficiently long folded comment that should stay folded after
+          formatting because it exceeds the wrap width.
+        verdict: not affected
+        justification: vulnerable code not in execute path
+    """.trimIndent() + "\n"
+
 class FormatTest :
     FunSpec({
         val mapper = createYamlMapper()
@@ -127,6 +162,20 @@ class FormatTest :
 
         test("formatting an entry-bearing document is idempotent") {
             val once = formatYaml(VulnlogFileRaw(ENTRIES_YAML), mapper)
+
+            formatYaml(once, mapper) shouldBe once
+        }
+
+        test("preserves literal and folded block styles") {
+            val result = formatYaml(VulnlogFileRaw(STYLED_YAML), mapper).content
+
+            result shouldContain "analysis: |"
+            result shouldContain "comment: >"
+            result shouldNotContain "analysis: >"
+        }
+
+        test("formatting a styled document is idempotent") {
+            val once = formatYaml(VulnlogFileRaw(STYLED_YAML), mapper)
 
             formatYaml(once, mapper) shouldBe once
         }

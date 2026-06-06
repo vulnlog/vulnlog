@@ -4,7 +4,9 @@
 package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.parse.BlockScalarStyle
 import dev.vulnlog.lib.parse.CanonicalYaml
+import dev.vulnlog.lib.parse.detectBlockScalarStyles
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.readValue
@@ -21,7 +23,8 @@ fun formatYaml(
     mapper: ObjectMapper,
 ): VulnlogFileRaw {
     val dto = mapper.readValue<VulnlogFileV1Dto>(rawContent.content)
-    return VulnlogFileRaw(formatContent(rawContent.content, dto, mapper))
+    val preservedStyles = detectBlockScalarStyles(rawContent)
+    return VulnlogFileRaw(formatContent(rawContent.content, dto, mapper, preservedStyles))
 }
 
 sealed interface FormatOutcome {
@@ -44,22 +47,43 @@ private fun formatContent(
     rawContent: String,
     dto: VulnlogFileV1Dto,
     mapper: ObjectMapper,
+    preservedStyles: Map<String, BlockScalarStyle>,
 ): String {
     var content = rawContent
     content =
         replaceTopLevelBlock(
             content,
             "schemaVersion",
-            CanonicalYaml.renderSection("schemaVersion", dto.schemaVersion, mapper),
+            CanonicalYaml.renderSection("schemaVersion", dto.schemaVersion, mapper, preservedStyles),
         )
-    content = replaceTopLevelBlock(content, "project", CanonicalYaml.renderSection("project", dto.project, mapper))
+    content =
+        replaceTopLevelBlock(
+            content,
+            "project",
+            CanonicalYaml.renderSection("project", dto.project, mapper, preservedStyles),
+        )
     if (dto.tags != null) {
-        content = replaceTopLevelBlock(content, "tags", CanonicalYaml.renderSection("tags", dto.tags, mapper))
+        content =
+            replaceTopLevelBlock(
+                content,
+                "tags",
+                CanonicalYaml.renderSection("tags", dto.tags, mapper, preservedStyles),
+            )
     }
-    content = replaceTopLevelBlock(content, "releases", CanonicalYaml.renderSection("releases", dto.releases, mapper))
+    content =
+        replaceTopLevelBlock(
+            content,
+            "releases",
+            CanonicalYaml.renderSection("releases", dto.releases, mapper, preservedStyles),
+        )
     for (entry in dto.vulnerabilities) {
         content =
-            replaceEntryById(content, parseVulnId(entry.id), serializeEntryYaml(entry, mapper), insertIfMissing = false)
+            replaceEntryById(
+                content,
+                parseVulnId(entry.id),
+                serializeEntryYaml(entry, mapper, preservedStyles),
+                insertIfMissing = false,
+            )
     }
     return content
 }

@@ -11,8 +11,10 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.parse.BlockScalarStyle
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.detectBlockScalarStyles
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import tools.jackson.databind.ObjectMapper
@@ -28,10 +30,14 @@ data class CopyOutcome(
  * If an entry already exists in [destination], it is merged with the source entry: existing values win for
  * scalars; lists (aliases, packages, tags) are unioned; reports are unioned by reporter. Releases on every
  * copied entry are rewritten to the destination's latest release (favoring published).
+ *
+ * Block-scalar styles (`|`/`>`) are preserved from the source and destination text; on a value collision the
+ * destination wins, matching the existing-scalars-win merge rule.
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
     destination: VulnlogFile,
+    sourceContent: VulnlogFileRaw = VulnlogFileRaw(""),
     destinationContent: VulnlogFileRaw,
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
@@ -39,12 +45,13 @@ fun copyVulnerabilities(
     val release = lastReleaseFavoringPublished(destination.releases)
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
     val existingById = destination.vulnerabilities.associateBy { it.id }
+    val preservedStyles = detectBlockScalarStyles(sourceContent) + detectBlockScalarStyles(destinationContent)
 
     val newContent =
         sourceEntries.fold(destinationContent.content) { acc, incoming ->
             val existing = existingById[incoming.id]
             val merged = mergeVulnerabilityEntry(existing, incoming, release)
-            val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper)
+            val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper, preservedStyles)
             if (existing == null) {
                 insertEntryAfterVulnerabilitiesHeader(acc, entryYaml)
             } else {
@@ -134,8 +141,9 @@ fun lastReleaseFavoringPublished(releases: List<ReleaseEntry>): Release =
 fun serializeEntryYaml(
     entry: VulnerabilityEntryDto,
     mapper: ObjectMapper,
+    preservedStyles: Map<String, BlockScalarStyle> = emptyMap(),
 ): String {
-    val raw = CanonicalYaml.renderEntry(entry, mapper)
+    val raw = CanonicalYaml.renderEntry(entry, mapper, preservedStyles)
     val lines =
         raw
             .lines()
