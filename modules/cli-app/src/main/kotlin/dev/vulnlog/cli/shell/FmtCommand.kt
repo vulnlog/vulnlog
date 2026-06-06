@@ -22,10 +22,9 @@ import kotlin.io.path.writeText
 class FmtCommand : CliktCommand(name = "fmt") {
     override fun help(context: Context): String =
         """
-        |Format Vulnlog file(s) to the canonical style: stable field order, single-element flow
-        |arrays, folded block scalars for long text, and minimal type-safe quoting.
-        |Files are formatted in place; '-' reads a single document from STDIN and writes the
-        |formatted result to STDOUT. STDIN cannot be combined with files.
+        |Format Vulnlog file(s) to the canonical style.
+        |The command rewrites the file in-place, when file(s) are specified.
+        |When read from STDIN, the command writes the formatted content to STDOUT.
         """.trimMargin()
 
     private val inputs: List<FileInputOption> by argument(
@@ -35,7 +34,11 @@ class FmtCommand : CliktCommand(name = "fmt") {
 
     private val isCheck: Boolean by option(
         "--check",
-        help = "Do not write changes; exit non-zero if any file is not already formatted.",
+        help =
+            """
+            |Check Vulnlog file(s) formatting without modifying them.
+            |Exit code ${ExitCode.FORMAT_ERROR.ordinal} if any file is not already formatted.
+            """.trimMargin(),
     ).flag(default = false)
 
     override fun run() {
@@ -61,6 +64,7 @@ class FmtCommand : CliktCommand(name = "fmt") {
                                 echo(outcome.formatted.content, trailingNewline = false)
                             }
                     }
+
                 is FileInputOption.File ->
                     when (outcome) {
                         is FormatOutcome.Unchanged -> echo("Already formatted: ${input.path}")
