@@ -20,7 +20,7 @@
 ** xref:cli-fmt.adoc[fmt]
 ** xref:cli-suppress.adoc[suppress]
 ** xref:cli-report.adoc[report]
-** xref:cli-add.adoc[modify add vulnerability]
+** xref:cli-add.adoc[modify add]
 ** xref:cli-copy.adoc[modify copy]
 * Guides
 ** xref:branching-strategy.adoc[Branching Strategy]

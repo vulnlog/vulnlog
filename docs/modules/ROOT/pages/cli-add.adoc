@@ -1,11 +1,11 @@
-= vulnlog modify add vulnerability
+= vulnlog modify add
 
 Adds a new vulnerability entry to one or more Vulnlog files, or prints the entry to STDOUT when no file is given.
 This records a finding from the command line instead of editing the YAML by hand.
 
 [source]
 ----
-vulnlog modify add vulnerability [<file...>] --vuln-id <id> [flags]
+vulnlog modify add [<file...>] --vuln-id <id> [flags]
 ----
 
 [cols="2,3"]
@@ -78,7 +78,7 @@ Releases and tags must already be defined in the file; otherwise the command fai
 .Add a new entry, letting the release default to the latest published release.
 [source]
 ----
-vulnlog modify add vulnerability vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
 Added to vulnlog.yaml: CVE-2026-1234
 ----
 
@@ -97,14 +97,14 @@ The entry is inserted at the top of the `vulnerabilities` list:
 .Re-run with new fields to update the existing entry in place.
 [source]
 ----
-vulnlog modify add vulnerability vulnlog.yaml --vuln-id CVE-2026-1234 --package pkg:npm/example-lib@2.3.0
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --package pkg:npm/example-lib@2.3.0
 Updated in vulnlog.yaml: CVE-2026-1234
 ----
 
 .Print an entry to STDOUT without writing a file.
 [source]
 ----
-vulnlog modify add vulnerability --vuln-id CVE-2026-1234
+vulnlog modify add --vuln-id CVE-2026-1234
   - id: CVE-2026-1234
     releases: []
     packages: []

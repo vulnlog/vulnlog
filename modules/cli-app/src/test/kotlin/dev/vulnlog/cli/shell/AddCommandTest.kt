@@ -10,13 +10,13 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.time.LocalDate
 
-class AddVulnerabilitiesCommandTest :
+class AddCommandTest :
     FunSpec({
 
         context("STDOUT output") {
 
             test("prints a list-item YAML entry for a minimal invocation") {
-                val result = AddVulnerabilitiesCommand().test("--vuln-id CVE-2026-1234")
+                val result = AddCommand().test("--vuln-id CVE-2026-1234")
 
                 result.statusCode shouldBe 0
                 result.stdout shouldContain "  - id: CVE-2026-1234"
@@ -27,7 +27,7 @@ class AddVulnerabilitiesCommandTest :
 
             test("emits multiple releases, packages and tags") {
                 val result =
-                    AddVulnerabilitiesCommand().test(
+                    AddCommand().test(
                         "--vuln-id CVE-2026-1234 " +
                             "--release 1.0.0 --release 1.1.0 " +
                             "--package pkg:npm/example-lib@2.3.0 " +
@@ -46,7 +46,7 @@ class AddVulnerabilitiesCommandTest :
 
             test("--reporter adds a reports entry dated today") {
                 val result =
-                    AddVulnerabilitiesCommand().test(
+                    AddCommand().test(
                         "--vuln-id CVE-2026-1234 --reporter trivy",
                     )
 
@@ -57,7 +57,7 @@ class AddVulnerabilitiesCommandTest :
 
             test("adds a report for every --reporter") {
                 val result =
-                    AddVulnerabilitiesCommand().test(
+                    AddCommand().test(
                         "--vuln-id CVE-2026-1234 --reporter trivy --reporter snyk",
                     )
 
@@ -68,7 +68,7 @@ class AddVulnerabilitiesCommandTest :
 
             test("emits the scalar and metadata fields") {
                 val result =
-                    AddVulnerabilitiesCommand().test(
+                    AddCommand().test(
                         "--vuln-id CVE-2026-1234 --name Log4Shell " +
                             "--description \"Remote code execution.\" " +
                             "--verdict \"not affected\" " +
@@ -88,14 +88,14 @@ class AddVulnerabilitiesCommandTest :
         context("argument validation") {
 
             test("fails when --vuln-id is missing") {
-                val result = AddVulnerabilitiesCommand().test("")
+                val result = AddCommand().test("")
 
                 result.statusCode shouldBe 1
                 result.stderr shouldContain "--vuln-id"
             }
 
             test("fails on an unknown --verdict value") {
-                val result = AddVulnerabilitiesCommand().test("--vuln-id CVE-2026-1234 --verdict bogus")
+                val result = AddCommand().test("--vuln-id CVE-2026-1234 --verdict bogus")
 
                 result.statusCode shouldBe 1
                 result.stderr shouldContain "--verdict"
@@ -107,7 +107,7 @@ class AddVulnerabilitiesCommandTest :
             test("inserts the entry into the destination file and prints a success message") {
                 withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
                     val result =
-                        AddVulnerabilitiesCommand().test(
+                        AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --release 1.0.0",
                         )
 
@@ -123,7 +123,7 @@ class AddVulnerabilitiesCommandTest :
             test("falls back to the latest published release when --release is omitted") {
                 withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
                     val result =
-                        AddVulnerabilitiesCommand().test(
+                        AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999",
                         )
 
@@ -138,7 +138,7 @@ class AddVulnerabilitiesCommandTest :
                 withTempFile(prefix = "target1", content = vulnlogYaml()) { target1 ->
                     withTempFile(prefix = "target2", content = vulnlogYaml()) { target2 ->
                         val result =
-                            AddVulnerabilitiesCommand().test(
+                            AddCommand().test(
                                 "${target1.absolutePath} ${target2.absolutePath} " +
                                     "--vuln-id CVE-2026-9999",
                             )
@@ -153,7 +153,7 @@ class AddVulnerabilitiesCommandTest :
             test("updates an existing entry in place and prints an 'Updated' message") {
                 withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
                     val result =
-                        AddVulnerabilitiesCommand().test(
+                        AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-1234 " +
                                 "--package pkg:npm/example-lib@9.9.9",
                         )
@@ -194,7 +194,7 @@ class AddVulnerabilitiesCommandTest :
 
                 withTempFile(prefix = "target", content = withTag) { target ->
                     val result =
-                        AddVulnerabilitiesCommand().test(
+                        AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --tag frontend",
                         )
 
@@ -208,7 +208,7 @@ class AddVulnerabilitiesCommandTest :
             test("fails when --release is not defined in the file") {
                 withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
                     val result =
-                        AddVulnerabilitiesCommand().test(
+                        AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --release 9.9.9",
                         )
 
@@ -220,7 +220,7 @@ class AddVulnerabilitiesCommandTest :
             test("fails when --tag is not defined in the file") {
                 withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
                     val result =
-                        AddVulnerabilitiesCommand().test(
+                        AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --tag unknown",
                         )
 
