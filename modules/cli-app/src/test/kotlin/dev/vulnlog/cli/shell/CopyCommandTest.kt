@@ -115,7 +115,7 @@ class CopyCommandTest :
                             "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
                         )
 
-                        target.readText() shouldContain "\"1.0.0\""
+                        target.readText() shouldContain "releases: [1.0.0]"
                     }
                 }
             }
@@ -132,11 +132,27 @@ class CopyCommandTest :
                         result.statusCode shouldBe 0
                         val content = target.readText()
                         // Existing entry's release was rewritten to the destination's latest release
-                        content shouldContain "\"1.0.0\""
+                        content shouldContain "releases: [1.0.0]"
                         content shouldNotContain "2.0.0"
                         // Only one CVE-2026-1234 entry remains (no duplicate prepended)
                         val occurrences = "CVE-2026-1234".toRegex().findAll(content).count()
                         occurrences shouldBe 1
+                    }
+                }
+            }
+
+            test("preserves the source entry's literal block style in the target") {
+                val literalSource = SOURCE_YAML.replace("analysis: >", "analysis: |")
+                withTempFile(prefix = "source", content = literalSource) { source ->
+                    withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe 0
+                        // the copied entry keeps the source's literal style (the target's own > entry is untouched)
+                        target.readText() shouldContain "analysis: |"
                     }
                 }
             }

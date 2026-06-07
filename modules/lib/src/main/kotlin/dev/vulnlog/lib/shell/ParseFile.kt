@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.shell
 
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.YamlParser
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.result.ParseResult
@@ -17,7 +18,7 @@ fun parseInputs(inputs: List<FileInputOption>): ParseResults {
     val stdinCount = typeToInputOptions[FileInputOption.Stdin::class]?.size ?: 0
     val fileCount = typeToInputOptions[FileInputOption.File::class]?.size ?: 0
     if (stdinCount > 1) {
-        error("Multiple <stdin> are not supported")
+        error("Multiple <stdin> are not supported.")
     }
     if (stdinCount > 0 && fileCount > 0) {
         error("Mixing input files with STDIN is not allowed.")
@@ -61,13 +62,16 @@ private fun parseInputOptions(
 private fun parseInputOption(
     parser: YamlParser,
     input: FileInputOption,
-): Pair<File, ParseResult> =
-    when (input) {
-        is FileInputOption.File -> Pair(input.path.toFile(), parseContent(parser, input.path.readText()))
-        FileInputOption.Stdin -> Pair(File("<stdin>"), parseContent(parser, System.`in`.bufferedReader().readText()))
-    }
+): Pair<File, ParseResult> {
+    val content =
+        when (input) {
+            is FileInputOption.File -> input.path.readText()
+            FileInputOption.Stdin -> System.`in`.bufferedReader().readText()
+        }
+    return input.sourceFile() to parseContent(parser, VulnlogFileRaw(content))
+}
 
 private fun parseContent(
     parser: YamlParser,
-    content: String,
+    content: VulnlogFileRaw,
 ): ParseResult = parser.parse(content)

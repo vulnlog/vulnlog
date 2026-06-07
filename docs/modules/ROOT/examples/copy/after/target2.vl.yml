@@ -13,22 +13,17 @@ releases:
 
 vulnerabilities:
 
-  - id: "CVE-2026-002"
-    description: "Remote code execution in example-lib"
-    releases:
-    - "2.0.0"
-    packages:
-    - "pkg:npm/example-lib@2.3.0"
+  - id: CVE-2026-002
+    description: Remote code execution in example-lib
+    releases: [2.0.0]
+    packages: ["pkg:npm/example-lib@2.3.0"]
     reports:
-    - reporter: "trivy"
-      at: null
-      source: null
-      vuln_ids: []
-      suppress: null
-    analysis: "The vulnerable code path is not reachable in our application because we\
-      \ only use the safe subset of the API.\n"
-    verdict: "not affected"
-    justification: "vulnerable code not in execute path"
+      - reporter: trivy
+    analysis: >
+      The vulnerable code path is not reachable in our application because we only use
+      the safe subset of the API.
+    verdict: not affected
+    justification: vulnerable code not in execute path
 
   - id: CVE-2026-001
     releases: [ 2.0.0 ]

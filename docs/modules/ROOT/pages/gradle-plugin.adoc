@@ -106,6 +106,36 @@ The task uses Gradle's up-to-date checking via `@InputFiles` and `@Input`, so it
 ./gradlew vulnlogValidate
 ----
 
+=== `vulnlogFormat`
+
+Formats the configured Vulnlog files to the canonical style, rewriting them in place.
+See xref:cli-fmt.adoc[`vulnlog fmt`] for the formatting rules.
+
+[source,kotlin]
+----
+vulnlog {
+    fmt {
+        check = true  // optional
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `check`
+| `false`
+| Do not write changes; fail the build if any file is not already formatted. Also available as the `--check` task option.
+|===
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogFormat
+./gradlew vulnlogFormat --check   # CI: fail if any file is unformatted
+----
+
 === `vulnlogSuppress`
 
 Generates suppression files for downstream scanners.

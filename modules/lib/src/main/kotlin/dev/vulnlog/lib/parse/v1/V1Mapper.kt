@@ -28,6 +28,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.v1.dto.ProjectDto
 import dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ReleasePurlEntryDto
@@ -103,6 +104,8 @@ object V1Mapper {
                 reporter = it.reporter.canonical(),
                 at = it.at,
                 source = it.source,
+                vulnIds = it.vulnIds.map { vulnId -> vulnId.id }.toSet(),
+                suppress = it.suppress?.let { suppression -> SuppressionDto(expiresAt = suppression.expiresAt) },
             )
         }
 
@@ -110,6 +113,7 @@ object V1Mapper {
         validationVersion: ParseValidationVersion,
         schemaVersion: SchemaVersion,
         dto: VulnlogFileV1Dto,
+        rawContent: VulnlogFileRaw,
     ): ParseResult =
         // TODO collect multiple errors and report all back. Something like this:
         //    val errors = mutableListOf<String>()
@@ -137,6 +141,7 @@ object V1Mapper {
                     releases = releases,
                     vulnerabilities = vulnerabilities,
                 ),
+                rawContent = rawContent,
             )
         } catch (e: IllegalArgumentException) {
             ParseResult.Error("Parser error: ${e.message}")

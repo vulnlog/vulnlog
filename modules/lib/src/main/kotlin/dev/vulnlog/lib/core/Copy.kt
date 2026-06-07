@@ -10,7 +10,11 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.parse.BlockScalarStyle
+import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.detectBlockScalarStyles
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import tools.jackson.databind.ObjectMapper
@@ -18,7 +22,7 @@ import java.nio.file.Path
 
 data class CopyOutcome(
     val copied: List<VulnId>,
-    val newContent: String,
+    val newContent: VulnlogFileRaw,
 )
 
 /**
@@ -26,23 +30,28 @@ data class CopyOutcome(
  * If an entry already exists in [destination], it is merged with the source entry: existing values win for
  * scalars; lists (aliases, packages, tags) are unioned; reports are unioned by reporter. Releases on every
  * copied entry are rewritten to the destination's latest release (favoring published).
+ *
+ * Block-scalar styles (`|`/`>`) are preserved from the source and destination text; on a value collision the
+ * destination wins, matching the existing-scalars-win merge rule.
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
     destination: VulnlogFile,
-    destinationContent: String,
+    sourceContent: VulnlogFileRaw = VulnlogFileRaw(""),
+    destinationContent: VulnlogFileRaw,
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
 ): CopyOutcome {
     val release = lastReleaseFavoringPublished(destination.releases)
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
     val existingById = destination.vulnerabilities.associateBy { it.id }
+    val preservedStyles = detectBlockScalarStyles(sourceContent) + detectBlockScalarStyles(destinationContent)
 
     val newContent =
-        sourceEntries.fold(destinationContent) { acc, incoming ->
+        sourceEntries.fold(destinationContent.content) { acc, incoming ->
             val existing = existingById[incoming.id]
             val merged = mergeVulnerabilityEntry(existing, incoming, release)
-            val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper)
+            val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper, preservedStyles)
             if (existing == null) {
                 insertEntryAfterVulnerabilitiesHeader(acc, entryYaml)
             } else {
@@ -51,7 +60,7 @@ fun copyVulnerabilities(
         }
     return CopyOutcome(
         copied = sourceEntries.map { it.id },
-        newContent = newContent,
+        newContent = VulnlogFileRaw(newContent),
     )
 }
 
@@ -116,13 +125,6 @@ fun formatCopiedMessage(
         "Copied to $destinationPath: ${ids.joinToString(", ") { it.id }}"
     }
 
-/**
- * Identifies vulnerability IDs from a given list that do not exist in the list of known vulnerabilities.
- *
- * @param vulnerabilities A list of known vulnerability entries, where each entry includes metadata and a unique ID.
- * @param vulnIds A list of vulnerability ID strings to be checked against the known vulnerabilities.
- * @return A set of parsed `VulnId` objects that are not present in the provided list of known vulnerabilities.
- */
 fun findNonExistingVulnIds(
     vulnerabilities: List<VulnerabilityEntry>,
     vulnIds: Set<VulnId>,
@@ -131,51 +133,34 @@ fun findNonExistingVulnIds(
         .filter { vulnId -> vulnId !in vulnerabilities.map(VulnerabilityEntry::id) }
         .toSet()
 
-/**
- * Finds the latest published release from a list of release entries.
- *
- * @param releases The list of release entries to search. Releases with a null publication date are considered unpublished.
- * @return The most recently published release or the last entry if no release has been published.
- */
+/** Latest published release, or the last entry when none is published. */
 fun lastReleaseFavoringPublished(releases: List<ReleaseEntry>): Release =
     releases.lastOrNull { it.publicationDate != null }?.id ?: releases.last().id
 
-/**
- * Serializes a [VulnerabilityEntryDto] object to a YAML-compatible string representation
- * with specific indentation adjustments for proper formatting.
- *
- * The YAML format adjusts the first line with a prefix `-` and indents subsequent lines with spaces.
- * This ensures that the resulting YAML is appropriately nested for inclusion in larger YAML structures.
- *
- * @param entry The [VulnerabilityEntryDto] object to be serialized.
- * @param mapper An instance of [ObjectMapper] used for converting the entry object into a raw JSON string.
- * @return A string representing the YAML-compatible serialized format of the given entry.
- */
+/** Renders an entry as a `vulnerabilities` list item: `- ` on the first line, the rest indented to match. */
 fun serializeEntryYaml(
     entry: VulnerabilityEntryDto,
     mapper: ObjectMapper,
+    preservedStyles: Map<String, BlockScalarStyle> = emptyMap(),
 ): String {
-    val raw = mapper.writeValueAsString(entry)
+    val raw = CanonicalYaml.renderEntry(entry, mapper, preservedStyles)
     val lines =
         raw
             .lines()
             .dropWhile { it.trimStart().startsWith("---") || it.isBlank() }
             .dropLastWhile { it.isBlank() }
 
+    val itemPrefix = " ".repeat(CanonicalYaml.INDENTATION) + "- "
+    val continuationPrefix = " ".repeat(CanonicalYaml.INDENTATION + 2)
     return lines
         .mapIndexed { index, line ->
-            if (index == 0) "  - $line" else "    $line"
+            if (index == 0) "$itemPrefix$line" else "$continuationPrefix$line"
         }.joinToString("\n")
 }
 
 /**
- * Inserts a YAML entry immediately after the "vulnerabilities:" header in the given file content.
- * If the "vulnerabilities:" header is empty (e.g., "vulnerabilities: []"), it converts it to "vulnerabilities:".
- *
- * @param fileContent The content of the file as a string, expected to include the "vulnerabilities:" section.
- * @param entryYaml The YAML entry to be inserted after the "vulnerabilities:" header.
- * @return The updated file content with the YAML entry inserted after the "vulnerabilities:" header.
- * @throws IllegalStateException If the "vulnerabilities:" section is not found in the file content.
+ * Inserts [entryYaml] after the `vulnerabilities:` header, rewriting an empty `vulnerabilities: []`
+ * placeholder to a real block first. Fails if no such header exists.
  */
 fun insertEntryAfterVulnerabilitiesHeader(
     fileContent: String,
@@ -198,11 +183,11 @@ fun insertEntryAfterVulnerabilitiesHeader(
     return lines.joinToString("\n")
 }
 
-private val ENTRY_ID_LINE = Regex("""^  - id:\s+["']?(\S+?)["']?\s*$""")
+private val ENTRY_ID_LINE = Regex("""^\s*- id:\s+["']?(\S+?)["']?\s*$""")
 
 /**
- * Replaces the YAML block of the entry whose `id` matches [vulnId] with [newEntryYaml].
- * If no such entry is found, falls back to inserting [newEntryYaml] after the `vulnerabilities:` header.
+ * Replaces the YAML block of the entry whose `id` matches [vulnId] with [newEntryYaml]. When the id is
+ * absent, inserts after the `vulnerabilities:` header if [insertIfMissing], otherwise fails fast.
  *
  * The block is delimited by the next `  - id:` line, the next top-level YAML key, or the end of the file.
  * Trailing blank lines that visually separate this entry from the next are preserved as-is.
@@ -211,6 +196,7 @@ fun replaceEntryById(
     fileContent: String,
     vulnId: VulnId,
     newEntryYaml: String,
+    insertIfMissing: Boolean = true,
 ): String {
     val lines = fileContent.lines()
     val startIndex =
@@ -218,6 +204,7 @@ fun replaceEntryById(
             ENTRY_ID_LINE.matchEntire(line)?.groupValues?.get(1) == vulnId.id
         }
     if (startIndex == -1) {
+        check(insertIfMissing) { "Vulnerability entry '${vulnId.id}' was parsed but not found in the source text." }
         return insertEntryAfterVulnerabilitiesHeader(fileContent, newEntryYaml)
     }
     var endIndex = lines.size
@@ -227,13 +214,13 @@ fun replaceEntryById(
             endIndex = i
             break
         }
-        // top-level YAML key (non-indented, non-blank, non-comment) ends the vulnerabilities section
-        if (line.isNotBlank() && !line.startsWith(" ") && !line.startsWith("#")) {
+        // the next top-level key ends the vulnerabilities section
+        if (line.isNotBlank() && !line.startsWith(" ") && !line.startsWith("#") && !line.startsWith("-")) {
             endIndex = i
             break
         }
     }
-    // Walk back over blank separator lines so they remain between this entry and the next
+    // keep trailing blank separators between this entry and the next
     while (endIndex > startIndex + 1 && lines[endIndex - 1].isBlank()) {
         endIndex--
     }

@@ -54,6 +54,9 @@ Available on `report` and `suppress` commands.
 | xref:cli-validate.adoc[validate]
 | Validate files against the schema and all validation rules.
 
+| xref:cli-fmt.adoc[fmt]
+| Format files to the canonical style.
+
 | xref:cli-suppress.adoc[suppress]
 | Generate scanner-specific suppression files.
 
@@ -81,6 +84,10 @@ Available on `report` and `suppress` commands.
 | `2`
 | Validation error
 | The Vulnlog file failed parsing or contains validation errors.
+
+| `3`
+| Formatting error
+| The Vulnlog file contains formatting errors.
 |===
 
 NOTE: Finer-grained exit codes for specific failure categories (file not found, missing flag, invalid flag value, lint violation) are planned for a future release.

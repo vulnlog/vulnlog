@@ -30,15 +30,26 @@ abstract class VulnlogExtension
         val report: VulnlogReportExtension =
             objects.newInstance(VulnlogReportExtension::class.java)
 
+        val fmt: VulnlogFmtExtension =
+            objects.newInstance(VulnlogFmtExtension::class.java).apply {
+                check.convention(false)
+            }
+
         fun validate(action: Action<VulnlogValidateExtension>) = action.execute(validate)
 
         fun suppress(action: Action<VulnlogSuppressExtension>) = action.execute(suppress)
 
         fun report(action: Action<VulnlogReportExtension>) = action.execute(report)
+
+        fun fmt(action: Action<VulnlogFmtExtension>) = action.execute(fmt)
     }
 
 interface VulnlogValidateExtension {
     val strict: Property<Boolean>
+}
+
+interface VulnlogFmtExtension {
+    val check: Property<Boolean>
 }
 
 interface VulnlogSuppressExtension {

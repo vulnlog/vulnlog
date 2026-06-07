@@ -20,6 +20,9 @@ The first positional argument is the source file.
 All subsequent positional arguments are target files.
 At least one `--vuln-id` is required; repeat the flag to copy multiple entries in one invocation.
 
+Copied entries are written in the canonical style, preserving block scalars (`|`/`>`) from the source so the entry reads the same as the original.
+On a value collision the destination's style wins, matching the merge rule below.
+
 For each target file, the `releases` field on the copied entry is rewritten to the latest release of the target, favoring releases with a publication date over unpublished ones.
 
 If an entry with the same `id` already exists in a target file, the existing entry is merged with the source entry rather than overwritten:
@@ -55,5 +58,5 @@ After the operation, the vulnerability entry is added with `releases` pointing t
 
 [source,yaml]
 ----
-include::{examplesdir}/copy/after/target1.vl.yml[lines=14..32]
+include::{examplesdir}/copy/after/target1.vl.yml[lines=14..26]
 ----

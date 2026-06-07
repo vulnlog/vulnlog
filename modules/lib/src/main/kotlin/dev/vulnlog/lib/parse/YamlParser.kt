@@ -5,6 +5,7 @@ package dev.vulnlog.lib.parse
 
 import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.SchemaVersion
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.result.ParseResult
@@ -15,7 +16,7 @@ import tools.jackson.module.kotlin.readValue
 class YamlParser(
     private val mapper: ObjectMapper,
 ) {
-    fun parse(yaml: String): ParseResult {
+    fun parse(yaml: VulnlogFileRaw): ParseResult {
         val schemaVersion: SchemaVersion =
             detectVersion(yaml)
                 ?: return ParseResult.Error("Missing or invalid schemaVersion")
@@ -33,23 +34,23 @@ class YamlParser(
         }
     }
 
-    private fun detectVersion(yaml: String): SchemaVersion? {
-        val tree = mapper.readTree(yaml)
+    private fun detectVersion(yaml: VulnlogFileRaw): SchemaVersion? {
+        val tree = mapper.readTree(yaml.content)
         val raw = tree.get("schemaVersion")?.stringValue() ?: return null
         return parseSchemaVersion(raw)
     }
 
     private fun parseV1(
-        yaml: String,
+        yaml: VulnlogFileRaw,
         validationVersion: ParseValidationVersion,
         schemaVersion: SchemaVersion,
     ): ParseResult {
         val dto: VulnlogFileV1Dto =
             try {
-                mapper.readValue<VulnlogFileV1Dto>(yaml)
+                mapper.readValue<VulnlogFileV1Dto>(yaml.content)
             } catch (e: DatabindException) {
                 return ParseResult.Error("YAML parse error: ${e.originalMessage}")
             }
-        return V1Mapper.toDomain(validationVersion, schemaVersion, dto)
+        return V1Mapper.toDomain(validationVersion, schemaVersion, dto, yaml)
     }
 }

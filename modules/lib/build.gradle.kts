@@ -11,6 +11,7 @@ dependencies {
     api(libs.jacksonKotlin)
     api(libs.jacksonYaml)
     api(libs.packageUrl)
+    implementation(libs.snakeyamlEngine)
 
     testImplementation(libs.kotestAssertionsCoreJvm)
     testImplementation(libs.kotestRunnerJunit5Jvm)

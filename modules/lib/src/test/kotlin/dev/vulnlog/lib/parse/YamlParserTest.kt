@@ -9,6 +9,7 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.result.ParseResult
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
@@ -24,14 +25,16 @@ class YamlParserTest :
         context("schema version detection") {
             test("missing schemaVersion field returns an error") {
                 val yaml =
-                    """
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
+                        releases: []
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -41,30 +44,34 @@ class YamlParserTest :
 
             test("non-numeric schemaVersion returns an error") {
                 val yaml =
-                    """
-                    schemaVersion: "abc"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "abc"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
+                        releases: []
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 parser.parse(yaml).shouldBeInstanceOf<ParseResult.Error>()
             }
 
             test("unsupported major version returns an error mentioning the version") {
                 val yaml =
-                    """
-                    schemaVersion: "99"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "99"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
+                        releases: []
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -76,15 +83,17 @@ class YamlParserTest :
         context("v1 parsing") {
             test("minimal valid v1 file parses project fields") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
+                        releases: []
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 val ok = parser.parse(yaml).shouldBeInstanceOf<ParseResult.Ok>()
                 ok.validationVersion shouldBe ParseValidationVersion.V1
@@ -96,15 +105,17 @@ class YamlParserTest :
 
             test("v1.2 file parses with correct minor version") {
                 val yaml =
-                    """
-                    schemaVersion: "1.2"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1.2"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
+                        releases: []
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -114,17 +125,19 @@ class YamlParserTest :
 
             test("release entries are parsed by id") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases:
-                      - id: "v1.0"
-                      - id: "v2.0"
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
+                        releases:
+                          - id: "v1.0"
+                          - id: "v2.0"
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 val releases =
                     parser
@@ -138,20 +151,22 @@ class YamlParserTest :
 
             test("vulnerability with CVE id is parsed") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: CVE-2021-44228
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages: []
-                        reports:
-                          - reporter: grype
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: CVE-2021-44228
+                            releases: []
+                            packages: []
+                            reports:
+                              - reporter: grype
+                        """.trimIndent(),
+                    )
 
                 val vulns =
                     parser
@@ -164,19 +179,21 @@ class YamlParserTest :
 
             test("vulnerability without verdict defaults to under_investigation") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: CVE-2021-1234
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages: []
-                        reports: []
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: CVE-2021-1234
+                            releases: []
+                            packages: []
+                            reports: []
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -187,21 +204,23 @@ class YamlParserTest :
 
             test("vulnerability with affected verdict and severity is parsed") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: CVE-2021-1234
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages: []
-                        reports: []
-                        verdict: affected
-                        severity: high
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: CVE-2021-1234
+                            releases: []
+                            packages: []
+                            reports: []
+                            verdict: affected
+                            severity: high
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -212,21 +231,23 @@ class YamlParserTest :
 
             test("vulnerability with not affected verdict and justification is parsed") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: CVE-2021-1234
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages: []
-                        reports: []
-                        verdict: not affected
-                        justification: component not present
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: CVE-2021-1234
+                            releases: []
+                            packages: []
+                            reports: []
+                            verdict: not affected
+                            justification: component not present
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -238,21 +259,23 @@ class YamlParserTest :
 
             test("vulnerability with risk acceptable verdict and severity is parsed") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: CVE-2021-1234
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages: []
-                        reports: []
-                        verdict: risk acceptable
-                        severity: medium
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: CVE-2021-1234
+                            releases: []
+                            packages: []
+                            reports: []
+                            verdict: risk acceptable
+                            severity: medium
+                        """.trimIndent(),
+                    )
 
                 parser
                     .parse(yaml)
@@ -263,39 +286,43 @@ class YamlParserTest :
 
             test("vulnerability with unrecognized id returns a parse error") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: UNKNOWN-2021-0001
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages: []
-                        reports: []
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: UNKNOWN-2021-0001
+                            releases: []
+                            packages: []
+                            reports: []
+                        """.trimIndent(),
+                    )
 
                 parser.parse(yaml).shouldBeInstanceOf<ParseResult.Error>()
             }
 
             test("vulnerability with maven package purl is parsed") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project:
-                      organization: acme
-                      name: widget
-                      author: alice
-                    releases: []
-                    vulnerabilities:
-                      - id: CVE-2021-44228
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project:
+                          organization: acme
+                          name: widget
+                          author: alice
                         releases: []
-                        packages:
-                          - "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
-                        reports: []
-                    """.trimIndent()
+                        vulnerabilities:
+                          - id: CVE-2021-44228
+                            releases: []
+                            packages:
+                              - "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+                            reports: []
+                        """.trimIndent(),
+                    )
 
                 val vulns =
                     parser
@@ -307,12 +334,14 @@ class YamlParserTest :
 
             test("project field of wrong type returns a parse error") {
                 val yaml =
-                    """
-                    schemaVersion: "1"
-                    project: "not an object"
-                    releases: []
-                    vulnerabilities: []
-                    """.trimIndent()
+                    VulnlogFileRaw(
+                        """
+                        schemaVersion: "1"
+                        project: "not an object"
+                        releases: []
+                        vulnerabilities: []
+                        """.trimIndent(),
+                    )
 
                 parser.parse(yaml).shouldBeInstanceOf<ParseResult.Error>()
             }

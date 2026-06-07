@@ -28,6 +28,13 @@ class VulnlogPlugin : Plugin<Project> {
             task.strict.convention(extension.validate.strict)
         }
 
+        project.tasks.register("vulnlogFormat", VulnlogFmtTask::class.java) { task ->
+            task.description = "Format Vulnlog YAML files to the canonical style."
+            task.group = "vulnlog"
+            task.files.from(extension.files)
+            task.check.convention(extension.fmt.check)
+        }
+
         project.tasks.register("vulnlogSuppress", VulnlogSuppressTask::class.java) { task ->
             task.description = "Generate suppression files."
             task.group = "vulnlog"
