@@ -468,7 +468,7 @@ class CopyTest :
                 outcome.newContent shouldContain "GHSA-1234-5678-abcd"
             }
 
-            test("rewrites releases to destination's latest published release") {
+            test("rewrites releases to destination's latest release") {
                 val source =
                     vulnlogFile(
                         vulnerabilities = listOf(vulnerability(id = cve1, releases = listOf(release2))),
@@ -490,8 +490,8 @@ class CopyTest :
                         vulnIds = setOf(cve1),
                     )
 
-                outcome.newContent shouldContain "\"1.0.0\""
-                outcome.newContent shouldNotContain "1.5.0"
+                outcome.newContent shouldContain "\"1.5.0\""
+                outcome.newContent shouldNotContain "1.0.0"
                 outcome.newContent shouldNotContain "2.0.0"
             }
 
