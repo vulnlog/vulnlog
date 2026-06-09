@@ -28,4 +28,17 @@ class ModifyCommandTest :
                 }
             }
         }
+
+        test("'modify add' invokes the add subcommand") {
+            withTempFile(prefix = "target", content = TARGET_YAML) { target ->
+                val result =
+                    ModifyCommand().test(
+                        "add ${target.absolutePath} --vuln-id CVE-2026-9999",
+                    )
+
+                result.statusCode shouldBe 0
+                result.stdout shouldContain "Added to ${target.path}: CVE-2026-9999"
+                target.readText() shouldContain "CVE-2026-9999"
+            }
+        }
     })

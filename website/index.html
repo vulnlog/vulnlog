@@ -301,6 +301,10 @@
                     $ vulnlog init --organization "Acme" --name "Web App" --author "Security Team" -o vulnlog.yaml
                     Vulnlog file created at: vulnlog.yaml
 
+                    # Add a vulnerability finding from the command line
+                    $ vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
+                    Added to vulnlog.yaml: CVE-2026-1234
+
                     # Validate your Vulnlog files
                     $ vulnlog validate vulnlog.yaml
                     Validation OK

@@ -7,9 +7,11 @@ import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReleaseEntry
+import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.Suppression
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.TagEntry
 import dev.vulnlog.lib.model.Verdict
@@ -22,6 +24,7 @@ import dev.vulnlog.lib.parse.v1.dto.ProjectDto
 import dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ResolutionDto
+import dev.vulnlog.lib.parse.v1.dto.SuppressionDto
 import dev.vulnlog.lib.parse.v1.dto.TagEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
@@ -30,6 +33,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.time.LocalDate
 
 private val defaultSchemaVersion = SchemaVersion(1, 0)
 private val defaultProject = ProjectDto("acme", "widget", "alice")
@@ -119,6 +123,64 @@ class V1MapperTest :
                         reports = emptyList(),
                     ),
                 )
+        }
+
+        context("toDto — report mapping") {
+            test("report vuln_ids are carried to the dto") {
+                val dto =
+                    V1Mapper.toDto(
+                        vulnlogFile(
+                            vulnerabilities =
+                                listOf(
+                                    VulnerabilityEntry(
+                                        id = VulnId.Cve("CVE-2024-1234"),
+                                        releases = emptyList(),
+                                        packages = emptyList(),
+                                        reports =
+                                            listOf(
+                                                ReportEntry(
+                                                    reporter = ReporterType.SNYK,
+                                                    vulnIds = setOf(VulnId.Snyk("SNYK-JAVA-FOO-1")),
+                                                ),
+                                            ),
+                                        verdict = Verdict.UnderInvestigation,
+                                    ),
+                                ),
+                        ),
+                    )
+
+                dto.vulnerabilities[0]
+                    .reports[0]
+                    .vulnIds shouldBe setOf("SNYK-JAVA-FOO-1")
+            }
+
+            test("report suppress is carried to the dto") {
+                val dto =
+                    V1Mapper.toDto(
+                        vulnlogFile(
+                            vulnerabilities =
+                                listOf(
+                                    VulnerabilityEntry(
+                                        id = VulnId.Cve("CVE-2024-1234"),
+                                        releases = emptyList(),
+                                        packages = emptyList(),
+                                        reports =
+                                            listOf(
+                                                ReportEntry(
+                                                    reporter = ReporterType.SNYK,
+                                                    suppress = Suppression(expiresAt = LocalDate.of(2026, 12, 31)),
+                                                ),
+                                            ),
+                                        verdict = Verdict.UnderInvestigation,
+                                    ),
+                                ),
+                        ),
+                    )
+
+                dto.vulnerabilities[0]
+                    .reports[0]
+                    .suppress shouldBe SuppressionDto(expiresAt = LocalDate.of(2026, 12, 31))
+            }
         }
 
         context("toDomain — project mapping") {

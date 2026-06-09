@@ -1,0 +1,112 @@
+= vulnlog modify add
+
+Adds a new vulnerability entry to one or more Vulnlog files, or prints the entry to STDOUT when no file is given.
+This records a finding from the command line instead of editing the YAML by hand.
+
+[source]
+----
+vulnlog modify add [<file...>] --vuln-id <id> [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--vuln-id <id>`
+| Vulnerability ID for the new entry. Required.
+
+| `--name <text>`
+| Common name for the vulnerability (e.g. Log4Shell).
+
+| `--alias <id>`
+| Alternative identifier for the entry. Repeatable.
+
+| `--release <id>`
+| Release the vulnerability affects. Repeatable. On insert, defaults to the latest release defined in the file. Must be defined in the file.
+
+| `--package <purl>`
+| Package URL (PURL) the vulnerability affects. Repeatable.
+
+| `--tag <id>`
+| Tag to attach to the entry. Repeatable. Must be defined in the file.
+
+| `--reporter <value>`
+| Reporter that surfaced the vulnerability. Repeatable. Adds a report dated today for each value.
+
+| `--description <text>`
+| Short description of the vulnerability.
+
+| `--analysis <text>`
+| Analysis and rationale for the triage decision.
+
+| `--analyzed-at <date>`
+| Date the analysis was performed, formatted `yyyy-MM-dd`.
+
+| `--verdict <value>`
+| Triage verdict. One of `affected`, `not affected`, `risk acceptable`.
+
+| `--severity <value>`
+| Severity. One of `low`, `medium`, `high`, `critical`.
+
+| `--justification <value>`
+| VEX justification for a `not affected` verdict (e.g. `vulnerable code not in execute path`).
+
+| `--comment <text>`
+| Free-text comment stored with the entry.
+|===
+
+The positional arguments are the target files; repeat them to add the same entry to several files in one invocation.
+When no file is given, the entry is written to STDOUT instead, ready to paste under a `vulnerabilities` list.
+A new entry carries no `verdict` unless you pass `--verdict`, so it starts under investigation by default.
+
+Entries are written in the canonical style, identical to xref:cli-fmt.adoc[fmt], so adding an entry never introduces formatting churn.
+
+The `--verdict`, `--severity`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:cli-validate.adoc[validate].
+
+If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated. The update favours adding over replacing:
+
+* List fields (`--alias`, `--release`, `--package`, `--tag`) are added to the existing values; nothing is removed.
+* `reports` are merged by reporter: each `--reporter` appends a report for a new reporter or sets the date to today for one that already exists.
+* Scalar fields (`--name`, `--description`, `--analysis`, `--analyzed-at`, `--verdict`, `--severity`, `--justification`, `--comment`) overwrite the existing value when supplied, and are left untouched when omitted.
+* `resolution` is never changed by this command.
+* The entry keeps its position in the file.
+
+Releases and tags must already be defined in the file; otherwise the command fails without writing changes.
+
+== Example
+
+.Add a new entry, letting the release default to the latest published release.
+[source]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
+Added to vulnlog.yaml: CVE-2026-1234
+----
+
+The entry is inserted at the top of the `vulnerabilities` list:
+
+[source,yaml]
+----
+  - id: CVE-2026-1234
+    releases: [1.0.0]
+    packages: []
+    reports:
+      - reporter: trivy
+        at: 2026-06-02
+----
+
+.Re-run with new fields to update the existing entry in place.
+[source]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --package pkg:npm/example-lib@2.3.0
+Updated in vulnlog.yaml: CVE-2026-1234
+----
+
+.Print an entry to STDOUT without writing a file.
+[source]
+----
+vulnlog modify add --vuln-id CVE-2026-1234
+  - id: CVE-2026-1234
+    releases: []
+    packages: []
+    reports: []
+----

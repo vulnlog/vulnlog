@@ -8,10 +8,14 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.subcommands
 
 class ModifyCommand : CliktCommand(name = "modify") {
-    override fun help(context: Context): String = "Modify Vulnlog files (e.g. copy entries between files)."
+    override fun help(context: Context): String =
+        "Modify Vulnlog files (e.g. copy entries between files or add new vulnerabilities)."
 
     init {
-        subcommands(CopyCommand())
+        subcommands(
+            AddCommand(),
+            CopyCommand(),
+        )
     }
 
     override fun run() = Unit
