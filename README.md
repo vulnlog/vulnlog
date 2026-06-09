@@ -5,44 +5,84 @@
 
 # Vulnlog
 
-**Supply chain security, as code. Track vulnerability findings in your repository.**
+**Supply chain security, as code.**
 
 [![GitHub release](https://img.shields.io/github/v/release/vulnlog/vulnlog?color=%23f405c5)](https://github.com/vulnlog/vulnlog/releases)
 [![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Vulnlog is an open-source tool for tracking, documenting and communicating vulnerability analysis directly in your
-source code repository. It uses a simple YAML format for recording your findings and a CLI for generating suppression
-files for common SCA scanners.
+Vulnlog is the single source of truth for vulnerability analysis: you record each finding's analysis and verdict once,
+in a YAML file in your Git repository, and Vulnlog communicates that verdict to everyone who needs it -- your team, your
+scanners, your customers, and your automation.
 
-> [!NOTE]
-> Vulnlog is in active development. The YAML format, CLI commands and Gradle plugin may still change.
-> Feedback and contributions are very welcome!
+Vulnlog is a CLI application built around a YAML-based vulnerability definition file, designed to run in your CI
+pipeline. It is open source and licensed under the Apache-2.0 license.
 
-## Why Vulnlog?
+## One analysis, every audience
 
-SCA scanners find vulnerabilities, but the analysis, triage and reasoning usually live in tickets, spreadsheets or
-someone's head. Vulnlog gives that context a home right next to your code:
+You analyse a finding once. Vulnlog communicates that verdict to everyone who needs it, in the form each one
+understands:
 
-- **One place for your analysis**: Document verdicts and justifications in version-controlled YAML, with VEX-aligned
-  terminology and per-release tracking.
-- **Suppression file generation**: Feed your analysis back into scanners like Trivy, Snyk, Dependency-Check, Grype and
-  others so they stop flagging what you have already reviewed.
-- **HTML report generation**: Produce a shareable report of your analysis for stakeholders, audits or teammates who
-  do not work in the repository.
-- **Works with your workflow**: Use the CLI locally, in CI, or via the Gradle plugin.
+- **Your team** the analysis, verdict, and justification live in the repository and are reviewed in pull requests, so
+  decisions are durable and never re-litigated.
+- **Your scanners** generate Trivy, Snyk, and generic suppression/ignore files (suppressions can be temporary and
+  expire automatically; machine-readable VEX is planned) so CI stays green on triaged findings.
+- **Your stakeholders and customers** a published HTML Vulnerability Report answers "are you affected by X?" without
+  pulling engineers off their work.
+
+And because every verdict is structured data with a recorded history and a CLI to read it, Vulnlog is the foundation for
+what comes next: automated, AI-assisted vulnerability triage in your CI pipeline.
+
+## Who is Vulnlog for?
+
+| Audience                        | What Vulnlog gives them                                                                                                                 |
+|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| **Software maintainers**        | Systematic, consistent triage of reported vulnerabilities, with the analysis and impact verdict recorded next to the code.              |
+| **Product managers and owners** | The HTML Vulnerability Report with every finding and verdict in one place, to plan fix releases and track the product's security state. |
+| **Customers and consumers**     | The published report, showing which vulnerabilities affect the software, their impact, and the version that fixes them.                 |
+| **SCA scanners** (Snyk, Trivy)  | Up-to-date suppression/ignore files so CI scans stay green and known or irrelevant findings are not re-reported.                        |
+
+## Why use Vulnlog?
+
+Take **Log4Shell** ([CVE-2021-44228](https://en.wikipedia.org/wiki/Log4Shell)) as an example. Acme sells a JVM-based
+Wiki product that depends on the Log4J library and runs two SCA scanners (Trivy and Snyk) nightly in CI. When
+researchers disclose Log4Shell and Acme's next scan flags it as critical, Vulnlog turns the process into a workflow:
+
+1. An engineer reviews the impact on the Wiki, records the analysis and verdict, and adds a temporary three-day
+   suppression to the **Vulnlog YAML** file in the Git repository.
+2. The next CI run invokes the **Vulnlog CLI**, regenerating the Trivy and Snyk **suppression/ignore files** and a fresh
+   HTML **Vulnerability Report**.
+3. The product manager reads the report and plans a release that contains the patched Log4J dependency.
+4. Acme's customers raise a support ticket; the support team answers it straight from the published report, without
+   pulling in the engineers.
 
 ## Quick Start
 
+> [!NOTE]
+> Vulnlog is in active development. The YAML format, CLI commands, and Gradle plugin may still change.
+> Feedback and contributions are very welcome!
+
 ### Install the CLI
 
-Pull the Docker image:
+The install script detects your OS and architecture and installs a native binary:
+
+```sh
+curl -fsSL vulnlog.dev/install | sh
+```
+
+On macOS, install from the Homebrew tap:
+
+```sh
+brew install vulnlog/vulnlog/vulnlog
+```
+
+Or pull the Docker image:
 
 ```sh
 docker pull ghcr.io/vulnlog/vulnlog:latest
 ```
 
-Or add the Gradle plugin to your build:
+To integrate Vulnlog into a Gradle build, add the plugin:
 
 ```kotlin
 plugins {
@@ -50,8 +90,10 @@ plugins {
 }
 ```
 
-Native binaries and JVM distributions are available on the
-[releases page](https://github.com/vulnlog/vulnlog/releases).
+Native binaries and the JVM distribution are also published on the
+[releases page](https://github.com/vulnlog/vulnlog/releases). See the
+[installation docs](https://vulnlog.dev/docs/vulnlog/0.14.0/installation.html) for all
+options, including build from source.
 
 ### Scaffold a new Vulnlog file
 
