@@ -11,28 +11,42 @@
 [![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-Vulnlog is an open-source tool for tracking, documenting and communicating vulnerability analysis directly in your
-source code repository. It uses a simple YAML format for recording your findings and a CLI for generating suppression
-files for common SCA scanners.
+Vulnlog helps software maintainers to triage software vulnerabilities and communicate their impact on the software to
+peers, consumers, or other systems.
 
-> [!NOTE]
-> Vulnlog is in active development. The YAML format, CLI commands and Gradle plugin may still change.
-> Feedback and contributions are very welcome!
+Vulnlog runs in your CI pipeline and produces vulnerability reports and suppression/ignore files for Software
+Composition Analysis (SCA) tools.
 
-## Why Vulnlog?
+Vulnlog consists of a CLI application and a YAML-based vulnerability definition file in your Git repository. Vulnlog is open source and licensed under the Apache-2.0 license.
 
-SCA scanners find vulnerabilities, but the analysis, triage and reasoning usually live in tickets, spreadsheets or
-someone's head. Vulnlog gives that context a home right next to your code:
+## Who is Vulnlog for?
 
-- **One place for your analysis**: Document verdicts and justifications in version-controlled YAML, with VEX-aligned
-  terminology and per-release tracking.
-- **Suppression file generation**: Feed your analysis back into scanners like Trivy, Snyk, Dependency-Check, Grype and
-  others so they stop flagging what you have already reviewed.
-- **HTML report generation**: Produce a shareable report of your analysis for stakeholders, audits or teammates who
-  do not work in the repository.
-- **Works with your workflow**: Use the CLI locally, in CI, or via the Gradle plugin.
+| Audience                        | What Vulnlog gives them                                                                                                                 |
+|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| **Software maintainers**        | Systematic, consistent triage of reported vulnerabilities, with the analysis and impact verdict recorded next to the code.              |
+| **Product managers and owners** | The HTML Vulnerability Report with every finding and verdict in one place, to plan fix releases and track the product's security state. |
+| **Customers and consumers**     | The published report, showing which vulnerabilities affect the software, their impact, and the version that fixes them.                 |
+| **SCA scanners** (Snyk, Trivy)  | Up-to-date suppression/ignore files so CI scans stay green and known or irrelevant findings are not re-reported.                        |
+
+## Why use Vulnlog?
+
+Take **Log4Shell** ([CVE-2021-44228](https://en.wikipedia.org/wiki/Log4Shell)) as an example. Acme sells a JVM-based
+Wiki product that depends on the Log4J library and runs two SCA scanners (Trivy and Snyk) nightly in CI. When
+researchers disclose Log4Shell and Acme's next scan flags it as critical, Vulnlog turns the process into a workflow:
+
+1. An engineer reviews the impact on the Wiki, records the analysis and verdict, and adds a temporary three-day
+   suppression to the **Vulnlog YAML** file in the Git repository.
+2. The next CI run invokes the **Vulnlog CLI**, regenerating the Trivy and Snyk **suppression/ignore files** and a fresh
+   HTML **Vulnerability Report**.
+3. The product manager reads the report and plans a release that contains the patched Log4J dependency.
+4. Acme's customers raise a support ticket; the support team answers it straight from the published report, without
+   pulling in the engineers.
 
 ## Quick Start
+
+> [!NOTE]
+> Vulnlog is in active development. The YAML format, CLI commands, and Gradle plugin may still change.
+> Feedback and contributions are very welcome!
 
 ### Install the CLI
 
