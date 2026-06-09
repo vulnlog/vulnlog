@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
@@ -39,7 +38,7 @@ fun copyVulnerabilities(
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
 ): CopyOutcome {
-    val release = lastReleaseFavoringPublished(destination.releases)
+    val release = destination.releases.last().id
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
     val existingById = destination.vulnerabilities.associateBy { it.id }
     val preservedStyles = detectBlockScalarStyles(sourceContent) + detectBlockScalarStyles(destinationContent)
@@ -129,10 +128,6 @@ fun findNonExistingVulnIds(
     vulnIds
         .filter { vulnId -> vulnId !in vulnerabilities.map(VulnerabilityEntry::id) }
         .toSet()
-
-/** Latest published release, or the last entry when none is published. */
-fun lastReleaseFavoringPublished(releases: List<ReleaseEntry>): Release =
-    releases.lastOrNull { it.publicationDate != null }?.id ?: releases.last().id
 
 /**
  * Inserts [entryYaml] after the `vulnerabilities:` header, rewriting an empty `vulnerabilities: []`

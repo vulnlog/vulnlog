@@ -23,14 +23,14 @@ At least one `--vuln-id` is required; repeat the flag to copy multiple entries i
 Copied entries are written in the canonical style, preserving block scalars (`|`/`>`) from the source so the entry reads the same as the original.
 On a value collision the destination's style wins, matching the merge rule below.
 
-For each target file, the `releases` field on the copied entry is rewritten to the latest release of the target, favoring releases with a publication date over unpublished ones.
+For each target file, the `releases` field on the copied entry is rewritten to the last release in the target's list of releases.
 
 If an entry with the same `id` already exists in a target file, the existing entry is merged with the source entry rather than overwritten:
 
 * Scalar fields (`name`, `description`, `analysis`, `analyzed_at`, `verdict`, `justification`, `resolution`, `comment`) keep the existing value when set; otherwise the source value is used.
 * List fields (`aliases`, `packages`, `tags`) are unioned, preserving the existing order.
 * `reports` are merged by reporter: an existing report is kept, with the source's `vuln_ids` appended and missing scalars filled in from the source.
-* `releases` is replaced with the target's latest release, as for new entries.
+* `releases` is replaced with the target's last release, as for new entries.
 
 == Example
 
@@ -54,7 +54,7 @@ This copies `CVE-2026-002` from before:
 include::{examplesdir}/copy/before/target1.vl.yml[lines=14..15]
 ----
 
-After the operation, the vulnerability entry is added with `releases` pointing to the target's latest release:
+After the operation, the vulnerability entry is added with `releases` pointing to the target's last release:
 
 [source,yaml]
 ----

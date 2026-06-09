@@ -70,30 +70,6 @@ private fun vulnlogFile(
 class CopyTest :
     FunSpec({
 
-        context("lastReleaseFavoringPublished") {
-
-            test("returns last published release") {
-                val releases =
-                    listOf(
-                        ReleaseEntry(id = Release("1.0.0"), publicationDate = LocalDate.of(2025, 1, 1)),
-                        ReleaseEntry(id = Release("1.1.0"), publicationDate = LocalDate.of(2025, 6, 1)),
-                        ReleaseEntry(id = Release("1.2.0")),
-                    )
-
-                lastReleaseFavoringPublished(releases) shouldBe Release("1.1.0")
-            }
-
-            test("falls back to last release when none is published") {
-                val releases =
-                    listOf(
-                        ReleaseEntry(id = Release("1.0.0")),
-                        ReleaseEntry(id = Release("1.1.0")),
-                    )
-
-                lastReleaseFavoringPublished(releases) shouldBe Release("1.1.0")
-            }
-        }
-
         context("findNonExistingVulnIds") {
 
             test("returns the requested ids that are not present") {
@@ -434,7 +410,7 @@ class CopyTest :
                 outcome.newContent.content shouldContain "GHSA-1234-5678-abcd"
             }
 
-            test("rewrites releases to destination's latest published release") {
+            test("rewrites releases to destination's latest release") {
                 val source =
                     vulnlogFile(
                         vulnerabilities = listOf(vulnerability(id = cve1, releases = listOf(release2))),
@@ -456,8 +432,8 @@ class CopyTest :
                         vulnIds = setOf(cve1),
                     )
 
-                outcome.newContent.content shouldContain "releases: [1.0.0]"
-                outcome.newContent.content shouldNotContain "1.5.0"
+                outcome.newContent.content shouldContain "releases: [1.5.0]"
+                outcome.newContent.content shouldNotContain "1.0.0"
                 outcome.newContent.content shouldNotContain "2.0.0"
             }
 
