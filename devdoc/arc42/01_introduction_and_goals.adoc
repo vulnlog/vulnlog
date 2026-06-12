@@ -1,0 +1,74 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[section-introduction-and-goals]]
+== Introduction and Goals
+
+This document describes the software architecture of the Vulnlog CLI, a software tool supporting engineers in _Software Composition Analysis (SCA)_ of software dependencies and their transitive dependencies.
+
+=== Requirements Overview
+
+Software projects heavily depend on software components written by other people or projects.
+This software, in the form of libraries or frameworks, provides functionality the main software depends on either at compile time and/or run time.
+It is a common and good practice to not invent the wheel again and using trusted functionality (standing on the shoulders of giants).
+
+The more dependencies a software project has, the bigger is the attack surface.
+The older the dependencies are, the bigger is the chance they introduce known and exploitable vulnerabilities to the main software project.
+Therefore, modern software projects run Software Composition Analysis (SCA) scanners such as _Snyk Open Source_, _Trivy_ or _Semgrep Supply Chain_ to regularly scan the software project dependencies for known vulnerabilities.
+
+Vulnlog's goal is to streamline the software vulnerability analysis, communication and triaging of SCA scanner reported vulnerabilities.
+
+==== What is Vulnlog and what it is not?
+
+- Vulnlog is the single source of truth (SSOT) for software vulnerability analysis.
+- It is a CLI tool and a YAML-based software vulnerability analysis and decision ledger.
+- It helps to communicate the efforts and analysis of software vulnerability impact performed by software engineers.
+- It generates artifacts consumable by humans and machines.
+
+- Vulnlog is not an SCA scanner.
+
+==== Essential Features
+
+- Git and software repository native single source of truth for software vulnerability analysis.
+- Generates _Vulnerability Reports_ for team members and customers informing about the impact of vulnerabilities on the software.
+- Generates _Suppression Files_ consumable by SCA scanners.
+- Generates _VEX Files_ consumable by supply chain security tools.
+
+=== Quality Goals
+
+[options="header",cols="1,2"]
+|===
+|Quality Goal
+|Motivation / Description
+
+|Interoperability
+|Vulnlog is used by engineers in various development environments and produces output for various human roles and multiple machine-readable formats. Therefore, it needs to apply common standards and formats.
+
+|Modifiability
+|The field of supply chain security is evolving rapidly. New security tools appear, and the standards and formats are maturing. The projects aim to be easily maintainable and extendable do quickly adopt the changing environment.
+
+|Operability
+|Vulnlog aims to support the vulnerability analysis process already used by teams and tries to provide a platform that is easily adopted and operable for existing teams and processes.
+
+|===
+
+=== Stakeholders
+
+[options="header",cols="1,2"]
+|===
+|Role|Expectations
+| Software Maintainers
+a|
+* Their main concern is their software product.
+* Vulnlog should help in the software vulnerability analysis and triaging.
+* Vulnlog shouldn't hinder them or make things unnecessarily complex.
+* They want to make the security state (regarding known software vulnerabilities) transparent to their audience.
+
+| Product Manager and Product Owners
+a|
+* They want to have an overview regarding the current state of their software product regarding known software vulnerabilities to understand and plan whether and what to update in the next (bug fix) release.
+
+| Customers of the Software Product
+a|
+* Expect quick and qualitative answers whether the software product they operate has known and severe software vulnerabilities and whether and when the vendor is planning to release a fixed software product version.
+
+|===
