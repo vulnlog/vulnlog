@@ -19,8 +19,7 @@ vulnerabilities:
     packages: ["pkg:npm/example-lib@2.3.0"]
     reports:
       - reporter: trivy
-    analysis: >
-      The vulnerable code path is not reachable in our application because we only use
-      the safe subset of the API.
+    analysis: >-
+      The vulnerable code path is not reachable in our application because we only use the safe subset of the API.
     verdict: not affected
     justification: vulnerable code not in execute path

@@ -28,13 +28,14 @@ vulnlog init [flags]
 [source]
 ----
 vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
 ---
 schemaVersion: "1"
 
 project:
-  organization: "Acme Corp"
-  name: "My App"
-  author: "Security Team"
+  organization: Acme Corp
+  name: My App
+  author: Security Team
 
 releases: []
 

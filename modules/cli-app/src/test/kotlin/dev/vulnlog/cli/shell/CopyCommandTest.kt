@@ -141,8 +141,58 @@ class CopyCommandTest :
                 }
             }
 
-            test("preserves the source entry's literal block style in the target") {
-                val literalSource = SOURCE_YAML.replace("analysis: >", "analysis: |")
+            test("rewrites a column-0 target canonically so fmt --check passes") {
+                val column0 =
+                    """
+                    schemaVersion: "1"
+                    project:
+                      organization: Acme Corp
+                      name: Acme Web App
+                      author: Acme Corp Security Team
+                    releases:
+                    - id: 1.0.0
+                      published_at: 2026-01-15
+                    vulnerabilities: []
+                    """.trimIndent() + "\n"
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = column0) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe 0
+                        target.readText() shouldContain "CVE-2026-1234"
+
+                        val check = FmtCommand().test("--check ${target.absolutePath}")
+                        check.statusCode shouldBe 0
+                        check.stdout shouldContain "Already formatted"
+                    }
+                }
+            }
+
+            test("warns when the target contains YAML comments") {
+                val commented = TARGET_YAML.replace("vulnerabilities:", "# audit notes\nvulnerabilities:")
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = commented) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe 0
+                        result.stderr shouldContain "contains YAML comments"
+                        target.readText() shouldNotContain "# audit notes"
+                    }
+                }
+            }
+
+            test("renders a multi-line source analysis as a literal block in the target") {
+                val literalSource =
+                    SOURCE_YAML.replace(
+                        "analysis: >\n      The vulnerable code path is not reachable.",
+                        "analysis: |\n      Affected paths:\n        - decode()\n      None reachable.",
+                    )
                 withTempFile(prefix = "source", content = literalSource) { source ->
                     withTempFile(prefix = "target", content = TARGET_YAML) { target ->
                         val result =
@@ -151,8 +201,7 @@ class CopyCommandTest :
                             )
 
                         result.statusCode shouldBe 0
-                        // the copied entry keeps the source's literal style (the target's own > entry is untouched)
-                        target.readText() shouldContain "analysis: |"
+                        target.readText() shouldContain "analysis: |-"
                     }
                 }
             }

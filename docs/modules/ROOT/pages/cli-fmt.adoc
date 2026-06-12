@@ -1,10 +1,9 @@
 = vulnlog fmt
 
 Formats one or more Vulnlog files to the canonical style, keeping files consistent and reviewable across branches.
-Only files that parse and validate without errors are formatted.
 
-Existing block scalars are preserved: a value written as `|` (literal) or `>` (folded) keeps that style.
-A long string with no explicit style is wrapped as a folded (`>`) block.
+NOTE: YAML comments are not part of the format and are removed on writing.
+The xref:cli-add.adoc[modify add] and xref:cli-copy.adoc[modify copy] commands write the same canonical style to preserve the canonical Vulnlog YAML format.
 
 [source]
 ----
@@ -16,14 +15,15 @@ vulnlog fmt <file...> [--check]
 | Flag | Description
 
 | `--check`
-| Do not write changes. Exit non-zero and list the files that are not already formatted.
+| Do not write changes. Exit non-zero, list the files that are not already formatted, and explain which canonical-style rules each file violates.
 
 | `-`
 | Read from STDIN and write the formatted document to STDOUT.
 
 |===
 
-NOTE: `-` reads a single document from STDIN and writes the formatted result to STDOUT; the input is never formatted in place. STDIN cannot be combined with file arguments, and only one STDIN input is accepted.
+NOTE: `-` reads a single document from STDIN and writes the formatted result to STDOUT.
+STDIN cannot be combined with file arguments, and only one STDIN input is accepted.
 
 .Format multiple files in place.
 [source]
@@ -33,11 +33,14 @@ Formatted: web-app-1.vl.yaml
 Already formatted: web-app-2.vl.yaml
 ----
 
-.Check formatting in CI without writing changes.
+.Check formatting in CI without writing changes. Each finding names the rule it violates, with the line in the file.
 [source]
 ----
 vulnlog fmt --check vulnlog.yaml
 Can be reformatted: vulnlog.yaml
+  [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
+  [non-canonical-block-scalar] vulnerabilities[CVE-2026-1234].analysis: Line 18: canonical style for this value is a folded block (>-) (found double-quoted).
+  [comments-not-preserved] YAML comments are removed on write.
 ----
 
 .Format from STDIN to STDOUT.

@@ -13,8 +13,12 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.lib.core.FormatOutcome
+import dev.vulnlog.lib.core.checkFormat
+import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.formatYamlOutcome
+import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.sourceFile
 import kotlin.io.path.writeText
@@ -44,12 +48,12 @@ class FmtCommand : CliktCommand(name = "fmt") {
     override fun run() {
         printOutputSeparator()
         val parsed = parseInputOrFail(inputs)
-        validateParsedInputOrFailWithFailureOutput(parsed)
 
         val mapper = createYamlMapper()
         var anyUnformatted = false
         for (input in inputs) {
-            val raw = parsed.getValue(input.sourceFile()).rawContent
+            val parsedInput = parsed.getValue(input.sourceFile())
+            val raw = parsedInput.rawContent
             val outcome = formatYamlOutcome(raw, mapper)
             if (outcome is FormatOutcome.Reformatted) anyUnformatted = true
 
@@ -60,7 +64,13 @@ class FmtCommand : CliktCommand(name = "fmt") {
                         is FormatOutcome.Reformatted ->
                             if (isCheck) {
                                 echo("Can be reformatted: <stdin>", err = true)
+                                checkFormat(raw, parsedInput.validationVersion, mapper).forEach { finding ->
+                                    echo("  ${renderFormatFinding(finding)}", err = true)
+                                }
                             } else {
+                                if (hasYamlComments(raw)) {
+                                    echo(formatCommentsDroppedWarning("<stdin>"), err = true)
+                                }
                                 echo(outcome.formatted.content, trailingNewline = false)
                             }
                     }
@@ -71,7 +81,13 @@ class FmtCommand : CliktCommand(name = "fmt") {
                         is FormatOutcome.Reformatted ->
                             if (isCheck) {
                                 echo("Can be reformatted: ${input.path}")
+                                checkFormat(raw, parsedInput.validationVersion, mapper).forEach { finding ->
+                                    echo("  ${renderFormatFinding(finding)}")
+                                }
                             } else {
+                                if (hasYamlComments(raw)) {
+                                    echo(formatCommentsDroppedWarning(input.path.toString()), err = true)
+                                }
                                 input.path.writeText(outcome.formatted.content)
                                 echo("Formatted: ${input.path}")
                             }

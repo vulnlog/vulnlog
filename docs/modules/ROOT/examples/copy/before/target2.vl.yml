@@ -14,12 +14,11 @@ releases:
 vulnerabilities:
 
   - id: CVE-2026-001
-    releases: [ 2.0.0 ]
-    packages: [ "pkg:maven/example/lib@1.2.3" ]
+    releases: [2.0.0]
+    packages: ["pkg:maven/example/lib@1.2.3"]
     reports:
       - reporter: trivy
-    analysis: >
-      The vulnerable code path is not reachable in our application
-      because we only use the safe subset of the API.
+    analysis: >-
+      The vulnerable code path is not reachable in our application because we only use the safe subset of the API.
     verdict: not affected
     justification: vulnerable code not in execute path

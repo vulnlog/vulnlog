@@ -19,7 +19,7 @@ Vulnlog is designed around the SCA scanning process:
 .Vulnerability entry for CVE-2026-1234 that was reported by Trivy but does not affect the product.
 [source,yaml]
 ----
-include::{examplesdir}/quickstart.vl.yaml[lines=16..26]
+include::{examplesdir}/quickstart.vl.yaml[lines=16..25]
 ----
 3. The Vulnlog CLI reads the YAML file, validates it, and generates xref:overview-report.adoc[reports], xref:overview-suppress.adoc[suppression files], or both.
 
