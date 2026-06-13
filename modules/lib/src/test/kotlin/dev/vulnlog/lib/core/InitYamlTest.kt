@@ -19,6 +19,7 @@ class InitYamlTest :
 
             yaml shouldBe
                 """
+            |# ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
             |---
             |schemaVersion: "1"
             |

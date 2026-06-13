@@ -12,6 +12,7 @@ data class ResolutionDto(
     @param:JsonProperty("in")
     val release: String,
     @param:JsonFormat(pattern = "yyyy-MM-dd")
+    @param:JsonInclude(JsonInclude.Include.NON_NULL)
     val at: LocalDate? = null,
     @param:JsonInclude(JsonInclude.Include.NON_NULL)
     val ref: String? = null,

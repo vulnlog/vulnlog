@@ -16,11 +16,13 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import dev.vulnlog.lib.core.copyVulnerabilities
 import dev.vulnlog.lib.core.findNonExistingVulnIds
+import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.formatCopiedMessage
 import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
 import kotlin.io.path.writeText
 
@@ -64,15 +66,18 @@ class CopyCommand : CliktCommand(name = "copy") {
             validateParsedInputOrFailWithFailureOutput(parsedDestination)
             val destinationVulnlogFile = parsedDestination.values.first().content
 
+            val destinationContent = parsedDestination.values.first().rawContent
             val outcome =
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
                     destination = destinationVulnlogFile,
-                    sourceContent = parsedSource.values.first().rawContent,
-                    destinationContent = parsedDestination.values.first().rawContent,
+                    destinationContent = destinationContent,
                     vulnIds = vulnIds,
                     mapper = mapper,
                 )
+            if (hasYamlComments(destinationContent)) {
+                echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
+            }
             destination.path.writeText(outcome.newContent.content)
             echo(formatCopiedMessage(destination.path, outcome.copied))
         }

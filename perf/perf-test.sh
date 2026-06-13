@@ -50,8 +50,10 @@ run_bench() {
 }
 
 failed=0
-run_bench validate "$VULNLOG_BIN validate $FIXTURE"                 || failed=1
-run_bench report   "$VULNLOG_BIN report $FIXTURE -o $WORK/r.html"   || failed=1
-run_bench suppress "$VULNLOG_BIN suppress $FIXTURE -o $WORK/sup"    || failed=1
+run_bench validate "$VULNLOG_BIN validate $FIXTURE"                          || failed=1
+# fmt command is not sub 1 second
+#run_bench fmt "$VULNLOG_BIN fmt --check $FIXTURE"                           || failed=1
+run_bench report   "$VULNLOG_BIN report $FIXTURE -o $WORK/r.html"            || failed=1
+run_bench suppress "$VULNLOG_BIN suppress $FIXTURE --output-dir $WORK/sup"   || failed=1
 
 exit "$failed"

@@ -37,7 +37,7 @@ private val COLUMN0_YAML =
     """.trimIndent() + "\n"
 
 // Two non-canonical entries (quoted scalars, block single-element arrays) that must each be
-// reformatted in place — exactly once, in order — without duplicating any entry.
+// reformatted in place, exactly once and in order, without duplicating any entry.
 private val ENTRIES_YAML =
     """
     # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
@@ -76,7 +76,8 @@ private val ENTRIES_YAML =
         justification: "vulnerable code not in execute path"
     """.trimIndent() + "\n"
 
-// A literal (|) analysis and a long folded (>) comment whose styles must survive formatting.
+// A multi-line analysis and a long single-line comment: styles are a function of the value
+// (multi-line -> literal, long single-line -> folded), regardless of the source notation.
 private val STYLED_YAML =
     """
     # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
@@ -105,9 +106,48 @@ private val STYLED_YAML =
           None are reachable from our entry points.
         comment: >
           This is a sufficiently long folded comment that should stay folded after
-          formatting because it exceeds the wrap width.
+          formatting because it is longer than two line widths, which is the
+          threshold beyond which prose becomes a folded block instead of a plain
+          wrapped scalar.
         verdict: not affected
         justification: vulnerable code not in execute path
+    """.trimIndent() + "\n"
+
+// User comments anywhere in the file (no header, between sections, inside entries) plus a wrong
+// schema pointer: formatting drops the comments and generates the canonical header.
+private val COMMENTED_YAML =
+    """
+    # ${'$'}schema: https://example.com/custom.json
+    schemaVersion: "1"
+
+    project:
+      organization: Acme
+      name: App
+      author: Sec
+
+    # reviewed by the security team
+    releases:
+      - id: 1.0.0
+        published_at: 2026-01-01
+
+    vulnerabilities:
+
+      - id: CVE-2026-0001
+        # temporary, recheck after upgrade
+        releases: [1.0.0]
+        packages: ["pkg:npm/example-lib@2.3.0"]
+        reports:
+          - reporter: trivy
+    """.trimIndent() + "\n"
+
+// A flow-style vulnerabilities list: valid YAML that the textual splicing approach could not handle.
+private val FLOW_YAML =
+    """
+    schemaVersion: "1"
+    project: {organization: Acme, name: App, author: Sec}
+    releases: [{id: 1.0.0, published_at: 2026-01-01}]
+    vulnerabilities: [{id: CVE-2026-0001, releases: [1.0.0],
+      packages: ["pkg:npm/example-lib@2.3.0"], reports: [{reporter: trivy}]}]
     """.trimIndent() + "\n"
 
 class FormatTest :
@@ -166,11 +206,11 @@ class FormatTest :
             formatYaml(once, mapper) shouldBe once
         }
 
-        test("preserves literal and folded block styles") {
+        test("renders multi-line values as literal and long single-line values as folded blocks") {
             val result = formatYaml(VulnlogFileRaw(STYLED_YAML), mapper).content
 
-            result shouldContain "analysis: |"
-            result shouldContain "comment: >"
+            result shouldContain "analysis: |-"
+            result shouldContain "comment: >-"
             result shouldNotContain "analysis: >"
         }
 
@@ -178,5 +218,49 @@ class FormatTest :
             val once = formatYaml(VulnlogFileRaw(STYLED_YAML), mapper)
 
             formatYaml(once, mapper) shouldBe once
+        }
+
+        test("removes user comments and generates the schema header") {
+            val result = formatYaml(VulnlogFileRaw(COMMENTED_YAML), mapper).content
+
+            result shouldNotContain "# reviewed by the security team"
+            result shouldNotContain "# temporary, recheck after upgrade"
+            occurrences(result, "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json") shouldBe 1
+            result.lines().first() shouldBe "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json"
+            result.lines()[1] shouldBe "---"
+        }
+
+        test("renders a flow-style vulnerabilities list in the canonical block style") {
+            val result = formatYaml(VulnlogFileRaw(FLOW_YAML), mapper)
+
+            result.content shouldContain "vulnerabilities:\n\n  - id: CVE-2026-0001"
+            result.content shouldContain "releases: [1.0.0]"
+            formatYaml(result, mapper) shouldBe result
+        }
+
+        test("an empty vulnerabilities list renders as an empty flow array") {
+            val result = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper).content
+
+            result shouldContain "vulnerabilities: []"
+        }
+
+        test("formatYamlOutcome reports canonical content as unchanged") {
+            val canonical = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper)
+
+            formatYamlOutcome(canonical, mapper) shouldBe FormatOutcome.Unchanged
+        }
+
+        test("formatYamlOutcome carries the reformatted content for non-canonical input") {
+            val outcome = formatYamlOutcome(VulnlogFileRaw(COLUMN0_YAML), mapper)
+
+            outcome shouldBe FormatOutcome.Reformatted(formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper))
+        }
+
+        test("the comments-dropped warning names the source and the replacement fields") {
+            val warning = formatCommentsDroppedWarning("web-app.vl.yaml")
+
+            warning shouldContain "web-app.vl.yaml"
+            warning shouldContain "removed on write"
+            warning shouldContain "comment"
         }
     })

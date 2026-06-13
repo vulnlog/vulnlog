@@ -34,6 +34,17 @@ To enable IDE validation and autocompletion, add a schema reference comment as t
 ----
 
 The path can point to a local bundled schema file or to the published JSON schema URL.
+The header is optional: it only enables editor support and has no effect on how the CLI reads a file.
+A file-writing command keeps the header when the file already has one and leaves it out otherwise; only xref:cli-init.adoc[init] adds it to a newly created file.
+
+== Canonical Formatting
+
+Vulnlog files are canonical: every file-writing command (xref:cli-fmt.adoc[fmt], xref:cli-add.adoc[modify add], xref:cli-copy.adoc[modify copy], xref:cli-init.adoc[init]) rewrites the whole file in the same style, derived only from the file's data.
+Any valid YAML layout is accepted as input, which makes the commands safe for automation: a file written by hand or by another tool is normalized on the next write.
+
+YAML comments are not part of the format and are not preserved; commands warn when they drop comments.
+Record prose in the schema fields designed for it: `comment` and `analysis` on a vulnerability, `description` on a tag, and `note` on a release.
+This keeps every remark visible to the outputs generated from the file, such as reports and suppression files.
 
 == File Structure
 

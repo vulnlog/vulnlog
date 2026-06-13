@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.testing.test
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 // A valid but non-canonical document: fully quoted, block single-element arrays, an inline-long analysis.
 private val UGLY_YAML =
@@ -34,7 +35,9 @@ private val UGLY_YAML =
           - "pkg:npm/example-lib@2.3.0"
         reports:
           - reporter: "trivy"
-        analysis: "The vulnerable code path is not reachable in our application because we only use the safe subset."
+        analysis: "The vulnerable code path is not reachable in our application because
+          we only use the safe subset of the API, and the affected module is excluded
+          from all production builds of every supported release."
         verdict: "not affected"
         justification: "vulnerable code not in execute path"
     """.trimIndent() + "\n"
@@ -50,7 +53,7 @@ class FmtCommandTest :
 
                     result.statusCode shouldBe 0
                     val content = file.readText()
-                    // header preserved
+                    // header preserved (the source had one)
                     content shouldContain "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json"
                     // minimal, type-safe quoting
                     content shouldContain "schemaVersion: \"1\""
@@ -81,6 +84,51 @@ class FmtCommandTest :
                 }
             }
 
+            test("does not add a schema header to a source that has none") {
+                // a valid document that simply omits the optional '# $schema:' header
+                val withoutHeader = UGLY_YAML.lines().drop(1).joinToString("\n")
+                withTempFile(prefix = "fmt", content = withoutHeader) { file ->
+                    val result = FmtCommand().test(file.absolutePath)
+
+                    result.statusCode shouldBe 0
+                    val content = file.readText()
+                    content shouldNotContain "# \$schema:"
+                    // still canonicalized in every other respect
+                    content shouldContain "releases: [1.0.0]"
+                    // and the header-less result is itself canonical
+                    FmtCommand().test("--check ${file.absolutePath}").statusCode shouldBe 0
+                }
+            }
+
+            test("removes comments, warns once, and keeps the schema header") {
+                val commented = UGLY_YAML.replace("vulnerabilities:", "# audit notes\nvulnerabilities:")
+                withTempFile(prefix = "fmt", content = commented) { file ->
+                    val result = FmtCommand().test(file.absolutePath)
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldContain "contains YAML comments"
+                    val content = file.readText()
+                    content shouldNotContain "# audit notes"
+                    content shouldContain "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json"
+
+                    val second = FmtCommand().test(file.absolutePath)
+                    second.stdout shouldContain "Already formatted"
+                    second.stderr shouldNotContain "YAML comments"
+                }
+            }
+
+            test("formats a file that parses but would fail validation") {
+                // dangling release reference: validation is not a precondition for formatting
+                val dangling = UGLY_YAML.replace("""- "1.0.0"""", """- "9.9.9"""")
+                withTempFile(prefix = "fmt", content = dangling) { file ->
+                    val result = FmtCommand().test(file.absolutePath)
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "Formatted"
+                    file.readText() shouldContain "releases: [9.9.9]"
+                }
+            }
+
             test("formats multiple files in one invocation") {
                 withTempFile(prefix = "a", content = UGLY_YAML) { a ->
                     withTempFile(prefix = "b", content = UGLY_YAML) { b ->
@@ -104,6 +152,43 @@ class FmtCommandTest :
                     result.stdout shouldContain "Can be reformatted"
                     // unchanged on disk
                     file.readText() shouldBe UGLY_YAML
+                }
+            }
+
+            test("explains the violated format rules with paths and line numbers") {
+                withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
+                    val result = FmtCommand().test("--check ${file.absolutePath}")
+
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    // block single-element list
+                    result.stdout shouldContain "[non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases"
+                    result.stdout shouldContain "flow array"
+                    // long quoted prose should be a folded block
+                    result.stdout shouldContain "[non-canonical-block-scalar] vulnerabilities[CVE-2026-1234].analysis"
+                    result.stdout shouldContain "folded block"
+                    result.stdout shouldContain "Line "
+                }
+            }
+
+            test("prints no findings for an already-formatted file") {
+                withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
+                    FmtCommand().test(file.absolutePath)
+
+                    val result = FmtCommand().test("--check ${file.absolutePath}")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldNotContain "non-canonical"
+                }
+            }
+
+            test("checks a file that parses but would fail validation") {
+                // dangling release reference: a validation error, not a format concern
+                val dangling = UGLY_YAML.replace("""- "1.0.0"""", """- "9.9.9"""")
+                withTempFile(prefix = "fmt", content = dangling) { file ->
+                    val result = FmtCommand().test("--check ${file.absolutePath}")
+
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.stdout shouldContain "Can be reformatted"
                 }
             }
 

@@ -10,10 +10,14 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
-import dev.vulnlog.lib.parse.detectBlockScalarStyles
+import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.v1.V1Mapper
+import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.nio.file.Path
 
 data class CopyOutcome(
@@ -22,18 +26,19 @@ data class CopyOutcome(
 )
 
 /**
- * Copies the requested vulnerability entries from [source] into [destinationContent].
- * If an entry already exists in [destination], it is merged with the source entry: existing values win for
- * scalars; lists (aliases, packages, tags) are unioned; reports are unioned by reporter. Releases on every
- * copied entry are rewritten to the destination's latest release (favoring published).
+ * Copies the requested vulnerability entries from [source] into [destinationContent] and rewrites the
+ * whole document in the canonical style ([YamlWriter.renderCanonicalDocument]), even when nothing is
+ * copied. Any valid layout is accepted. The optional `# $schema:` header is kept only when
+ * [destinationContent] already had it; YAML comments in [destinationContent] do not survive.
  *
- * Block-scalar styles (`|`/`>`) are preserved from the source and destination text; on a value collision the
- * destination wins, matching the existing-scalars-win merge rule.
+ * If an entry already exists in [destination], it is merged with the source entry and keeps its
+ * position: existing values win for scalars; lists (aliases, packages, tags) are unioned; reports are
+ * unioned by reporter. New entries are placed at the top of the `vulnerabilities:` list. Releases on
+ * every copied entry are rewritten to the destination's latest release.
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
     destination: VulnlogFile,
-    sourceContent: VulnlogFileRaw = VulnlogFileRaw(""),
     destinationContent: VulnlogFileRaw,
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
@@ -41,23 +46,39 @@ fun copyVulnerabilities(
     val release = destination.releases.last().id
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
     val existingById = destination.vulnerabilities.associateBy { it.id }
-    val preservedStyles = detectBlockScalarStyles(sourceContent) + detectBlockScalarStyles(destinationContent)
 
-    val newContent =
-        sourceEntries.fold(destinationContent.content) { acc, incoming ->
-            val existing = existingById[incoming.id]
-            val merged = mergeVulnerabilityEntry(existing, incoming, release)
-            val entryYaml = serializeEntryYaml(V1Mapper.vulnerabilityToDto(merged), mapper, preservedStyles)
-            if (existing == null) {
-                insertEntryAfterVulnerabilitiesHeader(acc, entryYaml)
-            } else {
-                replaceEntryById(acc, incoming.id, entryYaml)
-            }
+    val dto = mapper.readValue<VulnlogFileV1Dto>(destinationContent.content)
+    val newDto =
+        sourceEntries.fold(dto) { acc, incoming ->
+            val merged = mergeVulnerabilityEntry(existingById[incoming.id], incoming, release)
+            upsertEntry(acc, incoming.id, V1Mapper.vulnerabilityToDto(merged))
         }
     return CopyOutcome(
         copied = sourceEntries.map { it.id },
-        newContent = VulnlogFileRaw(newContent),
+        newContent =
+            VulnlogFileRaw(
+                YamlWriter.renderCanonicalDocument(
+                    newDto,
+                    mapper,
+                    includeSchemaHeader = hasSchemaHeader(destinationContent),
+                ),
+            ),
     )
+}
+
+private fun upsertEntry(
+    dto: VulnlogFileV1Dto,
+    id: VulnId,
+    entry: VulnerabilityEntryDto,
+): VulnlogFileV1Dto {
+    val index = dto.vulnerabilities.indexOfFirst { parseVulnId(it.id) == id }
+    val entries =
+        if (index == -1) {
+            listOf(entry) + dto.vulnerabilities
+        } else {
+            dto.vulnerabilities.toMutableList().also { it[index] = entry }
+        }
+    return dto.copy(vulnerabilities = entries)
 }
 
 private fun mergeVulnerabilityEntry(
@@ -128,74 +149,3 @@ fun findNonExistingVulnIds(
     vulnIds
         .filter { vulnId -> vulnId !in vulnerabilities.map(VulnerabilityEntry::id) }
         .toSet()
-
-/**
- * Inserts [entryYaml] after the `vulnerabilities:` header, rewriting an empty `vulnerabilities: []`
- * placeholder to a real block first. Fails if no such header exists.
- */
-fun insertEntryAfterVulnerabilitiesHeader(
-    fileContent: String,
-    entryYaml: String,
-): String {
-    val lines = fileContent.lines().toMutableList()
-    val headerIndex =
-        lines.indexOfFirst { it.trimEnd() == "vulnerabilities:" || it.trimEnd() == "vulnerabilities: []" }
-    if (headerIndex == -1) {
-        error("No 'vulnerabilities:' section found in target file")
-    }
-
-    if (lines[headerIndex].trimEnd() == "vulnerabilities: []") {
-        lines[headerIndex] = "vulnerabilities:"
-    }
-
-    lines.add(headerIndex + 1, "")
-    lines.add(headerIndex + 2, entryYaml)
-
-    return lines.joinToString("\n")
-}
-
-private val ENTRY_ID_LINE = Regex("""^\s*- id:\s+["']?(\S+?)["']?\s*$""")
-
-/**
- * Replaces the YAML block of the entry whose `id` matches [vulnId] with [newEntryYaml]. When the id is
- * absent, inserts after the `vulnerabilities:` header if [insertIfMissing], otherwise fails fast.
- *
- * The block is delimited by the next `  - id:` line, the next top-level YAML key, or the end of the file.
- * Trailing blank lines that visually separate this entry from the next are preserved as-is.
- */
-fun replaceEntryById(
-    fileContent: String,
-    vulnId: VulnId,
-    newEntryYaml: String,
-    insertIfMissing: Boolean = true,
-): String {
-    val lines = fileContent.lines()
-    val startIndex =
-        lines.indexOfFirst { line ->
-            ENTRY_ID_LINE.matchEntire(line)?.groupValues?.get(1) == vulnId.id
-        }
-    if (startIndex == -1) {
-        check(insertIfMissing) { "Vulnerability entry '${vulnId.id}' was parsed but not found in the source text." }
-        return insertEntryAfterVulnerabilitiesHeader(fileContent, newEntryYaml)
-    }
-    var endIndex = lines.size
-    for (i in startIndex + 1 until lines.size) {
-        val line = lines[i]
-        if (ENTRY_ID_LINE.matches(line)) {
-            endIndex = i
-            break
-        }
-        // the next top-level key ends the vulnerabilities section
-        if (line.isNotBlank() && !line.startsWith(" ") && !line.startsWith("#") && !line.startsWith("-")) {
-            endIndex = i
-            break
-        }
-    }
-    // keep trailing blank separators between this entry and the next
-    while (endIndex > startIndex + 1 && lines[endIndex - 1].isBlank()) {
-        endIndex--
-    }
-
-    val rebuilt = lines.subList(0, startIndex) + newEntryYaml.lines() + lines.subList(endIndex, lines.size)
-    return rebuilt.joinToString("\n")
-}
