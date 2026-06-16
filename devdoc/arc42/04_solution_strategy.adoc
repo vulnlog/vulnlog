@@ -1,0 +1,11 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[section-solution-strategy]]
+== Solution Strategy
+
+- Implement Vulnlog in Kotlin on the Java Virtual Machine (JVM) as a CLI tool.
+- Compile Vulnlog ahead-of-time to a native binary so it starts fast and runs without an installed JVM.
+- Decompose the system into a thin CLI shell, a core library holding the analysis logic, and a Gradle plugin for build integration.
+- Keep the core functional, deterministic and clear and separated from the more imperative input/output shell, following data-oriented programming (DoP), so behaviour is easy to unit test and to extend.
+- Handle each scanner input format and each generated artifact (vulnerability report, suppression file, VEX) through its own interchangeable parser or generator.
+- Write files canonically and deterministically so every generated artifact is reproducible and reviewable.
