@@ -1,0 +1,38 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[section-context-and-scope]]
+== Context and Scope
+
+=== Business Context
+
+image::Vulnlog-Context-View-Business.drawio.svg[alt="Busness context view of Vulnlog with conected systems."]
+
+[options="header",cols="1,2"]
+|===
+|Neighbor|Description
+
+|Engineer
+|The maintainer of the software project. They analyse the SCA reports and populate the Vulnlog YAML file.
+
+|Build Tool
+|The CI tools and pipeline that run Vulnlog to generate the artifact files.
+
+|Project Manager, Project Owner and Support Team
+|They need to know what vulnerabilities are impacting the software project to plan upcoming releases. Also, they want to process customer raised tickets regarding reported vulnerabilities.
+
+|Customer / User
+|The customer and users of the software project. They need to know whether their software in production is at risk and if so, when they can expect an update.
+
+|Security Team
+|Inhouse or external security team that monitors the risk state of the used software.
+
+|SCA Scanner
+|Scan the software project for known vulnerabilities and provide repotting. Also, some of them support suppression-/ignore files which are provided by Vulnlog.
+
+|Web Server
+|Vulnlog creates Vulnerability reports that can be uploaded to a web server.
+
+|OWASP Dependency Track
+|The central monitoring tool that consumes Source Bill of Material (SBOM) and Vulnerability EXchange (VEX) files. The latter is provided by Vulnlog (not yet implemented).
+
+|===
