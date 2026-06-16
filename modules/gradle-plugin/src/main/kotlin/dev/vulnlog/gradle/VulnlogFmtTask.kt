@@ -5,10 +5,13 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
-import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.FormatOutcome
+import dev.vulnlog.lib.core.checkFormat
+import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.formatYamlOutcome
+import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.sourceFile
 import org.gradle.api.DefaultTask
@@ -41,22 +44,27 @@ abstract class VulnlogFmtTask : DefaultTask() {
     fun format() {
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
         requireNonEmptyVulnlogFiles(inputFiles)
-        // Only format files that parse and validate without errors.
         val parsed = parseInputOrFail(inputFiles)
-        validateParsedInputOrFailWithFailureOutput(parsed)
 
         val mapper = createYamlMapper()
         val checkOnly = check.getOrElse(false)
         val unformatted = mutableListOf<Path>()
         for (input in inputFiles) {
-            val raw = parsed.getValue(input.sourceFile()).rawContent
+            val parsedInput = parsed.getValue(input.sourceFile())
+            val raw = parsedInput.rawContent
             when (val outcome = formatYamlOutcome(raw, mapper)) {
                 is FormatOutcome.Unchanged -> logger.lifecycle("Already formatted: ${input.path}")
                 is FormatOutcome.Reformatted ->
                     if (checkOnly) {
                         unformatted.add(input.path)
                         logger.lifecycle("Can be reformatted: ${input.path}")
+                        checkFormat(raw, parsedInput.validationVersion, mapper).forEach { finding ->
+                            logger.lifecycle("  ${renderFormatFinding(finding)}")
+                        }
                     } else {
+                        if (hasYamlComments(raw)) {
+                            logger.warn(formatCommentsDroppedWarning(input.path.toString()))
+                        }
                         input.path.writeText(outcome.formatted.content)
                         logger.lifecycle("Formatted: ${input.path}")
                     }

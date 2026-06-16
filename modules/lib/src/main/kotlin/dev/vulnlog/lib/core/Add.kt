@@ -8,16 +8,17 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
-import dev.vulnlog.lib.parse.BlockScalarStyle
+import dev.vulnlog.lib.parse.CanonicalYaml
+import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
-import dev.vulnlog.lib.parse.detectBlockScalarStyles
-import dev.vulnlog.lib.parse.v1.V1Mapper
+import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.nio.file.Path
 import java.time.LocalDate
 
@@ -57,22 +58,25 @@ data class AddOutcome(
  */
 fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
     val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, options.releases), options)
-    return serializeEntryYaml(entry, createYamlMapper())
+    return CanonicalYaml.renderEntryListItem(entry, createYamlMapper())
 }
 
 /**
- * Inserts or updates the [options].vulnId entry in [destinationContent], preserving the file's layout and
- * block-scalar styles (`|`/`>`) so reformatting stays a no-op.
+ * Inserts or updates the [options].vulnId entry in [destinationContent] and rewrites the whole document
+ * in the canonical style ([YamlWriter.renderCanonicalDocument]), so any valid layout is accepted and a
+ * subsequent `fmt` is a no-op. The optional `# $schema:` header is kept only when [destinationContent]
+ * already had it; YAML comments in [destinationContent] do not survive.
  *
- * On insert, an empty [options].releases defaults to the latest release of [destination], or stays empty when
- * [destination] defines no releases. On update, the entry is rewritten in place keeping its position: list
- * options are added to the existing values, scalar options overwrite them, and omitted options are kept.
+ * On insert, the new entry is placed at the top of the `vulnerabilities:` list; an empty
+ * [options].releases defaults to the latest release of [destination], or stays empty when [destination]
+ * defines no releases. On update, the entry keeps its position: list options are added to the existing
+ * values, scalar options overwrite them, and omitted options are kept.
  *
  * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in [destination].
  */
 fun addVulnerabilityToFile(
     destination: VulnlogFile,
-    destinationContent: String,
+    destinationContent: VulnlogFileRaw,
     options: AddVulnerabilityOptions,
     mapper: ObjectMapper = createYamlMapper(),
 ): AddOutcome {
@@ -87,17 +91,27 @@ fun addVulnerabilityToFile(
         "Tags not defined in file: ${missingTags.joinToString(", ") { it.value }}"
     }
 
-    val preservedStyles = detectBlockScalarStyles(VulnlogFileRaw(destinationContent))
-    val existing = destination.vulnerabilities.firstOrNull { it.id == options.vulnId }
-    return if (existing != null) {
-        updateExistingVulnerabilityEntry(existing, options, mapper, destinationContent, preservedStyles)
-    } else {
-        val effectiveReleases =
-            options.releases.ifEmpty {
-                if (knownReleases.isEmpty()) emptySet() else setOf(destination.releases.last().id)
-            }
-        addNewVulnerabilityEntryAtTop(effectiveReleases, options, mapper, destinationContent, preservedStyles)
-    }
+    val dto = mapper.readValue<VulnlogFileV1Dto>(destinationContent.content)
+    val existing = dto.vulnerabilities.firstOrNull { parseVulnId(it.id) == options.vulnId }
+    val (entries, updated) =
+        if (existing != null) {
+            val merged = mergeOptionsIntoEntry(existing, options)
+            dto.vulnerabilities.map { if (it === existing) merged else it } to true
+        } else {
+            val effectiveReleases =
+                options.releases.ifEmpty {
+                    if (knownReleases.isEmpty()) emptySet() else setOf(destination.releases.last().id)
+                }
+            val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options)
+            listOf(entry) + dto.vulnerabilities to false
+        }
+    val newContent =
+        YamlWriter.renderCanonicalDocument(
+            dto.copy(vulnerabilities = entries),
+            mapper,
+            includeSchemaHeader = hasSchemaHeader(destinationContent),
+        )
+    return AddOutcome(newContent, options.vulnId, updated)
 }
 
 /** Message stating whether [outcome] added a new entry to [destinationPath] or updated an existing one. */
@@ -110,32 +124,6 @@ fun formatAddOutcomeMessage(
     } else {
         "Added to $destinationPath: ${outcome.vulnId.id}"
     }
-
-private fun updateExistingVulnerabilityEntry(
-    existing: VulnerabilityEntry,
-    options: AddVulnerabilityOptions,
-    mapper: ObjectMapper,
-    destinationContent: String,
-    preservedStyles: Map<String, BlockScalarStyle>,
-): AddOutcome {
-    val merged = mergeOptionsIntoEntry(V1Mapper.vulnerabilityToDto(existing), options)
-    val entryYaml = serializeEntryYaml(merged, mapper, preservedStyles)
-    val newContent = replaceEntryById(destinationContent, options.vulnId, entryYaml)
-    return AddOutcome(newContent, options.vulnId, updated = true)
-}
-
-private fun addNewVulnerabilityEntryAtTop(
-    effectiveReleases: Set<Release>,
-    options: AddVulnerabilityOptions,
-    mapper: ObjectMapper,
-    destinationContent: String,
-    preservedStyles: Map<String, BlockScalarStyle>,
-): AddOutcome {
-    val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options)
-    val entryYaml = serializeEntryYaml(entry, mapper, preservedStyles)
-    val newContent = insertEntryAfterVulnerabilitiesHeader(destinationContent, entryYaml)
-    return AddOutcome(newContent, options.vulnId, updated = false)
-}
 
 private fun emptyEntryDto(
     vulnId: VulnId,

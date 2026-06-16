@@ -21,6 +21,7 @@ import dev.vulnlog.lib.core.AddVulnerabilityOptions
 import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
 import dev.vulnlog.lib.core.formatAddOutcomeMessage
+import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -30,9 +31,9 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
 import java.time.LocalDate
-import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 class AddCommand : CliktCommand(name = "add") {
@@ -169,14 +170,18 @@ class AddCommand : CliktCommand(name = "add") {
             val parsedDestination = parseInputOrFail(listOf(destination))
             validateParsedInputOrFailWithFailureOutput(parsedDestination)
             val vulnlogFile = parsedDestination.values.first().content
+            val rawContent = parsedDestination.values.first().rawContent
 
             val outcome =
                 try {
-                    addVulnerabilityToFile(vulnlogFile, destination.path.readText(), commandOption, mapper)
+                    addVulnerabilityToFile(vulnlogFile, rawContent, commandOption, mapper)
                 } catch (e: IllegalArgumentException) {
                     echo("Error: ${e.message} (${destination.path})", err = true)
                     throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
                 }
+            if (hasYamlComments(rawContent)) {
+                echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
+            }
             destination.path.writeText(outcome.newContent)
             echo(formatAddOutcomeMessage(destination.path, outcome))
         }

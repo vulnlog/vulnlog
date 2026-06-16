@@ -17,11 +17,14 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.parse.YamlWriter
+import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
 import java.nio.file.Path
 import java.time.LocalDate
 
@@ -67,6 +70,8 @@ private fun vulnlogFile(
     vulnerabilities = vulnerabilities,
 )
 
+private fun render(file: VulnlogFile): VulnlogFileRaw = VulnlogFileRaw(YamlWriter.write(file, createYamlMapper()))
+
 class CopyTest :
     FunSpec({
 
@@ -108,171 +113,7 @@ class CopyTest :
             }
         }
 
-        context("insertEntryAfterVulnerabilitiesHeader") {
-
-            test("inserts after header") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: "CVE-2026-0001"
-                    """.trimMargin()
-                val entryYaml = "  - id: \"CVE-2026-9999\"\n    releases:\n      - \"1.0.0\""
-
-                val result = insertEntryAfterVulnerabilitiesHeader(fileContent, entryYaml)
-
-                val lines = result.lines()
-                val headerIndex = lines.indexOf("vulnerabilities:")
-                lines[headerIndex + 2] shouldBe "  - id: \"CVE-2026-9999\""
-            }
-
-            test("handles empty vulnerabilities list") {
-                val fileContent = "vulnerabilities: []"
-                val entryYaml = "  - id: \"CVE-2026-9999\"\n    releases:\n      - \"1.0.0\""
-
-                val result = insertEntryAfterVulnerabilitiesHeader(fileContent, entryYaml)
-
-                result shouldContain "vulnerabilities:"
-                result shouldNotContain "[]"
-                result shouldContain "CVE-2026-9999"
-            }
-        }
-
-        context("replaceEntryById") {
-
-            test("replaces a middle entry and preserves blank separators") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-0001
-                    |    releases: [ 1.0.0 ]
-                    |
-                    |  - id: CVE-2026-1234
-                    |    releases: [ 1.0.0 ]
-                    |    description: old
-                    |
-                    |  - id: CVE-2026-5678
-                    |    releases: [ 1.0.0 ]
-                    """.trimMargin()
-                val newEntry = "  - id: CVE-2026-1234\n    releases: [ 2.0.0 ]\n    description: new"
-
-                val result = replaceEntryById(fileContent, cve1, newEntry)
-
-                result shouldContain "description: new"
-                result shouldNotContain "description: old"
-                // separator blank lines kept on both sides
-                result shouldContain "    releases: [ 1.0.0 ]\n\n  - id: CVE-2026-1234"
-                result shouldContain "    description: new\n\n  - id: CVE-2026-5678"
-                // the other entries are untouched
-                result shouldContain "  - id: CVE-2026-0001"
-                result shouldContain "  - id: CVE-2026-5678"
-            }
-
-            test("replaces the last entry in the section") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-0001
-                    |    releases: [ 1.0.0 ]
-                    |
-                    |  - id: CVE-2026-1234
-                    |    releases: [ 1.0.0 ]
-                    |    description: old
-                    """.trimMargin()
-                val newEntry = "  - id: CVE-2026-1234\n    description: new"
-
-                val result = replaceEntryById(fileContent, cve1, newEntry)
-
-                result shouldContain "description: new"
-                result shouldNotContain "description: old"
-                result shouldContain "  - id: CVE-2026-0001"
-            }
-
-            test("matches a quoted id") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: "CVE-2026-1234"
-                    |    description: old
-                    """.trimMargin()
-                val newEntry = "  - id: \"CVE-2026-1234\"\n    description: new"
-
-                val result = replaceEntryById(fileContent, cve1, newEntry)
-
-                result shouldContain "description: new"
-                result shouldNotContain "description: old"
-            }
-
-            test("falls back to inserting when the id is not present") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-0001
-                    |    releases: [ 1.0.0 ]
-                    """.trimMargin()
-                val newEntry = "  - id: CVE-2026-1234\n    releases: [ 1.0.0 ]"
-
-                val result = replaceEntryById(fileContent, cve1, newEntry)
-
-                result shouldContain "CVE-2026-1234"
-                result shouldContain "CVE-2026-0001"
-            }
-
-            test("stops at the next top-level key when the entry is the last one") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-1234
-                    |    description: old
-                    |
-                    |something_else:
-                    |  key: value
-                    """.trimMargin()
-                val newEntry = "  - id: CVE-2026-1234\n    description: new"
-
-                val result = replaceEntryById(fileContent, cve1, newEntry)
-
-                result shouldContain "description: new"
-                result shouldNotContain "description: old"
-                result shouldContain "something_else:"
-                result shouldContain "  key: value"
-            }
-
-            test("does not match an id substring inside a description") {
-                val fileContent =
-                    """
-                    |vulnerabilities:
-                    |
-                    |  - id: CVE-2026-0001
-                    |    description: see CVE-2026-1234 for context
-                    """.trimMargin()
-                val newEntry = "  - id: CVE-2026-1234\n    description: new"
-
-                val result = replaceEntryById(fileContent, cve1, newEntry)
-
-                // id wasn't found as a real entry → falls back to inserting after the header
-                result shouldContain "see CVE-2026-1234 for context"
-                result shouldContain "  - id: CVE-2026-1234"
-            }
-        }
-
         context("copyVulnerabilities") {
-
-            val sourceContent =
-                """
-                |vulnerabilities:
-                """.trimMargin()
-            val destinationContentEmpty =
-                VulnlogFileRaw(
-                    """
-                    |vulnerabilities:
-                    """.trimMargin(),
-                )
 
             test("inserts an entry that does not exist in the destination") {
                 val source =
@@ -285,15 +126,15 @@ class CopyTest :
                     copyVulnerabilities(
                         source = source,
                         destination = destination,
-                        destinationContent = destinationContentEmpty,
+                        destinationContent = render(destination),
                         vulnIds = setOf(cve1),
                     )
 
                 outcome.copied shouldContainExactly listOf(cve1)
                 outcome.newContent.content shouldContain "CVE-2026-1234"
                 outcome.newContent.content shouldContain "from source"
-                // release rewritten to destination's latest published release (1.0.0)
-                outcome.newContent.content shouldContain "1.0.0"
+                // release rewritten to destination's latest release (1.0.0)
+                outcome.newContent.content shouldContain "releases: [1.0.0]"
                 outcome.newContent.content shouldNotContain "2.0.0"
             }
 
@@ -317,33 +158,18 @@ class CopyTest :
                                 vulnerability(
                                     id = cve1,
                                     description = "existing description", // existing wins
-                                    analysis = null, // null in existing → falls back to source
-                                    name = null, // null in existing → falls back to source
+                                    analysis = null, // null in existing -> falls back to source
+                                    name = null, // null in existing -> falls back to source
                                     releases = listOf(release1),
                                 ),
                             ),
-                    )
-                val destinationContent =
-                    VulnlogFileRaw(
-                        """
-                        |vulnerabilities:
-                        |
-                        |  - id: CVE-2026-1234
-                        |    releases: [ 1.0.0 ]
-                        |    description: existing description
-                        |    packages: [ "pkg:npm/example-lib@2.3.0" ]
-                        |    reports:
-                        |      - reporter: trivy
-                        |    verdict: not affected
-                        |    justification: vulnerable code not in execute path
-                        """.trimMargin(),
                     )
 
                 val outcome =
                     copyVulnerabilities(
                         source = source,
                         destination = destination,
-                        destinationContent = destinationContent,
+                        destinationContent = render(destination),
                         vulnIds = setOf(cve1),
                     )
 
@@ -352,7 +178,7 @@ class CopyTest :
                 outcome.newContent.content shouldNotContain "source description"
                 outcome.newContent.content shouldContain "source analysis"
                 outcome.newContent.content shouldContain "source name"
-                // exactly one entry — replace, not duplicate
+                // exactly one entry - replace, not duplicate
                 "CVE-2026-1234".toRegex().findAll(outcome.newContent.content).count() shouldBe 1
             }
 
@@ -380,26 +206,12 @@ class CopyTest :
                                 ),
                             ),
                     )
-                val destinationContent =
-                    VulnlogFileRaw(
-                        """
-                        |vulnerabilities:
-                        |
-                        |  - id: CVE-2026-1234
-                        |    releases: [ 1.0.0 ]
-                        |    packages: [ "pkg:npm/dest-only@1.0" ]
-                        |    reports:
-                        |      - reporter: trivy
-                        |    verdict: not affected
-                        |    justification: vulnerable code not in execute path
-                        """.trimMargin(),
-                    )
 
                 val outcome =
                     copyVulnerabilities(
                         source = source,
                         destination = destination,
-                        destinationContent = destinationContent,
+                        destinationContent = render(destination),
                         vulnIds = setOf(cve1),
                     )
 
@@ -428,55 +240,142 @@ class CopyTest :
                     copyVulnerabilities(
                         source = source,
                         destination = destination,
-                        destinationContent = destinationContentEmpty,
+                        destinationContent = render(destination),
                         vulnIds = setOf(cve1),
                     )
 
-                outcome.newContent.content shouldContain "releases: [1.5.0]"
-                outcome.newContent.content shouldNotContain "1.0.0"
-                outcome.newContent.content shouldNotContain "2.0.0"
+                val entryBody = outcome.newContent.content.substring(outcome.newContent.content.indexOf("- id: CVE"))
+                entryBody shouldContain "releases: [1.5.0]"
+                entryBody shouldNotContain "1.0.0"
+                entryBody shouldNotContain "2.0.0"
             }
 
-            test("preserves the source entry's literal block style") {
+            test("renders a multi-line source analysis as a literal block scalar") {
                 val analysisText = "Affected paths:\n  - decode()\nNone reachable."
                 val source =
                     vulnlogFile(
                         vulnerabilities = listOf(vulnerability(id = cve1, analysis = analysisText)),
                     )
-                val sourceContent =
+                val destination = vulnlogFile()
+
+                val outcome =
+                    copyVulnerabilities(
+                        source = source,
+                        destination = destination,
+                        destinationContent = render(destination),
+                        vulnIds = setOf(cve1),
+                    )
+
+                outcome.newContent.content shouldContain "analysis: |-"
+                outcome.newContent.content shouldNotContain "analysis: >"
+            }
+
+            test("normalizes a column-0 destination and re-formatting is a no-op") {
+                val source =
+                    vulnlogFile(
+                        vulnerabilities = listOf(vulnerability(id = cve2, description = "from source")),
+                    )
+                val existing = vulnerability(id = cve1, releases = listOf(release1))
+                val destination = vulnlogFile(vulnerabilities = listOf(existing))
+                val destinationContent =
                     VulnlogFileRaw(
                         """
+                        |schemaVersion: "1"
+                        |project:
+                        |  organization: Acme
+                        |  name: App
+                        |  author: Sec
+                        |releases:
+                        |- id: 1.0.0
+                        |  published_at: 2026-01-01
                         |vulnerabilities:
+                        |- id: CVE-2026-1234
+                        |  releases: [1.0.0]
+                        |  packages: ["pkg:npm/example-lib@2.3.0"]
+                        |  reports:
+                        |  - reporter: trivy
+                        |  verdict: not affected
+                        |  justification: vulnerable code not in execute path
+                        """.trimMargin() + "\n",
+                    )
+                val mapper = createYamlMapper()
+
+                val outcome =
+                    copyVulnerabilities(
+                        source = source,
+                        destination = destination,
+                        destinationContent = destinationContent,
+                        vulnIds = setOf(cve2),
+                        mapper = mapper,
+                    )
+
+                outcome.newContent.content shouldContain "vulnerabilities:\n\n  - id: CVE-2026-5678"
+                outcome.newContent.content shouldContain "releases:\n  - id: 1.0.0"
+                "CVE-2026-1234".toRegex().findAll(outcome.newContent.content).count() shouldBe 1
+                formatYaml(outcome.newContent, mapper) shouldBe outcome.newContent
+            }
+
+            test("preserves the schema header when the destination has one") {
+                val source =
+                    vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1, description = "from source")))
+                val destination = vulnlogFile()
+
+                val outcome =
+                    copyVulnerabilities(
+                        source = source,
+                        destination = destination,
+                        // render uses YamlWriter.write, which emits the '# $schema:' header
+                        destinationContent = render(destination),
+                        vulnIds = setOf(cve1),
+                    )
+
+                outcome.newContent.content shouldStartWith "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---"
+            }
+
+            test("does not add a schema header when the destination has none") {
+                val source =
+                    vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1, description = "from source")))
+                val destination = vulnlogFile()
+                val destinationContent =
+                    VulnlogFileRaw(
+                        """
+                        |---
+                        |schemaVersion: "1"
                         |
-                        |  - id: CVE-2026-1234
-                        |    analysis: |
-                        |      Affected paths:
-                        |        - decode()
-                        |      None reachable.
-                        """.trimMargin(),
+                        |project:
+                        |  organization: Acme
+                        |  name: App
+                        |  author: Sec
+                        |
+                        |releases:
+                        |  - id: 1.0.0
+                        |    published_at: 2026-01-01
+                        |
+                        |vulnerabilities: []
+                        """.trimMargin() + "\n",
                     )
 
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = vulnlogFile(),
-                        sourceContent = sourceContent,
-                        destinationContent = destinationContentEmpty,
+                        destination = destination,
+                        destinationContent = destinationContent,
                         vulnIds = setOf(cve1),
                     )
 
-                outcome.newContent.content shouldContain "analysis: |"
-                outcome.newContent.content shouldNotContain "analysis: >"
+                outcome.newContent.content shouldNotContain "# \$schema:"
+                outcome.newContent.content shouldStartWith "---"
             }
 
             test("ignores ids in vulnIds that are not present in the source") {
                 val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1)))
+                val destination = vulnlogFile()
 
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = vulnlogFile(),
-                        destinationContent = destinationContentEmpty,
+                        destination = destination,
+                        destinationContent = render(destination),
                         vulnIds = setOf(cve2), // not in source
                     )
 

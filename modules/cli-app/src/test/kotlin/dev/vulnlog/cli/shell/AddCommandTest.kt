@@ -134,6 +134,50 @@ class AddCommandTest :
                 }
             }
 
+            test("rewrites a column-0 destination canonically so fmt --check passes") {
+                val column0 =
+                    """
+                    schemaVersion: "1"
+                    project:
+                      organization: Acme Corp
+                      name: Acme Web App
+                      author: Acme Corp Security Team
+                    releases:
+                    - id: 1.0.0
+                      published_at: 2026-01-15
+                    vulnerabilities:
+                    - id: CVE-2026-1234
+                      releases: [1.0.0]
+                      packages: ["pkg:npm/example-lib@2.3.0"]
+                      reports:
+                      - reporter: trivy
+                    """.trimIndent() + "\n"
+                withTempFile(prefix = "target", content = column0) { target ->
+                    val result =
+                        AddCommand().test(
+                            "${target.absolutePath} --vuln-id CVE-2026-9999 --reporter trivy",
+                        )
+
+                    result.statusCode shouldBe 0
+                    target.readText().split("CVE-2026-1234").size - 1 shouldBe 1
+
+                    val check = FmtCommand().test("--check ${target.absolutePath}")
+                    check.statusCode shouldBe 0
+                    check.stdout shouldContain "Already formatted"
+                }
+            }
+
+            test("warns when the destination contains YAML comments") {
+                val commented = vulnlogYaml().replace("vulnerabilities:", "# audit notes\nvulnerabilities:")
+                withTempFile(prefix = "target", content = commented) { target ->
+                    val result = AddCommand().test("${target.absolutePath} --vuln-id CVE-2026-9999")
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldContain "contains YAML comments"
+                    target.readText() shouldNotContain "# audit notes"
+                }
+            }
+
             test("writes the entry to multiple destinations") {
                 withTempFile(prefix = "target1", content = vulnlogYaml()) { target1 ->
                     withTempFile(prefix = "target2", content = vulnlogYaml()) { target2 ->

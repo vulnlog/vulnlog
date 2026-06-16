@@ -7,10 +7,12 @@ import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.copyVulnerabilities
 import dev.vulnlog.lib.core.findNonExistingVulnIds
+import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.formatCopiedMessage
 import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -59,15 +61,18 @@ abstract class VulnlogCopyTask : DefaultTask() {
             validateParsedInputOrFailWithFailureOutput(parsedDestination)
             val destinationVulnlogFile = parsedDestination.values.first().content
 
+            val destinationContent = parsedDestination.values.first().rawContent
             val outcome =
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
                     destination = destinationVulnlogFile,
-                    sourceContent = parsedSource.values.first().rawContent,
-                    destinationContent = parsedDestination.values.first().rawContent,
+                    destinationContent = destinationContent,
                     vulnIds = vulnIdSet,
                     mapper = mapper,
                 )
+            if (hasYamlComments(destinationContent)) {
+                logger.warn(formatCommentsDroppedWarning(destination.path.toString()))
+            }
             destination.path.writeText(outcome.newContent.content)
             logger.lifecycle(formatCopiedMessage(destination.path, outcome.copied))
         }

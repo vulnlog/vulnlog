@@ -43,16 +43,15 @@ private fun vulnlogFile(
         vulnerabilities = vulnerabilities,
     )
 
-private fun renderContent(file: VulnlogFile): String = YamlWriter.write(file, createYamlMapper())
+private fun renderContent(file: VulnlogFile): VulnlogFileRaw =
+    VulnlogFileRaw(YamlWriter.write(file, createYamlMapper()))
 
 /**
- * Builds a Vulnlog YAML content string with list items indented by 2 spaces (matching real
- * Vulnlog files). [YamlWriter] currently emits zero-indent list items, which doesn't match the
- * regex used by `replaceEntryById`. Real CLI flows read 2-space-indented files from disk, so for
- * upsert tests we hand-craft content here. [entriesYaml] is appended verbatim (no re-indent), so
- * callers control the entry block indentation directly.
+ * Builds a Vulnlog YAML content string with hand-picked source notation (quoting, block lists),
+ * so upsert tests can prove the output is normalized regardless of the input style. [entriesYaml]
+ * is appended verbatim.
  */
-private fun yamlWithEntries(entriesYaml: String): String {
+private fun yamlWithEntries(entriesYaml: String): VulnlogFileRaw {
     val header =
         """
         |---
@@ -70,7 +69,7 @@ private fun yamlWithEntries(entriesYaml: String): String {
         |vulnerabilities:
         |
         """.trimMargin()
-    return header + entriesYaml + "\n"
+    return VulnlogFileRaw(header + entriesYaml + "\n")
 }
 
 private val DEFAULT_OPTIONS = AddVulnerabilityOptions(vulnId = VulnId.Cve("CVE-2026-1234"))
@@ -225,7 +224,125 @@ class AddTest :
                 formatYaml(VulnlogFileRaw(outcome.newContent), mapper).content shouldBe outcome.newContent
             }
 
-            test("update preserves a literal block scalar from the destination file") {
+            test("preserves the schema header when the destination has one") {
+                val file = vulnlogFile()
+                // renderContent uses YamlWriter.write, which emits the '# $schema:' header
+                val outcome = addVulnerabilityToFile(file, renderContent(file), DEFAULT_OPTIONS)
+
+                outcome.newContent shouldStartWith "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---"
+            }
+
+            test("does not add a schema header when the destination has none") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-0001"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                // yamlWithEntries builds a document without the '# $schema:' header
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-0001"
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports: []
+                        """.trimMargin(),
+                    )
+
+                val outcome = addVulnerabilityToFile(file, content, DEFAULT_OPTIONS)
+
+                outcome.newContent shouldNotContain "# \$schema:"
+                outcome.newContent shouldStartWith "---"
+            }
+
+            test("insert into a column-0 file rewrites the whole file canonically") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-0001"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                val content =
+                    VulnlogFileRaw(
+                        """
+                        |schemaVersion: "1"
+                        |project:
+                        |  organization: acme
+                        |  name: widget
+                        |  author: alice
+                        |releases:
+                        |- id: 1.0.0
+                        |  published_at: 2026-01-15
+                        |vulnerabilities:
+                        |- id: CVE-2026-0001
+                        |  releases: [1.0.0]
+                        |  packages: []
+                        |  reports: []
+                        """.trimMargin() + "\n",
+                    )
+                val mapper = createYamlMapper()
+
+                val outcome = addVulnerabilityToFile(file, content, DEFAULT_OPTIONS, mapper)
+
+                outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-1234"
+                outcome.newContent shouldContain "releases:\n  - id: 1.0.0"
+                outcome.newContent.split("CVE-2026-0001").size - 1 shouldBe 1
+                formatYaml(VulnlogFileRaw(outcome.newContent), mapper).content shouldBe outcome.newContent
+            }
+
+            test("update of an entry in a column-0 file rewrites the whole file canonically") {
+                val existing =
+                    VulnerabilityEntry(
+                        id = VulnId.Cve("CVE-2026-1234"),
+                        releases = listOf(Release("1.0.0")),
+                        packages = emptyList(),
+                        reports = emptyList(),
+                        verdict = Verdict.UnderInvestigation,
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(existing))
+                val content =
+                    VulnlogFileRaw(
+                        """
+                        |schemaVersion: "1"
+                        |project:
+                        |  organization: acme
+                        |  name: widget
+                        |  author: alice
+                        |releases:
+                        |- id: 1.0.0
+                        |  published_at: 2026-01-15
+                        |vulnerabilities:
+                        |- id: CVE-2026-1234
+                        |  releases: [1.0.0]
+                        |  packages: []
+                        |  reports: []
+                        """.trimMargin() + "\n",
+                    )
+                val mapper = createYamlMapper()
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        file,
+                        content,
+                        DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/lib@1.0.0"))),
+                        mapper,
+                    )
+
+                outcome.updated shouldBe true
+                outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-1234"
+                outcome.newContent.split("CVE-2026-1234").size - 1 shouldBe 1
+                formatYaml(VulnlogFileRaw(outcome.newContent), mapper).content shouldBe outcome.newContent
+            }
+
+            test("update renders a multi-line description as a literal block scalar") {
                 val existing =
                     VulnerabilityEntry(
                         id = VulnId.Cve("CVE-2026-1234"),
@@ -360,7 +477,7 @@ class AddTest :
                     |    reports: []
                     """.trimMargin()
 
-                val outcome = addVulnerabilityToFile(file, content, DEFAULT_OPTIONS)
+                val outcome = addVulnerabilityToFile(file, VulnlogFileRaw(content), DEFAULT_OPTIONS)
 
                 outcome.updated shouldBe true
                 val entryStart = outcome.newContent.indexOf("- id: CVE-2026-1234")
