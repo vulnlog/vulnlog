@@ -226,7 +226,7 @@ class SuppressCommandTest :
                     "trivy",
                     "snyk",
                     "dependency-check",
-                    "github-advisory",
+                    "github-dependabot",
                     "grype",
                     "npm-audit",
                     "cargo-audit",
@@ -293,7 +293,7 @@ class SuppressCommandTest :
                 val result = SuppressCommand().test("--help")
 
                 result.stdout shouldContain "dependency-check"
-                result.stdout shouldContain "github-advisory"
+                result.stdout shouldContain "github-dependabot"
                 result.stdout shouldContain "npm-audit"
                 result.stdout shouldContain "cargo-audit"
             }

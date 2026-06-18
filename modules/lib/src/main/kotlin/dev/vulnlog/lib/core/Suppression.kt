@@ -104,7 +104,7 @@ fun mapToSuppression(
 private fun getDefaultSettingsForReporter(reporter: ReporterType): Suppression =
     when (reporter) {
         ReporterType.DEPENDENCY_CHECK -> Suppressable.GenericFormat.Generic(reporter)
-        ReporterType.GITHUB_SECURITY_ADVISORY -> Suppressable.GenericFormat.Generic(reporter)
+        ReporterType.GITHUB_DEPENDABOT -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.GRYPE -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.NPM_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
         ReporterType.OTHER -> NotSuppressable

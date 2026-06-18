@@ -118,8 +118,8 @@
           "const": "npm-audit"
         },
         {
-          "description": "GitHub Advisory Database. No suppression support",
-          "const": "github-advisory"
+          "description": "GitHub Dependabot. No suppression support",
+          "const": "github-dependabot"
         },
         {
           "description": "Generic or non-scanner source. Requires the 'source' field on the report entry",

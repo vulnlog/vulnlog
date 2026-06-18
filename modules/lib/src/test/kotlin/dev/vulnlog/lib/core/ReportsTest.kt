@@ -16,8 +16,8 @@ class ReportsTest :
                 parseReporter("dependency-check") shouldBe ReporterType.DEPENDENCY_CHECK
             }
 
-            test("parses github-advisory") {
-                parseReporter("github-advisory") shouldBe ReporterType.GITHUB_SECURITY_ADVISORY
+            test("parses github-dependabot") {
+                parseReporter("github-dependabot") shouldBe ReporterType.GITHUB_DEPENDABOT
             }
 
             test("parses grype") {
@@ -60,8 +60,8 @@ class ReportsTest :
                 ReporterType.DEPENDENCY_CHECK.canonical() shouldBe "dependency-check"
             }
 
-            test("GITHUB_SECURITY_ADVISORY canonical is github-advisory") {
-                ReporterType.GITHUB_SECURITY_ADVISORY.canonical() shouldBe "github-advisory"
+            test("GITHUB_DEPENDABOT canonical is github-dependabot") {
+                ReporterType.GITHUB_DEPENDABOT.canonical() shouldBe "github-dependabot"
             }
 
             test("GRYPE canonical is grype") {
@@ -96,7 +96,7 @@ class ReportsTest :
                 val allCanonicals =
                     listOf(
                         "dependency-check",
-                        "github-advisory",
+                        "github-dependabot",
                         "grype",
                         "npm-audit",
                         "other",

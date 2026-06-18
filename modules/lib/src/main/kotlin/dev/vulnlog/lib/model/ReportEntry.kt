@@ -7,7 +7,7 @@ import java.time.LocalDate
 
 enum class ReporterType {
     DEPENDENCY_CHECK,
-    GITHUB_SECURITY_ADVISORY,
+    GITHUB_DEPENDABOT,
     GRYPE,
     NPM_AUDIT,
     OTHER,
