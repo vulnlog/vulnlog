@@ -160,8 +160,8 @@ The CLI determines which identifiers to write into the suppression file using th
 | --
 | No
 
-| `github-advisory`
-| GitHub Advisory Database
+| `github-dependabot`
+| GitHub Dependabot
 | --
 | No
 
