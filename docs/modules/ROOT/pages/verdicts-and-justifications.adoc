@@ -50,7 +50,9 @@ resolution:
 The vulnerable dependency is present but does not impact the project.
 Requires a `justification` explaining why the vulnerability is not exploitable in this context.
 
-Because the finding does not reflect a real risk to the project, entries with this verdict are always included in generated suppression files without requiring an explicit `suppress` block.
+Because the finding does not reflect a real risk to the project, entries with this verdict are included in generated suppression files without requiring an explicit `suppress` block.
+
+If a `resolution` is also recorded, the entry is treated as resolved and excluded from generated suppression files -- the dependency was updated, so the scanner is expected to stop reporting the finding.
 
 [source,yaml]
 ----

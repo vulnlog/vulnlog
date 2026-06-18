@@ -3,11 +3,12 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Verdict
-import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.report.WorkState
 import dev.vulnlog.lib.model.suppress.NotSuppressable
 import dev.vulnlog.lib.model.suppress.Suppressable
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
@@ -31,40 +32,36 @@ fun collectSuppressedVulnerabilities(
 ): Map<ReporterType, List<SuppressedVulnerability>> =
     vulnlogFile.vulnerabilities
         .asSequence()
-        .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today, filter.filter) }
+        .filterNot { vulnerability -> isResolved(vulnerability, filter.filter.releases) }
+        .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today) }
         .applyFilter(filter)
         .groupBy { it.reporter }
         .filter { filter.filter.reporter == null || it.key == filter.filter.reporter }
 
+private fun isResolved(
+    vulnEntry: VulnerabilityEntry,
+    filterReleases: Set<Release>,
+): Boolean = findWorkState(vulnEntry, filterReleases) == WorkState.RESOLVED
+
 private fun explodeAndMapToSuppressedVulnerabilities(
     vulnerability: VulnerabilityEntry,
     today: LocalDate,
-    filter: VulnlogFilter,
-): List<SuppressedVulnerability> {
-    if (vulnerability.verdict is Verdict.Affected && vulnerability.resolution != null) {
-        // When --release X is given, treat the resolution as effective only if it shipped at-or-before X.
-        // Without a release context, fall back to dropping unconditionally (the fix is the canonical answer).
-        val resolutionShipped =
-            filter.releases.isEmpty() || vulnerability.resolution.release in filter.releases
-        if (resolutionShipped) return emptyList()
-    }
-    return vulnerability.reports.flatMap { report ->
-        if (!isReportEligible(vulnerability.verdict, report.suppress, today)) {
-            return@flatMap emptyList()
+): List<SuppressedVulnerability> =
+    vulnerability.reports
+        .filter { report -> isReportEligible(vulnerability.verdict, report.suppress, today) }
+        .flatMap { report ->
+            val ids = report.vulnIds.ifEmpty { setOf(vulnerability.id) }
+            ids.map { id ->
+                SuppressedVulnerability(
+                    id = id,
+                    releases = vulnerability.releases,
+                    reporter = report.reporter,
+                    expiresAt = report.suppress?.expiresAt,
+                    tags = vulnerability.tags,
+                    analysis = vulnerability.analysis ?: "",
+                )
+            }
         }
-        val ids: Collection<VulnId> = report.vulnIds.ifEmpty { listOf(vulnerability.id) }
-        ids.map { id ->
-            SuppressedVulnerability(
-                id = id,
-                releases = vulnerability.releases,
-                reporter = report.reporter,
-                expiresAt = report.suppress?.expiresAt,
-                tags = vulnerability.tags,
-                analysis = vulnerability.analysis ?: "",
-            )
-        }
-    }
-}
 
 private fun isReportEligible(
     verdict: Verdict,

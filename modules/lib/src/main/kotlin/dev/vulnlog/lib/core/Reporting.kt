@@ -84,7 +84,7 @@ private fun mergeTwo(
         fixedIn = a.fixedIn + b.fixedIn,
     )
 
-private fun findWorkState(
+fun findWorkState(
     vulnEntry: VulnerabilityEntry,
     filterReleases: Set<Release>,
 ): WorkState {

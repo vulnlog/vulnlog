@@ -474,7 +474,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("not affected with resolution is still included") {
+            test("not affected with resolution is excluded") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
@@ -483,6 +483,20 @@ class SuppressionTest :
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+
+                result.shouldBeEmpty()
+            }
+
+            test("not affected with resolution outside the filter releases is still included") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+
+                val filter = SuppressionFilter(VulnlogFilter(releases = setOf(releaseV1)), today)
+                val result = collectSuppressedVulnerabilities(file, filter)
 
                 result shouldHaveSize 1
             }
@@ -500,7 +514,7 @@ class SuppressionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk acceptable with resolution is included when suppress block present") {
+            test("risk acceptable with resolution is excluded regardless of suppress block") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
@@ -510,7 +524,7 @@ class SuppressionTest :
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result shouldHaveSize 1
+                result.shouldBeEmpty()
             }
 
             test("affected without resolution is included when suppress block present") {
