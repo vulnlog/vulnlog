@@ -22,45 +22,19 @@ See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dyna
 
 == Suppression Rules
 
-Whether an entry appears in the generated suppression file depends on whether the vulnerability still impacts the release and whether the scanner is expected to stop reporting the finding on its own.
+Three rules decide whether an entry appears in the generated suppression file:
 
-The following table summarises every combination.
-The cases are explained in prose below.
+Resolved findings are never suppressed::
+Once a `resolution` is recorded, the vulnerable dependency is gone and the scanner stops reporting the finding on its own.
+These entries are excluded regardless of verdict or `suppress` block.
+If the scanner still reports one, the resolution is incomplete and should be fixed rather than suppressed.
 
-[cols="2,2,2,3"]
-|===
-| Verdict | Resolution | `suppress` block | In suppression file?
+`not affected` findings are always suppressed::
+The finding does not impact the release, so it is noise and is suppressed automatically -- no `suppress` block required.
 
-| `not affected`           | any     | not required | *Yes*
-| `affected`               | present | ignored      | *No* -- scanner stops reporting after the fix
-| `affected`               | absent  | absent       | *No* -- live risk, no deliberate decision
-| `affected`               | absent  | present      | *Yes* ^*^
-| `risk acceptable`        | any     | absent       | *No* -- live risk, no deliberate decision
-| `risk acceptable`        | any     | present      | *Yes* ^*^
-| _(absent, under investigation)_ | n/a | absent  | *No*
-| _(absent, under investigation)_ | n/a | present | *Yes* ^*^
-|===
-
-^*^ Excluded once `suppress.expires_at` is in the past.
-
-Verdict `not affected`::
-The vulnerability does not impact the release, so the scanner finding is effectively noise.
-These entries are always included in suppression files, no explicit `suppress` block required.
-
-Verdict `affected` with a `resolution`::
-The vulnerable dependency version is no longer present after the resolution, so the scanner is expected to stop reporting the finding.
-These entries are *not* included in suppression files.
-If the scanner still reports the finding, the resolution is incomplete and should be investigated rather than suppressed.
-
-All other cases (`affected` without resolution, `risk acceptable`, absent verdict)::
-The vulnerable code is still present and still impacts the release, or the impact has not yet been assessed.
-Suppressing the finding would hide a live or unknown risk, so it must be recorded as a deliberate decision separate from the verdict: an explicit `suppress` block on the report entry is required.
-
-If the `suppress` block includes `expires_at`, the suppression is temporary.
-If `expires_at` is omitted, the suppression is permanent.
-
-NOTE: State and suppression are orthogonal.
-Both `not affected` and `risk acceptable` yield the `dismissed` state (see xref:vulnerability-states.adoc[Vulnerability States]), but their suppression behavior differs: `not affected` represents noise and is always suppressed; `risk acceptable` represents a live risk, so suppression must be an explicit, separate decision.
+Everything else needs an explicit `suppress` block::
+`affected`, `risk acceptable`, and not-yet-triaged findings are still a live or unknown risk.
+Suppressing one is a deliberate decision, so it happens only when the report entry carries a `suppress` block.
 
 === Permanent Suppression
 
