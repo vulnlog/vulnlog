@@ -36,7 +36,6 @@ fun collectSuppressedVulnerabilities(
         .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today) }
         .applyFilter(filter)
         .groupBy { it.reporter }
-        .filter { filter.filter.reporter == null || it.key == filter.filter.reporter }
 
 private fun isResolved(
     vulnEntry: VulnerabilityEntry,
