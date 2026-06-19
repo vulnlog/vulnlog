@@ -42,10 +42,20 @@ private fun emptyFile() =
         vulnerabilities = emptyList(),
     )
 
-private fun trivyReport(
+private fun report(
+    reporter: ReporterType,
     vulnIds: Set<VulnId> = emptySet(),
     suppress: Suppression? = Suppression(),
 ) = ReportEntry(
+    reporter = reporter,
+    vulnIds = vulnIds,
+    suppress = suppress,
+)
+
+private fun trivyReport(
+    vulnIds: Set<VulnId> = emptySet(),
+    suppress: Suppression? = Suppression(),
+) = report(
     reporter = ReporterType.TRIVY,
     vulnIds = vulnIds,
     suppress = suppress,
@@ -247,26 +257,30 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("excludes suppression expired before today") {
-                val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(1)))
-                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
-                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+            ReporterType.entries.forEach { reporter ->
+                test("excludes suppression expired before today for $reporter") {
+                    val report = report(reporter = reporter, suppress = Suppression(expiresAt = today.minusDays(1)))
+                    val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
+                    val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-                val result =
-                    collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+                    val result =
+                        collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result.shouldBeEmpty()
+                    result.shouldBeEmpty()
+                }
             }
 
-            test("includes suppression expiring after today") {
-                val report = trivyReport(suppress = Suppression(expiresAt = today.plusDays(30)))
-                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
-                val file = emptyFile().copy(vulnerabilities = listOf(vuln))
+            ReporterType.entries.forEach { reporter ->
+                test("includes suppression expiring after today for $reporter") {
+                    val report = report(reporter = reporter, suppress = Suppression(expiresAt = today.plusDays(30)))
+                    val vuln = vulnerability(reports = listOf(report), verdict = Verdict.UnderInvestigation)
+                    val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
-                val result =
-                    collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
+                    val result =
+                        collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result shouldHaveSize 1
+                    result shouldHaveSize 1
+                }
             }
 
             test("filters by reporter type") {
@@ -608,7 +622,7 @@ class SuppressionTest :
                 result shouldHaveSize 1
             }
 
-            test("not affected ignores suppress expiration") {
+            test("not affected respects suppress expiration") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(30)))
                 val vuln =
                     vulnerability(
@@ -619,7 +633,7 @@ class SuppressionTest :
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today))
 
-                result shouldHaveSize 1
+                result shouldHaveSize 0
             }
         }
 

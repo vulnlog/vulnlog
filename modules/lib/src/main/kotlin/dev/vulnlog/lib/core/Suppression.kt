@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
@@ -15,7 +16,6 @@ import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
 import dev.vulnlog.lib.model.suppress.Suppression
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.model.suppress.SuppressionVuln
-import java.time.LocalDate
 
 /**
  * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression
@@ -33,7 +33,7 @@ fun collectSuppressedVulnerabilities(
     vulnlogFile.vulnerabilities
         .asSequence()
         .filterNot { vulnerability -> isResolved(vulnerability, filter.filter.releases) }
-        .flatMap { explodeAndMapToSuppressedVulnerabilities(it, filter.today) }
+        .flatMap(::explodeOnReports)
         .applyFilter(filter)
         .groupBy { it.reporter }
 
@@ -42,35 +42,26 @@ private fun isResolved(
     filterReleases: Set<Release>,
 ): Boolean = findWorkState(vulnEntry, filterReleases) == WorkState.RESOLVED
 
-private fun explodeAndMapToSuppressedVulnerabilities(
-    vulnerability: VulnerabilityEntry,
-    today: LocalDate,
-): List<SuppressedVulnerability> =
+private fun explodeOnReports(vulnerability: VulnerabilityEntry): List<SuppressedVulnerability> =
     vulnerability.reports
-        .filter { report -> isReportEligible(vulnerability.verdict, report.suppress, today) }
-        .flatMap { report ->
-            val ids = report.vulnIds.ifEmpty { setOf(vulnerability.id) }
-            ids.map { id ->
-                SuppressedVulnerability(
-                    id = id,
-                    releases = vulnerability.releases,
-                    reporter = report.reporter,
-                    expiresAt = report.suppress?.expiresAt,
-                    tags = vulnerability.tags,
-                    analysis = vulnerability.analysis ?: "",
-                )
-            }
-        }
+        .filter { report -> report.suppress != null || vulnerability.verdict is Verdict.NotAffected }
+        .flatMap { report -> explodeOnVulnIds(report, vulnerability) }
 
-private fun isReportEligible(
-    verdict: Verdict,
-    suppress: dev.vulnlog.lib.model.Suppression?,
-    today: LocalDate,
-): Boolean {
-    if (verdict is Verdict.NotAffected) return true
-    if (suppress == null) return false
-    val expiresAt = suppress.expiresAt ?: return true
-    return !expiresAt.isBefore(today)
+private fun explodeOnVulnIds(
+    report: ReportEntry,
+    vulnerability: VulnerabilityEntry,
+): List<SuppressedVulnerability> {
+    val vulnIds = report.vulnIds.ifEmpty { setOf(vulnerability.id) }
+    return vulnIds.map { id ->
+        SuppressedVulnerability(
+            id = id,
+            releases = vulnerability.releases,
+            reporter = report.reporter,
+            expiresAt = report.suppress?.expiresAt,
+            tags = vulnerability.tags,
+            analysis = vulnerability.analysis ?: "",
+        )
+    }
 }
 
 /**

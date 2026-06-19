@@ -31,3 +31,4 @@ fun Sequence<SuppressedVulnerability>.applyFilter(filter: SuppressionFilter): Se
         .filter { filter.filter.releases.isEmpty() || it.releases.any { release -> release in filter.filter.releases } }
         .filter { filter.filter.tags.isEmpty() || filter.filter.tags.any { tag -> it.tags.contains(tag) } }
         .filter { filter.filter.reporter == null || filter.filter.reporter == it.reporter }
+        .filter { it.isActiveOn(filter.today) }
