@@ -83,6 +83,57 @@ class VulnlogSuppressTaskTest :
             }
         }
 
+        context("format selection") {
+
+            test("generic format writes the generic JSON file instead of the native one") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    format = "generic"
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogYaml(),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                val outputDir = dir.resolve("build/vulnlog/suppressions")
+                val files = outputDir.list()?.toList() ?: emptyList()
+                files shouldContain "trivy.generic.json"
+                files.contains(".trivyignore.yaml") shouldBe false
+                outputDir.resolve("trivy.generic.json").readText() shouldContain "CVE-2026-1234"
+            }
+
+            test("fails on an unknown format") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    format = "bogus"
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogYaml(),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Unknown suppression format 'bogus'"
+            }
+        }
+
         context("input validation") {
 
             test("fails when no files are configured") {

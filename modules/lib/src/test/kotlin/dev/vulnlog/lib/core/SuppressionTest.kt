@@ -20,6 +20,7 @@ import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -469,6 +470,78 @@ class SuppressionTest :
                 val result = mapToSuppression(setOf(ReporterType.TRIVY, ReporterType.SNYK), emptyMap())
 
                 result shouldHaveSize 2
+            }
+        }
+
+        context("mapToSuppression format selection") {
+
+            test("auto keeps the native format for a native reporter") {
+                val input = mapOf(ReporterType.TRIVY to listOf(suppressedVuln()))
+
+                val result = mapToSuppression(setOf(ReporterType.TRIVY), input, SuppressionFormatRequest.Auto)
+
+                result.first().shouldBeInstanceOf<SuppressionOutput.TrivySuppression>()
+            }
+
+            test("auto falls back to generic for a reporter without a native format") {
+                val input = mapOf(ReporterType.GRYPE to listOf(suppressedVuln(reporter = ReporterType.GRYPE)))
+
+                val result = mapToSuppression(setOf(ReporterType.GRYPE), input, SuppressionFormatRequest.Auto)
+
+                val generic = result.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
+                generic.fileName shouldBe "grype.generic.json"
+            }
+
+            test("generic overrides the native format of a native reporter") {
+                val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-1234"), analysis = "false positive")
+                val input = mapOf(ReporterType.TRIVY to listOf(entry))
+
+                val result = mapToSuppression(setOf(ReporterType.TRIVY), input, SuppressionFormatRequest.Generic)
+
+                val generic = result.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
+                generic.fileName shouldBe "trivy.generic.json"
+                generic.entries shouldHaveSize 1
+                generic.entries.first().id shouldBe VulnId.Cve("CVE-2024-1234")
+                generic.entries.first().reason shouldBe "false positive"
+            }
+
+            test("generic widens the accepted vuln id types beyond the native format") {
+                val cve = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), reporter = ReporterType.CARGO_AUDIT)
+                val input = mapOf(ReporterType.CARGO_AUDIT to listOf(cve))
+
+                val native = mapToSuppression(setOf(ReporterType.CARGO_AUDIT), input, SuppressionFormatRequest.Auto)
+                native
+                    .first()
+                    .shouldBeInstanceOf<SuppressionOutput.CargoAuditSuppression>()
+                    .entries
+                    .shouldBeEmpty()
+
+                val generic = mapToSuppression(setOf(ReporterType.CARGO_AUDIT), input, SuppressionFormatRequest.Generic)
+                generic
+                    .first()
+                    .shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
+                    .entries shouldHaveSize 1
+            }
+
+            test("excludes the OTHER reporter regardless of requested format") {
+                val input = mapOf(ReporterType.OTHER to listOf(suppressedVuln(reporter = ReporterType.OTHER)))
+
+                val result = mapToSuppression(setOf(ReporterType.OTHER), input, SuppressionFormatRequest.Generic)
+
+                result.shouldBeEmpty()
+            }
+
+            test("generic produces one generic file per reporter") {
+                val result =
+                    mapToSuppression(
+                        setOf(ReporterType.TRIVY, ReporterType.SNYK),
+                        emptyMap(),
+                        SuppressionFormatRequest.Generic,
+                    )
+
+                result shouldHaveSize 2
+                result.filterIsInstance<SuppressionOutput.GenericSuppression>().map { it.fileName }.toSet() shouldBe
+                    setOf("trivy.generic.json", "snyk.generic.json")
             }
         }
 

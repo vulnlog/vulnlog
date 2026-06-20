@@ -45,6 +45,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.outputDir.convention(
                 extension.suppress.outputDir.orElse(project.layout.buildDirectory.dir("vulnlog/suppressions")),
             )
+            task.format.convention(extension.suppress.format)
         }
 
         project.tasks.register("vulnlogReport", VulnlogReportTask::class.java) { task ->

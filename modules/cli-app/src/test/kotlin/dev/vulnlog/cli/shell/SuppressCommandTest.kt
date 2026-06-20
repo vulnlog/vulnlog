@@ -341,4 +341,71 @@ class SuppressCommandTest :
                 }
             }
         }
+
+        context("format selection") {
+
+            test("--format generic writes the generic JSON file for a native reporter") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    withTempDir(prefix = "suppress-out") { outputDir ->
+                        val result =
+                            SuppressCommand().test(
+                                "${input.absolutePath} --format generic --output-dir ${outputDir.toAbsolutePath()}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        outputDir.resolve("trivy.generic.json").toFile().exists() shouldBe true
+                        outputDir.resolve(".trivyignore.yaml").toFile().exists() shouldBe false
+                    }
+                }
+            }
+
+            test("--format auto writes the native format for a native reporter") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    withTempDir(prefix = "suppress-out") { outputDir ->
+                        val result =
+                            SuppressCommand().test(
+                                "${input.absolutePath} --format auto --output-dir ${outputDir.toAbsolutePath()}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        outputDir.resolve(".trivyignore.yaml").toFile().exists() shouldBe true
+                    }
+                }
+            }
+
+            test("--format is case insensitive") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    withTempDir(prefix = "suppress-out") { outputDir ->
+                        val result =
+                            SuppressCommand().test(
+                                "${input.absolutePath} --format GENERIC --output-dir ${outputDir.toAbsolutePath()}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        outputDir.resolve("trivy.generic.json").toFile().exists() shouldBe true
+                    }
+                }
+            }
+
+            test("--format generic emits generic JSON to stdout") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --format generic -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "vulnerabilities"
+                    result.stdout shouldContain "CVE-2026-1234"
+                }
+            }
+
+            test("rejects an unknown format value") {
+                withTempFile(content = vulnlogYaml()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --format bogus")
+
+                    result.statusCode shouldNotBe 0
+                    result.stderr shouldContain "--format"
+                    result.stderr shouldContain "auto"
+                    result.stderr shouldContain "generic"
+                }
+            }
+        }
     })

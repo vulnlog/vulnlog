@@ -7,34 +7,30 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import kotlin.reflect.KClass
 
-sealed interface Suppression
-
-data object NotSuppressable : Suppression
-
-sealed interface Suppressable : Suppression {
+sealed interface SuppressionFormat {
     val vulnIdTypes: Set<KClass<out VulnId>>
 
-    sealed interface GenericFormat : Suppressable {
+    sealed interface GenericFormat : SuppressionFormat {
         data class Generic(
             val reporter: ReporterType,
-        ) : Suppressable {
+        ) : GenericFormat {
             override val vulnIdTypes: Set<KClass<out VulnId>>
                 get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class, VulnId.Snyk::class, VulnId.RustSec::class)
         }
     }
 
-    sealed interface NativeFormat : Suppressable {
-        data object Trivy : Suppressable {
+    sealed interface NativeFormat : SuppressionFormat {
+        data object Trivy : NativeFormat {
             override val vulnIdTypes: Set<KClass<out VulnId>>
                 get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class)
         }
 
-        data object Snyk : Suppressable {
+        data object Snyk : NativeFormat {
             override val vulnIdTypes: Set<KClass<out VulnId>>
                 get() = setOf(VulnId.Snyk::class)
         }
 
-        data object CargoAudit : Suppressable {
+        data object CargoAudit : NativeFormat {
             override val vulnIdTypes: Set<KClass<out VulnId>>
                 get() = setOf(VulnId.RustSec::class)
         }
