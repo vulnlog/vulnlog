@@ -184,7 +184,7 @@ A record indicating that a specific scanner or source reported the finding.
 | `expires_at`
 | String (date, `YYYY-MM-DD`)
 | No
-| Expiration date. After this date, the entry is excluded from the generated suppression file. When omitted, the suppression is permanent.
+| Expiration date. After this date, the entry is excluded from every generated suppression file. When omitted, the suppression is permanent.
 |===
 
 [[resolution-entry]]
