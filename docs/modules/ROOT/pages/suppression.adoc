@@ -22,15 +22,21 @@ See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dyna
 
 == Suppression Rules
 
-Three rules decide whether an entry appears in the generated suppression file:
+Four rules decide whether an entry appears in the generated suppression file:
 
 Resolved findings are never suppressed::
 Once a `resolution` is recorded, the vulnerable dependency is gone and the scanner stops reporting the finding on its own.
 These entries are excluded regardless of verdict or `suppress` block.
 If the scanner still reports one, the resolution is incomplete and should be fixed rather than suppressed.
 
+Expired suppressions are always dropped::
+A `suppress` block whose `expires_at` date has passed is excluded, regardless of verdict.
+Expiry takes precedence over every other rule, so even a `not affected` finding is removed once its `expires_at` lapses.
+A finding without a `suppress` block has no expiry and stays suppressed.
+
 `not affected` findings are always suppressed::
-The finding does not impact the release, so it is noise and is suppressed automatically -- no `suppress` block required.
+The finding does not impact the release, so it is noise and is suppressed automatically; no `suppress` block is required.
+The one exception is the expiry rule above: if a `suppress` block is present and its `expires_at` has passed, the entry is dropped.
 
 Everything else needs an explicit `suppress` block::
 `affected`, `risk acceptable`, and not-yet-triaged findings are still a live or unknown risk.
@@ -55,7 +61,8 @@ reports:
       expires_at: 2026-06-01
 ----
 
-After the expiration date, the entry is excluded from the generated suppression file.
+After the expiration date, the entry is excluded from every generated suppression file.
+Vulnlog manages expiry itself so that each generated file lists only active suppressions and never an expired one.
 
 == Multiple Reporters
 

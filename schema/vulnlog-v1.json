@@ -424,7 +424,7 @@
       "additionalProperties": false,
       "$defs": {
         "suppressEntry": {
-          "description": "Scanner-specific suppression configuration. Required to suppress findings with verdict 'affected' (without resolution), 'risk acceptable', or absent verdict. Not required for 'not affected' findings (always included in suppression output) or 'affected' findings with a 'resolution' (never included). When present without 'expires_at', the suppression is permanent",
+          "description": "Scanner-specific suppression configuration. Required to suppress findings with verdict 'affected' (without resolution), 'risk acceptable', or absent verdict. Not required for 'not affected' findings (included in suppression output unless a present 'expires_at' has passed) or 'affected' findings with a 'resolution' (never included). When present without 'expires_at', the suppression is permanent",
           "examples": [
             {},
             {
@@ -434,7 +434,7 @@
           "type": "object",
           "properties": {
             "expires_at": {
-              "description": "Expiration date of the suppression. After this date, the entry is excluded from the generated suppression file. Omit for permanent suppression",
+              "description": "Expiration date of the suppression. After this date, the entry is excluded from every generated suppression file, regardless of verdict. Omit for permanent suppression",
               "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/date"
             }
           },
