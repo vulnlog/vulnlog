@@ -15,7 +15,9 @@ import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.groups.single
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.choice
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
@@ -26,6 +28,7 @@ import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.OutputOption
+import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import java.nio.file.Path
 
 class SuppressCommand : CliktCommand(name = "suppress") {
@@ -50,6 +53,17 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     ).single()
         .default(DirectoryOutputOption.Directory(Path.of(System.getProperty("user.dir"))))
 
+    val format: SuppressionFormatRequest by option(
+        "--format",
+        help =
+            """
+            Output format for the suppression files.
+            'auto' (default) uses each reporter's native format where one exists and falls back to the generic Vulnlog JSON format otherwise.
+            'generic' forces the generic Vulnlog JSON format for every reporter.
+            """.trimIndent(),
+    ).choice(SuppressionFormatRequest.byToken, ignoreCase = true)
+        .default(SuppressionFormatRequest.Auto)
+
     val filterOptions by FilterOptions()
 
     override fun run() {
@@ -70,7 +84,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         val suppressionVulns =
             collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
-        val outputSuppressions = mapToSuppression(targetReporters, suppressionVulns)
+        val outputSuppressions = mapToSuppression(targetReporters, suppressionVulns, format)
         val contents: List<SuppressionFile> = outputSuppressions.map(::writeSuppressionOutput)
 
         if (contents.isEmpty()) {

@@ -10,12 +10,11 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.WorkState
-import dev.vulnlog.lib.model.suppress.NotSuppressable
-import dev.vulnlog.lib.model.suppress.Suppressable
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
-import dev.vulnlog.lib.model.suppress.Suppression
+import dev.vulnlog.lib.model.suppress.SuppressionFormat
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.model.suppress.SuppressionVuln
+import dev.vulnlog.lib.shell.SuppressionFormatRequest
 
 /**
  * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression
@@ -80,45 +79,51 @@ private fun explodeOnVulnIds(
 fun mapToSuppression(
     targetReporters: Set<ReporterType>,
     reporterToSuppressions: Map<ReporterType, List<SuppressedVulnerability>>,
+    formatRequest: SuppressionFormatRequest = SuppressionFormatRequest.Auto,
 ): Set<SuppressionOutput> =
     targetReporters
-        .map { reporter ->
-            getDefaultSettingsForReporter(reporter) to (reporterToSuppressions[reporter] ?: emptyList())
-        }.filter { (defaults, _) -> defaults is Suppressable }
-        .map { (defaults, suppressions) -> createSuppression(defaults as Suppressable, suppressions) }
+        .filterNot { reporter -> reporter == ReporterType.OTHER }
+        .map { reporter -> reporter to resolveFormatRequest(formatRequest, reporter) }
+        .map { (reporter, format) -> createSuppression(format, reporterToSuppressions[reporter]) }
         .toSet()
 
-private fun getDefaultSettingsForReporter(reporter: ReporterType): Suppression =
+private fun resolveFormatRequest(
+    format: SuppressionFormatRequest,
+    reporter: ReporterType,
+): SuppressionFormat =
+    when (format) {
+        SuppressionFormatRequest.Auto -> nativeFormat(reporter) ?: SuppressionFormat.GenericFormat.Generic(reporter)
+        SuppressionFormatRequest.Generic -> SuppressionFormat.GenericFormat.Generic(reporter)
+    }
+
+private fun nativeFormat(reporter: ReporterType): SuppressionFormat.NativeFormat? =
     when (reporter) {
-        ReporterType.DEPENDENCY_CHECK -> Suppressable.GenericFormat.Generic(reporter)
-        ReporterType.GITHUB_DEPENDABOT -> Suppressable.GenericFormat.Generic(reporter)
-        ReporterType.GRYPE -> Suppressable.GenericFormat.Generic(reporter)
-        ReporterType.NPM_AUDIT -> Suppressable.GenericFormat.Generic(reporter)
-        ReporterType.OTHER -> NotSuppressable
-        ReporterType.CARGO_AUDIT -> Suppressable.NativeFormat.CargoAudit
-        ReporterType.SEMGREP -> Suppressable.GenericFormat.Generic(reporter)
-        ReporterType.SNYK -> Suppressable.NativeFormat.Snyk
-        ReporterType.TRIVY -> Suppressable.NativeFormat.Trivy
+        ReporterType.CARGO_AUDIT -> SuppressionFormat.NativeFormat.CargoAudit
+        ReporterType.SNYK -> SuppressionFormat.NativeFormat.Snyk
+        ReporterType.TRIVY -> SuppressionFormat.NativeFormat.Trivy
+        else -> null
     }
 
 private fun createSuppression(
-    defaults: Suppressable,
-    suppressions: List<SuppressedVulnerability>,
-): SuppressionOutput =
-    when (defaults) {
-        is Suppressable.GenericFormat.Generic -> createGenericSuppression(defaults, suppressions)
-        is Suppressable.NativeFormat.Trivy -> createTrivySuppression(defaults, suppressions)
-        is Suppressable.NativeFormat.Snyk -> createSnykSuppression(defaults, suppressions)
-        is Suppressable.NativeFormat.CargoAudit -> createCargoAuditSuppression(defaults, suppressions)
+    format: SuppressionFormat,
+    suppressions: List<SuppressedVulnerability>?,
+): SuppressionOutput {
+    val suppressionEntries = suppressions ?: emptyList()
+    return when (format) {
+        is SuppressionFormat.GenericFormat.Generic -> createGenericSuppression(format, suppressionEntries)
+        is SuppressionFormat.NativeFormat.Trivy -> createTrivySuppression(format, suppressionEntries)
+        is SuppressionFormat.NativeFormat.Snyk -> createSnykSuppression(format, suppressionEntries)
+        is SuppressionFormat.NativeFormat.CargoAudit -> createCargoAuditSuppression(format, suppressionEntries)
     }
+}
 
 private fun createGenericSuppression(
-    defaults: Suppressable.GenericFormat.Generic,
+    format: SuppressionFormat.GenericFormat.Generic,
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput {
     val entries =
         suppressions
-            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .filter { suppression -> suppression.id::class in format.vulnIdTypes }
             .map { suppression ->
                 SuppressionVuln.GenericSuppressionEntry(
                     id = suppression.id,
@@ -127,18 +132,18 @@ private fun createGenericSuppression(
                 )
             }.toSet()
     return SuppressionOutput.GenericSuppression(
-        fileName = defaults.reporter.name.lowercase() + ".generic.json",
+        fileName = format.reporter.name.lowercase() + ".generic.json",
         entries = entries,
     )
 }
 
 private fun createTrivySuppression(
-    defaults: Suppressable.NativeFormat.Trivy,
+    format: SuppressionFormat.NativeFormat.Trivy,
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput {
     val entries =
         suppressions
-            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .filter { suppression -> suppression.id::class in format.vulnIdTypes }
             .map { suppression ->
                 SuppressionVuln.TrivySuppressionEntry(
                     id = suppression.id,
@@ -150,24 +155,24 @@ private fun createTrivySuppression(
 }
 
 private fun createCargoAuditSuppression(
-    defaults: Suppressable.NativeFormat.CargoAudit,
+    format: SuppressionFormat.NativeFormat.CargoAudit,
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput {
     val entries =
         suppressions
-            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .filter { suppression -> suppression.id::class in format.vulnIdTypes }
             .map { suppression -> SuppressionVuln.CargoAuditSuppressionEntry(id = suppression.id) }
             .toSet()
     return SuppressionOutput.CargoAuditSuppression(entries = entries)
 }
 
 private fun createSnykSuppression(
-    defaults: Suppressable.NativeFormat.Snyk,
+    format: SuppressionFormat.NativeFormat.Snyk,
     suppressions: List<SuppressedVulnerability>,
 ): SuppressionOutput {
     val entries =
         suppressions
-            .filter { suppression -> suppression.id::class in defaults.vulnIdTypes }
+            .filter { suppression -> suppression.id::class in format.vulnIdTypes }
             .map { suppression ->
                 SuppressionVuln.SnykSuppressionEntry(
                     id = suppression.id,

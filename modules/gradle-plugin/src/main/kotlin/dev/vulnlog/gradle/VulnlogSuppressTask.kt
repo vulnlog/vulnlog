@@ -12,6 +12,7 @@ import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
 import dev.vulnlog.lib.core.mapToSuppression
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter
 import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
@@ -46,6 +47,10 @@ abstract class VulnlogSuppressTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
+    @get:Input
+    @get:Optional
+    abstract val format: Property<String>
+
     @TaskAction
     fun generate() {
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
@@ -64,7 +69,11 @@ abstract class VulnlogSuppressTask : DefaultTask() {
                 .toSet()
 
         val suppressionVulns = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
-        val outputs = mapToSuppression(targetReporters, suppressionVulns)
+        val suppressionFormatRequest: SuppressionFormatRequest =
+            SuppressionFormatRequest.fromToken(
+                format.getOrElse("auto"),
+            )
+        val outputs = mapToSuppression(targetReporters, suppressionVulns, suppressionFormatRequest)
 
         val dir = outputDir.get().asFile
         dir.mkdirs()
