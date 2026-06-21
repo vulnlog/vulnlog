@@ -3,13 +3,7 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
-import dev.vulnlog.lib.model.Verdict
-import dev.vulnlog.lib.model.VulnerabilityEntry
-import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.WorkState
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
 import dev.vulnlog.lib.model.suppress.SuppressionFormat
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
@@ -17,66 +11,15 @@ import dev.vulnlog.lib.model.suppress.SuppressionVuln
 import dev.vulnlog.lib.shell.SuppressionFormatRequest
 
 /**
- * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression
- * filter criteria. The vulnerabilities are grouped by their reporter type.
+ * Builds the per-reporter suppression outputs for the given target reporters, applying the requested
+ * output format. Reporters without a suppressible format (such as [ReporterType.OTHER]) are skipped.
  *
- * @param vulnlogFile The Vulnlog file containing vulnerability records to analyze.
- * @param filter The suppression filter to apply for selecting and grouping vulnerabilities.
- * @return A map where the keys are the reporter types, and the values are lists of suppressed vulnerabilities
- *         associated with each reporter.
+ * @param targetReporters The reporters to generate suppression outputs for.
+ * @param reporterToSuppressions The suppressed vulnerabilities grouped by reporter.
+ * @param formatRequest The requested output format. Defaults to [SuppressionFormatRequest.Auto].
+ * @return A set of [SuppressionOutput] objects, one per suppressible target reporter.
  */
-fun collectSuppressedVulnerabilities(
-    vulnlogFile: VulnlogFile,
-    filter: SuppressionFilter,
-): Map<ReporterType, List<SuppressedVulnerability>> =
-    vulnlogFile.vulnerabilities
-        .asSequence()
-        .filterNot { vulnerability -> isResolved(vulnerability, filter.filter.releases) }
-        .flatMap(::explodeOnReports)
-        .applyFilter(filter)
-        .groupBy { it.reporter }
-
-private fun isResolved(
-    vulnEntry: VulnerabilityEntry,
-    filterReleases: Set<Release>,
-): Boolean = findWorkState(vulnEntry, filterReleases) == WorkState.RESOLVED
-
-private fun explodeOnReports(vulnerability: VulnerabilityEntry): List<SuppressedVulnerability> =
-    vulnerability.reports
-        .filter { report -> report.suppress != null || vulnerability.verdict is Verdict.NotAffected }
-        .flatMap { report -> explodeOnVulnIds(report, vulnerability) }
-
-private fun explodeOnVulnIds(
-    report: ReportEntry,
-    vulnerability: VulnerabilityEntry,
-): List<SuppressedVulnerability> {
-    val vulnIds = report.vulnIds.ifEmpty { setOf(vulnerability.id) }
-    return vulnIds.map { id ->
-        SuppressedVulnerability(
-            id = id,
-            releases = vulnerability.releases,
-            reporter = report.reporter,
-            expiresAt = report.suppress?.expiresAt,
-            tags = vulnerability.tags,
-            analysis = vulnerability.analysis ?: "",
-        )
-    }
-}
-
-/**
- * Maps target reporters to their corresponding suppression outputs based on default settings
- * and the list of suppressed vulnerabilities. Only reporters with suppressible default
- * settings are processed.
- *
- * @param targetReporters A set of `ReporterType` enumeration values representing the reporters
- *                        for which suppression mappings should be generated.
- * @param reporterToSuppressions A map where the keys are `ReporterType` enumeration values
- *                                and the values are lists of `SuppressedVulnerability` objects
- *                                associated with those reporters.
- * @return A set of `SuppressionOutput` objects that represent the suppression configurations
- *         for the specified target reporters.
- */
-fun mapToSuppression(
+fun buildSuppressionOutputs(
     targetReporters: Set<ReporterType>,
     reporterToSuppressions: Map<ReporterType, List<SuppressedVulnerability>>,
     formatRequest: SuppressionFormatRequest = SuppressionFormatRequest.Auto,
