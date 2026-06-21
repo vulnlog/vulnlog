@@ -21,6 +21,12 @@ Mutually exclusive with `--output-dir`.
 | Output directory for the suppression files. Defaults to the current directory.
 Mutually exclusive with `-o, --output`.
 
+| `--format <value>`
+| Output format: `auto` (default) or `generic`.
+`auto` uses each reporter's native suppression format and falls back to the generic Vulnlog JSON format for reporters that have none.
+`generic` forces the generic JSON format for every reporter, written as `<reporter>.generic.json`.
+The format only changes how findings are serialized, not which findings are included.
+
 | `--reporter <value>`
 | Filter on reporter.
 
@@ -56,6 +62,13 @@ Suppression file created at: /path/to/.snyk
 ----
 vulnlog suppress full-example.vl.yaml --reporter trivy -o .myTrivy
 Suppression file created at: /path/to/.myTrivy
+----
+
+.Force the generic JSON format instead of a reporter's native format
+[source]
+----
+vulnlog suppress full-example.vl.yaml --reporter trivy --format generic
+Suppression file created at: /path/to/trivy.generic.json
 ----
 
 .Suppress a not-yet-shipped fix when scanning the currently deployed release

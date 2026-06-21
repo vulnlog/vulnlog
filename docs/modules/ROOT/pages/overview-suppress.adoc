@@ -50,6 +50,8 @@ Some scanners (such as Semgrep) have no suppression-file mechanism.
 Others (such as OWASP Dependency Check) do, but Vulnlog does not yet emit their format.
 For both cases Vulnlog writes a generic JSON file that teams can wire into their own tool chain.
 
+You can also request this format for any reporter with `--format generic`, which is useful when you prefer to post-process suppressions in scripts or other tooling rather than use the native format.
+
 .Generic json-based suppression file example.
 [source,json]
 ----
