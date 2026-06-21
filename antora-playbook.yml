@@ -7,10 +7,13 @@ content:
   sources:
     - url: .
       branches:
+        - release/0.15
         - release/0.14
-        - docs/0.13
-        - docs/0.12.0
       start_path: docs
+
+urls:
+  latest_version_segment: latest
+  latest_version_segment_strategy: redirect:from
 
 ui:
   bundle:
