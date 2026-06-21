@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-06-21
+
+### Added
+- Allow suppression format specification by @ryru in [#176](https://github.com/vulnlog/vulnlog/pull/176)
+- Introduce canonical formatting rules by @ryru in [#167](https://github.com/vulnlog/vulnlog/pull/167)
+- Add "modify add" command to create and update vulnerability entries by @ryru in [#163](https://github.com/vulnlog/vulnlog/pull/163)
+- Add fmt command to format Vulnlog files by @ryru in [#160](https://github.com/vulnlog/vulnlog/pull/160)
+- Add missing Jackson annotations in DTOs for non-null values by @ryru in [#159](https://github.com/vulnlog/vulnlog/pull/159)
+- Add Homebrew installation support for Vulnlog CLI by @ryru in [#157](https://github.com/vulnlog/vulnlog/pull/157)
+
+### Changed
+- Rename github-advisory reporter to github-dependabot by @Making4444 in [#171](https://github.com/vulnlog/vulnlog/pull/171)
+
+### Documentation
+- Add documentation for the new format output option by @ryru in [#176](https://github.com/vulnlog/vulnlog/pull/176)
+- Document the suppression expiration behavior explicitly by @ryru in [#175](https://github.com/vulnlog/vulnlog/pull/175)
+- Enhance README and add SECURITY.md for Vulnlog documentation by @ryru in [#165](https://github.com/vulnlog/vulnlog/pull/165)
+- Improve documentation overview by @ryru in [#153](https://github.com/vulnlog/vulnlog/pull/153)
+
+### Fixed
+- Do not write resolved vulnerabilities to suppression files by @ryru in [#172](https://github.com/vulnlog/vulnlog/pull/172)
+- Don't favor published releases anymore in the CLI copy command, just use last release by @monitorlizard in [#164](https://github.com/vulnlog/vulnlog/pull/164)
+
+### New Contributors
+* @Making4444 made their first contribution in [#171](https://github.com/vulnlog/vulnlog/pull/171)
+* @monitorlizard made their first contribution in [#164](https://github.com/vulnlog/vulnlog/pull/164)
+
 ## [Unreleased]
 
 ### Added
@@ -416,6 +443,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.15.0]: https://github.com/vulnlog/vulnlog/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/vulnlog/vulnlog/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/vulnlog/vulnlog/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/vulnlog/vulnlog/compare/v0.11.0...v0.12.0
