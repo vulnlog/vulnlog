@@ -19,9 +19,9 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import dev.vulnlog.lib.core.SuppressionFilter
+import dev.vulnlog.lib.core.buildSuppressionOutputs
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
-import dev.vulnlog.lib.core.mapToSuppression
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.lib.shell.DirectoryOutputOption
@@ -84,7 +84,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         val suppressionVulns =
             collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
-        val outputSuppressions = mapToSuppression(targetReporters, suppressionVulns, format)
+        val outputSuppressions = buildSuppressionOutputs(targetReporters, suppressionVulns, format)
         val contents: List<SuppressionFile> = outputSuppressions.map(::writeSuppressionOutput)
 
         if (contents.isEmpty()) {
