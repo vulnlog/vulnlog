@@ -1,10 +1,10 @@
 name: vulnlog
 title: Vulnlog
-version: '0.14.0'
+version: '0.15'
 start_page: ROOT:index.adoc
 nav:
   - modules/ROOT/nav.adoc
 
 asciidoc:
   attributes:
-    vulnlog-version: '0.14.0'
+    vulnlog-version: '0.15.0'
