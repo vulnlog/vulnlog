@@ -21,6 +21,8 @@ releases:
   - id: 0.14.0
     published_at: 2026-05-19
   - id: 0.15.0
+    published_at: 2026-06-22
+  - id: 0.16.0
 
 vulnerabilities:
 

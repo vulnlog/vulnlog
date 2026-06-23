@@ -1,5 +1,5 @@
 plugins {
-    id("dev.vulnlog.plugin") version "0.14.0"
+    id("dev.vulnlog.plugin") version "0.15.0"
     id("com.github.node-gradle.node") version "7.1.0"
 }
 
