@@ -7,4 +7,4 @@ nav:
 
 asciidoc:
   attributes:
-    vulnlog-version: '0.15.0'
+    vulnlog-version: '0.15.1'
