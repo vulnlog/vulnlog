@@ -8,6 +8,10 @@ project:
   author: Vulnlog Dev Team
 
 tags:
+  - id: cli
+    description: The CLI release artifact
+  - id: gradle plugin
+    description: The Gradle plugin release artifact
   - id: dev dependency
     description: Indicates that the vulnerability is related to development dependencies
 
@@ -22,9 +26,178 @@ releases:
     published_at: 2026-05-19
   - id: 0.15.0
     published_at: 2026-06-22
+  - id: 0.15.1
+    published_at: 2026-06-29
   - id: 0.16.0
 
 vulnerabilities:
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17457696
+    description: >-
+      Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()`
+      method.
+    aliases: [CVE-2026-54515]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54515]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17457396
+    description: >-
+      Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()`
+      and `BeanDeserializerFactory.addBeanProps()` methods.
+    aliases: [CVE-2026-54516]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54516]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17440359
+    description: >-
+      Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.
+    aliases: [CVE-2026-54518]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54518]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17440306
+    description: Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.
+    aliases: [CVE-2026-54517]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54517]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17434789
+    description: Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.
+    aliases: [CVE-2026-54514]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54514]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the affected class is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17440365
+    description: >-
+      Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.
+    aliases: [CVE-2026-54513]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54513]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
+
+  - id: SNYK-JAVA-TOOLSJACKSONCORE-17440597
+    description: Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.
+    aliases: [CVE-2026-54512]
+    releases: [0.15.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
+    reports:
+      - reporter: snyk
+        at: 2026-06-29
+      - reporter: trivy
+        at: 2026-06-29
+        vuln_ids: [CVE-2026-54512]
+    tags:
+      - cli
+      - gradle plugin
+    analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.15.1
+      at: 2026-06-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/183"
+    comment: Fixed in Jackson 3.1.4
 
   - id: SNYK-JAVA-TOOLSJACKSONCORE-15907550
     description: Allocation of resources without limits or throttling vulnerability in Jackson
