@@ -32,6 +32,57 @@ releases:
 
 vulnerabilities:
 
+  - id: SNYK-JAVA-CHQOSLOGBACK-17675449
+    description: Deserialization of untrusted data vulnerability in `HardenedObjectInputStream` of `logback-core`.
+    releases: [0.15.1]
+    packages: ["pkg:maven/ch.qos.logback/logback-core@1.3.14"]
+    reports:
+      - reporter: snyk
+        at: 2026-07-02
+    tags: [dev dependency]
+    analysis: >-
+      The logback-core dependency is not used by the Vulnlog project and is only used transitively by the Ktlinter Gradle plugin
+      in the build.
+    verdict: not affected
+    justification: vulnerable code cannot be controlled by adversary
+    comment: >-
+      The issue is fixed in `ch.qos.logback:logback-core:1.5.33` however the Gradle Ktlint plugin `org.jlleitschuh.gradle:ktlint-gradle`
+      does not yet use the fixed version.
+
+  - id: SNYK-JAVA-CHQOSLOGBACK-17675450
+    description: Deserialization of untrusted data vulnerability in `HardenedObjectInputStream` of `logback-classic`.
+    releases: [0.15.1]
+    packages: ["pkg:maven/ch.qos.logback/logback-classic@1.3.14"]
+    reports:
+      - reporter: snyk
+        at: 2026-07-02
+    tags: [dev dependency]
+    analysis: >-
+      The logback-classic dependency is not used by the Vulnlog project and is only used transitively by the Ktlinter Gradle plugin
+      in the build.
+    verdict: not affected
+    justification: vulnerable code cannot be controlled by adversary
+    comment: >-
+      The issue is fixed in `ch.qos.logback:logback-classic:1.5.33` however the Gradle Ktlint plugin `org.jlleitschuh.gradle:ktlint-gradle`
+      does not yet use the fixed version.
+
+  - id: SNYK-JAVA-CHQOSLOGBACK-17675439
+    description: Expression injection vulnerability in Ktlints logback-core dependency.
+    releases: [0.15.1]
+    packages: ["pkg:maven/ch.qos.logback/logback-core@1.3.14"]
+    reports:
+      - reporter: snyk
+        at: 2026-07-02
+    tags: [dev dependency]
+    analysis: >-
+      The logback-core dependency is not used by the Vulnlog project and is only used transitively by the Ktlinter Gradle plugin
+      in the build.
+    verdict: not affected
+    justification: vulnerable code cannot be controlled by adversary
+    comment: >-
+      The issue is fixed in `ch.qos.logback:logback-core:1.5.36` however the Gradle Ktlint plugin `org.jlleitschuh.gradle:ktlint-gradle`
+      does not yet use the fixed version.
+
   - id: SNYK-JAVA-TOOLSJACKSONCORE-17457696
     description: >-
       Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()`
