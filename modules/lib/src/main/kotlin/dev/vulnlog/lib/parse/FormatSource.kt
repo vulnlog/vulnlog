@@ -39,14 +39,20 @@ fun lineOf(node: Node): Int = node.startMark.map { it.line + 1 }.orElse(0)
 /** The mapping's keys in document order. */
 fun mappingKeys(mapping: MappingNode): List<String> = mapping.value.mapNotNull { (it.keyNode as? ScalarNode)?.value }
 
+/** The value node under [key], or null when absent. */
+fun valueNodeOf(
+    mapping: MappingNode,
+    key: String,
+): Node? =
+    mapping.value
+        .firstOrNull { (it.keyNode as? ScalarNode)?.value == key }
+        ?.valueNode
+
 /** The scalar value under [key], or null when absent or not scalar. */
 fun scalarValueOf(
     mapping: MappingNode,
     key: String,
-): String? =
-    mapping.value
-        .firstOrNull { (it.keyNode as? ScalarNode)?.value == key }
-        ?.let { (it.valueNode as? ScalarNode)?.value }
+): String? = (valueNodeOf(mapping, key) as? ScalarNode)?.value
 
 /**
  * Flattens every value node (mapping values and sequence items) with its path. Sequence items with

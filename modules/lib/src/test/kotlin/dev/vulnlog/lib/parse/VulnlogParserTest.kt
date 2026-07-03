@@ -10,6 +10,7 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.model.validation.FailureLocation
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.YamlParseDtoResult
 import dev.vulnlog.lib.result.YamlParseResult
@@ -381,6 +382,15 @@ class VulnlogParserTest :
 
                 parseToYaml(yaml).shouldBeInstanceOf<YamlParseResult.Valid>()
             }
+
+            test("invalid schemaVersion value points at its node") {
+                val yaml = VulnlogFileRaw(minimalV1.content.replace("schemaVersion: \"1\"", "schemaVersion: \"abc\""))
+
+                val invalid = parseToYaml(yaml).shouldBeInstanceOf<YamlParseResult.Invalid>()
+                invalid.errorMessage shouldBe "Missing or invalid schemaVersion"
+                invalid.location shouldNotBe null
+                invalid.location!!.line shouldBe 1
+            }
         }
 
         context("DTO step") {
@@ -388,21 +398,23 @@ class VulnlogParserTest :
                 val yaml = VulnlogFileRaw(minimalV1.content.replace("schemaVersion: \"1\"", "schemaVersion: \"99\""))
 
                 val invalid =
-                    parseToVulnlogDto(mapper, validYamlOf(yaml), yaml)
+                    parseToVulnlogDto(mapper, validYamlOf(yaml))
                         .shouldBeInstanceOf<YamlParseDtoResult.Invalid>()
                 invalid.message shouldContain "99"
                 invalid.message shouldContain "Try updating vulnlog"
             }
 
-            test("unknown property is rejected with its name") {
+            test("unknown property is rejected with its name and location") {
                 val yaml = VulnlogFileRaw(minimalV1.content + "\nbogus: true")
 
-                parseToVulnlogDto(mapper, validYamlOf(yaml), yaml)
-                    .shouldBeInstanceOf<YamlParseDtoResult.Invalid>()
-                    .message shouldContain "bogus"
+                val invalid =
+                    parseToVulnlogDto(mapper, validYamlOf(yaml))
+                        .shouldBeInstanceOf<YamlParseDtoResult.Invalid>()
+                invalid.message shouldContain "bogus"
+                invalid.location shouldBe FailureLocation(8, 8)
             }
 
-            test("wrong field type returns a YAML parse error") {
+            test("wrong field type returns a YAML parse error with location") {
                 val yaml =
                     VulnlogFileRaw(
                         """
@@ -413,14 +425,17 @@ class VulnlogParserTest :
                         """.trimIndent(),
                     )
 
-                parseToVulnlogDto(mapper, validYamlOf(yaml), yaml)
-                    .shouldBeInstanceOf<YamlParseDtoResult.Invalid>()
-                    .message shouldStartWith "YAML parse error:"
+                val invalid =
+                    parseToVulnlogDto(mapper, validYamlOf(yaml))
+                        .shouldBeInstanceOf<YamlParseDtoResult.Invalid>()
+                invalid.message shouldStartWith "YAML parse error:"
+                invalid.location shouldNotBe null
+                invalid.location!!.line shouldBe 2
             }
 
             test("valid input maps to the v1 DTO") {
                 val valid =
-                    parseToVulnlogDto(mapper, validYamlOf(minimalV1), minimalV1)
+                    parseToVulnlogDto(mapper, validYamlOf(minimalV1))
                         .shouldBeInstanceOf<YamlParseDtoResult.Valid>()
                 valid.validationVersion shouldBe ParseValidationVersion.V1
                 valid.schemaVersion shouldBe SchemaVersion(1, 0)
@@ -446,7 +461,7 @@ class VulnlogParserTest :
                         """.trimIndent(),
                     )
                 val dto =
-                    parseToVulnlogDto(mapper, validYamlOf(yaml), yaml)
+                    parseToVulnlogDto(mapper, validYamlOf(yaml))
                         .shouldBeInstanceOf<YamlParseDtoResult.Valid>()
 
                 parseToVulnlog(dto, yaml)
@@ -456,7 +471,7 @@ class VulnlogParserTest :
 
             test("success carries the raw content") {
                 val dto =
-                    parseToVulnlogDto(mapper, validYamlOf(minimalV1), minimalV1)
+                    parseToVulnlogDto(mapper, validYamlOf(minimalV1))
                         .shouldBeInstanceOf<YamlParseDtoResult.Valid>()
 
                 parseToVulnlog(dto, minimalV1)
@@ -472,12 +487,38 @@ class VulnlogParserTest :
                     .location shouldNotBe null
             }
 
-            test("failures past the syntax step have no location") {
+            test("DTO failure points at the offending node") {
                 val yaml = VulnlogFileRaw(minimalV1.content + "\nbogus: true")
 
                 parseVulnlogFile(mapper, yaml)
                     .shouldBeInstanceOf<ParseResult.Error>()
+                    .location shouldBe FailureLocation(8, 8)
+            }
+
+            test("domain mapping failures have no location") {
+                val yaml =
+                    VulnlogFileRaw(
+                        minimalV1.content.replace(
+                            "vulnerabilities: []",
+                            """
+                            vulnerabilities:
+                              - id: UNKNOWN-2021-0001
+                                releases: []
+                                packages: []
+                                reports: []
+                            """.trimIndent(),
+                        ),
+                    )
+
+                parseVulnlogFile(mapper, yaml)
+                    .shouldBeInstanceOf<ParseResult.Error>()
                     .location shouldBe null
+            }
+
+            test("unquoted numeric schemaVersion parses end-to-end") {
+                val yaml = VulnlogFileRaw(minimalV1.content.replace("schemaVersion: \"1\"", "schemaVersion: 1"))
+
+                parseVulnlogFile(mapper, yaml).shouldBeInstanceOf<ParseResult.Ok>()
             }
         }
     })
