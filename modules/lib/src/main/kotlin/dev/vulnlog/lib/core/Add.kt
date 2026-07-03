@@ -8,17 +8,14 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.result.ParseResult
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.readValue
 import java.nio.file.Path
 import java.time.LocalDate
 
@@ -62,36 +59,36 @@ fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
 }
 
 /**
- * Inserts or updates the [options].vulnId entry in [destinationContent] and rewrites the whole document
- * in the canonical style ([YamlWriter.renderCanonicalDocument]), so any valid layout is accepted and a
- * subsequent `fmt` is a no-op. The optional `# $schema:` header is kept only when [destinationContent]
- * already had it; YAML comments in [destinationContent] do not survive.
+ * Inserts or updates the [options].vulnId entry in the parsed [destination] and rewrites the whole
+ * document in the canonical style ([YamlWriter.renderCanonicalDocument]), so any valid layout is
+ * accepted and a subsequent `fmt` is a no-op. The optional `# $schema:` header is kept only when the
+ * destination already had it; YAML comments in the destination do not survive.
  *
  * On insert, the new entry is placed at the top of the `vulnerabilities:` list; an empty
- * [options].releases defaults to the latest release of [destination], or stays empty when [destination]
- * defines no releases. On update, the entry keeps its position: list options are added to the existing
- * values, scalar options overwrite them, and omitted options are kept.
+ * [options].releases defaults to the latest release of the destination, or stays empty when it
+ * defines no releases. On update, the entry keeps its position: list options are added to the
+ * existing values, scalar options overwrite them, and omitted options are kept.
  *
- * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in [destination].
+ * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in the
+ * destination.
  */
 fun addVulnerabilityToFile(
-    destination: VulnlogFile,
-    destinationContent: VulnlogFileRaw,
+    destination: ParseResult.Ok,
     options: AddVulnerabilityOptions,
     mapper: ObjectMapper = createYamlMapper(),
 ): AddOutcome {
-    val knownReleases = knownReleases(destination)
+    val knownReleases = knownReleases(destination.content)
     val missingReleases = options.releases - knownReleases
     require(missingReleases.isEmpty()) {
         "Releases not defined in file: ${missingReleases.joinToString(", ") { it.value }}"
     }
 
-    val missingTags = options.tags - knownTags(destination)
+    val missingTags = options.tags - knownTags(destination.content)
     require(missingTags.isEmpty()) {
         "Tags not defined in file: ${missingTags.joinToString(", ") { it.value }}"
     }
 
-    val dto = mapper.readValue<VulnlogFileV1Dto>(destinationContent.content)
+    val dto = destination.dto
     val existing = dto.vulnerabilities.firstOrNull { parseVulnId(it.id) == options.vulnId }
     val (entries, updated) =
         if (existing != null) {
@@ -100,7 +97,15 @@ fun addVulnerabilityToFile(
         } else {
             val effectiveReleases =
                 options.releases.ifEmpty {
-                    if (knownReleases.isEmpty()) emptySet() else setOf(destination.releases.last().id)
+                    if (knownReleases.isEmpty()) {
+                        emptySet()
+                    } else {
+                        setOf(
+                            destination.content.releases
+                                .last()
+                                .id,
+                        )
+                    }
                 }
             val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options)
             listOf(entry) + dto.vulnerabilities to false
@@ -109,7 +114,7 @@ fun addVulnerabilityToFile(
         YamlWriter.renderCanonicalDocument(
             dto.copy(vulnerabilities = entries),
             mapper,
-            includeSchemaHeader = hasSchemaHeader(destinationContent),
+            includeSchemaHeader = hasSchemaHeader(destination.rootNode),
         )
     return AddOutcome(newContent, options.vulnId, updated)
 }

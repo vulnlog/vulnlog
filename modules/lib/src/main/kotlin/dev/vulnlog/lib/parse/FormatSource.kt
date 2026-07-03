@@ -4,8 +4,6 @@
 package dev.vulnlog.lib.parse
 
 import dev.vulnlog.lib.model.VulnlogFileRaw
-import org.snakeyaml.engine.v2.api.LoadSettings
-import org.snakeyaml.engine.v2.api.lowlevel.Compose
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
 import org.snakeyaml.engine.v2.nodes.ScalarNode
@@ -17,15 +15,8 @@ import org.snakeyaml.engine.v2.nodes.SequenceNode
  */
 data class FormatSource(
     val raw: VulnlogFileRaw,
-    val root: MappingNode?,
-) {
-    companion object {
-        fun of(raw: VulnlogFileRaw): FormatSource {
-            val root = Compose(LoadSettings.builder().build()).composeString(raw.content).orElse(null)
-            return FormatSource(raw, root as? MappingNode)
-        }
-    }
-}
+    val root: MappingNode,
+)
 
 /** A value node and the path it sits at, e.g. `vulnerabilities[CVE-2026-0001].releases`. */
 data class LocatedNode(

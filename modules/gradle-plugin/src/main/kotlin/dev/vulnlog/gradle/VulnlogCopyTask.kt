@@ -59,18 +59,16 @@ abstract class VulnlogCopyTask : DefaultTask() {
         for (destination in destinations) {
             val parsedDestination = parseInputOrFail(listOf(destination))
             validateParsedInputOrFailWithFailureOutput(parsedDestination)
-            val destinationVulnlogFile = parsedDestination.values.first().content
+            val destinationFile = parsedDestination.values.first()
 
-            val destinationContent = parsedDestination.values.first().rawContent
             val outcome =
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
-                    destination = destinationVulnlogFile,
-                    destinationContent = destinationContent,
+                    destination = destinationFile,
                     vulnIds = vulnIdSet,
                     mapper = mapper,
                 )
-            if (hasYamlComments(destinationContent)) {
+            if (hasYamlComments(destinationFile.rootNode)) {
                 logger.warn(formatCommentsDroppedWarning(destination.path.toString()))
             }
             destination.path.writeText(outcome.newContent.content)

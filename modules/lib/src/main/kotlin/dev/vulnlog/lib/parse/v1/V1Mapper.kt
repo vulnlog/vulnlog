@@ -10,7 +10,6 @@ import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.core.shortenSchemaVersion
-import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.PurlEntry
@@ -28,7 +27,6 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.v1.dto.ProjectDto
 import dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ReleasePurlEntryDto
@@ -38,13 +36,13 @@ import dev.vulnlog.lib.parse.v1.dto.SuppressionDto
 import dev.vulnlog.lib.parse.v1.dto.TagEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.result.ParseResult
 
 object V1Mapper {
     fun toDto(file: VulnlogFile): VulnlogFileV1Dto =
         VulnlogFileV1Dto(
             schemaVersion = shortenSchemaVersion(file.schemaVersion),
             project = file.project.toDto(),
+            tags = file.tags.map { TagEntryDto(it.id.value, it.description) }.takeIf { it.isNotEmpty() },
             releases = releasesToDto(file.releases),
             vulnerabilities = vulnerabilitiesToDto(file.vulnerabilities),
         )
@@ -109,43 +107,23 @@ object V1Mapper {
             )
         }
 
+    /**
+     * Maps the DTO onto the domain model. Throws [IllegalArgumentException] when a value has no
+     * domain representation (unknown vulnerability id, purl, verdict, ...).
+     *
+     * TODO collect multiple errors and report all back instead of stopping at the first.
+     */
     fun toDomain(
-        validationVersion: ParseValidationVersion,
         schemaVersion: SchemaVersion,
         dto: VulnlogFileV1Dto,
-        rawContent: VulnlogFileRaw,
-    ): ParseResult =
-        // TODO collect multiple errors and report all back. Something like this:
-        //    val errors = mutableListOf<String>()
-        //
-        //    val vulnerabilities = dto.vulnerabilities.map { vuln ->
-        //        val id = parseVulnId(vuln.id)
-        //        if (id == null) errors.add("Unknown vulnerability ID format: '${vuln.id}'")
-        //        // ...
-        //    }
-        //
-        //    return if (errors.isEmpty()) ParseResult.Ok(...)
-        //    else ParseResult.Error(errors.joinToString("\n"))
-        try {
-            val project = dto.project.toDomain()
-            val tags = tagsToDomain(dto.tags)
-            val releases = releasesToDomain(dto.releases)
-            val vulnerabilities = vulnerabilitiesToDomain(dto.vulnerabilities)
-
-            ParseResult.Ok(
-                validationVersion,
-                VulnlogFile(
-                    schemaVersion = schemaVersion,
-                    project = project,
-                    tags = tags,
-                    releases = releases,
-                    vulnerabilities = vulnerabilities,
-                ),
-                rawContent = rawContent,
-            )
-        } catch (e: IllegalArgumentException) {
-            ParseResult.Error("Parser error: ${e.message}")
-        }
+    ): VulnlogFile =
+        VulnlogFile(
+            schemaVersion = schemaVersion,
+            project = dto.project.toDomain(),
+            tags = tagsToDomain(dto.tags),
+            releases = releasesToDomain(dto.releases),
+            vulnerabilities = vulnerabilitiesToDomain(dto.vulnerabilities),
+        )
 
     private fun ProjectDto.toDomain(): Project = Project(organization, name, author, contact)
 

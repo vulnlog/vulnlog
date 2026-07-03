@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.parse.v1
 
-import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReleaseEntry
@@ -19,7 +18,6 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.v1.dto.ProjectDto
 import dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
@@ -28,11 +26,10 @@ import dev.vulnlog.lib.parse.v1.dto.SuppressionDto
 import dev.vulnlog.lib.parse.v1.dto.TagEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.result.ParseResult
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.LocalDate
 
 private val defaultSchemaVersion = SchemaVersion(1, 0)
@@ -50,8 +47,7 @@ private fun minimalDto(
     tags = tags,
 )
 
-private fun toDomain(dto: VulnlogFileV1Dto) =
-    V1Mapper.toDomain(ParseValidationVersion.V1, defaultSchemaVersion, dto, rawContent = VulnlogFileRaw(""))
+private fun toDomain(dto: VulnlogFileV1Dto): VulnlogFile = V1Mapper.toDomain(defaultSchemaVersion, dto)
 
 private fun vulnlogFile(
     schemaVersion: SchemaVersion = SchemaVersion(1, 0),
@@ -186,30 +182,27 @@ class V1MapperTest :
         context("toDomain — project mapping") {
             test("project fields are mapped from dto") {
                 toDomain(minimalDto())
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.project shouldBe Project("acme", "widget", "alice")
+                    .project shouldBe Project("acme", "widget", "alice")
             }
 
             test("project contact field is mapped when present") {
                 val dto = minimalDto().copy(project = ProjectDto("acme", "widget", "alice", "alice@example.com"))
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.project.contact shouldBe "alice@example.com"
+                    .project.contact shouldBe "alice@example.com"
             }
         }
 
         context("toDomain — tags mapping") {
             test("null tags list maps to empty list") {
                 toDomain(minimalDto(tags = null))
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.tags shouldBe emptyList()
+                    .tags shouldBe emptyList()
             }
 
             test("tag entries are mapped with id and description") {
                 val dto = minimalDto(tags = listOf(TagEntryDto("backend", "Backend services")))
 
-                val tags = toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>().content.tags
+                val tags = toDomain(dto).tags
                 tags shouldHaveSize 1
                 tags[0] shouldBe TagEntry(Tag("backend"), "Backend services")
             }
@@ -219,7 +212,7 @@ class V1MapperTest :
             test("releases are mapped by id") {
                 val dto = minimalDto(releases = listOf(ReleaseEntryDto("v1.0"), ReleaseEntryDto("v2.0")))
 
-                val releases = toDomain(dto).shouldBeInstanceOf<ParseResult.Ok>().content.releases
+                val releases = toDomain(dto).releases
                 releases shouldHaveSize 2
                 releases[0].id shouldBe Release("v1.0")
                 releases[1].id shouldBe Release("v2.0")
@@ -242,8 +235,7 @@ class V1MapperTest :
                     )
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0]
+                    .vulnerabilities[0]
                     .verdict shouldBe Verdict.UnderInvestigation
             }
 
@@ -263,8 +255,7 @@ class V1MapperTest :
                     )
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0]
+                    .vulnerabilities[0]
                     .verdict shouldBe Verdict.UnderInvestigation
             }
 
@@ -285,8 +276,7 @@ class V1MapperTest :
                     )
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0]
+                    .vulnerabilities[0]
                     .verdict shouldBe Verdict.Affected(Severity.CRITICAL)
             }
 
@@ -307,8 +297,7 @@ class V1MapperTest :
                     )
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0]
+                    .vulnerabilities[0]
                     .verdict shouldBe Verdict.RiskAcceptable(Severity.LOW)
             }
 
@@ -329,15 +318,14 @@ class V1MapperTest :
                     )
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0]
+                    .vulnerabilities[0]
                     .verdict shouldBe
                     Verdict.NotAffected(
                         VexJustification.VULNERABLE_CODE_NOT_PRESENT,
                     )
             }
 
-            test("unknown verdict returns a parse error") {
+            test("unknown verdict is rejected") {
                 val dto =
                     minimalDto(
                         vulnerabilities =
@@ -352,7 +340,7 @@ class V1MapperTest :
                             ),
                     )
 
-                toDomain(dto).shouldBeInstanceOf<ParseResult.Error>()
+                shouldThrow<IllegalArgumentException> { toDomain(dto) }
             }
         }
 
@@ -374,8 +362,7 @@ class V1MapperTest :
 
                 val aliases =
                     toDomain(dto)
-                        .shouldBeInstanceOf<ParseResult.Ok>()
-                        .content.vulnerabilities[0]
+                        .vulnerabilities[0]
                         .aliases
                 aliases shouldHaveSize 1
                 aliases[0] shouldBe VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")
@@ -399,8 +386,7 @@ class V1MapperTest :
 
                 val reports =
                     toDomain(dto)
-                        .shouldBeInstanceOf<ParseResult.Ok>()
-                        .content.vulnerabilities[0]
+                        .vulnerabilities[0]
                         .reports
                 reports shouldHaveSize 1
                 reports[0].reporter shouldBe ReporterType.GRYPE
@@ -423,8 +409,7 @@ class V1MapperTest :
                     )
 
                 toDomain(dto)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .content.vulnerabilities[0]
+                    .vulnerabilities[0]
                     .resolution shouldBe null
             }
 
@@ -445,8 +430,7 @@ class V1MapperTest :
 
                 val resolution =
                     toDomain(dto)
-                        .shouldBeInstanceOf<ParseResult.Ok>()
-                        .content.vulnerabilities[0]
+                        .vulnerabilities[0]
                         .resolution
                 resolution?.release shouldBe Release("v2.0")
                 resolution?.ref shouldBe "https://example.com/fix"

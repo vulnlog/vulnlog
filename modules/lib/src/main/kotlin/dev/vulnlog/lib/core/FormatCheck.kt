@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.ParseValidationVersion
-import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.FormatSource
 import dev.vulnlog.lib.parse.LocatedNode
@@ -17,6 +16,7 @@ import dev.vulnlog.lib.parse.scalarValueOf
 import dev.vulnlog.lib.parse.walkValues
 import dev.vulnlog.lib.result.FormatFinding
 import dev.vulnlog.lib.result.FormatRule
+import dev.vulnlog.lib.result.ParseResult
 import org.snakeyaml.engine.v2.common.FlowStyle
 import org.snakeyaml.engine.v2.common.ScalarStyle
 import org.snakeyaml.engine.v2.nodes.MappingNode
@@ -25,26 +25,23 @@ import org.snakeyaml.engine.v2.nodes.SequenceNode
 import tools.jackson.databind.ObjectMapper
 
 /**
- * Explains why [rawContent] is not in the canonical style as findings, one per deviation, with the
+ * Explains why [parsed] is not in the canonical style as findings, one per deviation, with the
  * rule set versioned like [validate]. Each rule compares the observed presentation against the same
  * [CanonicalYaml] decision functions the writer uses, so checker and writer cannot disagree.
  * Deviations no rule names (blank lines, indentation, quoting, chomping) fall into a single
  * [FormatRule.NON_CANONICAL_LAYOUT] finding. An empty result means the content is byte-canonical.
- *
- * Formatting only requires parseable content; it is checked before and independently of [validate].
  */
 fun checkFormat(
-    rawContent: VulnlogFileRaw,
-    version: ParseValidationVersion,
+    parsed: ParseResult.Ok,
     mapper: ObjectMapper,
 ): List<FormatFinding> {
-    val source = FormatSource.of(rawContent)
-    val context = FormatCheckContext(source, source.root?.let(::walkValues) ?: emptyList(), mapper)
+    val source = FormatSource(parsed.rawContent, parsed.rootNode)
+    val context = FormatCheckContext(source, walkValues(source.root), mapper)
     val findings =
-        when (version) {
+        when (parsed.validationVersion) {
             ParseValidationVersion.V1 -> v1FormatRules
         }.flatMap { rule -> rule(context) }
-    return findings.ifEmpty { layoutCatchAll(rawContent, mapper) }
+    return findings.ifEmpty { layoutCatchAll(parsed, mapper) }
 }
 
 /** One line per finding, tagged with the kebab-case rule id, e.g. `[non-canonical-array-style]`. */
@@ -70,11 +67,12 @@ private val v1FormatRules =
     )
 
 private fun checkSchemaHeader(context: FormatCheckContext): List<FormatFinding> {
-    val raw = context.source.raw
-    val lines = raw.content.lines()
-    val schemaVersion = context.source.root?.let { scalarValueOf(it, "schemaVersion") } ?: "1"
+    val lines =
+        context.source.raw.content
+            .lines()
+    val schemaVersion = scalarValueOf(context.source.root, "schemaVersion") ?: "1"
     val header = YamlWriter.schemaHeader(schemaVersion)
-    val hasHeader = hasSchemaHeader(raw)
+    val hasHeader = hasSchemaHeader(context.source.root)
     val expectedStart = if (hasHeader) listOf(header, "---") else listOf("---")
     if (lines.take(expectedStart.size) == expectedStart) return emptyList()
     return listOf(
@@ -151,7 +149,7 @@ private fun styleName(style: ScalarStyle): String =
     }
 
 private fun checkComments(context: FormatCheckContext): List<FormatFinding> =
-    if (hasYamlComments(context.source.raw)) {
+    if (hasYamlComments(context.source.root)) {
         listOf(
             FormatFinding(
                 rule = FormatRule.COMMENTS_NOT_PRESERVED,
@@ -164,10 +162,10 @@ private fun checkComments(context: FormatCheckContext): List<FormatFinding> =
     }
 
 private fun layoutCatchAll(
-    rawContent: VulnlogFileRaw,
+    parsed: ParseResult.Ok,
     mapper: ObjectMapper,
 ): List<FormatFinding> =
-    if (formatYaml(rawContent, mapper) == rawContent) {
+    if (formatYaml(parsed, mapper) == parsed.rawContent) {
         emptyList()
     } else {
         listOf(

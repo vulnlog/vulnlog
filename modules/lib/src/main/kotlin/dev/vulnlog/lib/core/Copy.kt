@@ -16,8 +16,8 @@ import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.result.ParseResult
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.readValue
 import java.nio.file.Path
 
 data class CopyOutcome(
@@ -26,30 +26,31 @@ data class CopyOutcome(
 )
 
 /**
- * Copies the requested vulnerability entries from [source] into [destinationContent] and rewrites the
- * whole document in the canonical style ([YamlWriter.renderCanonicalDocument]), even when nothing is
- * copied. Any valid layout is accepted. The optional `# $schema:` header is kept only when
- * [destinationContent] already had it; YAML comments in [destinationContent] do not survive.
+ * Copies the requested vulnerability entries from [source] into the parsed [destination] and rewrites
+ * the whole document in the canonical style ([YamlWriter.renderCanonicalDocument]), even when nothing
+ * is copied. Any valid layout is accepted. The optional `# $schema:` header is kept only when the
+ * destination already had it; YAML comments in the destination do not survive.
  *
- * If an entry already exists in [destination], it is merged with the source entry and keeps its
+ * If an entry already exists in the destination, it is merged with the source entry and keeps its
  * position: existing values win for scalars; lists (aliases, packages, tags) are unioned; reports are
  * unioned by reporter. New entries are placed at the top of the `vulnerabilities:` list. Releases on
  * every copied entry are rewritten to the destination's latest release.
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
-    destination: VulnlogFile,
-    destinationContent: VulnlogFileRaw,
+    destination: ParseResult.Ok,
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
 ): CopyOutcome {
-    val release = destination.releases.last().id
+    val release =
+        destination.content.releases
+            .last()
+            .id
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
-    val existingById = destination.vulnerabilities.associateBy { it.id }
+    val existingById = destination.content.vulnerabilities.associateBy { it.id }
 
-    val dto = mapper.readValue<VulnlogFileV1Dto>(destinationContent.content)
     val newDto =
-        sourceEntries.fold(dto) { acc, incoming ->
+        sourceEntries.fold(destination.dto) { acc, incoming ->
             val merged = mergeVulnerabilityEntry(existingById[incoming.id], incoming, release)
             upsertEntry(acc, incoming.id, V1Mapper.vulnerabilityToDto(merged))
         }
@@ -60,7 +61,7 @@ fun copyVulnerabilities(
                 YamlWriter.renderCanonicalDocument(
                     newDto,
                     mapper,
-                    includeSchemaHeader = hasSchemaHeader(destinationContent),
+                    includeSchemaHeader = hasSchemaHeader(destination.rootNode),
                 ),
             ),
     )

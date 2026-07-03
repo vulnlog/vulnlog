@@ -6,25 +6,22 @@ package dev.vulnlog.lib.core
 import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.result.ParseResult
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.readValue
 
 /**
- * Rewrites a parsed schema-v1 document in the canonical style: the whole file is rendered
- * from its data ([VulnlogFileV1Dto], a 1:1 image of the YAML, so no field is dropped), replacing
- * whatever layout the source used. The optional `# $schema:` header is kept only when [rawContent]
- * already had it; YAML comments are not part of the format and do not survive.
+ * Rewrites a parsed schema-v1 document in the canonical style: the whole file is rendered from
+ * [ParseResult.Ok.dto] (a 1:1 image of the YAML, so no field is dropped), replacing whatever
+ * layout the source used. The optional `# $schema:` header is kept only when the source already
+ * had it; YAML comments are not part of the format and do not survive.
  */
 fun formatYaml(
-    rawContent: VulnlogFileRaw,
+    parsed: ParseResult.Ok,
     mapper: ObjectMapper,
-): VulnlogFileRaw {
-    val dto = mapper.readValue<VulnlogFileV1Dto>(rawContent.content)
-    return VulnlogFileRaw(
-        YamlWriter.renderCanonicalDocument(dto, mapper, includeSchemaHeader = hasSchemaHeader(rawContent)),
+): VulnlogFileRaw =
+    VulnlogFileRaw(
+        YamlWriter.renderCanonicalDocument(parsed.dto, mapper, includeSchemaHeader = hasSchemaHeader(parsed.rootNode)),
     )
-}
 
 sealed interface FormatOutcome {
     data object Unchanged : FormatOutcome
@@ -35,11 +32,11 @@ sealed interface FormatOutcome {
 }
 
 fun formatYamlOutcome(
-    rawContent: VulnlogFileRaw,
+    parsed: ParseResult.Ok,
     mapper: ObjectMapper,
 ): FormatOutcome {
-    val formatted = formatYaml(rawContent, mapper)
-    return if (formatted == rawContent) FormatOutcome.Unchanged else FormatOutcome.Reformatted(formatted)
+    val formatted = formatYaml(parsed, mapper)
+    return if (formatted == parsed.rawContent) FormatOutcome.Unchanged else FormatOutcome.Reformatted(formatted)
 }
 
 fun formatCommentsDroppedWarning(source: String): String =
