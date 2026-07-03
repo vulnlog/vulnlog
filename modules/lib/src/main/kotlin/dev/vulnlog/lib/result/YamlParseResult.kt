@@ -32,5 +32,6 @@ sealed interface YamlParseDtoResult {
 
     data class Invalid(
         val message: String,
+        val location: FailureLocation? = null,
     ) : YamlParseDtoResult
 }
