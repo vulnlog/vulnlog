@@ -460,23 +460,18 @@ class VulnlogParserTest :
                             reports: []
                         """.trimIndent(),
                     )
-                val dto =
-                    parseToVulnlogDto(mapper, validYamlOf(yaml))
-                        .shouldBeInstanceOf<YamlParseDtoResult.Valid>()
 
-                parseToVulnlog(dto, yaml)
+                parseVulnlogFile(mapper, yaml)
                     .shouldBeInstanceOf<ParseResult.Error>()
                     .error shouldContain "Parser error"
             }
 
-            test("success carries the raw content") {
-                val dto =
-                    parseToVulnlogDto(mapper, validYamlOf(minimalV1))
-                        .shouldBeInstanceOf<YamlParseDtoResult.Valid>()
+            test("success carries every parse artifact") {
+                val ok = parseVulnlogFile(mapper, minimalV1).shouldBeInstanceOf<ParseResult.Ok>()
 
-                parseToVulnlog(dto, minimalV1)
-                    .shouldBeInstanceOf<ParseResult.Ok>()
-                    .rawContent shouldBe minimalV1
+                ok.rawContent shouldBe minimalV1
+                ok.dto.schemaVersion shouldBe "1"
+                scalarValueOf(ok.rootNode, "schemaVersion") shouldBe "1"
             }
         }
 

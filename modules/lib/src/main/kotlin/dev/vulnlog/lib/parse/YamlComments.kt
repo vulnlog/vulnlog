@@ -3,33 +3,52 @@
 
 package dev.vulnlog.lib.parse
 
-import dev.vulnlog.lib.model.VulnlogFileRaw
-import org.snakeyaml.engine.v2.api.LoadSettings
-import org.snakeyaml.engine.v2.api.lowlevel.Parse
+import org.snakeyaml.engine.v2.comments.CommentLine
 import org.snakeyaml.engine.v2.comments.CommentType
-import org.snakeyaml.engine.v2.events.CommentEvent
+import org.snakeyaml.engine.v2.nodes.AnchorNode
+import org.snakeyaml.engine.v2.nodes.MappingNode
+import org.snakeyaml.engine.v2.nodes.Node
+import org.snakeyaml.engine.v2.nodes.SequenceNode
 
 /**
- * True when [raw] contains YAML comments that a canonical rewrite drops. Blank lines and the
- * `# $schema:` header (which [YamlWriter] preserves) do not count as comments.
+ * True when [root] carries YAML comments that a canonical rewrite drops. Blank lines and the
+ * `# $schema:` header (which [YamlWriter] preserves) do not count as comments. Comments are only
+ * present when the tree was composed with comment parsing enabled, as the parse pipeline does.
  */
-fun hasYamlComments(raw: VulnlogFileRaw): Boolean {
-    val settings = LoadSettings.builder().setParseComments(true).build()
-    return Parse(settings).parseString(raw.content).any { event ->
-        event is CommentEvent &&
-            event.commentType != CommentType.BLANK_LINE &&
-            !event.value.trim().startsWith("\$schema:")
+fun hasYamlComments(root: Node): Boolean =
+    commentLines(root).any { comment ->
+        comment.commentType != CommentType.BLANK_LINE && !isSchemaHeader(comment)
     }
-}
 
 /**
- * True when [raw] carries the optional `# $schema:` header comment. The header only enables JSON
+ * True when [root] carries the optional `# $schema:` header comment. The header only enables JSON
  * Schema support in editors; [YamlWriter] re-emits it for documents that already have it and omits
  * it for those that do not, so a write never introduces it on its own.
  */
-fun hasSchemaHeader(raw: VulnlogFileRaw): Boolean {
-    val settings = LoadSettings.builder().setParseComments(true).build()
-    return Parse(settings).parseString(raw.content).any { event ->
-        event is CommentEvent && event.value.trim().startsWith("\$schema:")
+fun hasSchemaHeader(root: Node): Boolean = commentLines(root).any(::isSchemaHeader)
+
+private fun isSchemaHeader(comment: CommentLine): Boolean = comment.value.trim().startsWith("\$schema:")
+
+private fun commentLines(node: Node): List<CommentLine> {
+    val comments = mutableListOf<CommentLine>()
+
+    fun visit(node: Node) {
+        node.blockComments?.let(comments::addAll)
+        node.inLineComments?.let(comments::addAll)
+        node.endComments?.let(comments::addAll)
+        when (node) {
+            is MappingNode ->
+                node.value.forEach { tuple ->
+                    visit(tuple.keyNode)
+                    visit(tuple.valueNode)
+                }
+
+            is SequenceNode -> node.value.forEach(::visit)
+            is AnchorNode -> visit(node.realNode)
+            else -> {}
+        }
     }
+
+    visit(node)
+    return comments
 }

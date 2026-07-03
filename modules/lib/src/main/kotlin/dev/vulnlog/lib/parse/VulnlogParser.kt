@@ -32,6 +32,7 @@ private val syntaxSettings: LoadSettings =
         .builder()
         .setUseMarks(true)
         .setAllowDuplicateKeys(true) // key handling stays last-wins, as before
+        .setParseComments(true) // rewrite flows detect comments on the same node tree
         .build()
 
 /** Step 1: the text is well-formed YAML with a schemaVersion declaration. */
@@ -99,16 +100,6 @@ private fun parseToV1Dto(
     }
 }
 
-/** Step 2b, second half: the DTO maps onto the domain model. */
-fun parseToVulnlog(
-    validDto: YamlParseDtoResult.Valid,
-    raw: VulnlogFileRaw,
-): ParseResult =
-    when (validDto.validationVersion) {
-        ParseValidationVersion.V1 ->
-            V1Mapper.toDomain(validDto.validationVersion, validDto.schemaVersion, validDto.dto, raw)
-    }
-
 /** Full per-file pipeline; parses the text once and stops at the first failing step. */
 fun parseVulnlogFile(
     mapper: ObjectMapper,
@@ -125,7 +116,16 @@ fun parseVulnlogFile(
             is YamlParseDtoResult.Invalid -> return ParseResult.Error(result.message, result.location)
             is YamlParseDtoResult.Valid -> result
         }
-    return parseToVulnlog(dto, raw)
+    // Step 2b, second half: the DTO maps onto the domain model.
+    val content =
+        try {
+            when (dto.validationVersion) {
+                ParseValidationVersion.V1 -> V1Mapper.toDomain(dto.schemaVersion, dto.dto)
+            }
+        } catch (e: IllegalArgumentException) {
+            return ParseResult.Error("Parser error: ${e.message}")
+        }
+    return ParseResult.Ok(dto.validationVersion, content, dto.dto, yaml.rootNode, raw)
 }
 
 private fun locationOf(e: MarkedYamlEngineException): FailureLocation? =

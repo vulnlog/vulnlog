@@ -50,18 +50,17 @@ abstract class VulnlogFmtTask : DefaultTask() {
         val unformatted = mutableListOf<Path>()
         for (input in inputFiles) {
             val parsedInput = parsed.getValue(input)
-            val raw = parsedInput.rawContent
-            when (val outcome = formatYamlOutcome(raw, mapper)) {
+            when (val outcome = formatYamlOutcome(parsedInput, mapper)) {
                 is FormatOutcome.Unchanged -> logger.lifecycle("Already formatted: ${input.path}")
                 is FormatOutcome.Reformatted ->
                     if (checkOnly) {
                         unformatted.add(input.path)
                         logger.lifecycle("Can be reformatted: ${input.path}")
-                        checkFormat(raw, parsedInput.validationVersion, mapper).forEach { finding ->
+                        checkFormat(parsedInput, mapper).forEach { finding ->
                             logger.lifecycle("  ${renderFormatFinding(finding)}")
                         }
                     } else {
-                        if (hasYamlComments(raw)) {
+                        if (hasYamlComments(parsedInput.rootNode)) {
                             logger.warn(formatCommentsDroppedWarning(input.path.toString()))
                         }
                         input.path.writeText(outcome.formatted.content)

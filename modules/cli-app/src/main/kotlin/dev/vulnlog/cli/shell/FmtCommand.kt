@@ -53,7 +53,7 @@ class FmtCommand : CliktCommand(name = "fmt") {
         for (input in inputs) {
             val parsedInput = parsed.getValue(input)
             val raw = parsedInput.rawContent
-            val outcome = formatYamlOutcome(raw, mapper)
+            val outcome = formatYamlOutcome(parsedInput, mapper)
             if (outcome is FormatOutcome.Reformatted) anyUnformatted = true
 
             when (input) {
@@ -63,11 +63,11 @@ class FmtCommand : CliktCommand(name = "fmt") {
                         is FormatOutcome.Reformatted ->
                             if (isCheck) {
                                 echo("Can be reformatted: <stdin>", err = true)
-                                checkFormat(raw, parsedInput.validationVersion, mapper).forEach { finding ->
+                                checkFormat(parsedInput, mapper).forEach { finding ->
                                     echo("  ${renderFormatFinding(finding)}", err = true)
                                 }
                             } else {
-                                if (hasYamlComments(raw)) {
+                                if (hasYamlComments(parsedInput.rootNode)) {
                                     echo(formatCommentsDroppedWarning("<stdin>"), err = true)
                                 }
                                 echo(outcome.formatted.content, trailingNewline = false)
@@ -80,11 +80,11 @@ class FmtCommand : CliktCommand(name = "fmt") {
                         is FormatOutcome.Reformatted ->
                             if (isCheck) {
                                 echo("Can be reformatted: ${input.path}")
-                                checkFormat(raw, parsedInput.validationVersion, mapper).forEach { finding ->
+                                checkFormat(parsedInput, mapper).forEach { finding ->
                                     echo("  ${renderFormatFinding(finding)}")
                                 }
                             } else {
-                                if (hasYamlComments(raw)) {
+                                if (hasYamlComments(parsedInput.rootNode)) {
                                     echo(formatCommentsDroppedWarning(input.path.toString()), err = true)
                                 }
                                 input.path.writeText(outcome.formatted.content)

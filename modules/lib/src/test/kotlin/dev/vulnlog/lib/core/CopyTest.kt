@@ -125,8 +125,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve1),
                     )
 
@@ -168,8 +167,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve1),
                     )
 
@@ -210,8 +208,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve1),
                     )
 
@@ -239,8 +236,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve1),
                     )
 
@@ -261,8 +257,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve1),
                     )
 
@@ -303,8 +298,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = destinationContent,
+                        destination = parsed(destinationContent),
                         vulnIds = setOf(cve2),
                         mapper = mapper,
                     )
@@ -312,7 +306,7 @@ class CopyTest :
                 outcome.newContent.content shouldContain "vulnerabilities:\n\n  - id: CVE-2026-5678"
                 outcome.newContent.content shouldContain "releases:\n  - id: 1.0.0"
                 "CVE-2026-1234".toRegex().findAll(outcome.newContent.content).count() shouldBe 1
-                formatYaml(outcome.newContent, mapper) shouldBe outcome.newContent
+                formatYaml(parsed(outcome.newContent), mapper).content shouldBe outcome.newContent.content
             }
 
             test("preserves the schema header when the destination has one") {
@@ -323,9 +317,8 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
                         // render uses YamlWriter.write, which emits the '# $schema:' header
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve1),
                     )
 
@@ -358,8 +351,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = destinationContent,
+                        destination = parsed(destinationContent),
                         vulnIds = setOf(cve1),
                     )
 
@@ -374,8 +366,7 @@ class CopyTest :
                 val outcome =
                     copyVulnerabilities(
                         source = source,
-                        destination = destination,
-                        destinationContent = render(destination),
+                        destination = parsed(render(destination)),
                         vulnIds = setOf(cve2), // not in source
                     )
 

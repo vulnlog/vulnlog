@@ -64,18 +64,16 @@ class CopyCommand : CliktCommand(name = "copy") {
         for (destination in destinations) {
             val parsedDestination = parseInputOrFail(listOf(destination))
             validateParsedInputOrFailWithFailureOutput(parsedDestination)
-            val destinationVulnlogFile = parsedDestination.values.first().content
+            val destinationFile = parsedDestination.values.first()
 
-            val destinationContent = parsedDestination.values.first().rawContent
             val outcome =
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
-                    destination = destinationVulnlogFile,
-                    destinationContent = destinationContent,
+                    destination = destinationFile,
                     vulnIds = vulnIds,
                     mapper = mapper,
                 )
-            if (hasYamlComments(destinationContent)) {
+            if (hasYamlComments(destinationFile.rootNode)) {
                 echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
             }
             destination.path.writeText(outcome.newContent.content)

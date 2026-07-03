@@ -169,17 +169,16 @@ class AddCommand : CliktCommand(name = "add") {
         for (destination in destinations) {
             val parsedDestination = parseInputOrFail(listOf(destination))
             validateParsedInputOrFailWithFailureOutput(parsedDestination)
-            val vulnlogFile = parsedDestination.values.first().content
-            val rawContent = parsedDestination.values.first().rawContent
+            val destinationFile = parsedDestination.values.first()
 
             val outcome =
                 try {
-                    addVulnerabilityToFile(vulnlogFile, rawContent, commandOption, mapper)
+                    addVulnerabilityToFile(destinationFile, commandOption, mapper)
                 } catch (e: IllegalArgumentException) {
                     echo("Error: ${e.message} (${destination.path})", err = true)
                     throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
                 }
-            if (hasYamlComments(rawContent)) {
+            if (hasYamlComments(destinationFile.rootNode)) {
                 echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
             }
             destination.path.writeText(outcome.newContent)

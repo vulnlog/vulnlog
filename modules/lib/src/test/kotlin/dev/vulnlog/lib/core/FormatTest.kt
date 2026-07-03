@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
@@ -160,7 +159,7 @@ class FormatTest :
         ) = Regex(Regex.escape(needle)).findAll(haystack).count()
 
         test("column-0 sequences are normalised without duplicating entries") {
-            val result = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper).content
+            val result = formatYaml(parsed(COLUMN0_YAML), mapper).content
 
             // Each entry appears exactly once (the bug duplicated them).
             occurrences(result, "id: foo") shouldBe 1
@@ -174,20 +173,20 @@ class FormatTest :
         }
 
         test("formatting is idempotent for column-0 input") {
-            val once = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper)
-            val twice = formatYaml(once, mapper)
+            val once = formatYaml(parsed(COLUMN0_YAML), mapper)
+            val twice = formatYaml(parsed(once), mapper)
 
             twice shouldBe once
         }
 
         test("formatting is idempotent for already-indented input") {
-            val once = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper)
+            val once = formatYaml(parsed(COLUMN0_YAML), mapper)
             // Re-running on indented output is a no-op.
-            formatYaml(once, mapper) shouldBe once
+            formatYaml(parsed(once), mapper) shouldBe once
         }
 
         test("reformats every vulnerability entry in place without duplicating it") {
-            val result = formatYaml(VulnlogFileRaw(ENTRIES_YAML), mapper).content
+            val result = formatYaml(parsed(ENTRIES_YAML), mapper).content
 
             occurrences(result, "id: CVE-2026-0001") shouldBe 1
             occurrences(result, "id: CVE-2026-0002") shouldBe 1
@@ -201,13 +200,13 @@ class FormatTest :
         }
 
         test("formatting an entry-bearing document is idempotent") {
-            val once = formatYaml(VulnlogFileRaw(ENTRIES_YAML), mapper)
+            val once = formatYaml(parsed(ENTRIES_YAML), mapper)
 
-            formatYaml(once, mapper) shouldBe once
+            formatYaml(parsed(once), mapper) shouldBe once
         }
 
         test("renders multi-line values as literal and long single-line values as folded blocks") {
-            val result = formatYaml(VulnlogFileRaw(STYLED_YAML), mapper).content
+            val result = formatYaml(parsed(STYLED_YAML), mapper).content
 
             result shouldContain "analysis: |-"
             result shouldContain "comment: >-"
@@ -215,13 +214,13 @@ class FormatTest :
         }
 
         test("formatting a styled document is idempotent") {
-            val once = formatYaml(VulnlogFileRaw(STYLED_YAML), mapper)
+            val once = formatYaml(parsed(STYLED_YAML), mapper)
 
-            formatYaml(once, mapper) shouldBe once
+            formatYaml(parsed(once), mapper) shouldBe once
         }
 
         test("removes user comments and generates the schema header") {
-            val result = formatYaml(VulnlogFileRaw(COMMENTED_YAML), mapper).content
+            val result = formatYaml(parsed(COMMENTED_YAML), mapper).content
 
             result shouldNotContain "# reviewed by the security team"
             result shouldNotContain "# temporary, recheck after upgrade"
@@ -231,29 +230,29 @@ class FormatTest :
         }
 
         test("renders a flow-style vulnerabilities list in the canonical block style") {
-            val result = formatYaml(VulnlogFileRaw(FLOW_YAML), mapper)
+            val result = formatYaml(parsed(FLOW_YAML), mapper)
 
             result.content shouldContain "vulnerabilities:\n\n  - id: CVE-2026-0001"
             result.content shouldContain "releases: [1.0.0]"
-            formatYaml(result, mapper) shouldBe result
+            formatYaml(parsed(result), mapper) shouldBe result
         }
 
         test("an empty vulnerabilities list renders as an empty flow array") {
-            val result = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper).content
+            val result = formatYaml(parsed(COLUMN0_YAML), mapper).content
 
             result shouldContain "vulnerabilities: []"
         }
 
         test("formatYamlOutcome reports canonical content as unchanged") {
-            val canonical = formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper)
+            val canonical = formatYaml(parsed(COLUMN0_YAML), mapper)
 
-            formatYamlOutcome(canonical, mapper) shouldBe FormatOutcome.Unchanged
+            formatYamlOutcome(parsed(canonical), mapper) shouldBe FormatOutcome.Unchanged
         }
 
         test("formatYamlOutcome carries the reformatted content for non-canonical input") {
-            val outcome = formatYamlOutcome(VulnlogFileRaw(COLUMN0_YAML), mapper)
+            val outcome = formatYamlOutcome(parsed(COLUMN0_YAML), mapper)
 
-            outcome shouldBe FormatOutcome.Reformatted(formatYaml(VulnlogFileRaw(COLUMN0_YAML), mapper))
+            outcome shouldBe FormatOutcome.Reformatted(formatYaml(parsed(COLUMN0_YAML), mapper))
         }
 
         test("the comments-dropped warning names the source and the replacement fields") {
