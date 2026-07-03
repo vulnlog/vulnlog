@@ -17,7 +17,6 @@ import dev.vulnlog.lib.shell.renderParseFailures
 import dev.vulnlog.lib.shell.validateFiles
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
-import java.io.File
 
 fun requireNonEmptyVulnlogFiles(inputFiles: List<FileInputOption.File>) {
     if (inputFiles.isEmpty()) {
@@ -36,7 +35,7 @@ fun requireSingleVulnlogFile(
     return inputFiles.single()
 }
 
-fun parseInputOrFail(inputFiles: List<FileInputOption.File>): Map<File, ParseResult.Ok> {
+fun parseInputOrFail(inputFiles: List<FileInputOption.File>): Map<FileInputOption, ParseResult.Ok> {
     val parseResults: ParseResults =
         try {
             parseInputs(inputFiles)
@@ -63,7 +62,7 @@ fun buildFilterOrFail(
     }
 
 fun DefaultTask.validateParsedInputOrFailWithFailureOutput(
-    fileToResult: Map<File, ParseResult.Ok>,
+    fileToResult: Map<FileInputOption, ParseResult.Ok>,
     renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
 ): ValidationResults {
     val validationFindings = validateFiles(fileToResult, renderedSeverities)

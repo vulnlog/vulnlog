@@ -138,7 +138,7 @@ class ValidateCommandTest :
                 withTempFile(content = INVALID_VULNLOG_YAML) { input ->
                     val result = ValidateCommand().test(input.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
                     result.stderr shouldContain "Parsing of ${input.name} failed"
                 }
             }
@@ -147,8 +147,18 @@ class ValidateCommandTest :
                 withStdin(INVALID_VULNLOG_YAML) {
                     val result = ValidateCommand().test("-")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
                     result.stderr shouldContain "Parsing of <stdin> failed"
+                }
+            }
+
+            test("reports the failure location for a YAML syntax error") {
+                withTempFile(content = "schemaVersion: [unclosed") { input ->
+                    val result = ValidateCommand().test(input.absolutePath)
+
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.stderr shouldContain "Parsing of ${input.name} failed"
+                    result.stderr shouldContain "[ERROR] Line "
                 }
             }
         }

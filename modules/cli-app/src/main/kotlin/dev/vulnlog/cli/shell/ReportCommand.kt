@@ -25,6 +25,7 @@ import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
+import dev.vulnlog.lib.shell.sourceFile
 import java.nio.file.Path
 import java.time.Instant
 
@@ -71,7 +72,7 @@ class ReportCommand : CliktCommand(name = "report") {
                 tags = filterOptions.tagsOptions.sorted(),
                 reporter = filterOptions.reporter?.canonical(),
             )
-        val inputNames = parsedSuccessfully.keys.map { it.name }
+        val inputNames = parsedSuccessfully.keys.map { it.sourceFile().name }
 
         val reportData =
             toDto(

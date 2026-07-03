@@ -17,6 +17,7 @@ import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.shell.sourceFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -77,7 +78,7 @@ abstract class VulnlogReportTask : DefaultTask() {
                 tags = tags.get().sorted(),
                 reporter = reporter.orNull?.let { parseReporter(it).canonical() },
             )
-        val inputNames = parsedSuccessfully.keys.map { it.name }
+        val inputNames = parsedSuccessfully.keys.map { it.sourceFile().name }
 
         val reportData =
             HtmlReportMapper.toDto(

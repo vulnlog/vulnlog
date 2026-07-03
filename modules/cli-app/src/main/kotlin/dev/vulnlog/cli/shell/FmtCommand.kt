@@ -20,7 +20,6 @@ import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.sourceFile
 import kotlin.io.path.writeText
 
 class FmtCommand : CliktCommand(name = "fmt") {
@@ -52,7 +51,7 @@ class FmtCommand : CliktCommand(name = "fmt") {
         val mapper = createYamlMapper()
         var anyUnformatted = false
         for (input in inputs) {
-            val parsedInput = parsed.getValue(input.sourceFile())
+            val parsedInput = parsed.getValue(input)
             val raw = parsedInput.rawContent
             val outcome = formatYamlOutcome(raw, mapper)
             if (outcome is FormatOutcome.Reformatted) anyUnformatted = true

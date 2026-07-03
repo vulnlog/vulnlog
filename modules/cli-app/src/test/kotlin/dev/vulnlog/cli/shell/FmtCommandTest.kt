@@ -238,7 +238,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = INVALID_VULNLOG_YAML) { file ->
                     val result = FmtCommand().test(file.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
                     result.stderr shouldContain "failed"
                     // file is left untouched
                     file.readText() shouldBe INVALID_VULNLOG_YAML

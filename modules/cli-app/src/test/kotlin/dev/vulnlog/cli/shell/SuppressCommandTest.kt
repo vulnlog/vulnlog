@@ -213,7 +213,7 @@ class SuppressCommandTest :
                 withStdin(INVALID_VULNLOG_YAML) {
                     val result = SuppressCommand().test("-")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
                     result.stderr shouldContain "Parsing of <stdin> failed"
                 }
             }

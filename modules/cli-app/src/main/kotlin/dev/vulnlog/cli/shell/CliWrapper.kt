@@ -25,13 +25,12 @@ import dev.vulnlog.lib.shell.resolveReleaseFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateFiles
 import dev.vulnlog.lib.shell.validateInputPath
-import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.writeText
 
-fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<File, ParseResult.Ok> {
+fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputOption, ParseResult.Ok> {
     val parseResults: ParseResults =
         try {
             parseInputs(inputs)
@@ -42,13 +41,13 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<File, Pars
         }
     if (parseResults.failure.isNotEmpty()) {
         renderParseFailures(parseResults).forEach { echo(it, err = true) }
-        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
     }
     return parseResults.success
 }
 
 fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
-    fileToResult: Map<File, ParseResult.Ok>,
+    fileToResult: Map<FileInputOption, ParseResult.Ok>,
     renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
 ): ValidationResults {
     val validationFindings = validateFiles(fileToResult, renderedSeverities)

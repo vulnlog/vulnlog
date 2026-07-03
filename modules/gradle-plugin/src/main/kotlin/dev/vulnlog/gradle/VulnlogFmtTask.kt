@@ -13,7 +13,6 @@ import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.sourceFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -50,7 +49,7 @@ abstract class VulnlogFmtTask : DefaultTask() {
         val checkOnly = check.getOrElse(false)
         val unformatted = mutableListOf<Path>()
         for (input in inputFiles) {
-            val parsedInput = parsed.getValue(input.sourceFile())
+            val parsedInput = parsed.getValue(input)
             val raw = parsedInput.rawContent
             when (val outcome = formatYamlOutcome(raw, mapper)) {
                 is FormatOutcome.Unchanged -> logger.lifecycle("Already formatted: ${input.path}")
