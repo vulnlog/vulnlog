@@ -73,6 +73,7 @@ class VulnlogValidateTaskTest :
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "Parsing of test.vl.yaml failed"
+                result.output shouldContain "[ERROR]"
             }
         }
 

@@ -10,10 +10,9 @@ import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.result.ValidationResult
 import dev.vulnlog.lib.result.ValidationResults
-import java.io.File
 
 fun validateFiles(
-    fileToResult: Map<File, ParseResult.Ok>,
+    fileToResult: Map<FileInputOption, ParseResult.Ok>,
     renderedSeverities: Set<Severity> = Severity.entries.toSet(),
 ): ValidationResults {
     val contextToResults = validateEachFile(fileToResult)
@@ -33,12 +32,14 @@ fun validateFiles(
     )
 }
 
-private fun validateEachFile(fileToResult: Map<File, ParseResult.Ok>): Map<VulnlogFileContext, ValidationResult> =
+private fun validateEachFile(
+    fileToResult: Map<FileInputOption, ParseResult.Ok>,
+): Map<VulnlogFileContext, ValidationResult> =
     fileToResult
-        .map { (file, parseResult) ->
+        .map { (input, parseResult) ->
             VulnlogFileContext(
                 parseResult.validationVersion,
-                file.name,
+                input.sourceFile().name,
                 parseResult.content,
             )
         }.associateWith { context -> validate(context) }

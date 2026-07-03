@@ -3,14 +3,20 @@
 
 package dev.vulnlog.lib.shell
 
+import dev.vulnlog.lib.core.renderParseFailure
 import dev.vulnlog.lib.model.VulnlogFileRaw
-import dev.vulnlog.lib.parse.YamlParser
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.parseVulnlogFile
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.ParseResults
-import java.io.File
+import tools.jackson.databind.ObjectMapper
+import java.io.IOException
 import kotlin.io.path.readText
 
+/**
+ * Reads and parses each input independently: every file progresses to its own first failing
+ * pipeline step, so one run reports all files' failures together.
+ */
 fun parseInputs(inputs: List<FileInputOption>): ParseResults {
     require(inputs.isNotEmpty()) { "inputs must not be empty." }
 
@@ -24,8 +30,12 @@ fun parseInputs(inputs: List<FileInputOption>): ParseResults {
         error("Mixing input files with STDIN is not allowed.")
     }
 
-    val parser = YamlParser(createYamlMapper())
-    return parseInputOptions(parser, inputs)
+    val mapper = createYamlMapper()
+    val results = inputs.associateWith { parseInput(mapper, it) }
+    return ParseResults(
+        success = results.mapNotNull { (input, result) -> (result as? ParseResult.Ok)?.let { input to it } }.toMap(),
+        failure = results.mapNotNull { (input, result) -> (result as? ParseResult.Error)?.let { input to it } }.toMap(),
+    )
 }
 
 /**
@@ -34,44 +44,20 @@ fun parseInputs(inputs: List<FileInputOption>): ParseResults {
  * parse failures identically.
  */
 fun renderParseFailures(parseResults: ParseResults): List<String> =
-    parseResults.failure.map { (file, result) ->
-        "Parsing of ${file.name} failed:\n${result.error}"
-    }
+    parseResults.failure.map { (input, result) -> renderParseFailure(input.sourceFile().name, result) }
 
-private fun parseInputOptions(
-    parser: YamlParser,
-    inputs: List<FileInputOption>,
-): ParseResults {
-    val typeToResults =
-        inputs
-            .map { parseInputOption(parser, it) }
-            .groupBy { it.second::class }
-
-    val success =
-        typeToResults[ParseResult.Ok::class]
-            ?.associate { it.first to (it.second as ParseResult.Ok) }
-            ?: emptyMap()
-    val failure =
-        typeToResults[ParseResult.Error::class]
-            ?.associate { it.first to (it.second as ParseResult.Error) }
-            ?: emptyMap()
-
-    return ParseResults(success, failure)
-}
-
-private fun parseInputOption(
-    parser: YamlParser,
+private fun parseInput(
+    mapper: ObjectMapper,
     input: FileInputOption,
-): Pair<File, ParseResult> {
+): ParseResult {
     val content =
-        when (input) {
-            is FileInputOption.File -> input.path.readText()
-            FileInputOption.Stdin -> System.`in`.bufferedReader().readText()
+        try {
+            when (input) {
+                is FileInputOption.File -> input.path.readText()
+                FileInputOption.Stdin -> System.`in`.bufferedReader().readText()
+            }
+        } catch (e: IOException) {
+            error("Cannot read ${input.sourceFile().name}: ${e.message}")
         }
-    return input.sourceFile() to parseContent(parser, VulnlogFileRaw(content))
+    return parseVulnlogFile(mapper, VulnlogFileRaw(content))
 }
-
-private fun parseContent(
-    parser: YamlParser,
-    content: VulnlogFileRaw,
-): ParseResult = parser.parse(content)
