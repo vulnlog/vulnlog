@@ -35,19 +35,19 @@ private val cve2 = VulnId.Cve("CVE-2024-0002")
 private val ghsa1 = VulnId.Ghsa("GHSA-1234-5678-abcd")
 
 private fun vulnlogFile(
-    project: Project = _root_ide_package_.dev.vulnlog.lib.core.defaultProject,
+    project: Project = defaultProject,
     vulnerabilities: List<VulnerabilityEntry> = emptyList(),
 ) = VulnlogFile(
-    schemaVersion = _root_ide_package_.dev.vulnlog.lib.core.defaultSchema,
+    schemaVersion = defaultSchema,
     project = project,
     releases = emptyList(),
     vulnerabilities = vulnerabilities,
 )
 
 private fun vulnerability(
-    id: VulnId = _root_ide_package_.dev.vulnlog.lib.core.cve1,
+    id: VulnId = cve1,
     aliases: List<VulnId> = emptyList(),
-    releases: List<Release> = listOf(_root_ide_package_.dev.vulnlog.lib.core.releaseV1),
+    releases: List<Release> = listOf(releaseV1),
     analysis: String? = "not affected",
     verdict: Verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
     resolution: Resolution? = null,
@@ -65,12 +65,12 @@ private fun vulnerability(
 )
 
 private fun reportingEntry(
-    primaryId: VulnId = _root_ide_package_.dev.vulnlog.lib.core.cve1,
+    primaryId: VulnId = cve1,
     state: WorkState = WorkState.OPEN,
     ids: Set<VulnId> = setOf(primaryId),
     impact: Impact = Impact.NotAffected("vulnerable code not in execute path"),
     analysis: String? = "not affected",
-    reportFor: Set<Release> = setOf(_root_ide_package_.dev.vulnlog.lib.core.releaseV1),
+    reportFor: Set<Release> = setOf(releaseV1),
     fixedIn: Set<Release> = emptySet(),
     shortDescription: String? = null,
 ) = ReportingEntry(
