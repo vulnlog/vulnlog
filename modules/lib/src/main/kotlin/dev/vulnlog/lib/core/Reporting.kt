@@ -42,6 +42,7 @@ fun collectReportingEntries(
             ReportingEntry(
                 state = findWorkState(vuln, filter.releases),
                 primaryId = vuln.id,
+                name = vuln.name,
                 ids = vuln.aliases.toSet(),
                 shortDescription = vuln.description,
                 impact = defineImpact(vuln),
@@ -78,6 +79,7 @@ private fun mergeTwo(
     b: ReportingEntry,
 ): ReportingEntry =
     a.copy(
+        name = a.name ?: b.name,
         ids = a.ids + b.ids,
         shortDescription = a.shortDescription ?: b.shortDescription,
         reportFor = a.reportFor + b.reportFor,

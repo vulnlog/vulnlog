@@ -46,6 +46,7 @@ private fun vulnlogFile(
 
 private fun vulnerability(
     id: VulnId = cve1,
+    name: String? = null,
     aliases: List<VulnId> = emptyList(),
     releases: List<Release> = listOf(releaseV1),
     analysis: String? = "not affected",
@@ -54,6 +55,7 @@ private fun vulnerability(
     description: String? = null,
 ) = VulnerabilityEntry(
     id = id,
+    name = name,
     aliases = aliases,
     releases = releases,
     packages = listOf(Purl.Maven("pkg:maven/com.example/lib@1.0")),
@@ -66,6 +68,7 @@ private fun vulnerability(
 
 private fun reportingEntry(
     primaryId: VulnId = cve1,
+    name: String? = null,
     state: WorkState = WorkState.OPEN,
     ids: Set<VulnId> = setOf(primaryId),
     impact: Impact = Impact.NotAffected("vulnerable code not in execute path"),
@@ -75,6 +78,7 @@ private fun reportingEntry(
     shortDescription: String? = null,
 ) = ReportingEntry(
     primaryId = primaryId,
+    name = name,
     state = state,
     ids = ids,
     shortDescription = shortDescription,
@@ -98,6 +102,14 @@ class ReportingTest :
                 val entry = result.first()
                 entry.primaryId shouldBe cve1
                 entry.ids shouldBe setOf(ghsa1)
+            }
+
+            test("maps common name") {
+                val file = vulnlogFile(vulnerabilities = listOf(vulnerability(name = "Log4Shell")))
+
+                val result = collectReportingEntries(file)
+
+                result.first().name shouldBe "Log4Shell"
             }
 
             test("maps fixedIn as set from resolution") {
@@ -323,6 +335,16 @@ class ReportingTest :
 
                 result shouldHaveSize 1
                 result.first().shortDescription shouldBe "RCE in lib"
+            }
+
+            test("picks first non-null common name") {
+                val entry1 = reportingEntry(name = null)
+                val entry2 = reportingEntry(name = "Log4Shell")
+
+                val result = mergeReportingEntries(listOf(entry1, entry2))
+
+                result shouldHaveSize 1
+                result.first().name shouldBe "Log4Shell"
             }
 
             test("keeps entries separate when verdict differs") {

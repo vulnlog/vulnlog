@@ -5,6 +5,7 @@ package dev.vulnlog.lib.parse.reporting.dto
 
 data class ReportEntryDataDto(
     val primaryId: String,
+    val name: String?,
     val ids: List<String>,
     val state: String,
     val verdict: String,

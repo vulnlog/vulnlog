@@ -9,6 +9,7 @@ import dev.vulnlog.lib.model.VulnId
 data class ReportingEntry(
     val state: WorkState,
     val primaryId: VulnId,
+    val name: String? = null,
     val ids: Set<VulnId>,
     val shortDescription: String?,
     val impact: Impact,
