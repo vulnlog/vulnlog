@@ -5,7 +5,7 @@ plugins {
     id("vulnlog.common-convention")
     `java-gradle-plugin`
     id("com.gradle.plugin-publish") version "2.1.1"
-    id("com.gradleup.shadow") version "9.4.1"
+    id("com.gradleup.shadow") version "9.4.3"
 }
 
 description = "Vulnlog Gradle plugin"
