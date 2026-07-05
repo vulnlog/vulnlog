@@ -419,6 +419,33 @@ class AddTest :
                 outcome.newContent shouldContain "Existing comment."
             }
 
+            test("updates an existing entry when the supplied id differs only by case") {
+                val content =
+                    yamlWithEntries(
+                        """
+                        |  - id: "CVE-2026-1234"
+                        |    releases:
+                        |      - "1.0.0"
+                        |    packages: []
+                        |    reports: []
+                        """.trimMargin(),
+                    )
+
+                val outcome =
+                    addVulnerabilityToFile(
+                        parsed(content),
+                        DEFAULT_OPTIONS.copy(
+                            vulnId = parseVulnId("cve-2026-1234"),
+                            description = "Updated description.",
+                        ),
+                    )
+
+                outcome.updated shouldBe true
+                outcome.vulnId shouldBe VulnId.Cve("CVE-2026-1234")
+                outcome.newContent shouldContain "description: Updated description."
+                outcome.newContent.split("id: CVE-2026-1234").size - 1 shouldBe 1
+            }
+
             test("update with no --release keeps existing releases (no fallback to latest)") {
                 val existing =
                     VulnerabilityEntry(
