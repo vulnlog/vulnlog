@@ -27,16 +27,6 @@ class ValidateCommand : CliktCommand(name = "validate") {
     override fun run() {
         printOutputSeparator()
 
-        /**
-         * 1. Check that the file is valid YAML.
-         *    - Parse YAML file to the node tree, if it failes it is not correct YAML.
-         * 2. Check the file is a valid Vulnlog file.
-         * 2a) Validate against the JSON schema
-         *    - Use node tree and validate against the JSON schema, if it fails, it is not a valid Vulnlog file.
-         * 2b) Validate against the domain model
-         *    - Parse to a Vulnlog domain model and check domain rules, if it fails, it is not a valid Vulnlog file.
-         */
-
         val parsedSuccessfully = parseInputOrFail(inputs)
         val validationFindings =
             validateParsedInputOrFailWithFailureOutput(

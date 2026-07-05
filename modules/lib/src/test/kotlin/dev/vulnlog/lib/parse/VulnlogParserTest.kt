@@ -59,7 +59,9 @@ class VulnlogParserTest :
 
                 parseVulnlogFile(mapper, yaml)
                     .shouldBeInstanceOf<ParseResult.Error>()
-                    .error shouldContain "schemaVersion"
+                    .failures
+                    .single()
+                    .message shouldContain "schemaVersion"
             }
 
             test("non-numeric schemaVersion returns an error") {
@@ -95,7 +97,9 @@ class VulnlogParserTest :
 
                 parseVulnlogFile(mapper, yaml)
                     .shouldBeInstanceOf<ParseResult.Error>()
-                    .error shouldContain "99"
+                    .failures
+                    .single()
+                    .message shouldContain "99"
             }
         }
 
@@ -461,9 +465,13 @@ class VulnlogParserTest :
                         """.trimIndent(),
                     )
 
-                parseVulnlogFile(mapper, yaml)
-                    .shouldBeInstanceOf<ParseResult.Error>()
-                    .error shouldContain "Parser error"
+                val failure =
+                    parseVulnlogFile(mapper, yaml)
+                        .shouldBeInstanceOf<ParseResult.Error>()
+                        .failures
+                        .single()
+                failure.path shouldBe "vulnerabilities[UNKNOWN-2021-0001].id"
+                failure.message shouldContain "UNKNOWN-2021-0001"
             }
 
             test("success carries every parse artifact") {
@@ -479,6 +487,8 @@ class VulnlogParserTest :
             test("syntax failure carries a location") {
                 parseVulnlogFile(mapper, VulnlogFileRaw("schemaVersion: [unclosed"))
                     .shouldBeInstanceOf<ParseResult.Error>()
+                    .failures
+                    .single()
                     .location shouldNotBe null
             }
 
@@ -487,10 +497,12 @@ class VulnlogParserTest :
 
                 parseVulnlogFile(mapper, yaml)
                     .shouldBeInstanceOf<ParseResult.Error>()
+                    .failures
+                    .single()
                     .location shouldBe FailureLocation(8, 8)
             }
 
-            test("domain mapping failures have no location") {
+            test("domain mapping failures point at the offending entry") {
                 val yaml =
                     VulnlogFileRaw(
                         minimalV1.content.replace(
@@ -505,9 +517,45 @@ class VulnlogParserTest :
                         ),
                     )
 
-                parseVulnlogFile(mapper, yaml)
-                    .shouldBeInstanceOf<ParseResult.Error>()
-                    .location shouldBe null
+                val failure =
+                    parseVulnlogFile(mapper, yaml)
+                        .shouldBeInstanceOf<ParseResult.Error>()
+                        .failures
+                        .single()
+                failure.path shouldBe "vulnerabilities[UNKNOWN-2021-0001].id"
+                failure.location shouldBe FailureLocation(8, 9)
+            }
+
+            test("every domain mapping problem is reported at once") {
+                val yaml =
+                    VulnlogFileRaw(
+                        minimalV1.content.replace(
+                            "vulnerabilities: []",
+                            """
+                            vulnerabilities:
+                              - id: UNKNOWN-2021-0001
+                                releases: []
+                                packages: []
+                                reports: []
+                              - id: CVE-2021-1234
+                                releases: []
+                                packages: []
+                                reports: []
+                                verdict: bogus
+                            """.trimIndent(),
+                        ),
+                    )
+
+                val failures =
+                    parseVulnlogFile(mapper, yaml)
+                        .shouldBeInstanceOf<ParseResult.Error>()
+                        .failures
+                failures.map { it.path } shouldBe
+                    listOf(
+                        "vulnerabilities[UNKNOWN-2021-0001].id",
+                        "vulnerabilities[CVE-2021-1234].verdict",
+                    )
+                failures.map { it.location?.line } shouldBe listOf(8, 16)
             }
 
             test("unquoted numeric schemaVersion parses end-to-end") {

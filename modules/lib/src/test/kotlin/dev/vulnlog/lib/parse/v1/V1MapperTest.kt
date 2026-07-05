@@ -26,10 +26,11 @@ import dev.vulnlog.lib.parse.v1.dto.SuppressionDto
 import dev.vulnlog.lib.parse.v1.dto.TagEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
-import io.kotest.assertions.throwables.shouldThrow
+import dev.vulnlog.lib.result.DomainMappingResult
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.LocalDate
 
 private val defaultSchemaVersion = SchemaVersion(1, 0)
@@ -47,7 +48,11 @@ private fun minimalDto(
     tags = tags,
 )
 
-private fun toDomain(dto: VulnlogFileV1Dto): VulnlogFile = V1Mapper.toDomain(defaultSchemaVersion, dto)
+private fun toDomain(dto: VulnlogFileV1Dto): VulnlogFile =
+    V1Mapper
+        .toDomain(defaultSchemaVersion, dto)
+        .shouldBeInstanceOf<DomainMappingResult.Valid>()
+        .file
 
 private fun vulnlogFile(
     schemaVersion: SchemaVersion = SchemaVersion(1, 0),
@@ -340,7 +345,12 @@ class V1MapperTest :
                             ),
                     )
 
-                shouldThrow<IllegalArgumentException> { toDomain(dto) }
+                val invalid =
+                    V1Mapper
+                        .toDomain(defaultSchemaVersion, dto)
+                        .shouldBeInstanceOf<DomainMappingResult.Invalid>()
+                invalid.failures.single().path shouldBe "vulnerabilities[CVE-2021-1].verdict"
+                invalid.failures.single().message shouldBe "Invalid verdict: invalid_verdict"
             }
         }
 

@@ -7,21 +7,31 @@ import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.VulnlogFileContext
 import dev.vulnlog.lib.result.Rule
 import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.result.ValidationFinding
 import dev.vulnlog.lib.result.ValidationResult
+import org.snakeyaml.engine.v2.nodes.MappingNode
 
 /**
- * Validates the given vulnerability log file context and returns a validation result
- * containing findings such as errors, warnings, or informational messages.
- *
- * @param vulnlogContext The context of the vulnerability log file, including its
- *                       validation version, file name, and the actual vulnerability log file.
- * @return A `ValidationResult` containing a list of validation findings identified
- *         based on the specified validation version and the provided log file.
+ * One file under validation. The node tree lets future rules resolve finding locations; it is
+ * absent when the file was built from domain objects rather than parsed text.
  */
+data class VulnlogFileContext(
+    val validationVersion: ParseValidationVersion,
+    val fileName: String,
+    val vulnlogFile: VulnlogFile,
+    val rootNode: MappingNode? = null,
+)
+
+/**
+ * Validates every file and returns the findings per context. Cross-file rules (issues #200 and
+ * #132) will run here, over the full list.
+ */
+fun validate(contexts: List<VulnlogFileContext>): Map<VulnlogFileContext, ValidationResult> =
+    contexts.associateWith(::validate)
+
+/** Validates a single file against the domain rules of its schema version. */
 fun validate(vulnlogContext: VulnlogFileContext): ValidationResult {
     val findings =
         when (vulnlogContext.validationVersion) {

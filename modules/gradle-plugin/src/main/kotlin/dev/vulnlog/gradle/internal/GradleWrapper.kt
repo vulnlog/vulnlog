@@ -14,6 +14,7 @@ import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.buildFilter
 import dev.vulnlog.lib.shell.parseInputs
 import dev.vulnlog.lib.shell.renderParseFailures
+import dev.vulnlog.lib.shell.renderValidationFindings
 import dev.vulnlog.lib.shell.validateFiles
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -65,9 +66,10 @@ fun DefaultTask.validateParsedInputOrFailWithFailureOutput(
     fileToResult: Map<FileInputOption, ParseResult.Ok>,
     renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
 ): ValidationResults {
-    val validationFindings = validateFiles(fileToResult, renderedSeverities)
-    if (validationFindings.renderedFindings.isNotBlank()) {
-        logger.warn(validationFindings.renderedFindings)
+    val validationFindings = validateFiles(fileToResult)
+    val rendered = renderValidationFindings(validationFindings, renderedSeverities)
+    if (rendered.isNotBlank()) {
+        logger.warn(rendered)
     }
     if (validationFindings.hasErrors) {
         throw GradleException("Vulnlog validation failed.")

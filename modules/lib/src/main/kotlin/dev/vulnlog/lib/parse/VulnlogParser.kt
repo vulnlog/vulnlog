@@ -6,8 +6,10 @@ package dev.vulnlog.lib.parse
 import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.model.validation.FailureLocation
+import dev.vulnlog.lib.model.validation.ParseFailure
 import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.result.DomainMappingResult
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.YamlParseDtoResult
 import dev.vulnlog.lib.result.YamlParseResult
@@ -107,25 +109,41 @@ fun parseVulnlogFile(
 ): ParseResult {
     val yaml =
         when (val result = parseToYaml(raw)) {
-            is YamlParseResult.Invalid -> return ParseResult.Error(result.errorMessage, result.location)
+            is YamlParseResult.Invalid ->
+                return ParseResult.Error(listOf(ParseFailure(result.errorMessage, location = result.location)))
+
             is YamlParseResult.Valid -> result
         }
     // Step 2a slot: validate yaml.rootNode against the JSON schema (/schema) in a future commit.
     val dto =
         when (val result = parseToVulnlogDto(mapper, yaml)) {
-            is YamlParseDtoResult.Invalid -> return ParseResult.Error(result.message, result.location)
+            is YamlParseDtoResult.Invalid ->
+                return ParseResult.Error(listOf(ParseFailure(result.message, location = result.location)))
+
             is YamlParseDtoResult.Valid -> result
         }
     // Step 2b, second half: the DTO maps onto the domain model.
+    val domain =
+        when (dto.validationVersion) {
+            ParseValidationVersion.V1 -> V1Mapper.toDomain(dto.schemaVersion, dto.dto)
+        }
     val content =
-        try {
-            when (dto.validationVersion) {
-                ParseValidationVersion.V1 -> V1Mapper.toDomain(dto.schemaVersion, dto.dto)
-            }
-        } catch (e: IllegalArgumentException) {
-            return ParseResult.Error("Parser error: ${e.message}")
+        when (domain) {
+            is DomainMappingResult.Invalid -> return ParseResult.Error(locate(yaml.rootNode, domain.failures))
+            is DomainMappingResult.Valid -> domain.file
         }
     return ParseResult.Ok(dto.validationVersion, content, dto.dto, yaml.rootNode, raw)
+}
+
+/** Resolves each failure's path against the node tree so messages can point at line and column. */
+private fun locate(
+    root: MappingNode,
+    failures: List<ParseFailure>,
+): List<ParseFailure> {
+    val nodesByPath = walkValues(root).associate { it.path to it.node }
+    return failures.map { failure ->
+        failure.copy(location = failure.path?.let { nodesByPath[it] }?.let(::locationOf))
+    }
 }
 
 private fun locationOf(e: MarkedYamlEngineException): FailureLocation? =

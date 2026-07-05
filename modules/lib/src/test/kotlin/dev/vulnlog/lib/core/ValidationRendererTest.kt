@@ -17,7 +17,7 @@ class ValidationRendererTest :
 
         test("no findings renders OK message") {
             val result = ValidationResult(emptyList())
-            renderValidation(result) shouldBe "OK — no issues found."
+            renderValidation(result) shouldBe "OK: no issues found"
         }
 
         test("single error renders error line and summary") {
