@@ -5,7 +5,9 @@ package dev.vulnlog.lib.result
 
 import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.SchemaVersion
+import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.validation.FailureLocation
+import dev.vulnlog.lib.model.validation.ParseFailure
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import org.snakeyaml.engine.v2.nodes.MappingNode
 
@@ -34,4 +36,16 @@ sealed interface YamlParseDtoResult {
         val message: String,
         val location: FailureLocation? = null,
     ) : YamlParseDtoResult
+}
+
+/** Result of mapping the DTO onto the domain model (step 2b, second half). */
+sealed interface DomainMappingResult {
+    data class Valid(
+        val file: VulnlogFile,
+    ) : DomainMappingResult
+
+    /** Every value without a domain representation, each naming its entry path. */
+    data class Invalid(
+        val failures: List<ParseFailure>,
+    ) : DomainMappingResult
 }

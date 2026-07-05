@@ -21,6 +21,7 @@ import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.parseInputs
 import dev.vulnlog.lib.shell.renderParseFailures
+import dev.vulnlog.lib.shell.renderValidationFindings
 import dev.vulnlog.lib.shell.resolveReleaseFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateFiles
@@ -50,9 +51,10 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     fileToResult: Map<FileInputOption, ParseResult.Ok>,
     renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
 ): ValidationResults {
-    val validationFindings = validateFiles(fileToResult, renderedSeverities)
-    if (validationFindings.renderedFindings.isNotBlank()) {
-        echo(validationFindings.renderedFindings, err = true)
+    val validationFindings = validateFiles(fileToResult)
+    val rendered = renderValidationFindings(validationFindings, renderedSeverities)
+    if (rendered.isNotBlank()) {
+        echo(rendered, err = true)
     }
     if (validationFindings.hasErrors) {
         throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)

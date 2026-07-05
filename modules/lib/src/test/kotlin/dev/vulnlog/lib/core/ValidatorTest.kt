@@ -18,7 +18,6 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.VulnlogFileContext
 import dev.vulnlog.lib.result.Rule
 import dev.vulnlog.lib.result.Severity
 import io.kotest.core.spec.style.FunSpec

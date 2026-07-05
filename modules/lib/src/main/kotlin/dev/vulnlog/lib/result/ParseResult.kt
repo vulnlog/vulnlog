@@ -6,7 +6,7 @@ package dev.vulnlog.lib.result
 import dev.vulnlog.lib.model.ParseValidationVersion
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
-import dev.vulnlog.lib.model.validation.FailureLocation
+import dev.vulnlog.lib.model.validation.ParseFailure
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.shell.FileInputOption
 import org.snakeyaml.engine.v2.nodes.MappingNode
@@ -25,9 +25,9 @@ sealed interface ParseResult {
         val rawContent: VulnlogFileRaw,
     ) : ParseResult
 
+    /** All problems the failing pipeline step found, at least one. */
     data class Error(
-        val error: String,
-        val location: FailureLocation? = null,
+        val failures: List<ParseFailure>,
     ) : ParseResult
 }
 

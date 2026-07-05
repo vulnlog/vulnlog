@@ -3,6 +3,9 @@
 
 package dev.vulnlog.lib.result
 
+import dev.vulnlog.lib.model.validation.FailureLocation
+import dev.vulnlog.lib.shell.FileInputOption
+
 enum class Severity {
     /**
      * Observations that help the user improve their file.
@@ -37,6 +40,8 @@ data class ValidationFinding(
     val rule: Rule,
     val path: String,
     val message: String,
+    /** Source position of the finding; none of the current rules resolve one yet. */
+    val location: FailureLocation? = null,
 )
 
 data class ValidationResult(
@@ -47,8 +52,10 @@ data class ValidationResult(
     val infos: List<ValidationFinding> get() = findings.filter { it.severity == Severity.INFO }
 }
 
+/** Findings per input file; rendering happens at the edges so tooling can consume the data. */
 data class ValidationResults(
-    val renderedFindings: String,
-    val hasErrors: Boolean,
-    val hasWarnings: Boolean,
-)
+    val fileFindings: Map<FileInputOption, ValidationResult>,
+) {
+    val hasErrors: Boolean get() = fileFindings.values.any { it.errors.isNotEmpty() }
+    val hasWarnings: Boolean get() = fileFindings.values.any { it.warnings.isNotEmpty() }
+}

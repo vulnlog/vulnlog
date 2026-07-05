@@ -18,7 +18,7 @@ import dev.vulnlog.lib.result.ValidationResult
 fun renderValidation(result: ValidationResult): String =
     buildString {
         if (result.findings.isEmpty()) {
-            append("OK — no issues found.")
+            append("OK: no issues found")
             return@buildString
         }
 

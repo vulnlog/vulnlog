@@ -27,6 +27,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.validation.ParseFailure
 import dev.vulnlog.lib.parse.v1.dto.ProjectDto
 import dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto
 import dev.vulnlog.lib.parse.v1.dto.ReleasePurlEntryDto
@@ -36,6 +37,7 @@ import dev.vulnlog.lib.parse.v1.dto.SuppressionDto
 import dev.vulnlog.lib.parse.v1.dto.TagEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.result.DomainMappingResult
 
 object V1Mapper {
     fun toDto(file: VulnlogFile): VulnlogFileV1Dto =
@@ -108,22 +110,55 @@ object V1Mapper {
         }
 
     /**
-     * Maps the DTO onto the domain model. Throws [IllegalArgumentException] when a value has no
-     * domain representation (unknown vulnerability id, purl, verdict, ...).
-     *
-     * TODO collect multiple errors and report all back instead of stopping at the first.
+     * Maps the DTO onto the domain model, collecting every value without a domain representation
+     * (unknown vulnerability id, purl, verdict, ...) together with the entry path it sits at.
      */
     fun toDomain(
         schemaVersion: SchemaVersion,
         dto: VulnlogFileV1Dto,
-    ): VulnlogFile =
-        VulnlogFile(
-            schemaVersion = schemaVersion,
-            project = dto.project.toDomain(),
-            tags = tagsToDomain(dto.tags),
-            releases = releasesToDomain(dto.releases),
-            vulnerabilities = vulnerabilitiesToDomain(dto.vulnerabilities),
-        )
+    ): DomainMappingResult {
+        val failures = FailureCollector()
+        val file =
+            VulnlogFile(
+                schemaVersion = schemaVersion,
+                project = dto.project.toDomain(),
+                tags = tagsToDomain(dto.tags),
+                releases = releasesToDomain(dto.releases, failures),
+                vulnerabilities = vulnerabilitiesToDomain(dto.vulnerabilities, failures),
+            )
+        return if (failures.isEmpty()) {
+            DomainMappingResult.Valid(file)
+        } else {
+            DomainMappingResult.Invalid(failures.toList())
+        }
+    }
+
+    /** Collects mapping failures so a single pass reports every problem (issue #208). */
+    private class FailureCollector {
+        private val failures = mutableListOf<ParseFailure>()
+
+        fun <T> attempt(
+            path: String,
+            block: () -> T,
+        ): T? =
+            try {
+                block()
+            } catch (e: IllegalArgumentException) {
+                report(path, e.message ?: "Invalid value")
+                null
+            }
+
+        fun report(
+            path: String,
+            message: String,
+        ) {
+            failures += ParseFailure(message, path)
+        }
+
+        fun isEmpty(): Boolean = failures.isEmpty()
+
+        fun toList(): List<ParseFailure> = failures.toList()
+    }
 
     private fun ProjectDto.toDomain(): Project = Project(organization, name, author, contact)
 
@@ -135,56 +170,97 @@ object V1Mapper {
             )
         } ?: emptyList()
 
-    private fun releasesToDomain(releases: List<ReleaseEntryDto>): List<ReleaseEntry> =
+    private fun releasesToDomain(
+        releases: List<ReleaseEntryDto>,
+        failures: FailureCollector,
+    ): List<ReleaseEntry> =
         releases.map { release ->
             ReleaseEntry(
                 id = Release(release.id),
                 publicationDate = release.publishedAt,
-                purls = purlsToDomain(release.purls),
+                purls = purlsToDomain("releases[${release.id}]", release.purls, failures),
             )
         }
 
-    private fun purlsToDomain(purls: List<ReleasePurlEntryDto>?): List<PurlEntry> =
-        purls?.map { purl ->
-            PurlEntry(
-                purl = parsePurl(purl.purl),
-                tags = purl.tags.map(::Tag),
-            )
+    private fun purlsToDomain(
+        parentPath: String,
+        purls: List<ReleasePurlEntryDto>?,
+        failures: FailureCollector,
+    ): List<PurlEntry> =
+        purls?.mapIndexedNotNull { index, entry ->
+            failures
+                .attempt("$parentPath.purls[$index].purl") { parsePurl(entry.purl) }
+                ?.let { purl -> PurlEntry(purl = purl, tags = entry.tags.map(::Tag)) }
         } ?: emptyList()
 
-    private fun vulnerabilitiesToDomain(vulnerabilities: List<VulnerabilityEntryDto>): List<VulnerabilityEntry> =
-        vulnerabilities.map { vulnerability ->
-            VulnerabilityEntry(
-                id = parseVulnId(vulnerability.id),
-                aliases = vulnerability.aliases.map(::parseVulnId),
-                description = vulnerability.description,
-                releases = vulnerabilityReleasesToDomain(vulnerability.releases),
-                reports = reportsToDomain(vulnerability.reports),
-                tags = vulnerability.tags.map(::Tag),
-                packages = vulnerability.packages.map { parsePurl(it) },
-                analysis = vulnerability.analysis,
-                analyzedAt = vulnerability.analyzedAt,
-                verdict =
-                    when (vulnerability.verdict) {
-                        "affected" -> Verdict.Affected(parseSeverity(vulnerability.severity))
-                        "not affected" -> Verdict.NotAffected(parseVexJustification(vulnerability.justification))
-                        "risk acceptable" -> Verdict.RiskAcceptable(parseSeverity(vulnerability.severity))
-                        "under_investigation" -> Verdict.UnderInvestigation
-                        null -> Verdict.UnderInvestigation
-                        else -> throw IllegalArgumentException("Invalid verdict: ${vulnerability.verdict}")
-                    },
-                resolution =
-                    if (vulnerability.resolution != null) {
-                        Resolution(
-                            release = Release(vulnerability.resolution.release),
-                            at = vulnerability.resolution.at,
-                            ref = vulnerability.resolution.ref,
-                            note = vulnerability.resolution.note,
-                        )
-                    } else {
-                        null
-                    },
-                comment = vulnerability.comment,
+    private fun vulnerabilitiesToDomain(
+        vulnerabilities: List<VulnerabilityEntryDto>,
+        failures: FailureCollector,
+    ): List<VulnerabilityEntry> = vulnerabilities.mapNotNull { vulnerabilityToDomain(it, failures) }
+
+    private fun vulnerabilityToDomain(
+        dto: VulnerabilityEntryDto,
+        failures: FailureCollector,
+    ): VulnerabilityEntry? {
+        val path = "vulnerabilities[${dto.id}]"
+        val id = failures.attempt("$path.id") { parseVulnId(dto.id) }
+        val aliases =
+            dto.aliases.mapIndexedNotNull { index, alias ->
+                failures.attempt("$path.aliases[$index]") { parseVulnId(alias) }
+            }
+        val packages =
+            dto.packages.mapIndexedNotNull { index, purl ->
+                failures.attempt("$path.packages[$index]") { parsePurl(purl) }
+            }
+        val reports = reportsToDomain(path, dto.reports, failures)
+        val verdict = verdictToDomain(path, dto, failures)
+        if (id == null || verdict == null) return null
+        return VulnerabilityEntry(
+            id = id,
+            aliases = aliases,
+            description = dto.description,
+            releases = vulnerabilityReleasesToDomain(dto.releases),
+            reports = reports,
+            tags = dto.tags.map(::Tag),
+            packages = packages,
+            analysis = dto.analysis,
+            analyzedAt = dto.analyzedAt,
+            verdict = verdict,
+            resolution = resolutionToDomain(dto.resolution),
+            comment = dto.comment,
+        )
+    }
+
+    private fun verdictToDomain(
+        path: String,
+        dto: VulnerabilityEntryDto,
+        failures: FailureCollector,
+    ): Verdict? =
+        when (dto.verdict) {
+            "affected" -> failures.attempt("$path.severity") { Verdict.Affected(parseSeverity(dto.severity)) }
+            "not affected" ->
+                failures.attempt(
+                    "$path.justification",
+                ) { Verdict.NotAffected(parseVexJustification(dto.justification)) }
+
+            "risk acceptable" ->
+                failures.attempt(
+                    "$path.severity",
+                ) { Verdict.RiskAcceptable(parseSeverity(dto.severity)) }
+            "under_investigation", null -> Verdict.UnderInvestigation
+            else -> {
+                failures.report("$path.verdict", "Invalid verdict: ${dto.verdict}")
+                null
+            }
+        }
+
+    private fun resolutionToDomain(dto: ResolutionDto?): Resolution? =
+        dto?.let {
+            Resolution(
+                release = Release(it.release),
+                at = it.at,
+                ref = it.ref,
+                note = it.note,
             )
         }
 
@@ -259,13 +335,28 @@ object V1Mapper {
 
     private fun vulnerabilityReleasesToDomain(releases: List<String>): List<Release> = releases.map(::Release)
 
-    private fun reportsToDomain(reports: List<ReportEntryDto>): List<ReportEntry> =
-        reports.map { report ->
+    private fun reportsToDomain(
+        parentPath: String,
+        reports: List<ReportEntryDto>,
+        failures: FailureCollector,
+    ): List<ReportEntry> =
+        reports.mapIndexedNotNull { index, report ->
+            val path = "$parentPath.reports[$index]"
+            val reporter =
+                failures.attempt("$path.reporter") { parseReporter(report.reporter) }
+                    ?: return@mapIndexedNotNull null
             ReportEntry(
-                reporter = parseReporter(report.reporter),
+                reporter = reporter,
                 at = report.at,
                 source = report.source,
-                vulnIds = report.vulnIds.map(::parseVulnId).toSet(),
+                vulnIds =
+                    report.vulnIds
+                        .mapIndexedNotNull {
+                            i,
+                            vulnId,
+                            ->
+                            failures.attempt("$path.vuln_ids[$i]") { parseVulnId(vulnId) }
+                        }.toSet(),
                 suppress = report.suppress?.let(::suppressionsToDomain),
             )
         }
