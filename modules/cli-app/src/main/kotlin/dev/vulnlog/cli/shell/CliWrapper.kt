@@ -31,6 +31,13 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.writeText
 
+private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
+
+fun CliktCommand.echoHelpHint() {
+    echo("", err = true)
+    echo("Stuck? Ask for help at $HELP_DISCUSSIONS_URL", err = true)
+}
+
 fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputOption, ParseResult.Ok> {
     val parseResults: ParseResults =
         try {
@@ -42,6 +49,7 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputO
         }
     if (parseResults.failure.isNotEmpty()) {
         renderParseFailures(parseResults).forEach { echo(it, err = true) }
+        echoHelpHint()
         throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
     }
     return parseResults.success
@@ -57,6 +65,7 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
         echo(rendered, err = true)
     }
     if (validationFindings.hasErrors) {
+        echoHelpHint()
         throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
     }
     return validationFindings
