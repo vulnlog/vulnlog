@@ -4,6 +4,7 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.versionOption
@@ -23,6 +24,9 @@ class VulnlogCli : CliktCommand(name = "vulnlog") {
     init {
         versionOption(BuildInfo.VERSION)
     }
+
+    override fun helpEpilog(context: Context): String =
+        "Questions or feedback? Join the discussion at https://github.com/vulnlog/vulnlog/discussions"
 
     override fun run() = Unit
 }

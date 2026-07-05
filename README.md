@@ -154,8 +154,13 @@ vulnlog report vulnlog.yaml
 - [Documentation](https://vulnlog.dev/docs/)
 - [Project Website](https://vulnlog.dev/)
 - [Changelog](CHANGELOG.md)
+- [Get help](SUPPORT.md)
 
 ## Community
+
+Have a question or an idea? Join the conversation in
+[GitHub Discussions](https://github.com/vulnlog/vulnlog/discussions): ask in Q&A, propose features,
+or share how you use Vulnlog.
 
 [![Bluesky](https://img.shields.io/bluesky/followers/vulnlog.bsky.social?style=flat&logo=bluesky&labelColor=white&color=blue)](https://bsky.app/profile/vulnlog.bsky.social)
 [![Mastodon](https://img.shields.io/mastodon/follow/114149693629631038?domain=infosec.exchange&style=flat&logo=mastodon&labelColor=white&color=blue)](https://infosec.exchange/@vulnlog)

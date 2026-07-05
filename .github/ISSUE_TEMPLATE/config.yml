@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or help
+    url: https://github.com/vulnlog/vulnlog/discussions/categories/q-a
+    about: Ask how to use Vulnlog, including the .vl.yaml format, suppression output, and CLI usage.
