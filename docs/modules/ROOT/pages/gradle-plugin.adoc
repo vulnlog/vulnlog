@@ -63,6 +63,10 @@ See xref:cli-init.adoc[`vulnlog init`] for the generated structure.
 | `vulnlog.output`
 | Yes
 | Output file path, relative to the project directory.
+
+| `vulnlog.force`
+| No
+| Set to `true` to overwrite the output file if it already exists.
 |===
 
 .Example

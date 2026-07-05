@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import dev.vulnlog.lib.core.init
@@ -36,6 +37,10 @@ class InitCommand : CliktCommand(name = "init") {
         help = "Output path for the generated file. Defaults to stdout. Use '-' for explicit stdout.",
     ).convert { toOutputFileOption(it) }
         .default(FileOutputOption.Stdout)
+    val force: Boolean by option(
+        "--force",
+        help = "Overwrite the output file if it already exists.",
+    ).flag(default = false)
 
     private val mapper = createYamlMapper()
 
@@ -51,6 +56,7 @@ class InitCommand : CliktCommand(name = "init") {
                     { echo(it, err = true) },
                     target,
                     content,
+                    force,
                 )
 
             is FileOutputOption.Stdout -> echo(content)

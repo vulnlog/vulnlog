@@ -133,7 +133,13 @@ fun writeInit(
     err: (String) -> Unit,
     initFile: FileOutputOption.File,
     content: String,
+    force: Boolean = false,
 ) {
+    if (initFile.path.exists() && !force) {
+        err("${initFile.path} already exists. Use --force to overwrite.")
+        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+    }
+
     try {
         initFile.path.writeText(content)
         out("Vulnlog file created at: ${initFile.path.toAbsolutePath()}")
