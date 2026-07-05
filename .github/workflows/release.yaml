@@ -1,0 +1,221 @@
+name: Release
+
+# Publishes a release when a version tag is pushed. Stages are ordered by
+# reversibility: nothing is published before the gate (check + native builds)
+# passes, and the irreversible Gradle Plugin Portal publication runs last.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+      - "!v0.9.*"
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      final: ${{ steps.resolve.outputs.final }}
+      latest: ${{ steps.resolve.outputs.latest }}
+    steps:
+      - name: Resolve version from tag
+        id: resolve
+        run: |
+          TAG="${{ github.ref_name }}"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          case "$TAG" in
+            *-rc*) FINAL=false ;;
+            *)     FINAL=true ;;
+          esac
+          echo "final=$FINAL" >> "$GITHUB_OUTPUT"
+          # A bug fix release for an older minor (e.g. v0.15.1 after v0.16.0)
+          # must not move :latest, the website, or the Homebrew formula.
+          HIGHEST=$(git ls-remote --tags --refs "https://github.com/${{ github.repository }}" \
+            | awk -F/ '{print $NF}' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sort -V | tail -n 1)
+          if [ "$FINAL" = "true" ] && [ "$TAG" = "$HIGHEST" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
+      - name: Check
+        run: ./gradlew check
+
+  build-native-images:
+    name: Build native image (${{ matrix.artifact-name }})
+    needs: [ version ]
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact-name: vulnlog-linux-amd64
+          - os: macos-latest
+            artifact-name: vulnlog-macos-aarch64
+          - os: windows-latest
+            artifact-name: vulnlog-windows-amd64
+    uses: ./.github/workflows/build-native.yaml
+    with:
+      os: ${{ matrix.os }}
+      artifact-name: ${{ matrix.artifact-name }}
+      app-version: ${{ needs.version.outputs.version }}
+
+  publish-release:
+    name: Publish GitHub release
+    needs: [ version, check, build-native-images ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
+      - name: Build JVM distribution
+        run: ./gradlew :cli-app:distZip -PappVersion="${{ needs.version.outputs.version }}"
+      - name: Download native images
+        uses: actions/download-artifact@v8
+        with:
+          pattern: vulnlog-*
+          path: native-images
+      - name: Package native images
+        run: |
+          for dir in native-images/vulnlog-*/; do
+            name=$(basename "$dir")
+            (cd "$dir" && zip "../${name}.zip" *)
+          done
+      - name: Render install scripts
+        run: |
+          sed "s|^VERSION=\".*\"|VERSION=\"${{ needs.version.outputs.version }}\"|" \
+              install/install.sh.template > install-vulnlog.sh
+          cp install/uninstall.sh.template uninstall-vulnlog.sh
+          chmod +x install-vulnlog.sh uninstall-vulnlog.sh
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Vulnlog ${{ github.ref_name }}"
+          prerelease: true
+          generate_release_notes: true
+          body: |
+            Full changelog: https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md
+          files: |
+            modules/cli-app/build/distributions/*.zip
+            native-images/*.zip
+            install-vulnlog.sh
+            uninstall-vulnlog.sh
+
+  publish-docker:
+    name: Publish Docker image
+    needs: [ version, publish-release ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Fetch native binary
+        uses: ./.github/actions/fetch-native-binary
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push release image
+        uses: docker/build-push-action@v7
+        with:
+          context: modules/cli-app
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ needs.version.outputs.version }}
+            ${{ needs.version.outputs.latest == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+
+  deploy-website:
+    name: Deploy website and docs
+    needs: [ version, publish-release ]
+    if: needs.version.outputs.latest == 'true'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      actions: read
+    uses: ./.github/workflows/deploy-website.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+
+  notify-homebrew:
+    name: Trigger Homebrew formula bump
+    needs: [ version, publish-release ]
+    if: needs.version.outputs.latest == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger homebrew formula bump
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_DISPATCH_TOKEN }}
+        run: |
+          gh api repos/vulnlog/homebrew-vulnlog/dispatches \
+            -f event_type=vulnlog-release \
+            -f client_payload[version]="${{ needs.version.outputs.version }}"
+
+  publish-gradle-plugin:
+    name: Publish Gradle plugin
+    needs: [ version, publish-docker, deploy-website, notify-homebrew ]
+    # Runs on every final tag, also when the latest-only jobs above were
+    # skipped for a bug fix release of an older minor.
+    if: |
+      !cancelled() &&
+      needs.version.outputs.final == 'true' &&
+      needs.publish-docker.result == 'success' &&
+      needs.deploy-website.result != 'failure' &&
+      needs.notify-homebrew.result != 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
+      - name: Publish Gradle plugin
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PLUGIN_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PLUGIN_SECRET }}
+        run: ./gradlew :gradle-plugin:publishPlugins -PappVersion="${{ needs.version.outputs.version }}"
+
+  announce:
+    name: Announce release
+    needs: [ publish-gradle-plugin ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      discussions: write
+    steps:
+      - name: Create GitHub discussion
+        uses: abirismyname/create-discussion@c2b7c825241769dda523865ae444a879f6bbd0e0 # v2.1.0
+        with:
+          title: Vulnlog ${{ github.ref_name }} is released
+          body: |
+            Vulnlog ${{ github.ref_name }} is released!
+
+            For a full description of changes, take a look at our [release notes](https://github.com/vulnlog/vulnlog/releases/tag/${{ github.ref_name }}).
+          category-name: Announcements
+          github-token: ${{ secrets.GITHUB_TOKEN }}

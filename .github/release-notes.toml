@@ -1,5 +1,13 @@
 # git-cliff ~ configuration file
 # https://git-cliff.org/docs/configuration
+#
+# Renders a draft for the GitHub-release body, grouped by conventional-commit type.
+# Typical invocation (after the tag is pushed):
+#   git-cliff --config .github/release-notes.toml --latest --github-token "$(gh auth token)"
+
+[remote.github]
+owner = "vulnlog"
+repo = "vulnlog"
 
 [changelog]
 # A Tera template to be rendered for each release in the changelog.
@@ -42,7 +50,7 @@ body = """
 {% endfor -%}
 {%- if github -%}
 {% if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}
-  ## New Contributors ❤️
+  ## New Contributors
 {% endif %}\
 {% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
   * @{{ contributor.username }} made their first contribution
@@ -76,38 +84,31 @@ commit_preprocessors = [
     { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))" },
 ]
 # An array of regex based parsers for extracting data from the commit message.
-# Assigns commits to groups.
-# Optionally sets the commit's scope and can decide to exclude commits from further processing.
+# Assigns commits to groups; housekeeping types are skipped because they carry
+# no information for release-notes readers.
+# The <!-- N --> markers order the groups; they are stripped when rendering.
 commit_parsers = [
-    { message = "^feat", group = "<!-- 0 -->⛰️  Features" },
-    { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
-    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
-    { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
-    { message = "^refactor\\(clippy\\)", skip = true },
-    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
-    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
-    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
-    { message = "^chore\\(release\\): prepare for", skip = true },
-    { message = "^chore\\(deps.*\\)", skip = true },
-    { message = "^chore\\(pr\\)", skip = true },
-    { message = "^chore\\(pull\\)", skip = true },
-    { message = "^chore\\(npm\\).*yarn\\.lock", skip = true },
-    { message = "^chore|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
-    { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
-    { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
+    { message = "^docs\\(changelog\\)", skip = true },
+    { message = "^feat", group = "<!-- 0 -->Features" },
+    { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
+    { message = "^refactor", group = "<!-- 2 -->Refactor" },
+    { message = "^doc", group = "<!-- 3 -->Documentation" },
+    { message = "^perf", group = "<!-- 4 -->Performance" },
+    { message = "^style", skip = true },
+    { message = "^test", skip = true },
+    { message = "^chore|^ci", skip = true },
+    { body = ".*security", group = "<!-- 5 -->Security" },
+    { message = "^revert", group = "<!-- 6 -->Revert" },
 ]
 # Prevent commits that are breaking from being excluded by commit parsers.
-protect_breaking_commits = false
+protect_breaking_commits = true
 # Exclude commits that are not matched by any commit parser.
 filter_commits = false
 # Regex to select git tags that represent releases.
-tag_pattern = "v[0-9].*"
-# Regex to select git tags that do not represent proper releases.
-# Takes precedence over `tag_pattern`.
-# Changes belonging to these releases will be included in the next release.
-skip_tags = "beta|alpha"
+tag_pattern = "^v[0-9]+\\.[0-9]+\\.[0-9]+(-rc[0-9]+)?$"
 # Regex to exclude git tags after applying the tag_pattern.
-ignore_tags = "rc|v2.1.0|v2.1.1"
+# Release-candidate tags are excluded so their commits roll up into the eventual final release.
+ignore_tags = "-rc[0-9]+$"
 # Order releases topologically instead of chronologically.
 topo_order = false
 # Order of commits in each group/release within the changelog.
