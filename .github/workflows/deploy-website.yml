@@ -1,6 +1,17 @@
 name: Deploy website and docs to GitHub Pages
 
+# Single implementation of the Pages deploy. Invoked three ways:
+# - workflow_call from release.yaml on final release tags
+# - workflow_dispatch for manual deploys from main
+# - workflow_run after the weekly security scan, to refresh the bundled report
+
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Vulnlog version rendered into the website and install script. Defaults to vulnlog-version from docs/antora.yml."
+        type: string
+        default: ''
   workflow_dispatch:
   workflow_run:
     workflows: ["Security Scanning"]
@@ -13,17 +24,17 @@ permissions:
   id-token: write
   actions: read
 
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
   deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -42,21 +53,21 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             echo "run-id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          run_id=$(gh run list \
+            --repo "${{ github.repository }}" \
+            --workflow=security.yml \
+            --status=success \
+            --branch=main \
+            --limit=1 \
+            --json databaseId \
+            -q '.[0].databaseId' || true)
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "No successful security run found; skipping report bundle."
+            echo "run-id=" >> "$GITHUB_OUTPUT"
           else
-            run_id=$(gh run list \
-              --repo "${{ github.repository }}" \
-              --workflow=security.yml \
-              --status=success \
-              --branch=main \
-              --limit=1 \
-              --json databaseId \
-              -q '.[0].databaseId' || true)
-            if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
-              echo "No successful security run found; skipping report bundle."
-              echo "run-id=" >> "$GITHUB_OUTPUT"
-            else
-              echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
-            fi
+            echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
           fi
       - name: Download latest security report
         if: steps.report-run.outputs.run-id != ''
@@ -67,8 +78,18 @@ jobs:
           run-id: ${{ steps.report-run.outputs.run-id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compose site
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
+          VERSION="$VERSION_INPUT"
+          if [ -z "$VERSION" ]; then
+            TAG=$(gh api "repos/${{ github.repository }}/releases/latest" -q .tag_name 2>/dev/null || true)
+            VERSION="${TAG#v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
+          fi
           mkdir -p _site/docs _site/schema
           cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
           cp -r build/docs/* _site/docs/
@@ -81,7 +102,7 @@ jobs:
           sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
               install/install.sh.template > _site/install
           cp install/uninstall.sh.template _site/uninstall
-          sed -i "s/0\.13\.0/${VERSION}/g" _site/index.html
+          sed -i "s/VULNLOG_VERSION/${VERSION}/g" _site/index.html
           echo 'vulnlog.dev' > _site/CNAME
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

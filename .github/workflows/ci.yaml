@@ -26,6 +26,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Check DCO sign-off
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           base="${{ github.event.pull_request.base.sha }}"
           head="${{ github.event.pull_request.head.sha }}"
@@ -106,29 +107,3 @@ jobs:
   perf-test:
     needs: [ native-image ]
     uses: ./.github/workflows/perf-test.yaml
-
-  publish-docker:
-    name: Publish snapshot Docker image
-    needs: [ native-image ]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      packages: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Fetch native binary
-        uses: ./.github/actions/fetch-native-binary
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push snapshot image
-        uses: docker/build-push-action@v7
-        with:
-          context: modules/cli-app
-          push: true
-          tags: ghcr.io/${{ github.repository }}:snapshot
