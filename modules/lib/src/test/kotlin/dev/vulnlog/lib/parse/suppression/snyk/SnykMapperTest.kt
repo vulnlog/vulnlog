@@ -35,7 +35,7 @@ class SnykMapperTest :
             entryList.size shouldBe 1
             val wildcardEntry = entryList.first()["*"]!!
             wildcardEntry.reason shouldBe "not exploitable"
-            wildcardEntry.expires shouldBe LocalDate.of(2026, 12, 31)
+            wildcardEntry.expires shouldBe "2026-12-31T00:00:00.000Z"
         }
 
         test("maps multiple entries to separate ignore keys") {

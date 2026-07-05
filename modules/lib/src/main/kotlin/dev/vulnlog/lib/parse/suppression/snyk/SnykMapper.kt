@@ -6,6 +6,7 @@ package dev.vulnlog.lib.parse.suppression.snyk
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.parse.suppression.snyk.dto.SnykIgnoreEntryDto
 import dev.vulnlog.lib.parse.suppression.snyk.dto.SnykSuppressionDto
+import java.time.LocalDate
 
 object SnykMapper {
     fun toDto(suppressionData: SuppressionOutput.SnykSuppression): SnykSuppressionDto {
@@ -17,11 +18,13 @@ object SnykMapper {
                             "*" to
                                 SnykIgnoreEntryDto(
                                     reason = entry.reason,
-                                    expires = entry.expiresAt,
+                                    expires = entry.expiresAt?.toSnykExpires(),
                                 ),
                         ),
                     )
             }
-        return SnykSuppressionDto(ignore)
+        return SnykSuppressionDto(ignore = ignore)
     }
+
+    private fun LocalDate.toSnykExpires(): String = "${this}T00:00:00.000Z"
 }
