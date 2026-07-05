@@ -74,6 +74,7 @@ class ValidatorTest :
                 errors[0].rule shouldBe Rule.DUPLICATE_RELEASE_ID
                 errors[0].severity shouldBe Severity.ERROR
                 errors[0].path shouldBe "releases[v1.0]"
+                errors[0].message shouldBe "Duplicate release ID 'v1.0'."
             }
         }
 
@@ -100,6 +101,7 @@ class ValidatorTest :
                 errors shouldHaveSize 1
                 errors[0].rule shouldBe Rule.DUPLICATE_TAG_ID
                 errors[0].path shouldBe "tags[backend]"
+                errors[0].message shouldBe "Duplicate tag ID 'backend'."
             }
         }
 

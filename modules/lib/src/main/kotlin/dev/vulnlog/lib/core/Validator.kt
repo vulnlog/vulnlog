@@ -98,7 +98,7 @@ private fun validateUniqueReleases(file: VulnlogFile): List<ValidationFinding> =
                 severity = Severity.ERROR,
                 rule = Rule.DUPLICATE_RELEASE_ID,
                 path = "releases[${id.value}]",
-                message = "Duplicate release ID '$id'.",
+                message = "Duplicate release ID '${id.value}'.",
             )
         }
 
@@ -111,7 +111,7 @@ private fun validateUniqueTags(file: VulnlogFile): List<ValidationFinding> =
                 severity = Severity.ERROR,
                 rule = Rule.DUPLICATE_TAG_ID,
                 path = "tags[${id.value}]",
-                message = "Duplicate tag ID '$id'.",
+                message = "Duplicate tag ID '${id.value}'.",
             )
         }
 
