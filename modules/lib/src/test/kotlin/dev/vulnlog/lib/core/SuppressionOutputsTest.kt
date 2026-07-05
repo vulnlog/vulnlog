@@ -213,6 +213,18 @@ class SuppressionOutputsTest :
                 generic.fileName shouldBe "grype.generic.json"
             }
 
+            test("generic filenames use canonical reporter names") {
+                val result =
+                    buildSuppressionOutputs(
+                        setOf(ReporterType.GITHUB_DEPENDABOT),
+                        emptyMap(),
+                        SuppressionFormatRequest.Generic,
+                    )
+
+                val generic = result.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
+                generic.fileName shouldBe "github-dependabot.generic.json"
+            }
+
             test("generic overrides the native format of a native reporter") {
                 val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-1234"), analysis = "false positive")
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))

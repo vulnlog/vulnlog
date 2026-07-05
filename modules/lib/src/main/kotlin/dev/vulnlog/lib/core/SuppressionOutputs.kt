@@ -75,7 +75,7 @@ private fun createGenericSuppression(
                 )
             }.toSet()
     return SuppressionOutput.GenericSuppression(
-        fileName = format.reporter.name.lowercase() + ".generic.json",
+        fileName = format.reporter.canonical() + ".generic.json",
         entries = entries,
     )
 }
