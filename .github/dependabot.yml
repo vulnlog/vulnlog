@@ -1,8 +1,39 @@
 version: 2
 updates:
+  # Actions in workflow files and in the composite actions under .github/actions.
   - package-ecosystem: "github-actions"
-    directory: "/"
-    commit-message:
-      prefix: "chore: "
+    directories:
+      - "/"
+      - "/.github/actions/*"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  # Gradle build: version catalog (gradle/libs.versions.toml), build scripts, buildSrc.
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      gradle-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Base image of the release Docker image.
+  - package-ecosystem: "docker"
+    directory: "/modules/cli-app"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
