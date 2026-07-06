@@ -22,6 +22,10 @@ import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
+import dev.vulnlog.lib.core.renderSuppressionExclusion
+import dev.vulnlog.lib.core.renderSuppressionInclusions
+import dev.vulnlog.lib.core.renderSuppressionWritten
+import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.lib.shell.DirectoryOutputOption
@@ -82,13 +86,17 @@ class SuppressCommand : CliktCommand(name = "suppress") {
                 .filter { filter.reporter == null || it == filter.reporter }
                 .toSet()
 
-        val suppressionVulns =
-            collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
-        val outputSuppressions = buildSuppressionOutputs(targetReporters, suppressionVulns, format)
-        val contents: List<SuppressionFile> = outputSuppressions.map(::writeSuppressionOutput)
+        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
+        val suppressionResult = buildSuppressionOutputs(targetReporters, collected.included, format)
+        (collected.exclusions + suppressionResult.exclusions).forEach { exclusion ->
+            diagnosticSink().verbose(renderSuppressionExclusion(exclusion))
+        }
+        renderSuppressionInclusions(collected.included).forEach { diagnosticSink().debug(it) }
+        val contents: List<RenderedSuppression> =
+            suppressionResult.outputs.map { output -> RenderedSuppression(output, writeSuppressionOutput(output)) }
 
         if (contents.isEmpty()) {
-            echo("No suppression entries applicable; nothing written.", err = true)
+            echoStatus("No suppression entries applicable; nothing written.", err = true)
             return
         }
 
@@ -104,35 +112,45 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         when (val resolved = destination) {
             is DirectoryOutputOption.Directory -> writeToDirectory(resolved, contents)
             is FileOutputOption.File -> writeSingleFileOutput(resolved, contents.first())
-            FileOutputOption.Stdout -> echo(contents.first().content)
+            FileOutputOption.Stdout -> {
+                echo(contents.first().file.content)
+                diagnosticSink().verbose(renderSuppressionWritten("<stdout>", contents.first().output))
+            }
         }
     }
 
     private fun writeToDirectory(
         destination: DirectoryOutputOption.Directory,
-        suppressionFiles: List<SuppressionFile>,
+        suppressions: List<RenderedSuppression>,
     ) {
-        suppressionFiles.forEach { suppressionFile ->
+        suppressions.forEach { (output, suppressionFile) ->
             val outputPath: Path = destination.path.resolve(suppressionFile.fileName)
             writeSuppressionFile(
-                { echo(it) },
+                { echoStatus(it) },
                 { echo(it, err = true) },
                 outputPath,
                 suppressionFile,
             )
+            diagnosticSink().verbose(renderSuppressionWritten(outputPath.toString(), output))
         }
     }
 
     private fun writeSingleFileOutput(
         destination: FileOutputOption.File,
-        suppressionFile: SuppressionFile,
+        suppression: RenderedSuppression,
     ) {
         val outputPath = destination.path
         writeSuppressionFile(
-            { echo(it) },
+            { echoStatus(it) },
             { echo(it, err = true) },
             outputPath,
-            suppressionFile,
+            suppression.file,
         )
+        diagnosticSink().verbose(renderSuppressionWritten(outputPath.toString(), suppression.output))
     }
 }
+
+private data class RenderedSuppression(
+    val output: SuppressionOutput,
+    val file: SuppressionFile,
+)

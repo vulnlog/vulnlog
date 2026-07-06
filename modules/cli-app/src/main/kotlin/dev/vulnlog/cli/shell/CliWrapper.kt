@@ -20,8 +20,11 @@ import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.parseInputs
+import dev.vulnlog.lib.shell.renderFilterResolution
 import dev.vulnlog.lib.shell.renderParseFailures
+import dev.vulnlog.lib.shell.renderParsedInputs
 import dev.vulnlog.lib.shell.renderValidationFindings
+import dev.vulnlog.lib.shell.renderValidationSummary
 import dev.vulnlog.lib.shell.resolveReleaseFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateFiles
@@ -52,6 +55,7 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputO
         echoHelpHint()
         throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
     }
+    renderParsedInputs(parseResults.success).forEach { diagnosticSink().verbose(it) }
     return parseResults.success
 }
 
@@ -60,6 +64,7 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
 ): ValidationResults {
     val validationFindings = validateFiles(fileToResult)
+    renderValidationSummary(validationFindings).forEach { diagnosticSink().verbose(it) }
     val rendered = renderValidationFindings(validationFindings, renderedSeverities)
     if (rendered.isNotBlank()) {
         echo(rendered, err = true)
@@ -71,7 +76,7 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     return validationFindings
 }
 
-fun CliktCommand.printOutputSeparator() = echo("", err = true)
+fun CliktCommand.printOutputSeparator() = echoStatus("", err = true)
 
 fun OptionCallTransformContext.toOutputFileOption(output: String): FileOutputOption =
     if (output == "-") {
@@ -121,7 +126,9 @@ fun CliktCommand.resolveFilter(
     try {
         val releases = resolveReleaseFilter(filterOptions.releaseOption, vulnlogFile)
         val tags = resolveTagsFilter(filterOptions.tagsOptions, vulnlogFile)
-        VulnlogFilter(releases, tags, filterOptions.reporter)
+        val filter = VulnlogFilter(releases, tags, filterOptions.reporter)
+        renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
+        filter
     } catch (e: FilterValidationException) {
         echo(e.message, err = true)
         echo(e.detail, err = true)

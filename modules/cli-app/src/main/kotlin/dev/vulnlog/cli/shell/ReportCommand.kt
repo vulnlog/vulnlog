@@ -19,6 +19,7 @@ import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
+import dev.vulnlog.lib.core.renderReportingCounts
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
@@ -65,6 +66,7 @@ class ReportCommand : CliktCommand(name = "report") {
         val allEntries =
             vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
         val merged = mergeReportingEntries(allEntries)
+        diagnosticSink().debug(renderReportingCounts(allEntries.size, merged.size))
 
         val filterData =
             FilterDataDto(
@@ -86,13 +88,15 @@ class ReportCommand : CliktCommand(name = "report") {
         val content = renderHtmlReport(reportData)
 
         when (val target = output) {
-            is FileOutputOption.File ->
+            is FileOutputOption.File -> {
                 writeReport(
-                    { echo(it) },
+                    { echoStatus(it) },
                     { echo(it, err = true) },
                     target,
                     content,
                 )
+                diagnosticSink().verbose("wrote ${target.path}")
+            }
 
             is FileOutputOption.Stdout -> echo(content)
         }

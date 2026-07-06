@@ -4,6 +4,8 @@
 package dev.vulnlog.lib.shell
 
 import dev.vulnlog.lib.core.renderParseFailure
+import dev.vulnlog.lib.core.shortenSchemaVersion
+import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.parseVulnlogFile
@@ -45,6 +47,23 @@ fun parseInputs(inputs: List<FileInputOption>): ParseResults {
  */
 fun renderParseFailures(parseResults: ParseResults): List<String> =
     parseResults.failure.map { (input, result) -> renderParseFailure(input.sourceFile().name, result) }
+
+/**
+ * Renders one diagnostic line per successfully parsed input, stating the detected schema version
+ * and the entry counts. Shared by the CLI and the Gradle plugin so verbose output never drifts.
+ */
+fun renderParsedInputs(success: Map<FileInputOption, ParseResult.Ok>): List<String> =
+    success.entries
+        .map { (input, result) -> renderParsedInput(input.sourceFile().name, result.content) }
+        .sorted()
+
+private fun renderParsedInput(
+    name: String,
+    content: VulnlogFile,
+): String =
+    "parsed $name: schema version ${shortenSchemaVersion(content.schemaVersion)}, " +
+        "releases: ${content.releases.size}, tags: ${content.tags.size}, " +
+        "vulnerabilities: ${content.vulnerabilities.size}"
 
 private fun parseInput(
     mapper: ObjectMapper,

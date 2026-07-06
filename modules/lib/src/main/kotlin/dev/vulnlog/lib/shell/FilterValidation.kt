@@ -122,6 +122,21 @@ fun buildFilter(
         reporter = resolveReporterFilter(reporterOption),
     )
 
+/**
+ * Renders one diagnostic line per active filter dimension, stating what the filter resolved to.
+ * Inactive dimensions produce no line.
+ */
+fun renderFilterResolution(filter: VulnlogFilter): List<String> =
+    listOfNotNull(
+        filter.releases
+            .takeIf { it.isNotEmpty() }
+            ?.let { releases -> "release filter expanded to releases: ${releases.joinToString(", ") { it.value }}" },
+        filter.tags
+            .takeIf { it.isNotEmpty() }
+            ?.let { tags -> "tag filter matched tags: ${tags.joinToString(", ") { it.value }}" },
+        filter.reporter?.let { reporter -> "reporter filter: ${reporter.canonical()}" },
+    )
+
 class FilterValidationException(
     message: String,
     val detail: String,

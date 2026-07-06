@@ -3,6 +3,7 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
 import dev.vulnlog.lib.core.copyVulnerabilities
@@ -43,9 +44,10 @@ abstract class VulnlogCopyTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
+        val sink = diagnosticSink()
         val sourceInput = FileInputOption.File(sourceFile.get().asFile.toPath())
-        val parsedSource = parseInputOrFail(listOf(sourceInput))
-        validateParsedInputOrFailWithFailureOutput(parsedSource)
+        val parsedSource = parseInputOrFail(listOf(sourceInput), sink)
+        validateParsedInputOrFailWithFailureOutput(parsedSource, sink = sink)
         val sourceVulnlogFile = parsedSource.values.first().content
 
         val vulnIdSet = vulnIds.get().map { parseVulnId(it) }.toSet()
@@ -57,8 +59,8 @@ abstract class VulnlogCopyTask : DefaultTask() {
         val mapper = createYamlMapper()
         val destinations = destinationFiles.files.map { FileInputOption.File(it.toPath()) }
         for (destination in destinations) {
-            val parsedDestination = parseInputOrFail(listOf(destination))
-            validateParsedInputOrFailWithFailureOutput(parsedDestination)
+            val parsedDestination = parseInputOrFail(listOf(destination), sink)
+            validateParsedInputOrFailWithFailureOutput(parsedDestination, sink = sink)
             val destinationFile = parsedDestination.values.first()
 
             val outcome =
@@ -72,6 +74,7 @@ abstract class VulnlogCopyTask : DefaultTask() {
                 logger.warn(formatCommentsDroppedWarning(destination.path.toString()))
             }
             destination.path.writeText(outcome.newContent.content)
+            sink.verbose("wrote ${destination.path}")
             logger.lifecycle(formatCopiedMessage(destination.path, outcome.copied))
         }
     }

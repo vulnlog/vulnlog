@@ -7,6 +7,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.gradle.testkit.runner.TaskOutcome
 
 private val FILES_FROM_TEST_YAML =
@@ -80,6 +81,39 @@ class VulnlogSuppressTaskTest :
                 val files = outputDir.list()?.toList() ?: emptyList()
                 files shouldContain ".trivyignore.yaml"
                 files.any { it.startsWith("grype") } shouldBe false
+            }
+        }
+
+        context("diagnostics") {
+
+            test("--info shows parsed inputs and written outputs") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
+
+                val result = runner(dir, "vulnlogSuppress", "--info").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldContain
+                    "parsed test.vl.yaml: schema version 1, releases: 1, tags: 0, vulnerabilities: 1"
+                result.output shouldContain ".trivyignore.yaml: trivy format, 1 entry"
+            }
+
+            test("the default log level hides diagnostics") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
+
+                val result = runner(dir, "vulnlogSuppress").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldNotContain "parsed test.vl.yaml"
+            }
+
+            test("--info shows entries skipped for the output format") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml(reporter = "snyk"))
+
+                val result = runner(dir, "vulnlogSuppress", "--info").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldContain
+                    "skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids"
             }
         }
 

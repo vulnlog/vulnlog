@@ -77,7 +77,8 @@ class CopyCommand : CliktCommand(name = "copy") {
                 echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
             }
             destination.path.writeText(outcome.newContent.content)
-            echo(formatCopiedMessage(destination.path, outcome.copied))
+            diagnosticSink().verbose("wrote ${destination.path}")
+            echoStatus(formatCopiedMessage(destination.path, outcome.copied))
         }
     }
 }

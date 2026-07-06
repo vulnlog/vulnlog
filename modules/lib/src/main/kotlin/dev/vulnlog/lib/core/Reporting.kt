@@ -52,6 +52,15 @@ fun collectReportingEntries(
         }.toSet()
 
 /**
+ * Renders one diagnostic line stating how many reporting entries the inputs produced and how many
+ * remain after merging. Shared by the CLI and the Gradle plugin.
+ */
+fun renderReportingCounts(
+    collected: Int,
+    merged: Int,
+): String = "collected $collected report entries, merged to $merged"
+
+/**
  * Merges reporting entries from multiple sources by primary vulnerability ID.
  *
  * Entries with the same primary ID, state, impact, and analysis are merged by unioning

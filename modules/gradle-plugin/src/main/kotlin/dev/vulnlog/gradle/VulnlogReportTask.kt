@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.buildFilterOrFail
+import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
@@ -11,6 +12,7 @@ import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.parseReporter
+import dev.vulnlog.lib.core.renderReportingCounts
 import dev.vulnlog.lib.core.validateSharedProject
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
@@ -56,10 +58,11 @@ abstract class VulnlogReportTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
+        val sink = diagnosticSink()
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
         requireNonEmptyVulnlogFiles(inputFiles)
-        val parsedSuccessfully = parseInputOrFail(inputFiles)
-        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        val parsedSuccessfully = parseInputOrFail(inputFiles, sink)
+        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully, sink = sink)
 
         val vulnlogFiles = parsedSuccessfully.values.map(ParseResult.Ok::content)
 
@@ -67,10 +70,11 @@ abstract class VulnlogReportTask : DefaultTask() {
             validateSharedProject(vulnlogFiles)
                 ?: throw GradleException("All input files must share the same project metadata.")
 
-        val filter = buildFilterOrFail(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get())
+        val filter = buildFilterOrFail(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get(), sink)
 
         val allEntries = vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
         val merged = mergeReportingEntries(allEntries)
+        sink.debug(renderReportingCounts(allEntries.size, merged.size))
 
         val filterData =
             FilterDataDto(
@@ -94,6 +98,7 @@ abstract class VulnlogReportTask : DefaultTask() {
         val out = outputFile.get().asFile
         out.parentFile?.mkdirs()
         out.writeText(reportContent)
+        sink.verbose("wrote ${out.path}")
         logger.lifecycle("Report written to: ${out.absolutePath}")
     }
 }
