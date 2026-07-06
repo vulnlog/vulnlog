@@ -22,7 +22,26 @@ No automatic file detection.
 
 | `--help`
 | Print help.
+
+| `-v, --verbose`
+| Print diagnostic lines prefixed `verbose:` on stderr.
+
+| `-vv`
+| Additionally print `debug:` lines and full stack traces on unexpected errors.
+
+| `-q, --quiet`
+| Suppress status lines. Errors and warnings always print. Cannot be combined with `-v`.
 |===
+
+== Diagnostics
+
+By default a command prints one status line per action, plus errors and warnings.
+`-v` adds diagnostic detail about what the tool did: one line per parsed input file, a validation summary per file, the releases and tags a filter expanded to, every written output file, and every entry excluded from an output with the reason.
+`-vv` adds debug detail aimed at bug reports: every entry included in a suppression file, the findings that caused a file to be reformatted, report entry counts before and after merging, and the full stack trace when an unexpected error occurs; without it, such errors show a single `error:` line.
+
+Diagnostics always go to stderr.
+Stdout carries only command output, so redirections like `vulnlog suppress --reporter trivy -o - > .trivyignore.yaml` are safe at any verbosity.
+There is no log file; to capture diagnostics, redirect stderr.
 
 == Filtering Flags
 
