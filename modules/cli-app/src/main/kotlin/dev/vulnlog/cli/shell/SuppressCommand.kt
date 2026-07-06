@@ -18,10 +18,12 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
@@ -95,7 +97,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             suppressionResult.outputs.map { output -> RenderedSuppression(output, writeSuppressionOutput(output)) }
 
         if (contents.isEmpty()) {
-            echoStatus("No suppression entries applicable; nothing written.", err = true)
+            echoStatus(formatStatus(StatusVerb.UNCHANGED, "no suppression entries applicable"))
             return
         }
 

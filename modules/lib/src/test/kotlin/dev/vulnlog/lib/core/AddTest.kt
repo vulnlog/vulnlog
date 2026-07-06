@@ -614,14 +614,14 @@ class AddTest :
                 val outcome = AddOutcome(newContent = "", vulnId = VulnId.Cve("CVE-2026-1234"), updated = false)
 
                 formatAddOutcomeMessage(Path.of("/tmp/x.vl.yaml"), outcome) shouldBe
-                    "Added to /tmp/x.vl.yaml: CVE-2026-1234"
+                    "Added: CVE-2026-1234 to /tmp/x.vl.yaml"
             }
 
             test("renders an updated message on update") {
                 val outcome = AddOutcome(newContent = "", vulnId = VulnId.Cve("CVE-2026-1234"), updated = true)
 
                 formatAddOutcomeMessage(Path.of("/tmp/x.vl.yaml"), outcome) shouldBe
-                    "Updated in /tmp/x.vl.yaml: CVE-2026-1234"
+                    "Updated: CVE-2026-1234 in /tmp/x.vl.yaml"
             }
         }
     })

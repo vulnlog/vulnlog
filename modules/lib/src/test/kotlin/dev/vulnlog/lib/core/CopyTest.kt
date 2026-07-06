@@ -95,12 +95,12 @@ class CopyTest :
 
             test("renders copied ids when non-empty") {
                 formatCopiedMessage(Path.of("/tmp/x.vl.yaml"), listOf(cve1, cve2)) shouldBe
-                    "Copied to /tmp/x.vl.yaml: CVE-2026-1234, CVE-2026-5678"
+                    "Copied: 2 entries to /tmp/x.vl.yaml"
             }
 
             test("renders no-op message when empty") {
                 formatCopiedMessage(Path.of("/tmp/x.vl.yaml"), emptyList()) shouldBe
-                    "No new vulnerabilities to copy to /tmp/x.vl.yaml"
+                    "Unchanged: /tmp/x.vl.yaml: no new vulnerabilities"
             }
         }
 

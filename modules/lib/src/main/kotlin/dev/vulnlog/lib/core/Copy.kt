@@ -138,9 +138,9 @@ fun formatCopiedMessage(
     ids: List<VulnId>,
 ): String =
     if (ids.isEmpty()) {
-        "No new vulnerabilities to copy to $destinationPath"
+        formatStatus(StatusVerb.UNCHANGED, "$destinationPath: no new vulnerabilities")
     } else {
-        "Copied to $destinationPath: ${ids.joinToString(", ") { it.id }}"
+        formatStatus(StatusVerb.COPIED, "${pluralize(ids.size, "entry", "entries")} to $destinationPath")
     }
 
 fun findNonExistingVulnIds(

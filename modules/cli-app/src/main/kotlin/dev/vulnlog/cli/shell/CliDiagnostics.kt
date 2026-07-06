@@ -22,9 +22,6 @@ fun CliktCommand.diagnostics(): CliDiagnostics =
 
 fun CliktCommand.diagnosticSink(): DiagnosticSink = diagnostics().sink
 
-fun CliktCommand.echoStatus(
-    message: String,
-    err: Boolean = false,
-) {
-    if (diagnostics().verbosity.statusEnabled) echo(message, err = err)
+fun CliktCommand.echoStatus(message: String) {
+    if (diagnostics().verbosity.statusEnabled) echo(message, err = true)
 }

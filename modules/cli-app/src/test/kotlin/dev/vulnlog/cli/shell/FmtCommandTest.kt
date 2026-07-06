@@ -80,7 +80,7 @@ class FmtCommandTest :
 
                     result.statusCode shouldBe 0
                     file.readText() shouldBe once
-                    result.stdout shouldContain "Already formatted"
+                    result.stderr shouldContain "Unchanged: "
                 }
             }
 
@@ -112,7 +112,7 @@ class FmtCommandTest :
                     content shouldContain "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json"
 
                     val second = FmtCommand().test(file.absolutePath)
-                    second.stdout shouldContain "Already formatted"
+                    second.stderr shouldContain "Unchanged: "
                     second.stderr shouldNotContain "YAML comments"
                 }
             }
@@ -124,7 +124,7 @@ class FmtCommandTest :
                     val result = FmtCommand().test(file.absolutePath)
 
                     result.statusCode shouldBe 0
-                    result.stdout shouldContain "Formatted"
+                    result.stderr shouldContain "Formatted: "
                     file.readText() shouldContain "releases: [9.9.9]"
                 }
             }

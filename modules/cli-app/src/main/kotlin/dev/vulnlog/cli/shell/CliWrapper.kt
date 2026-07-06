@@ -7,7 +7,9 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.result.InputValidationResult
@@ -141,7 +143,7 @@ fun writeInit(
 ) {
     try {
         initFile.path.writeText(content)
-        out("Vulnlog file created at: ${initFile.path.toAbsolutePath()}")
+        out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))
     } catch (e: Exception) {
         err("Error writing file: ${e.message}")
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
@@ -156,7 +158,7 @@ fun writeSuppressionFile(
 ) {
     try {
         outputPath.writeText(suppressionFile.content)
-        out("Suppression file created at: ${outputPath.toAbsolutePath()}")
+        out(formatStatus(StatusVerb.WROTE, outputPath.toString()))
     } catch (e: Exception) {
         err("Error writing file: ${e.message}")
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
@@ -171,7 +173,7 @@ fun writeReport(
 ) {
     try {
         reportFile.path.writeText(content)
-        out("Report written to: ${reportFile.path.toAbsolutePath()}")
+        out(formatStatus(StatusVerb.WROTE, reportFile.path.toString()))
     } catch (e: Exception) {
         err("Error writing file: ${e.message}")
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)

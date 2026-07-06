@@ -125,9 +125,9 @@ fun formatAddOutcomeMessage(
     outcome: AddOutcome,
 ): String =
     if (outcome.updated) {
-        "Updated in $destinationPath: ${outcome.vulnId.id}"
+        formatStatus(StatusVerb.UPDATED, "${outcome.vulnId.id} in $destinationPath")
     } else {
-        "Added to $destinationPath: ${outcome.vulnId.id}"
+        formatStatus(StatusVerb.ADDED, "${outcome.vulnId.id} to $destinationPath")
     }
 
 private fun emptyEntryDto(
