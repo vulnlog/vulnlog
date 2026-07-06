@@ -49,7 +49,7 @@ class ValidateFileTest :
                     )
 
                 renderValidationSummary(results) shouldBe
-                    listOf("validated app.vl.yaml: 1 error(s), 2 warning(s)")
+                    listOf("validated app.vl.yaml: 1 error, 2 warnings")
             }
 
             test("renders one sorted line per file") {
@@ -61,7 +61,7 @@ class ValidateFileTest :
 
                 renderValidationSummary(results) shouldBe
                     listOf(
-                        "validated a.vl.yaml: 1 info(s)",
+                        "validated a.vl.yaml: 1 info",
                         "validated b.vl.yaml: no findings",
                     )
             }

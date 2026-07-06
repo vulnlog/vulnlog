@@ -97,7 +97,7 @@ class VulnlogReportTaskTest :
                 val result = runner(dir, "vulnlogReport").buildAndFail()
 
                 result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Parsing of test.vl.yaml failed"
+                result.output shouldContain "error: test.vl.yaml: "
             }
         }
 

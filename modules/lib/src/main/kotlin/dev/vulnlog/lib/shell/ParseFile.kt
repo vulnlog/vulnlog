@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.shell
 
+import dev.vulnlog.lib.core.formatSummary
 import dev.vulnlog.lib.core.renderParseFailure
 import dev.vulnlog.lib.core.shortenSchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
@@ -41,12 +42,14 @@ fun parseInputs(inputs: List<FileInputOption>): ParseResults {
 }
 
 /**
- * Renders each failure in [parseResults] as a two-line block: a header naming the file and the
- * underlying parse error. Centralises the message format so all surfaces (CLI, Gradle) report
- * parse failures identically.
+ * Renders each failure in [parseResults] as one finding line per problem, followed by a summary
+ * line. Centralises the message format so all surfaces (CLI, Gradle) report parse failures
+ * identically.
  */
-fun renderParseFailures(parseResults: ParseResults): List<String> =
-    parseResults.failure.map { (input, result) -> renderParseFailure(input.sourceFile().name, result) }
+fun renderParseFailures(parseResults: ParseResults): List<String> {
+    val lines = parseResults.failure.flatMap { (input, result) -> renderParseFailure(input.sourceFile().name, result) }
+    return lines + formatSummary(errors = lines.size, warnings = 0)
+}
 
 /**
  * Renders one diagnostic line per successfully parsed input, stating the detected schema version

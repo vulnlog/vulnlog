@@ -63,8 +63,7 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe 0
-                    result.stderr shouldContain "Validation findings for"
-                    result.stderr shouldContain "[INFO ]"
+                    result.stderr shouldContain "info: ${input.name}: "
                     result.stderr shouldContain "Unreferenced release ID"
                     result.stdout shouldContain "Validation OK"
                 }
@@ -139,7 +138,7 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                    result.stderr shouldContain "Parsing of ${input.name} failed"
+                    result.stderr shouldContain "error: ${input.name}: "
                 }
             }
 
@@ -148,7 +147,7 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test("-")
 
                     result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                    result.stderr shouldContain "Parsing of <stdin> failed"
+                    result.stderr shouldContain "error: <stdin>: "
                 }
             }
 
@@ -157,8 +156,7 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                    result.stderr shouldContain "Parsing of ${input.name} failed"
-                    result.stderr shouldContain "[ERROR] Line "
+                    result.stderr shouldContain Regex("error: ${Regex.escape(input.name)}: \\d+:\\d+: ")
                 }
             }
         }

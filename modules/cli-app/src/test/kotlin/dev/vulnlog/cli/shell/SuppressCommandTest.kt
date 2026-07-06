@@ -214,7 +214,7 @@ class SuppressCommandTest :
                     val result = SuppressCommand().test("-")
 
                     result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                    result.stderr shouldContain "Parsing of <stdin> failed"
+                    result.stderr shouldContain "error: <stdin>: "
                 }
             }
         }
@@ -315,8 +315,7 @@ class SuppressCommandTest :
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
-                    result.stderr shouldNotContain "Validation findings for"
-                    result.stderr shouldNotContain "[INFO ]"
+                    result.stderr shouldNotContain "info: ${input.name}: "
                 }
             }
         }
