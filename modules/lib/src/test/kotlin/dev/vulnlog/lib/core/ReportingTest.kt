@@ -427,4 +427,12 @@ class ReportingTest :
                 result shouldBe defaultProject
             }
         }
+
+        context("renderReportingCounts") {
+
+            test("states the collected and merged counts") {
+                renderReportingCounts(collected = 12, merged = 9) shouldBe
+                    "collected 12 report entries, merged to 9"
+            }
+        }
     })

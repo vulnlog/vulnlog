@@ -37,6 +37,6 @@ class ValidateCommand : CliktCommand(name = "validate") {
         if (validationFindings.hasWarnings && strict) {
             throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
         }
-        echo("Validation OK")
+        echoStatus("Validation OK")
     }
 }

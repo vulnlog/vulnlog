@@ -7,7 +7,9 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppress.SuppressionFormat
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.result.SuppressionExclusion
 import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -40,7 +42,7 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln()
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input).outputs
 
                 result shouldHaveSize 1
                 result.first().shouldBeInstanceOf<SuppressionOutput.TrivySuppression>()
@@ -50,7 +52,7 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln(reporter = ReporterType.OTHER)
                 val input = mapOf(ReporterType.OTHER to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.OTHER), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.OTHER), input).outputs
 
                 result.shouldBeEmpty()
             }
@@ -59,7 +61,7 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-1234"), analysis = "false positive")
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input).outputs
                 val trivy = result.first() as SuppressionOutput.TrivySuppression
 
                 trivy.entries shouldHaveSize 1
@@ -68,7 +70,7 @@ class SuppressionOutputsTest :
             }
 
             test("produces empty TrivySuppression when no suppressions match") {
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), emptyMap())
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), emptyMap()).outputs
 
                 result shouldHaveSize 1
                 val trivy = result.first() as SuppressionOutput.TrivySuppression
@@ -76,14 +78,14 @@ class SuppressionOutputsTest :
             }
 
             test("ignores target reporters not in suppressable set") {
-                val result = buildSuppressionOutputs(setOf(ReporterType.OTHER, ReporterType.TRIVY), emptyMap())
+                val result = buildSuppressionOutputs(setOf(ReporterType.OTHER, ReporterType.TRIVY), emptyMap()).outputs
 
                 result shouldHaveSize 1
                 result.first().shouldBeInstanceOf<SuppressionOutput.TrivySuppression>()
             }
 
             test("produces empty output when no target reporters") {
-                val result = buildSuppressionOutputs(emptySet(), emptyMap())
+                val result = buildSuppressionOutputs(emptySet(), emptyMap()).outputs
 
                 result.shouldBeEmpty()
             }
@@ -93,7 +95,7 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln(expiresAt = expiresAt)
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input).outputs
                 val trivy = result.first() as SuppressionOutput.TrivySuppression
 
                 trivy.entries.first().expiresAt shouldBe expiresAt
@@ -103,7 +105,7 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln(expiresAt = null)
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input).outputs
                 val trivy = result.first() as SuppressionOutput.TrivySuppression
 
                 trivy.entries.first().expiresAt shouldBe null
@@ -114,7 +116,7 @@ class SuppressionOutputsTest :
                 val entry2 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"))
                 val input = mapOf(ReporterType.TRIVY to listOf(entry1, entry2))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input).outputs
                 val trivy = result.first() as SuppressionOutput.TrivySuppression
 
                 trivy.entries shouldHaveSize 1
@@ -127,7 +129,7 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln(id = VulnId.Snyk("SNYK-JAVA-001"), reporter = ReporterType.SNYK)
                 val input = mapOf(ReporterType.SNYK to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input).outputs
 
                 result shouldHaveSize 1
                 result.first().shouldBeInstanceOf<SuppressionOutput.SnykSuppression>()
@@ -142,7 +144,7 @@ class SuppressionOutputsTest :
                     )
                 val input = mapOf(ReporterType.SNYK to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input).outputs
                 val snyk = result.first() as SuppressionOutput.SnykSuppression
 
                 snyk.entries shouldHaveSize 1
@@ -154,14 +156,14 @@ class SuppressionOutputsTest :
                 val cveEntry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), reporter = ReporterType.SNYK)
                 val input = mapOf(ReporterType.SNYK to listOf(cveEntry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input).outputs
                 val snyk = result.first() as SuppressionOutput.SnykSuppression
 
                 snyk.entries.shouldBeEmpty()
             }
 
             test("produces empty SnykSuppression when no suppressions match") {
-                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), emptyMap())
+                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), emptyMap()).outputs
 
                 result shouldHaveSize 1
                 val snyk = result.first() as SuppressionOutput.SnykSuppression
@@ -178,7 +180,7 @@ class SuppressionOutputsTest :
                     )
                 val input = mapOf(ReporterType.SNYK to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input)
+                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input).outputs
                 val snyk = result.first() as SuppressionOutput.SnykSuppression
 
                 snyk.entries.first().expiresAt shouldBe expiresAt
@@ -188,7 +190,7 @@ class SuppressionOutputsTest :
         context("buildSuppressionOutputs for multiple reporters") {
 
             test("produces both trivy and snyk output") {
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY, ReporterType.SNYK), emptyMap())
+                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY, ReporterType.SNYK), emptyMap()).outputs
 
                 result shouldHaveSize 2
             }
@@ -199,7 +201,8 @@ class SuppressionOutputsTest :
             test("auto keeps the native format for a native reporter") {
                 val input = mapOf(ReporterType.TRIVY to listOf(suppressedVuln()))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input, SuppressionFormatRequest.Auto)
+                val result =
+                    buildSuppressionOutputs(setOf(ReporterType.TRIVY), input, SuppressionFormatRequest.Auto).outputs
 
                 result.first().shouldBeInstanceOf<SuppressionOutput.TrivySuppression>()
             }
@@ -207,7 +210,8 @@ class SuppressionOutputsTest :
             test("auto falls back to generic for a reporter without a native format") {
                 val input = mapOf(ReporterType.GRYPE to listOf(suppressedVuln(reporter = ReporterType.GRYPE)))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.GRYPE), input, SuppressionFormatRequest.Auto)
+                val result =
+                    buildSuppressionOutputs(setOf(ReporterType.GRYPE), input, SuppressionFormatRequest.Auto).outputs
 
                 val generic = result.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
                 generic.fileName shouldBe "grype.generic.json"
@@ -221,7 +225,7 @@ class SuppressionOutputsTest :
                         SuppressionFormatRequest.Generic,
                     )
 
-                val generic = result.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
+                val generic = result.outputs.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
                 generic.fileName shouldBe "github-dependabot.generic.json"
             }
 
@@ -229,7 +233,8 @@ class SuppressionOutputsTest :
                 val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-1234"), analysis = "false positive")
                 val input = mapOf(ReporterType.TRIVY to listOf(entry))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.TRIVY), input, SuppressionFormatRequest.Generic)
+                val result =
+                    buildSuppressionOutputs(setOf(ReporterType.TRIVY), input, SuppressionFormatRequest.Generic).outputs
 
                 val generic = result.first().shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
                 generic.fileName shouldBe "trivy.generic.json"
@@ -244,6 +249,7 @@ class SuppressionOutputsTest :
 
                 val native =
                     buildSuppressionOutputs(setOf(ReporterType.CARGO_AUDIT), input, SuppressionFormatRequest.Auto)
+                        .outputs
                 native
                     .first()
                     .shouldBeInstanceOf<SuppressionOutput.CargoAuditSuppression>()
@@ -252,6 +258,7 @@ class SuppressionOutputsTest :
 
                 val generic =
                     buildSuppressionOutputs(setOf(ReporterType.CARGO_AUDIT), input, SuppressionFormatRequest.Generic)
+                        .outputs
                 generic
                     .first()
                     .shouldBeInstanceOf<SuppressionOutput.GenericSuppression>()
@@ -261,7 +268,8 @@ class SuppressionOutputsTest :
             test("excludes the OTHER reporter regardless of requested format") {
                 val input = mapOf(ReporterType.OTHER to listOf(suppressedVuln(reporter = ReporterType.OTHER)))
 
-                val result = buildSuppressionOutputs(setOf(ReporterType.OTHER), input, SuppressionFormatRequest.Generic)
+                val result =
+                    buildSuppressionOutputs(setOf(ReporterType.OTHER), input, SuppressionFormatRequest.Generic).outputs
 
                 result.shouldBeEmpty()
             }
@@ -272,11 +280,57 @@ class SuppressionOutputsTest :
                         setOf(ReporterType.TRIVY, ReporterType.SNYK),
                         emptyMap(),
                         SuppressionFormatRequest.Generic,
-                    )
+                    ).outputs
 
                 result shouldHaveSize 2
                 result.filterIsInstance<SuppressionOutput.GenericSuppression>().map { it.fileName }.toSet() shouldBe
                     setOf("trivy.generic.json", "snyk.generic.json")
+            }
+        }
+
+        context("buildSuppressionOutputs exclusions") {
+
+            test("records a non-snyk id dropped from the snyk output") {
+                val cveEntry = suppressedVuln(id = VulnId.Cve("CVE-2026-1234"), reporter = ReporterType.SNYK)
+                val input = mapOf(ReporterType.SNYK to listOf(cveEntry))
+
+                val result = buildSuppressionOutputs(setOf(ReporterType.SNYK), input)
+
+                result.exclusions shouldBe
+                    listOf(
+                        SuppressionExclusion.UnsupportedIdType(
+                            id = VulnId.Cve("CVE-2026-1234"),
+                            fileName = ".snyk",
+                            format = SuppressionFormat.NativeFormat.Snyk,
+                        ),
+                    )
+            }
+
+            test("records entries of the OTHER reporter") {
+                val entry = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), reporter = ReporterType.OTHER)
+                val input = mapOf(ReporterType.OTHER to listOf(entry))
+
+                val result = buildSuppressionOutputs(setOf(ReporterType.OTHER), input)
+
+                result.outputs.shouldBeEmpty()
+                result.exclusions shouldBe
+                    listOf(
+                        SuppressionExclusion.UnsupportedReporter(VulnId.Cve("CVE-2024-0001"), ReporterType.OTHER),
+                    )
+            }
+
+            test("supported entries produce no exclusions") {
+                val input = mapOf(ReporterType.TRIVY to listOf(suppressedVuln()))
+
+                buildSuppressionOutputs(setOf(ReporterType.TRIVY), input).exclusions.shouldBeEmpty()
+            }
+
+            test("deduplicates identical exclusions") {
+                val entry1 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), reporter = ReporterType.SNYK)
+                val entry2 = suppressedVuln(id = VulnId.Cve("CVE-2024-0001"), reporter = ReporterType.SNYK)
+                val input = mapOf(ReporterType.SNYK to listOf(entry1, entry2))
+
+                buildSuppressionOutputs(setOf(ReporterType.SNYK), input).exclusions shouldHaveSize 1
             }
         }
     })

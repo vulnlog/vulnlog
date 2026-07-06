@@ -45,13 +45,15 @@ class InitCommand : CliktCommand(name = "init") {
         val content = YamlWriter.write(vulnlogFile, mapper)
 
         when (val target = output) {
-            is FileOutputOption.File ->
+            is FileOutputOption.File -> {
                 writeInit(
-                    { echo(it) },
+                    { echoStatus(it) },
                     { echo(it, err = true) },
                     target,
                     content,
                 )
+                diagnosticSink().verbose("wrote ${target.path}")
+            }
 
             is FileOutputOption.Stdout -> echo(content)
         }

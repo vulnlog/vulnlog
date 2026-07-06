@@ -3,6 +3,7 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.lib.core.FormatOutcome
@@ -41,9 +42,10 @@ abstract class VulnlogFmtTask : DefaultTask() {
 
     @TaskAction
     fun format() {
+        val sink = diagnosticSink()
         val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
         requireNonEmptyVulnlogFiles(inputFiles)
-        val parsed = parseInputOrFail(inputFiles)
+        val parsed = parseInputOrFail(inputFiles, sink)
 
         val mapper = createYamlMapper()
         val checkOnly = check.getOrElse(false)
@@ -63,7 +65,13 @@ abstract class VulnlogFmtTask : DefaultTask() {
                         if (hasYamlComments(parsedInput.rootNode)) {
                             logger.warn(formatCommentsDroppedWarning(input.path.toString()))
                         }
+                        if (logger.isDebugEnabled) {
+                            checkFormat(parsedInput, mapper).forEach { finding ->
+                                sink.debug(renderFormatFinding(finding))
+                            }
+                        }
                         input.path.writeText(outcome.formatted.content)
+                        sink.verbose("wrote ${input.path}")
                         logger.lifecycle("Formatted: ${input.path}")
                     }
             }

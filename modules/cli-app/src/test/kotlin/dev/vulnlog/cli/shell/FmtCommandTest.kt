@@ -201,6 +201,54 @@ class FmtCommandTest :
                     result.statusCode shouldBe 0
                 }
             }
+
+            test("lists STDIN findings on stdout like file findings") {
+                withStdin(UGLY_YAML) {
+                    val result = FmtCommand().test("--check -")
+
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.stdout shouldContain "Can be reformatted: <stdin>"
+                }
+            }
+
+            test("-q suppresses the listing and keeps the exit code") {
+                withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
+                    val result = vulnlogCommand().test("-q fmt --check ${file.absolutePath}")
+
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.stdout shouldNotContain "Can be reformatted"
+                }
+            }
+        }
+
+        context("diagnostics") {
+
+            test("-v reports the rewritten file on stderr") {
+                withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
+                    val result = vulnlogCommand().test("-v fmt ${file.absolutePath}")
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldContain "verbose: wrote ${file.absolutePath}"
+                }
+            }
+
+            test("-vv explains why the file was rewritten") {
+                withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
+                    val result = vulnlogCommand().test("-vv fmt ${file.absolutePath}")
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldContain "debug: [non-canonical-array-style]"
+                }
+            }
+
+            test("-v alone does not explain the rewrite") {
+                withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
+                    val result = vulnlogCommand().test("-v fmt ${file.absolutePath}")
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldNotContain "non-canonical"
+                }
+            }
         }
 
         context("stdin/stdout") {

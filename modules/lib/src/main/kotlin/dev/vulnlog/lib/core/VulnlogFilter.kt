@@ -26,9 +26,9 @@ fun Sequence<VulnerabilityEntry>.applyFilter(filter: VulnlogFilter): Sequence<Vu
         .filter { filter.releases.isEmpty() || it.releases.any { release -> release in filter.releases } }
         .filter { filter.tags.isEmpty() || filter.tags.any { tag -> it.tags.contains(tag) } }
 
-fun Sequence<SuppressedVulnerability>.applyFilter(filter: SuppressionFilter): Sequence<SuppressedVulnerability> =
+@JvmName("applyFilterToSuppressedVulnerabilities")
+fun Sequence<SuppressedVulnerability>.applyFilter(filter: VulnlogFilter): Sequence<SuppressedVulnerability> =
     this
-        .filter { filter.filter.releases.isEmpty() || it.releases.any { release -> release in filter.filter.releases } }
-        .filter { filter.filter.tags.isEmpty() || filter.filter.tags.any { tag -> it.tags.contains(tag) } }
-        .filter { filter.filter.reporter == null || filter.filter.reporter == it.reporter }
-        .filter { it.isActiveOn(filter.today) }
+        .filter { filter.releases.isEmpty() || it.releases.any { release -> release in filter.releases } }
+        .filter { filter.tags.isEmpty() || filter.tags.any { tag -> it.tags.contains(tag) } }
+        .filter { filter.reporter == null || filter.reporter == it.reporter }
