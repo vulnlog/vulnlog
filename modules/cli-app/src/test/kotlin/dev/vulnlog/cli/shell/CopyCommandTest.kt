@@ -63,7 +63,7 @@ class CopyCommandTest :
                             )
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldBe "Copied to ${target.path}: CVE-2026-1234\n"
+                        result.stderr shouldBe "Copied: 1 entry to ${target.path}\n"
 
                         val content = target.readText()
                         content shouldContain "CVE-2026-1234"
@@ -166,7 +166,7 @@ class CopyCommandTest :
 
                         val check = FmtCommand().test("--check ${target.absolutePath}")
                         check.statusCode shouldBe 0
-                        check.stdout shouldContain "Already formatted"
+                        check.stderr shouldContain "Unchanged: "
                     }
                 }
             }

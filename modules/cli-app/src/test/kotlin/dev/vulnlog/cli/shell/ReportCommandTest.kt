@@ -20,7 +20,7 @@ class ReportCommandTest :
                             ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldContain "Report written to:"
+                        result.stderr shouldContain "Wrote: "
                         val html = output.readText()
                         html shouldContain "<!DOCTYPE html>"
                         html shouldContain "CVE-2026-1234"

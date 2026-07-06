@@ -19,7 +19,7 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe 0
-                    result.stdout shouldContain "Validation OK"
+                    result.stderr shouldContain "Validation OK"
                 }
             }
 
@@ -35,7 +35,7 @@ class ValidateCommandTest :
                         val result = ValidateCommand().test("${f1.absolutePath} ${f2.absolutePath}")
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldContain "Validation OK"
+                        result.stderr shouldContain "Validation OK"
                     }
                 }
             }
@@ -45,7 +45,7 @@ class ValidateCommandTest :
                     val result = ValidateCommand().test("-")
 
                     result.statusCode shouldBe 0
-                    result.stdout shouldContain "Validation OK"
+                    result.stderr shouldContain "Validation OK"
                 }
             }
 
@@ -65,7 +65,7 @@ class ValidateCommandTest :
                     result.statusCode shouldBe 0
                     result.stderr shouldContain "info: ${input.name}: "
                     result.stderr shouldContain "Unreferenced release ID"
-                    result.stdout shouldContain "Validation OK"
+                    result.stderr shouldContain "Validation OK"
                 }
             }
         }

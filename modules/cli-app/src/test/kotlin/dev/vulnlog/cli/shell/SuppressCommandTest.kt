@@ -23,7 +23,7 @@ class SuppressCommandTest :
                             SuppressCommand().test("${input.absolutePath} --output-dir ${outputDir.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldContain "Suppression file created at:"
+                        result.stderr shouldContain "Wrote: "
                     }
                 }
             }
@@ -36,7 +36,7 @@ class SuppressCommandTest :
                             SuppressCommand().test("${input.absolutePath} -o ${target.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldContain "Suppression file created at: ${target.toAbsolutePath()}"
+                        result.stderr shouldContain "Wrote: ${target.toAbsolutePath()}"
                         target.toFile().exists() shouldBe true
                     }
                 }
@@ -66,7 +66,7 @@ class SuppressCommandTest :
                         val result = SuppressCommand().test("- --output-dir ${outputDir.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
-                        result.stdout shouldContain "Suppression file created at:"
+                        result.stderr shouldContain "Wrote: "
                     }
                 }
             }
@@ -138,7 +138,7 @@ class SuppressCommandTest :
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
-                    result.stderr shouldContain "No suppression entries applicable"
+                    result.stderr shouldContain "Unchanged: no suppression entries applicable"
                     result.stdout shouldNotContain "CVE-2026-1234"
                 }
             }
@@ -150,7 +150,7 @@ class SuppressCommandTest :
                             SuppressCommand().test("${input.absolutePath} --output-dir ${outputDir.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
-                        result.stderr shouldContain "No suppression entries applicable"
+                        result.stderr shouldContain "Unchanged: no suppression entries applicable"
                         val written = outputDir.toFile().listFiles().orEmpty()
                         written.toList() shouldBe emptyList()
                     }

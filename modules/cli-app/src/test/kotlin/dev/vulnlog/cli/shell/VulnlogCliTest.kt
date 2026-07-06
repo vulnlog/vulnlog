@@ -178,7 +178,7 @@ class VulnlogCliTest :
                     val result = vulnlogCommand().test("validate ${file.absolutePath}")
 
                     result.statusCode shouldBe 0
-                    result.stdout shouldContain "Validation OK"
+                    result.stderr shouldContain "Validation OK"
                 }
             }
 

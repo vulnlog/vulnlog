@@ -77,6 +77,11 @@ class CopyCommand : CliktCommand(name = "copy") {
             }
             destination.path.writeText(outcome.newContent.content)
             diagnosticSink().verbose("wrote ${destination.path}")
+            if (outcome.copied.isNotEmpty()) {
+                diagnosticSink().verbose(
+                    "copied to ${destination.path}: ${outcome.copied.joinToString(", ") { it.id }}",
+                )
+            }
             echoStatus(formatCopiedMessage(destination.path, outcome.copied))
         }
     }

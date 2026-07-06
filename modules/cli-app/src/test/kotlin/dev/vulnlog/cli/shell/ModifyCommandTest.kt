@@ -23,7 +23,7 @@ class ModifyCommandTest :
                         )
 
                     result.statusCode shouldBe 0
-                    result.stdout shouldContain "Copied to ${target.path}: CVE-2026-1234"
+                    result.stderr shouldContain "Copied: 1 entry to ${target.path}"
                     target.readText() shouldContain "CVE-2026-1234"
                 }
             }
@@ -37,7 +37,7 @@ class ModifyCommandTest :
                     )
 
                 result.statusCode shouldBe 0
-                result.stdout shouldContain "Added to ${target.path}: CVE-2026-9999"
+                result.stderr shouldContain "Added: CVE-2026-9999 to ${target.path}"
                 target.readText() shouldContain "CVE-2026-9999"
             }
         }

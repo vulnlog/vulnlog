@@ -37,7 +37,7 @@ class InitCommandTest :
                 val result = InitCommand().test(REQUIRED_OPTIONS)
 
                 result.statusCode shouldBe 0
-                result.stdout shouldNotContain "Vulnlog file created at:"
+                result.stdout shouldNotContain "Created: "
             }
 
             test("writes YAML to a file when -o path is specified") {
@@ -45,7 +45,7 @@ class InitCommandTest :
                     val result = InitCommand().test("$REQUIRED_OPTIONS -o ${output.absolutePath}")
 
                     result.statusCode shouldBe 0
-                    result.stdout shouldContain "Vulnlog file created at:"
+                    result.stderr shouldContain "Created: "
                     output.readText() shouldContain "acme"
                 }
             }

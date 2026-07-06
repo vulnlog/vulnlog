@@ -8,8 +8,7 @@ shows verbose, `--debug` shows debug).
 
 - stdout carries command output only (YAML, HTML, suppression content). Redirections like
   `vulnlog suppress -o - > .trivyignore.yaml` must stay safe at any verbosity.
-- Everything else is secondary: status lines print to stdout but are suppressible with `-q`. warnings, errors and
-  diagnostics go to stderr.
+- Everything else goes to stderr: status lines (suppressible with `-q`), warnings, errors and diagnostics.
 - There is no log file. Users capture diagnostics by redirecting stderr.
 
 ## Levels
@@ -77,4 +76,4 @@ debug: [non-canonical-array-style] vulnerabilities[0].releases: Line 12: canonic
 - Diagnostics: lowercase, verb-first, past tense (`parsed x`, `wrote y`, `skipped z: reason`), one line per event, no
   trailing period, ASCII only.
 - Include the identifier the user would grep for: file name, vulnerability id, reporter.
-- Status lines keep the existing human style (`Formatted: ...`, `Validation OK`).
+- Status lines use the shared verb grammar from `StatusVerb` (`Formatted: <file>`), plus `Validation OK`.
