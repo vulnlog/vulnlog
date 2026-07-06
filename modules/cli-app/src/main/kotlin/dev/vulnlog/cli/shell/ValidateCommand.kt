@@ -25,8 +25,6 @@ class ValidateCommand : CliktCommand(name = "validate") {
     val strict: Boolean by option("--strict", help = "Treats warnings as errors.").flag(default = false)
 
     override fun run() {
-        printOutputSeparator()
-
         val parsedSuccessfully = parseInputOrFail(inputs)
         val validationFindings =
             validateParsedInputOrFailWithFailureOutput(

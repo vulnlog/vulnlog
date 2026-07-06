@@ -48,7 +48,6 @@ class FmtCommand : CliktCommand(name = "fmt") {
     ).flag(default = false)
 
     override fun run() {
-        printOutputSeparator()
         val parsed = parseInputOrFail(inputs)
 
         val mapper = createYamlMapper()

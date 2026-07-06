@@ -9,7 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.string.shouldNotStartWith
 
 class SuppressCommandTest :
     FunSpec({
@@ -301,12 +301,12 @@ class SuppressCommandTest :
 
         context("uniform output formatting") {
 
-            test("prints a leading blank line on stderr to separate the output from the typed command") {
+            test("does not print a leading blank line on stderr") {
                 withTempFile(content = vulnlogYaml()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
-                    result.stderr shouldStartWith "\n"
+                    result.stderr shouldNotStartWith "\n"
                 }
             }
 
