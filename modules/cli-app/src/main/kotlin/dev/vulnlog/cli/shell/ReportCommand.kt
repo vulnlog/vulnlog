@@ -48,7 +48,6 @@ class ReportCommand : CliktCommand(name = "report") {
     val filterOptions by FilterOptions()
 
     override fun run() {
-        printOutputSeparator()
         val parsedSuccessfully = parseInputOrFail(inputs)
         validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
 

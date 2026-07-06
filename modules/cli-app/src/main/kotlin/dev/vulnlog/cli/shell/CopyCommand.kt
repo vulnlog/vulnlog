@@ -49,7 +49,6 @@ class CopyCommand : CliktCommand(name = "copy") {
         .unique()
 
     override fun run() {
-        printOutputSeparator()
         val parsedSource = parseInputOrFail(listOf(source))
         validateParsedInputOrFailWithFailureOutput(parsedSource)
         val sourceVulnlogFile = parsedSource.values.first().content
