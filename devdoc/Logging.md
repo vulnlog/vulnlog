@@ -48,7 +48,7 @@ Verbose answers "why is X (not) in the output?":
 ```
 verbose: parsed vulnlog.yaml: schema version 1, releases: 2, tags: 1, vulnerabilities: 4
 verbose: release filter expanded to releases: 1.2.0, 1.2.1
-verbose: validated vulnlog.yaml: 2 warning(s)
+verbose: validated vulnlog.yaml: 2 warnings
 verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
 verbose: wrote .trivyignore.yaml: trivy format, 3 entries
 ```

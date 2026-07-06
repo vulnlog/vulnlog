@@ -208,7 +208,7 @@ class VulnlogSuppressTaskTest :
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
 
                 result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Parsing of test.vl.yaml failed"
+                result.output shouldContain "error: test.vl.yaml: "
             }
         }
 

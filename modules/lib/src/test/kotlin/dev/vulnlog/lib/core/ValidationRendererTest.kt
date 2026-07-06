@@ -8,19 +8,17 @@ import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.result.ValidationFinding
 import dev.vulnlog.lib.result.ValidationResult
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 
 class ValidationRendererTest :
     FunSpec({
 
-        test("no findings renders OK message") {
-            val result = ValidationResult(emptyList())
-            renderValidation(result) shouldBe "OK: no issues found"
+        test("no findings renders nothing") {
+            renderValidation("vulnlog.yaml", ValidationResult(emptyList())).shouldBeEmpty()
         }
 
-        test("single error renders error line and summary") {
+        test("error finding renders one line in the severity grammar") {
             val result =
                 ValidationResult(
                     listOf(
@@ -32,12 +30,11 @@ class ValidationRendererTest :
                         ),
                     ),
                 )
-            val output = renderValidation(result)
-            output shouldContain "[ERROR] releases[v1.0]: Duplicate release ID 'v1.0'."
-            output shouldContain "1 error(s)"
+            renderValidation("vulnlog.yaml", result) shouldBe
+                listOf("error: vulnlog.yaml: releases[v1.0]: Duplicate release ID 'v1.0'.")
         }
 
-        test("single warning renders warn line and summary") {
+        test("warning finding renders with the warning prefix") {
             val result =
                 ValidationResult(
                     listOf(
@@ -49,12 +46,14 @@ class ValidationRendererTest :
                         ),
                     ),
                 )
-            val output = renderValidation(result)
-            output shouldContain "[WARN ] vulnerabilities[CVE-2021-1].analyzed_at: Analyzed date is before report date."
-            output shouldContain "1 warning(s)"
+            renderValidation("vulnlog.yaml", result) shouldBe
+                listOf(
+                    "warning: vulnlog.yaml: vulnerabilities[CVE-2021-1].analyzed_at: " +
+                        "Analyzed date is before report date.",
+                )
         }
 
-        test("single info renders info line and summary") {
+        test("info finding renders with the info prefix") {
             val result =
                 ValidationResult(
                     listOf(
@@ -66,59 +65,29 @@ class ValidationRendererTest :
                         ),
                     ),
                 )
-            val output = renderValidation(result)
-            output shouldContain "[INFO ] vulnerabilities[CVE-2021-1]: Some info."
-            output shouldContain "1 info(s)"
+            renderValidation("vulnlog.yaml", result) shouldBe
+                listOf("info: vulnlog.yaml: vulnerabilities[CVE-2021-1]: Some info.")
         }
 
-        test("errors appear before warnings in output") {
+        test("errors appear before warnings, warnings before infos") {
             val result =
                 ValidationResult(
                     listOf(
+                        ValidationFinding(Severity.INFO, Rule.UNREFERENCED_RELEASE_ID, "path.info", "An info."),
                         ValidationFinding(
-                            severity = Severity.WARNING,
-                            rule = Rule.ANALYZED_BEFORE_REPORTED,
-                            path = "path.warning",
-                            message = "A warning.",
+                            Severity.WARNING,
+                            Rule.ANALYZED_BEFORE_REPORTED,
+                            "path.warning",
+                            "A warning.",
                         ),
-                        ValidationFinding(
-                            severity = Severity.ERROR,
-                            rule = Rule.DUPLICATE_RELEASE_ID,
-                            path = "path.error",
-                            message = "An error.",
-                        ),
+                        ValidationFinding(Severity.ERROR, Rule.DUPLICATE_RELEASE_ID, "path.error", "An error."),
                     ),
                 )
-            val output = renderValidation(result)
-            val errorIndex = output.indexOf("[ERROR]")
-            val warnIndex = output.indexOf("[WARN ]")
-            assert(errorIndex < warnIndex) { "ERROR should appear before WARN in output" }
-        }
-
-        test("mixed findings summary lists all counts") {
-            val result =
-                ValidationResult(
-                    listOf(
-                        ValidationFinding(Severity.ERROR, Rule.DUPLICATE_RELEASE_ID, "p1", "msg"),
-                        ValidationFinding(Severity.WARNING, Rule.ANALYZED_BEFORE_REPORTED, "p2", "msg"),
-                        ValidationFinding(Severity.INFO, Rule.DUPLICATE_VULNERABILITY_ID, "p3", "msg"),
-                    ),
+            renderValidation("vulnlog.yaml", result) shouldBe
+                listOf(
+                    "error: vulnlog.yaml: path.error: An error.",
+                    "warning: vulnlog.yaml: path.warning: A warning.",
+                    "info: vulnlog.yaml: path.info: An info.",
                 )
-            val output = renderValidation(result)
-            output shouldContain "1 error(s)"
-            output shouldContain "1 warning(s)"
-            output shouldContain "1 info(s)"
-        }
-
-        test("summary omits zero counts") {
-            val result =
-                ValidationResult(
-                    listOf(
-                        ValidationFinding(Severity.ERROR, Rule.DUPLICATE_RELEASE_ID, "p1", "msg"),
-                    ),
-                )
-            val output = renderValidation(result)
-            output shouldNotContain "warning(s)"
-            output shouldNotContain "info(s)"
         }
     })

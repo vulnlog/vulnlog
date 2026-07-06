@@ -52,7 +52,7 @@ fun parseInputOrFail(
             throw GradleException(e.message ?: "Unknown error during parsing")
         }
     if (parseResults.failure.isNotEmpty()) {
-        throw GradleException(renderParseFailures(parseResults).joinToString("\n\n"))
+        throw GradleException(renderParseFailures(parseResults).joinToString("\n"))
     }
     renderParsedInputs(parseResults.success).forEach(sink::verbose)
     return parseResults.success

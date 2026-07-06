@@ -72,8 +72,7 @@ class VulnlogValidateTaskTest :
                 val result = runner(dir, "vulnlogValidate").buildAndFail()
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Parsing of test.vl.yaml failed"
-                result.output shouldContain "[ERROR]"
+                result.output shouldContain "error: test.vl.yaml: "
             }
         }
 
@@ -85,7 +84,7 @@ class VulnlogValidateTaskTest :
                 val result = runner(dir, "vulnlogValidate").build()
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "WARN"
+                result.output shouldContain "warning: test.vl.yaml: "
             }
 
             test("fails with warnings when strict is true") {

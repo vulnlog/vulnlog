@@ -287,7 +287,7 @@ class FmtCommandTest :
                     val result = FmtCommand().test(file.absolutePath)
 
                     result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
-                    result.stderr shouldContain "failed"
+                    result.stderr shouldContain "error: ${file.name}: "
                     // file is left untouched
                     file.readText() shouldBe INVALID_VULNLOG_YAML
                 }

@@ -15,13 +15,13 @@ class ParseRendererTest :
         test("renders the failure with its location") {
             val failure = ParseResult.Error(listOf(ParseFailure("boom", location = FailureLocation(3, 5))))
 
-            renderParseFailure("a.vl.yaml", failure) shouldBe "Parsing of a.vl.yaml failed:\n[ERROR] Line 3:5 - boom"
+            renderParseFailure("a.vl.yaml", failure) shouldBe listOf("error: a.vl.yaml: 3:5: boom")
         }
 
         test("renders the failure without a position when the location is unknown") {
             val failure = ParseResult.Error(listOf(ParseFailure("boom")))
 
-            renderParseFailure("a.vl.yaml", failure) shouldBe "Parsing of a.vl.yaml failed:\n[ERROR] boom"
+            renderParseFailure("a.vl.yaml", failure) shouldBe listOf("error: a.vl.yaml: boom")
         }
 
         test("renders the entry path between position and message") {
@@ -31,7 +31,7 @@ class ParseRendererTest :
                 )
 
             renderParseFailure("a.vl.yaml", failure) shouldBe
-                "Parsing of a.vl.yaml failed:\n[ERROR] Line 3:5 - vulnerabilities[CVE-1].id: boom"
+                listOf("error: a.vl.yaml: 3:5: vulnerabilities[CVE-1].id: boom")
         }
 
         test("renders every failure on its own line") {
@@ -44,8 +44,9 @@ class ParseRendererTest :
                 )
 
             renderParseFailure("a.vl.yaml", failure) shouldBe
-                "Parsing of a.vl.yaml failed:\n" +
-                "[ERROR] Line 3:5 - vulnerabilities[CVE-1].id: boom\n" +
-                "[ERROR] vulnerabilities[CVE-2].verdict: bang"
+                listOf(
+                    "error: a.vl.yaml: 3:5: vulnerabilities[CVE-1].id: boom",
+                    "error: a.vl.yaml: vulnerabilities[CVE-2].verdict: bang",
+                )
         }
     })

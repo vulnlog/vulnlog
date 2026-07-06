@@ -5,22 +5,19 @@ package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.validation.ParseFailure
 import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.result.Severity
 
 /**
- * One block per failed file: a header naming the file, then every problem with its source
- * position and entry path when known.
+ * Renders each problem of a failed file as one line in the severity grammar, keeping the source
+ * position and entry path when known: `error: <file>: <line>:<column>: <path>: <message>`.
  */
 fun renderParseFailure(
     filename: String,
     failure: ParseResult.Error,
-): String =
-    buildString {
-        append("Parsing of $filename failed:")
-        failure.failures.forEach { append("\n${renderFailureLine(it)}") }
-    }
+): List<String> = failure.failures.map { formatFinding(Severity.ERROR, filename, location(it), it.message) }
 
-private fun renderFailureLine(failure: ParseFailure): String {
-    val position = failure.location?.let { "Line ${it.line}:${it.column} - " } ?: ""
-    val path = failure.path?.let { "$it: " } ?: ""
-    return "[ERROR] $position$path${failure.message}"
-}
+private fun location(failure: ParseFailure): String =
+    listOfNotNull(
+        failure.location?.let { "${it.line}:${it.column}" },
+        failure.path,
+    ).joinToString(": ")

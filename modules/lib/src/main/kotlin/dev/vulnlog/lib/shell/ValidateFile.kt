@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.shell
 
 import dev.vulnlog.lib.core.VulnlogFileContext
+import dev.vulnlog.lib.core.formatSummary
 import dev.vulnlog.lib.core.renderValidation
 import dev.vulnlog.lib.core.validate
 import dev.vulnlog.lib.result.ParseResult
@@ -40,30 +41,33 @@ private fun renderValidationSummaryLine(
     result: ValidationResult,
 ): String {
     val counts =
-        listOfNotNull(
-            result.errors.size
-                .takeIf { it > 0 }
-                ?.let { "$it error(s)" },
-            result.warnings.size
-                .takeIf { it > 0 }
-                ?.let { "$it warning(s)" },
-            result.infos.size
-                .takeIf { it > 0 }
-                ?.let { "$it info(s)" },
-        ).joinToString(", ")
+        formatSummary(
+            errors = result.errors.size,
+            warnings = result.warnings.size,
+            infos = result.infos.size,
+        )
     return "validated $name: ${counts.ifEmpty { "no findings" }}"
 }
 
-/** Renders the findings of the given severities, one block per file, same format on all surfaces. */
+/** Renders the findings of the given severities, one line per finding plus a summary, same format on all surfaces. */
 fun renderValidationFindings(
     results: ValidationResults,
     renderedSeverities: Set<Severity> = Severity.entries.toSet(),
-): String =
-    results.fileFindings
-        .mapValues { (_, result) ->
-            result.copy(findings = result.findings.filter { it.severity in renderedSeverities })
-        }.filterValues { it.findings.isNotEmpty() }
-        .entries
-        .joinToString("\n\n") { (input, result) ->
-            "Validation findings for ${input.sourceFile().name}:\n${renderValidation(result)}"
-        }
+): String {
+    val filtered =
+        results.fileFindings
+            .mapValues { (_, result) ->
+                result.copy(findings = result.findings.filter { it.severity in renderedSeverities })
+            }.filterValues { it.findings.isNotEmpty() }
+    if (filtered.isEmpty()) return ""
+
+    val lines = filtered.entries.flatMap { (input, result) -> renderValidation(input.sourceFile().name, result) }
+    val findings = filtered.values.flatMap { it.findings }
+    val summary =
+        formatSummary(
+            errors = findings.count { it.severity == Severity.ERROR },
+            warnings = findings.count { it.severity == Severity.WARNING },
+            infos = findings.count { it.severity == Severity.INFO },
+        )
+    return (lines + summary).joinToString("\n")
+}
