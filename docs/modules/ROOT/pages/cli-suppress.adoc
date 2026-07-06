@@ -93,6 +93,17 @@ NOTE: `-o` (including `-o -` for stdout) requires a single reporter.
 Set `--reporter` to pick one, or use an input that only applies to one reporter.
 To write all applicable suppression files in one go, use `--output-dir <dir>` instead.
 
+== Seeing what was skipped
+
+Not every entry ends up in a suppression file: a format only accepts matching identifier types (a CVE id cannot go into a `.snyk` file), resolved vulnerabilities are not suppressed, and expired suppressions are dropped.
+Run with `-v` to see each skipped entry and the reason:
+
+[source]
+----
+vulnlog -v suppress full-example.vl.yaml
+verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
+----
+
 == Output Examples
 
 .Generated Snyk suppression file

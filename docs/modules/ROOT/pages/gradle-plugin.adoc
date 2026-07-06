@@ -33,6 +33,11 @@ vulnlog {
 | File collection of Vulnlog YAML files to operate on. Used by all tasks except `vulnlogInit`.
 |===
 
+== Diagnostics
+
+The tasks emit the same diagnostics as the CLI's `-v` and `-vv` flags through the Gradle logger.
+Run with `gradle --info` to see parsed inputs, validation summaries, filter resolution, written outputs, and skipped suppression entries; `gradle --debug` adds debug detail such as included suppression entries and report entry counts.
+
 == Tasks
 
 All tasks are registered in the `vulnlog` task group.
