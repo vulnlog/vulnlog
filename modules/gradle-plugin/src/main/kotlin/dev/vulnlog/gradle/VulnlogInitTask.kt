@@ -4,6 +4,8 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.lib.core.StatusVerb
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.init
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.parse.YamlWriter
@@ -37,6 +39,6 @@ abstract class VulnlogInitTask : DefaultTask() {
         val file = outputFile.get().asFile
         file.writeText(content)
         diagnosticSink().verbose("wrote ${file.path}")
-        logger.lifecycle("Vulnlog file created at: ${file.absolutePath}")
+        logger.lifecycle(formatStatus(StatusVerb.CREATED, file.absolutePath))
     }
 }

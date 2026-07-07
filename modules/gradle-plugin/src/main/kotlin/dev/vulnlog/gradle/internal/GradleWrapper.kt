@@ -4,6 +4,8 @@
 package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.formatFinding
+import dev.vulnlog.lib.core.formatSummary
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.result.ParseResult
 import dev.vulnlog.lib.result.ParseResults
@@ -17,8 +19,8 @@ import dev.vulnlog.lib.shell.parseInputs
 import dev.vulnlog.lib.shell.renderFilterResolution
 import dev.vulnlog.lib.shell.renderParseFailures
 import dev.vulnlog.lib.shell.renderParsedInputs
-import dev.vulnlog.lib.shell.renderValidationFindings
 import dev.vulnlog.lib.shell.renderValidationSummary
+import dev.vulnlog.lib.shell.sourceFile
 import dev.vulnlog.lib.shell.validateFiles
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -80,12 +82,45 @@ fun DefaultTask.validateParsedInputOrFailWithFailureOutput(
 ): ValidationResults {
     val validationFindings = validateFiles(fileToResult)
     renderValidationSummary(validationFindings).forEach(sink::verbose)
-    val rendered = renderValidationFindings(validationFindings, renderedSeverities)
-    if (rendered.isNotBlank()) {
-        logger.warn(rendered)
-    }
+    logValidationFindings(validationFindings, renderedSeverities)
     if (validationFindings.hasErrors) {
         throw GradleException("Vulnlog validation failed.")
     }
     return validationFindings
+}
+
+/**
+ * Logs each finding on the Gradle level matching its severity; wording comes from the shared
+ * formatters, presentation from Gradle. No ANSI is emitted by the plugin itself.
+ */
+private fun DefaultTask.logValidationFindings(
+    results: ValidationResults,
+    renderedSeverities: Set<Severity>,
+) {
+    val fileFindings =
+        results.fileFindings
+            .mapKeys { (input, _) -> input.sourceFile().name }
+            .mapValues { (_, result) ->
+                (result.errors + result.warnings + result.infos).filter { it.severity in renderedSeverities }
+            }.filterValues { it.isNotEmpty() }
+    if (fileFindings.isEmpty()) return
+
+    fileFindings.forEach { (file, findings) ->
+        findings.forEach { finding ->
+            val line = formatFinding(finding.severity, file, finding.path, finding.message)
+            when (finding.severity) {
+                Severity.ERROR -> logger.error(line)
+                Severity.WARNING -> logger.warn(line)
+                Severity.INFO -> logger.lifecycle(line)
+            }
+        }
+    }
+    val all = fileFindings.values.flatten()
+    logger.lifecycle(
+        formatSummary(
+            errors = all.count { it.severity == Severity.ERROR },
+            warnings = all.count { it.severity == Severity.WARNING },
+            infos = all.count { it.severity == Severity.INFO },
+        ),
+    )
 }

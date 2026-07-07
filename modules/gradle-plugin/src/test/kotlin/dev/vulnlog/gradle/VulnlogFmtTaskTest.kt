@@ -39,7 +39,7 @@ class VulnlogFmtTaskTest :
                 val result = runner(dir, "vulnlogFormat").build()
 
                 result.task(":vulnlogFormat")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Already formatted:"
+                result.output shouldContain "Unchanged: "
             }
         }
 
@@ -52,7 +52,8 @@ class VulnlogFmtTaskTest :
                 val result = runner(dir, "vulnlogFormat", "--check").buildAndFail()
 
                 result.task(":vulnlogFormat")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Can be reformatted"
+                result.output shouldContain "warning: "
+                result.output shouldContain "test.vl.yaml: not canonically formatted"
                 dir.resolve("test.vl.yaml").readText() shouldBe original
             }
 

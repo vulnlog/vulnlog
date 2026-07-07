@@ -28,7 +28,7 @@ class VulnlogValidateTaskTest :
                 val result = runner(dir, "vulnlogValidate").build()
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Vulnlog validation OK"
+                result.output shouldContain "Validation OK"
             }
 
             test("succeeds on multiple valid files") {
@@ -48,7 +48,7 @@ class VulnlogValidateTaskTest :
                 val result = runner(dir, "vulnlogValidate").build()
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Vulnlog validation OK"
+                result.output shouldContain "Validation OK"
             }
         }
 
