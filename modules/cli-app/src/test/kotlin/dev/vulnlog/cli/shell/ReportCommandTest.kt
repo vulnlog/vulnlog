@@ -90,7 +90,7 @@ class ReportCommandTest :
             test("fails when no input is provided") {
                 val result = ReportCommand().test("")
 
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldBe
                     """
                     Usage: report [<options>] <inputs>...
@@ -103,7 +103,7 @@ class ReportCommandTest :
             test("fails when the input file does not exist") {
                 val result = ReportCommand().test("/nonexistent/vulnlog.vl.yaml")
 
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldBe
                     """
                     Usage: report [<options>] <inputs>...
@@ -117,7 +117,7 @@ class ReportCommandTest :
                 withTempDir { dir ->
                     val result = ReportCommand().test(dir.toAbsolutePath().toString())
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "is a directory"
                 }
             }
@@ -126,7 +126,7 @@ class ReportCommandTest :
                 withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
                     val result = ReportCommand().test(input.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldBe
                         """
                         Usage: report [<options>] <inputs>...
@@ -142,7 +142,7 @@ class ReportCommandTest :
                     withStdin(vulnlogYaml()) {
                         val result = ReportCommand().test("- ${input.absolutePath}")
 
-                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "Mixing input files with STDIN is not allowed"
                     }
                 }
@@ -152,7 +152,7 @@ class ReportCommandTest :
                 withStdin(vulnlogYaml()) {
                     val result = ReportCommand().test("- -")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "Multiple <stdin> are not supported"
                 }
             }
@@ -165,7 +165,7 @@ class ReportCommandTest :
                     withTempFile(prefix = "vulnlog-2x", content = vulnlogYaml(projectName = "Project B")) { f2 ->
                         val result = ReportCommand().test("${f1.absolutePath} ${f2.absolutePath}")
 
-                        result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                         result.stderr shouldContain "same project metadata"
                     }
                 }
@@ -178,7 +178,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogYaml()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --reporter bogus")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "Unsupported reporter: bogus"
                 }
             }
@@ -187,7 +187,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogYaml()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --release 9.9.9")
 
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
                     result.stderr shouldContain "Known releases: 1.0.0"
                 }
@@ -197,7 +197,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogYaml()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --tag missing-tag")
 
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Tag not found: missing-tag"
                 }
             }

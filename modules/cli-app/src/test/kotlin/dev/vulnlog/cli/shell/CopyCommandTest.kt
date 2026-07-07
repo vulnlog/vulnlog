@@ -216,7 +216,7 @@ class CopyCommandTest :
                             "/nonexistent/source.vl.yaml ${target.absolutePath} --vuln-id CVE-2026-1234",
                         )
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "does not exist"
                 }
             }
@@ -228,7 +228,7 @@ class CopyCommandTest :
                             "${source.absolutePath} /nonexistent/target.vl.yaml --vuln-id CVE-2026-1234",
                         )
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "does not exist"
                 }
             }
@@ -241,7 +241,7 @@ class CopyCommandTest :
                                 "${sourceDir.toAbsolutePath()} ${target.absolutePath} --vuln-id CVE-2026-1234",
                             )
 
-                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "is a directory"
                     }
                 }
@@ -255,7 +255,7 @@ class CopyCommandTest :
                                 "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
                             )
 
-                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "File name must be"
                     }
                 }
@@ -269,7 +269,7 @@ class CopyCommandTest :
                                 "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
                             )
 
-                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "File name must be"
                     }
                 }
@@ -286,7 +286,7 @@ class CopyCommandTest :
                                 "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-9999-0000",
                             )
 
-                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "not found in source"
                     }
                 }

@@ -256,7 +256,7 @@ class AddCommandTest :
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --release 9.9.9",
                         )
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "not defined"
                 }
             }
@@ -268,7 +268,7 @@ class AddCommandTest :
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --tag unknown",
                         )
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "not defined"
                 }
             }

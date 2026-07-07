@@ -75,7 +75,7 @@ class ValidateCommandTest :
             test("fails when no input is provided") {
                 val result = ValidateCommand().test("")
 
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldBe
                     """
                     Usage: validate [<options>] <inputs>...
@@ -88,7 +88,7 @@ class ValidateCommandTest :
             test("fails when the input file does not exist") {
                 val result = ValidateCommand().test("/nonexistent/vulnlog.vl.yaml")
 
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldContain "does not exist"
             }
 
@@ -96,7 +96,7 @@ class ValidateCommandTest :
                 withTempDir { dir ->
                     val result = ValidateCommand().test(dir.toAbsolutePath().toString())
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "is a directory"
                 }
             }
@@ -105,7 +105,7 @@ class ValidateCommandTest :
                 withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
                     val result = ValidateCommand().test(input.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "File name must be"
                 }
             }
@@ -115,7 +115,7 @@ class ValidateCommandTest :
                     withStdin(vulnlogYaml()) {
                         val result = ValidateCommand().test("- ${input.absolutePath}")
 
-                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "Mixing input files with STDIN is not allowed"
                     }
                 }
@@ -125,7 +125,7 @@ class ValidateCommandTest :
                 withStdin(vulnlogYaml()) {
                     val result = ValidateCommand().test("- -")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "Multiple <stdin> are not supported"
                 }
             }
@@ -137,7 +137,7 @@ class ValidateCommandTest :
                 withTempFile(content = INVALID_VULNLOG_YAML) { input ->
                     val result = ValidateCommand().test(input.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain "error: ${input.name}: "
                 }
             }
@@ -146,7 +146,7 @@ class ValidateCommandTest :
                 withStdin(INVALID_VULNLOG_YAML) {
                     val result = ValidateCommand().test("-")
 
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain "error: <stdin>: "
                 }
             }
@@ -155,7 +155,7 @@ class ValidateCommandTest :
                 withTempFile(content = "schemaVersion: [unclosed") { input ->
                     val result = ValidateCommand().test(input.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain Regex("error: ${Regex.escape(input.name)}: \\d+:\\d+: ")
                 }
             }

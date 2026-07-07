@@ -148,7 +148,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
                     val result = FmtCommand().test("--check ${file.absolutePath}")
 
-                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.code
                     result.stderr shouldContain "warning: ${file.absolutePath}: not canonically formatted"
                     // unchanged on disk
                     file.readText() shouldBe UGLY_YAML
@@ -159,7 +159,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
                     val result = FmtCommand().test("--check ${file.absolutePath}")
 
-                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.code
                     // block single-element list
                     result.stderr shouldContain "[non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases"
                     result.stderr shouldContain "flow array"
@@ -187,7 +187,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = dangling) { file ->
                     val result = FmtCommand().test("--check ${file.absolutePath}")
 
-                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.code
                     result.stderr shouldContain "warning: ${file.absolutePath}: not canonically formatted"
                 }
             }
@@ -206,7 +206,7 @@ class FmtCommandTest :
                 withStdin(UGLY_YAML) {
                     val result = FmtCommand().test("--check -")
 
-                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.code
                     result.stderr shouldContain "warning: <stdin>: not canonically formatted"
                 }
             }
@@ -215,7 +215,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
                     val result = vulnlogCommand().test("-q fmt --check ${file.absolutePath}")
 
-                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.FORMAT_ERROR.code
                     result.stderr shouldContain "warning: ${file.absolutePath}: not canonically formatted"
                 }
             }
@@ -267,7 +267,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = UGLY_YAML) { file ->
                     val result = FmtCommand().test("- ${file.absolutePath}")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "Mixing input files with STDIN is not allowed"
                 }
             }
@@ -275,7 +275,7 @@ class FmtCommandTest :
             test("rejects more than one STDIN input") {
                 val result = FmtCommand().test("- -")
 
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldContain "Multiple <stdin> are not supported"
             }
         }
@@ -286,7 +286,7 @@ class FmtCommandTest :
                 withTempFile(prefix = "fmt", content = INVALID_VULNLOG_YAML) { file ->
                     val result = FmtCommand().test(file.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain "error: ${file.name}: "
                     // file is left untouched
                     file.readText() shouldBe INVALID_VULNLOG_YAML

@@ -202,7 +202,7 @@ class VulnlogCliTest :
                 withTempFile(content = INVALID_VULNLOG_YAML) { file ->
                     val result = vulnlogCommand().test("-q validate ${file.absolutePath}")
 
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain file.name
                 }
             }

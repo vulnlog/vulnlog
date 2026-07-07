@@ -181,7 +181,7 @@ class AddCommand : CliktCommand(name = "add") {
                         formatFinding(Severity.ERROR, destination.path.toString(), message = e.message.orEmpty()),
                         err = true,
                     )
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+                    throw ProgramResult(ExitCode.GENERAL_ERROR.code)
                 }
             if (hasYamlComments(destinationFile.rootNode)) {
                 echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
