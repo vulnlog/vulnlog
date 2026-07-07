@@ -44,6 +44,6 @@ abstract class VulnlogValidateTask : DefaultTask() {
         if (validationFindings.hasWarnings && strict.get()) {
             throw GradleException("Vulnlog validation failed.")
         }
-        logger.lifecycle("Vulnlog validation OK")
+        logger.lifecycle("Validation OK")
     }
 }

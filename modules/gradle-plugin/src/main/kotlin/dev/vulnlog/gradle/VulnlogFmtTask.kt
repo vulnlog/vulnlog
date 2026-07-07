@@ -7,12 +7,16 @@ import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.lib.core.FormatOutcome
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.checkFormat
 import dev.vulnlog.lib.core.formatCommentsDroppedWarning
+import dev.vulnlog.lib.core.formatFinding
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -53,13 +57,20 @@ abstract class VulnlogFmtTask : DefaultTask() {
         for (input in inputFiles) {
             val parsedInput = parsed.getValue(input)
             when (val outcome = formatYamlOutcome(parsedInput, mapper)) {
-                is FormatOutcome.Unchanged -> logger.lifecycle("Already formatted: ${input.path}")
+                is FormatOutcome.Unchanged ->
+                    logger.lifecycle(formatStatus(StatusVerb.UNCHANGED, input.path.toString()))
                 is FormatOutcome.Reformatted ->
                     if (checkOnly) {
                         unformatted.add(input.path)
-                        logger.lifecycle("Can be reformatted: ${input.path}")
+                        val warning =
+                            formatFinding(
+                                Severity.WARNING,
+                                input.path.toString(),
+                                message = "not canonically formatted",
+                            )
+                        logger.warn(warning)
                         checkFormat(parsedInput, mapper).forEach { finding ->
-                            logger.lifecycle("  ${renderFormatFinding(finding)}")
+                            logger.warn("  ${renderFormatFinding(finding)}")
                         }
                     } else {
                         if (hasYamlComments(parsedInput.rootNode)) {
@@ -72,7 +83,7 @@ abstract class VulnlogFmtTask : DefaultTask() {
                         }
                         input.path.writeText(outcome.formatted.content)
                         sink.verbose("wrote ${input.path}")
-                        logger.lifecycle("Formatted: ${input.path}")
+                        logger.lifecycle(formatStatus(StatusVerb.FORMATTED, input.path.toString()))
                     }
             }
         }

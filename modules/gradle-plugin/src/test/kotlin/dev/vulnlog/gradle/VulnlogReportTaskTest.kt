@@ -28,7 +28,7 @@ class VulnlogReportTaskTest :
                 val result = runner(dir, "vulnlogReport").build()
 
                 result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Report written to:"
+                result.output shouldContain "Wrote: "
                 val report = dir.resolve("build/vulnlog/vulnlog-report.html")
                 report.exists() shouldBe true
                 report.readText() shouldContain "CVE-2026-1234"

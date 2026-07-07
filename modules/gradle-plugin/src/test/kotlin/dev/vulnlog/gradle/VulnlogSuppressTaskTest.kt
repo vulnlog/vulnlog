@@ -30,7 +30,7 @@ class VulnlogSuppressTaskTest :
                 val result = runner(dir, "vulnlogSuppress").build()
 
                 result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Suppression file created at:"
+                result.output shouldContain "Wrote: "
                 val outputDir = dir.resolve("build/vulnlog/suppressions")
                 (outputDir.list()?.toList() ?: emptyList()) shouldContain ".trivyignore.yaml"
                 outputDir.resolve(".trivyignore.yaml").readText() shouldContain "CVE-2026-1234"
