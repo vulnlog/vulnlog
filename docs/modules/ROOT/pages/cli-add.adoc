@@ -82,7 +82,7 @@ Releases and tags must already be defined in the file; otherwise the command fai
 [source]
 ----
 vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
-Added to vulnlog.yaml: CVE-2026-1234
+Added: CVE-2026-1234 to vulnlog.yaml
 ----
 
 The entry is inserted at the top of the `vulnerabilities` list:
@@ -101,7 +101,7 @@ The entry is inserted at the top of the `vulnerabilities` list:
 [source]
 ----
 vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --package pkg:npm/example-lib@2.3.0
-Updated in vulnlog.yaml: CVE-2026-1234
+Updated: CVE-2026-1234 in vulnlog.yaml
 ----
 
 .Print an entry to STDOUT without writing a file.

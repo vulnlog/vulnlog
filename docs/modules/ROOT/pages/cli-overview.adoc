@@ -33,6 +33,22 @@ No automatic file detection.
 | Suppress status lines. Errors and warnings always print. Cannot be combined with `-v`.
 |===
 
+== Output Messages
+
+Stdout carries data, stderr carries conversation.
+Report content, suppression files, and formatted YAML go to stdout only when `-` is the target; every message addressed to a human goes to stderr.
+
+A command that worked prints one status line per action in the form `<Verb>: <path or subject>`, for example `Created: vulnlog.yaml` or `Wrote: reports/report.html`.
+Findings and errors print one per line in the form `<severity>: <file>[: <location>]: <message>` with the lowercase prefixes `error:`, `warning:`, and `info:`, followed by a summary line such as `2 errors, 1 warning`.
+When a next step is known, a `hint:` line follows the finding.
+The shape is stable, so `grep '^error:'` works in CI.
+
+=== Color
+
+Color is on when the stream is a terminal and off when piped or redirected.
+Setting `NO_COLOR` to any value forces color off; `FORCE_COLOR` or `CLICOLOR_FORCE` forces it on, which is useful in CI systems that render ANSI, like GitHub Actions.
+Color never carries information on its own; stripped output reads identically.
+
 == Diagnostics
 
 By default a command prints one status line per action, plus errors and warnings.
@@ -101,7 +117,7 @@ Available on `report` and `suppress` commands.
 
 | `1`
 | General error
-| Unexpected error (I/O failure, missing argument, invalid flag value, file not found, unhandled exception).
+| Unexpected error (I/O failure, missing argument, file not found, unhandled exception).
 
 | `2`
 | Validation error
@@ -110,6 +126,11 @@ Available on `report` and `suppress` commands.
 | `3`
 | Formatting error
 | The Vulnlog file contains formatting errors.
+
+| `5`
+| Invalid flag value
+| A flag references an unknown entity or unsupported type, for example a release that is not defined in the file.
 |===
 
-NOTE: Finer-grained exit codes for specific failure categories (file not found, missing flag, invalid flag value, lint violation) are planned for a future release.
+The exit codes are a documented, stable interface for scripts and CI pipelines.
+Code `4` is reserved for a dedicated file-not-found error in a future release.

@@ -31,14 +31,14 @@ STDIN cannot be combined with file arguments, and only one STDIN input is accept
 ----
 vulnlog fmt web-app-1.vl.yaml web-app-2.vl.yaml
 Formatted: web-app-1.vl.yaml
-Already formatted: web-app-2.vl.yaml
+Unchanged: web-app-2.vl.yaml
 ----
 
 .Check formatting in CI without writing changes. Each finding names the rule it violates, with the line in the file.
 [source]
 ----
 vulnlog fmt --check vulnlog.yaml
-Can be reformatted: vulnlog.yaml
+warning: vulnlog.yaml: not canonically formatted
   [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
   [non-canonical-block-scalar] vulnerabilities[CVE-2026-1234].analysis: Line 18: canonical style for this value is a folded block (>-) (found double-quoted).
   [comments-not-preserved] YAML comments are removed on write.
