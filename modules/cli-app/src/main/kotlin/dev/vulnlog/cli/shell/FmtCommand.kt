@@ -72,7 +72,7 @@ class FmtCommand : CliktCommand(name = "fmt") {
                                 echoFormatCheckFindings("<stdin>", checkFormat(parsedInput, mapper))
                             } else {
                                 if (hasYamlComments(parsedInput.rootNode)) {
-                                    echo(formatCommentsDroppedWarning("<stdin>"), err = true)
+                                    echoMessage(formatCommentsDroppedWarning("<stdin>"))
                                 }
                                 debugFormatFindings(parsedInput, mapper)
                                 echo(outcome.formatted.content, trailingNewline = false)
@@ -88,7 +88,7 @@ class FmtCommand : CliktCommand(name = "fmt") {
                                 echoFormatCheckFindings(input.path.toString(), checkFormat(parsedInput, mapper))
                             } else {
                                 if (hasYamlComments(parsedInput.rootNode)) {
-                                    echo(formatCommentsDroppedWarning(input.path.toString()), err = true)
+                                    echoMessage(formatCommentsDroppedWarning(input.path.toString()))
                                 }
                                 debugFormatFindings(parsedInput, mapper)
                                 input.path.writeText(outcome.formatted.content)
@@ -108,9 +108,9 @@ class FmtCommand : CliktCommand(name = "fmt") {
         source: String,
         findings: List<FormatFinding>,
     ) {
-        echo(formatFinding(Severity.WARNING, source, message = "not canonically formatted"), err = true)
+        echoMessage(formatFinding(Severity.WARNING, source, message = "not canonically formatted"))
         findings.forEach { finding ->
-            echo("  ${renderFormatFinding(finding)}", err = true)
+            echoMessage("  ${renderFormatFinding(finding)}")
         }
     }
 

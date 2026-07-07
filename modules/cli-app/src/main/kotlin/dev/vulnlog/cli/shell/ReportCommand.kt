@@ -58,10 +58,7 @@ class ReportCommand : CliktCommand(name = "report") {
         val project =
             validateSharedProject(vulnlogFiles)
                 ?: run {
-                    echo(
-                        formatMessage(Severity.ERROR, "all input files must share the same project metadata"),
-                        err = true,
-                    )
+                    echoMessage(formatMessage(Severity.ERROR, "all input files must share the same project metadata"))
                     throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
                 }
 
@@ -95,7 +92,7 @@ class ReportCommand : CliktCommand(name = "report") {
             is FileOutputOption.File -> {
                 writeReport(
                     { echoStatus(it) },
-                    { echo(it, err = true) },
+                    { echoMessage(it) },
                     target,
                     content,
                 )

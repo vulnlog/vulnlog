@@ -106,8 +106,8 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         if (contents.size > 1 && destination !is DirectoryOutputOption) {
             val names = targetReporters.map { it.canonical() }.sorted().joinToString(", ")
-            echo(formatMessage(Severity.ERROR, "-o requires a single reporter, found: $names"), err = true)
-            echo(formatHint("use --reporter <name> to pick one, or --output-dir for one file per reporter"), err = true)
+            echoMessage(formatMessage(Severity.ERROR, "-o requires a single reporter, found: $names"))
+            echoMessage(formatHint("use --reporter <name> to pick one, or --output-dir for one file per reporter"))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
 
@@ -129,7 +129,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             val outputPath: Path = destination.path.resolve(suppressionFile.fileName)
             writeSuppressionFile(
                 { echoStatus(it) },
-                { echo(it, err = true) },
+                { echoMessage(it) },
                 outputPath,
                 suppressionFile,
             )
@@ -144,7 +144,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         val outputPath = destination.path
         writeSuppressionFile(
             { echoStatus(it) },
-            { echo(it, err = true) },
+            { echoMessage(it) },
             outputPath,
             suppression.file,
         )

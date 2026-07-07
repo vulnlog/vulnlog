@@ -55,7 +55,7 @@ class CopyCommand : CliktCommand(name = "copy") {
 
         val missing = findNonExistingVulnIds(sourceVulnlogFile.vulnerabilities, vulnIds)
         if (missing.isNotEmpty()) {
-            echo(formatVulnIdsNotInSourceMessage(missing), err = true)
+            echoMessage(formatVulnIdsNotInSourceMessage(missing))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
 
@@ -73,7 +73,7 @@ class CopyCommand : CliktCommand(name = "copy") {
                     mapper = mapper,
                 )
             if (hasYamlComments(destinationFile.rootNode)) {
-                echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
+                echoMessage(formatCommentsDroppedWarning(destination.path.toString()))
             }
             destination.path.writeText(outcome.newContent.content)
             diagnosticSink().verbose("wrote ${destination.path}")
