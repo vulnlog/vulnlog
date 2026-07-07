@@ -41,7 +41,7 @@ import kotlin.io.path.writeText
 private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
 
 fun CliktCommand.echoHelpHint() {
-    echo(formatHint("ask for help at $HELP_DISCUSSIONS_URL"), err = true)
+    echoMessage(formatHint("ask for help at $HELP_DISCUSSIONS_URL"))
 }
 
 fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputOption, ParseResult.Ok> {
@@ -50,11 +50,11 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputO
             parseInputs(inputs)
         } catch (e: RuntimeException) {
             if (e !is IllegalArgumentException && e !is IllegalStateException) throw e
-            echo(formatMessage(Severity.ERROR, e.message ?: "unknown error"), err = true)
+            echoMessage(formatMessage(Severity.ERROR, e.message ?: "unknown error"))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
     if (parseResults.failure.isNotEmpty()) {
-        renderParseFailures(parseResults).forEach { echo(it, err = true) }
+        renderParseFailures(parseResults).forEach { echoMessage(it) }
         echoHelpHint()
         throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
     }
@@ -70,7 +70,7 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     renderValidationSummary(validationFindings).forEach { diagnosticSink().verbose(it) }
     val rendered = renderValidationFindings(validationFindings, renderedSeverities)
     if (rendered.isNotBlank()) {
-        echo(rendered, err = true)
+        echoMessage(rendered)
     }
     if (validationFindings.hasErrors) {
         echoHelpHint()
@@ -131,8 +131,8 @@ fun CliktCommand.resolveFilter(
         renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
         filter
     } catch (e: FilterValidationException) {
-        echo(formatMessage(Severity.ERROR, e.message.orEmpty()), err = true)
-        echo(formatHint(e.detail), err = true)
+        echoMessage(formatMessage(Severity.ERROR, e.message.orEmpty()))
+        echoMessage(formatHint(e.detail))
         throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 

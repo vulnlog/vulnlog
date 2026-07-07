@@ -177,14 +177,13 @@ class AddCommand : CliktCommand(name = "add") {
                 try {
                     addVulnerabilityToFile(destinationFile, commandOption, mapper)
                 } catch (e: IllegalArgumentException) {
-                    echo(
+                    echoMessage(
                         formatFinding(Severity.ERROR, destination.path.toString(), message = e.message.orEmpty()),
-                        err = true,
                     )
                     throw ProgramResult(ExitCode.GENERAL_ERROR.code)
                 }
             if (hasYamlComments(destinationFile.rootNode)) {
-                echo(formatCommentsDroppedWarning(destination.path.toString()), err = true)
+                echoMessage(formatCommentsDroppedWarning(destination.path.toString()))
             }
             destination.path.writeText(outcome.newContent)
             diagnosticSink().verbose("wrote ${destination.path}")
