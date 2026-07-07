@@ -46,8 +46,8 @@ Validation OK
 [source,bash,subs="attributes"]
 ----
 docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
-Suppression file created at: /work/.snyk
-Suppression file created at: /work/.trivyignore.yaml
+Wrote: /work/.snyk
+Wrote: /work/.trivyignore.yaml
 ----
 
 [NOTE]

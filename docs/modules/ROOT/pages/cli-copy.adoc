@@ -42,8 +42,8 @@ In this example the vulnerability `CVE-2026-002` is copied from link:{examplesdi
 ----
 vulnlog modify copy source.vl.yml target1.vl.yml target2.vl.yml --vuln-id CVE-2026-002
 
-Copied to target1.vl.yml: CVE-2026-002
-Copied to target2.vl.yml: CVE-2026-002
+Copied: 1 entry to target1.vl.yml
+Copied: 1 entry to target2.vl.yml
 ----
 
 The command adds the vulnerability entry to the previously empty `vulnerabilities` list.

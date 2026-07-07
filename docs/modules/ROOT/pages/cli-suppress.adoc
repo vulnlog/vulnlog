@@ -46,29 +46,29 @@ A vulnerability whose `resolution` targets a release outside this range is treat
 [source]
 ----
 vulnlog suppress full-example.vl.yaml
-Suppression file created at: /path/to/.snyk
-Suppression file created at: /path/to/.trivyignore.yaml
+Wrote: /path/to/.snyk
+Wrote: /path/to/.trivyignore.yaml
 ----
 
 .Create suppression for releases up to and including 8.1.1 and reporter snyk
 [source]
 ----
 vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
-Suppression file created at: /path/to/.snyk
+Wrote: /path/to/.snyk
 ----
 
 .Write a single reporter's suppression file under a custom name
 [source]
 ----
 vulnlog suppress full-example.vl.yaml --reporter trivy -o .myTrivy
-Suppression file created at: /path/to/.myTrivy
+Wrote: /path/to/.myTrivy
 ----
 
 .Force the generic JSON format instead of a reporter's native format
 [source]
 ----
 vulnlog suppress full-example.vl.yaml --reporter trivy --format generic
-Suppression file created at: /path/to/trivy.generic.json
+Wrote: /path/to/trivy.generic.json
 ----
 
 .Suppress a not-yet-shipped fix when scanning the currently deployed release

@@ -52,14 +52,14 @@ The report is fully offline (no network requests), CSP-locked, print-friendly, a
 [source]
 ----
 vulnlog report full-example.vl.yaml
-Report written to: vulnlog-report.html
+Wrote: vulnlog-report.html
 ----
 
 .Generate a merged report from multiple Vulnlog files
 [source]
 ----
 vulnlog report frontend.vl.yaml backend.vl.yaml
-Report written to: vulnlog-report.html
+Wrote: vulnlog-report.html
 ----
 
 To generate an HTML report using the Vulnlog Docker container:
@@ -67,7 +67,7 @@ To generate an HTML report using the Vulnlog Docker container:
 [source,subs="attributes"]
 ----
 docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report vulnlog.yaml --output report.html
-Report written to: /work/report.html
+Wrote: /work/report.html
 ----
 
 This renders an example Vulnlog HTML report:

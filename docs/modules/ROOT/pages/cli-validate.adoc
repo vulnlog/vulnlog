@@ -47,7 +47,7 @@ Validation OK
 [source]
 ----
 vulnlog validate vulnlog.yaml
-Validation findings for vulnlog.yaml:
-[ERROR] vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
-1 error(s)
+error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
+1 error
+  hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
 ----
