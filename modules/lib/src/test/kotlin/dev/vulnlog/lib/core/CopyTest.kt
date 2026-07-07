@@ -108,7 +108,7 @@ class CopyTest :
 
             test("renders missing ids") {
                 formatVulnIdsNotInSourceMessage(setOf(cve1, ghsa1)) shouldContain
-                    "Vulnerability IDs not found in source file:"
+                    "error: vulnerability IDs not found in source file:"
                 formatVulnIdsNotInSourceMessage(setOf(cve1)) shouldContain "CVE-2026-1234"
             }
         }

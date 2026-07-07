@@ -22,6 +22,7 @@ import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
 import dev.vulnlog.lib.core.formatAddOutcomeMessage
 import dev.vulnlog.lib.core.formatCommentsDroppedWarning
+import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -32,6 +33,7 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.FileInputOption
 import java.time.LocalDate
 import kotlin.io.path.writeText
@@ -175,7 +177,10 @@ class AddCommand : CliktCommand(name = "add") {
                 try {
                     addVulnerabilityToFile(destinationFile, commandOption, mapper)
                 } catch (e: IllegalArgumentException) {
-                    echo("Error: ${e.message} (${destination.path})", err = true)
+                    echo(
+                        formatFinding(Severity.ERROR, destination.path.toString(), message = e.message.orEmpty()),
+                        err = true,
+                    )
                     throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
                 }
             if (hasYamlComments(destinationFile.rootNode)) {

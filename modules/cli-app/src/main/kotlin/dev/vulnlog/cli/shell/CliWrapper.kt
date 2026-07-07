@@ -9,6 +9,8 @@ import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.formatHint
+import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
@@ -39,8 +41,7 @@ import kotlin.io.path.writeText
 private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
 
 fun CliktCommand.echoHelpHint() {
-    echo("", err = true)
-    echo("Stuck? Ask for help at $HELP_DISCUSSIONS_URL", err = true)
+    echo(formatHint("ask for help at $HELP_DISCUSSIONS_URL"), err = true)
 }
 
 fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputOption, ParseResult.Ok> {
@@ -49,7 +50,7 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputO
             parseInputs(inputs)
         } catch (e: RuntimeException) {
             if (e !is IllegalArgumentException && e !is IllegalStateException) throw e
-            echo(e.message, err = true)
+            echo(formatMessage(Severity.ERROR, e.message ?: "unknown error"), err = true)
             throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
     if (parseResults.failure.isNotEmpty()) {
@@ -130,8 +131,8 @@ fun CliktCommand.resolveFilter(
         renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
         filter
     } catch (e: FilterValidationException) {
-        echo(e.message, err = true)
-        echo(e.detail, err = true)
+        echo(formatMessage(Severity.ERROR, e.message.orEmpty()), err = true)
+        echo(formatHint(e.detail), err = true)
         throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.ordinal)
     }
 
@@ -145,7 +146,7 @@ fun writeInit(
         initFile.path.writeText(content)
         out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))
     } catch (e: Exception) {
-        err("Error writing file: ${e.message}")
+        err(formatMessage(Severity.ERROR, "cannot write ${initFile.path}: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
     }
 }
@@ -160,7 +161,7 @@ fun writeSuppressionFile(
         outputPath.writeText(suppressionFile.content)
         out(formatStatus(StatusVerb.WROTE, outputPath.toString()))
     } catch (e: Exception) {
-        err("Error writing file: ${e.message}")
+        err(formatMessage(Severity.ERROR, "cannot write $outputPath: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
     }
 }
@@ -175,7 +176,7 @@ fun writeReport(
         reportFile.path.writeText(content)
         out(formatStatus(StatusVerb.WROTE, reportFile.path.toString()))
     } catch (e: Exception) {
-        err("Error writing file: ${e.message}")
+        err(formatMessage(Severity.ERROR, "cannot write ${reportFile.path}: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
     }
 }
