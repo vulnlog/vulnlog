@@ -102,7 +102,7 @@ class SuppressCommandTest :
                 withTempFile(content = vulnlogYamlMultiReporter()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "-o requires a single reporter"
                     result.stderr shouldContain "snyk"
                     result.stderr shouldContain "trivy"
@@ -187,7 +187,7 @@ class SuppressCommandTest :
             test("fails when the input file does not exist") {
                 val result = SuppressCommand().test("/nonexistent/vulnlog.vl.yaml")
 
-                result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldContain "does not exist"
             }
 
@@ -195,7 +195,7 @@ class SuppressCommandTest :
                 withTempDir { dir ->
                     val result = SuppressCommand().test(dir.toAbsolutePath().toString())
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "is a directory"
                 }
             }
@@ -204,7 +204,7 @@ class SuppressCommandTest :
                 withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
                     val result = SuppressCommand().test(input.absolutePath)
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "File name must be"
                 }
             }
@@ -213,7 +213,7 @@ class SuppressCommandTest :
                 withStdin(INVALID_VULNLOG_YAML) {
                     val result = SuppressCommand().test("-")
 
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.ordinal
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain "error: <stdin>: "
                 }
             }
@@ -274,7 +274,7 @@ class SuppressCommandTest :
                 withTempFile(content = vulnlogYaml()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --release 9.9.9")
 
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
                     result.stderr shouldContain "Known releases: 1.0.0"
                 }
@@ -284,7 +284,7 @@ class SuppressCommandTest :
                 withTempFile(content = vulnlogYaml()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --tag missing-tag")
 
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.ordinal
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Tag not found: missing-tag"
                 }
             }

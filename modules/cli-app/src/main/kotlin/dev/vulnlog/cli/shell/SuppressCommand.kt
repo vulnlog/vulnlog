@@ -108,7 +108,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
             val names = targetReporters.map { it.canonical() }.sorted().joinToString(", ")
             echo(formatMessage(Severity.ERROR, "-o requires a single reporter, found: $names"), err = true)
             echo(formatHint("use --reporter <name> to pick one, or --output-dir for one file per reporter"), err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
 
         when (val resolved = destination) {

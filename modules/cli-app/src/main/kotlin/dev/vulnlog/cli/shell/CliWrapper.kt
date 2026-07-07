@@ -51,12 +51,12 @@ fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputO
         } catch (e: RuntimeException) {
             if (e !is IllegalArgumentException && e !is IllegalStateException) throw e
             echo(formatMessage(Severity.ERROR, e.message ?: "unknown error"), err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
     if (parseResults.failure.isNotEmpty()) {
         renderParseFailures(parseResults).forEach { echo(it, err = true) }
         echoHelpHint()
-        throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
+        throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
     }
     renderParsedInputs(parseResults.success).forEach { diagnosticSink().verbose(it) }
     return parseResults.success
@@ -74,7 +74,7 @@ fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
     }
     if (validationFindings.hasErrors) {
         echoHelpHint()
-        throw ProgramResult(ExitCode.VALIDATION_ERROR.ordinal)
+        throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
     }
     return validationFindings
 }
@@ -133,7 +133,7 @@ fun CliktCommand.resolveFilter(
     } catch (e: FilterValidationException) {
         echo(formatMessage(Severity.ERROR, e.message.orEmpty()), err = true)
         echo(formatHint(e.detail), err = true)
-        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.ordinal)
+        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 
 fun writeInit(
@@ -147,7 +147,7 @@ fun writeInit(
         out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))
     } catch (e: Exception) {
         err(formatMessage(Severity.ERROR, "cannot write ${initFile.path}: ${e.message}"))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
     }
 }
 
@@ -162,7 +162,7 @@ fun writeSuppressionFile(
         out(formatStatus(StatusVerb.WROTE, outputPath.toString()))
     } catch (e: Exception) {
         err(formatMessage(Severity.ERROR, "cannot write $outputPath: ${e.message}"))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
     }
 }
 
@@ -177,6 +177,6 @@ fun writeReport(
         out(formatStatus(StatusVerb.WROTE, reportFile.path.toString()))
     } catch (e: Exception) {
         err(formatMessage(Severity.ERROR, "cannot write ${reportFile.path}: ${e.message}"))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
     }
 }

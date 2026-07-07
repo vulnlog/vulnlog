@@ -56,7 +56,7 @@ class CopyCommand : CliktCommand(name = "copy") {
         val missing = findNonExistingVulnIds(sourceVulnlogFile.vulnerabilities, vulnIds)
         if (missing.isNotEmpty()) {
             echo(formatVulnIdsNotInSourceMessage(missing), err = true)
-            throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
+            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
 
         val mapper = createYamlMapper()

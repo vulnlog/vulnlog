@@ -39,13 +39,13 @@ internal fun runVulnlog(
 ): Int =
     try {
         cli.parse(args)
-        ExitCode.SUCCESS.ordinal
+        ExitCode.SUCCESS.code
     } catch (e: CliktError) {
         cli.echoFormattedHelp(e)
         e.statusCode
     } catch (e: Exception) {
         renderUnexpectedError(e, cli.verbosity.stackTraces).forEach(printError)
-        ExitCode.GENERAL_ERROR.ordinal
+        ExitCode.GENERAL_ERROR.code
     }
 
 internal fun renderUnexpectedError(
