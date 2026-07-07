@@ -7,6 +7,7 @@ import dev.vulnlog.lib.model.VulnlogFileRaw
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.result.Severity
 import tools.jackson.databind.ObjectMapper
 
 /**
@@ -40,5 +41,5 @@ fun formatYamlOutcome(
 }
 
 fun formatCommentsDroppedWarning(source: String): String =
-    "Warning: $source contains YAML comments; they are removed on write. " +
-        "Record notes in schema fields (e.g. comment, analysis)."
+    formatFinding(Severity.WARNING, source, message = "contains YAML comments; they are removed on write") +
+        "\n" + formatHint("record notes in schema fields (e.g. comment, analysis)")

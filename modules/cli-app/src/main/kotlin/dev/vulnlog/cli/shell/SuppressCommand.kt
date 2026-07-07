@@ -23,6 +23,8 @@ import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
+import dev.vulnlog.lib.core.formatHint
+import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
@@ -30,6 +32,7 @@ import dev.vulnlog.lib.core.renderSuppressionWritten
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
+import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
@@ -103,10 +106,8 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         if (contents.size > 1 && destination !is DirectoryOutputOption) {
             val names = targetReporters.map { it.canonical() }.sorted().joinToString(", ")
-            echo(
-                "Error: -o requires a single reporter. Use --reporter <name>, or the input must apply to only one reporter. Found: $names.",
-                err = true,
-            )
+            echo(formatMessage(Severity.ERROR, "-o requires a single reporter, found: $names"), err = true)
+            echo(formatHint("use --reporter <name> to pick one, or --output-dir for one file per reporter"), err = true)
             throw ProgramResult(ExitCode.GENERAL_ERROR.ordinal)
         }
 

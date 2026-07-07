@@ -17,6 +17,7 @@ import dev.vulnlog.lib.parse.v1.V1Mapper
 import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.result.Severity
 import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 
@@ -131,7 +132,10 @@ private fun mergeReports(
 }
 
 fun formatVulnIdsNotInSourceMessage(missing: Set<VulnId>): String =
-    "Error: Vulnerability IDs not found in source file: ${missing.joinToString(", ") { it.id }}"
+    formatMessage(
+        Severity.ERROR,
+        "vulnerability IDs not found in source file: ${missing.joinToString(", ") { it.id }}",
+    )
 
 fun formatCopiedMessage(
     destinationPath: Path,
