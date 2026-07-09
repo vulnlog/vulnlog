@@ -41,11 +41,31 @@ class InitCommandTest :
             }
 
             test("writes YAML to a file when -o path is specified") {
-                withTempFile(prefix = "vulnlog-init", suffix = ".yaml") { output ->
-                    val result = InitCommand().test("$REQUIRED_OPTIONS -o ${output.absolutePath}")
+                withTempDir(prefix = "vulnlog-init") { dir ->
+                    val output = dir.resolve("vulnlog.yaml")
+                    val result = InitCommand().test("$REQUIRED_OPTIONS -o $output")
 
                     result.statusCode shouldBe 0
                     result.stdout shouldContain "Vulnlog file created at:"
+                    output.toFile().readText() shouldContain "acme"
+                }
+            }
+
+            test("does not overwrite an existing output file without --force") {
+                withTempFile(prefix = "vulnlog-init", suffix = ".yaml", content = "keep me") { output ->
+                    val result = InitCommand().test("$REQUIRED_OPTIONS -o ${output.absolutePath}")
+
+                    result.statusCode shouldBe 1
+                    result.stderr shouldContain "already exists"
+                    output.readText() shouldBe "keep me"
+                }
+            }
+
+            test("overwrites an existing output file with --force") {
+                withTempFile(prefix = "vulnlog-init", suffix = ".yaml", content = "replace me") { output ->
+                    val result = InitCommand().test("$REQUIRED_OPTIONS -o ${output.absolutePath} --force")
+
+                    result.statusCode shouldBe 0
                     output.readText() shouldContain "acme"
                 }
             }

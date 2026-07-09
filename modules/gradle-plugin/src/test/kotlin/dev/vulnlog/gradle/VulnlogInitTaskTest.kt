@@ -33,6 +33,25 @@ class VulnlogInitTaskTest :
                 content shouldContain "Alice"
                 content shouldContain "schemaVersion:"
             }
+
+            test("does not overwrite an existing output file without force") {
+                val dir = gradleProject(buildFile(), "vulnlog.yaml" to "keep me")
+
+                val result = runner(dir, "vulnlogInit", *REQUIRED_PROPS).buildAndFail()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "already exists"
+                dir.resolve("vulnlog.yaml").readText() shouldBe "keep me"
+            }
+
+            test("overwrites an existing output file with force") {
+                val dir = gradleProject(buildFile(), "vulnlog.yaml" to "replace me")
+
+                val result = runner(dir, "vulnlogInit", *REQUIRED_PROPS, "-Pvulnlog.force=true").build()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("vulnlog.yaml").readText() shouldContain "Acme Corp"
+            }
         }
 
         context("argument validation") {

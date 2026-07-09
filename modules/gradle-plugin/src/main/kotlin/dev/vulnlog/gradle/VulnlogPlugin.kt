@@ -16,6 +16,12 @@ class VulnlogPlugin : Plugin<Project> {
             task.organization.convention(project.propertyOrNull("vulnlog.organization"))
             task.projectName.convention(project.propertyOrNull("vulnlog.name"))
             task.author.convention(project.propertyOrNull("vulnlog.author"))
+            task.force.convention(
+                project.providers
+                    .gradleProperty("vulnlog.force")
+                    .map { it.toBoolean() }
+                    .orElse(false),
+            )
             task.outputFile.convention(
                 project.propertyOrNull("vulnlog.output")?.let { project.layout.projectDirectory.file(it) },
             )

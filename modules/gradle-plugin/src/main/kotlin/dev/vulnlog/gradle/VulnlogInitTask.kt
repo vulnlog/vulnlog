@@ -8,6 +8,7 @@ import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -26,6 +27,9 @@ abstract class VulnlogInitTask : DefaultTask() {
     @get:Input
     abstract val author: Property<String>
 
+    @get:Input
+    abstract val force: Property<Boolean>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -34,6 +38,9 @@ abstract class VulnlogInitTask : DefaultTask() {
         val vulnlogFile = init(SchemaVersion(1, 0), organization.get(), projectName.get(), author.get())
         val content = YamlWriter.write(vulnlogFile, createYamlMapper())
         val file = outputFile.get().asFile
+        if (file.exists() && !force.get()) {
+            throw GradleException("${file.absolutePath} already exists. Use -Pvulnlog.force=true to overwrite.")
+        }
         file.writeText(content)
         logger.lifecycle("Vulnlog file created at: ${file.absolutePath}")
     }
