@@ -1,0 +1,81 @@
+= Work with releases and tags
+
+Releases and tags are the two axes every filter and report runs on.
+This guide keeps both current, so questions like "what affects release X?" and "what ships in the container image?" stay answerable.
+
+== Prerequisites
+
+* A Vulnlog file (see the xref:get-started/quickstart-triage.adoc[triage quickstart]).
+
+== Maintain the release list
+
+Add a release to the `releases` section when you start working toward it, without a `published_at` date:
+
+[source,yaml]
+----
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+  - id: 1.1.0
+----
+
+Keep the list in chronological order, oldest first; the `--release` filter resolves ranges by array position (see xref:reference/project-and-releases.adoc[Project and releases]).
+
+Set `published_at` on the day the release ships.
+The date matters: in release-scoped views, a recorded fix only protects users once its target release is published (see xref:concepts/vulnerability-states.adoc[Vulnerability states]).
+
+== Define a tag taxonomy
+
+Tags are team-defined.
+Two patterns cover most needs: deliverables (`binary`, `container`, `sdk`) and usage contexts (`build-dep`, `test-infra`):
+
+[source,yaml]
+----
+tags:
+  - id: container
+    description: Shipped as Docker container
+  - id: build-dep
+    description: Build-time dependency only
+----
+
+Define tags before using them; an entry referencing an undefined tag fails validation (see xref:troubleshooting.adoc#references-undefined-tags[the troubleshooting entry]).
+
+== Assign tags
+
+On vulnerability entries, tags categorize the finding and enable filtering:
+
+[source,yaml]
+----
+  - id: CVE-2026-5678
+    releases: [2.0.0]
+    packages: ["pkg:npm/image-lib@3.1.0"]
+    reports:
+      - reporter: trivy
+    tags: [container]
+----
+
+On release purl entries, tags scope the release artifacts (see xref:reference/tags.adoc[Tags] for both forms).
+
+== Filter outputs
+
+`report` and `suppress` accept both axes, separately or combined:
+
+[source,bash]
+----
+vulnlog report my-app.vl.yaml --release 1.1.0 --tag container
+vulnlog suppress my-app.vl.yaml --reporter trivy --tag build-dep
+----
+
+`--release` includes all releases up to and including the given one; `--tag` is repeatable.
+Entries without tags are included in all unfiltered outputs.
+
+== Verify
+
+* `vulnlog validate` catches undefined tag references and release ordering issues.
+* The report header names the applied filter, so a wrongly scoped output is visible at a glance.
+
+== Related
+
+* xref:reference/project-and-releases.adoc[Project and releases] and xref:reference/tags.adoc[Tags] define the fields.
+* xref:guides/find-what-affects-a-release.adoc[Find what affects a release] applies the release axis to planning.
+* xref:guides/organize-files-across-branches.adoc[Organize files across branches] covers the file-per-release-line layout.

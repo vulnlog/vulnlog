@@ -9,6 +9,7 @@
 * Guides
 ** xref:guides/triage-a-finding.adoc[Triage a new scanner finding]
 ** xref:guides/record-a-resolution.adoc[Record a resolution]
+** xref:guides/work-with-releases-and-tags.adoc[Work with releases and tags]
 ** xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner]
 ** xref:guides/validate-and-format.adoc[Validate and format Vulnlog files]
 ** xref:guides/generate-reports.adoc[Generate reports]
