@@ -12,7 +12,7 @@ Read-only commands like `validate` accept multiple files.
 `suppress` operates on a single file.
 No automatic file detection.
 
-== Global Flags
+== Global flags
 
 [cols="2,3"]
 |===
@@ -34,21 +34,9 @@ No automatic file detection.
 | Suppress status lines. Errors and warnings always print. Cannot be combined with `-v`.
 |===
 
-== Output Messages
+== Output messages
 
-Stdout carries data, stderr carries conversation.
-Report content, suppression files, and formatted YAML go to stdout only when `-` is the target; every message addressed to a human goes to stderr.
-
-A command that worked prints one status line per action in the form `<Verb>: <path or subject>`, for example `Created: vulnlog.yaml` or `Wrote: reports/report.html`.
-Findings and errors print one per line in the form `<severity>: <file>[: <location>]: <message>` with the lowercase prefixes `error:`, `warning:`, and `info:`, followed by a summary line such as `2 errors, 1 warning`.
-When a next step is known, a `hint:` line follows the finding.
-The shape is stable, so `grep '^error:'` works in CI.
-
-=== Color
-
-Color is on when the stream is a terminal and off when piped or redirected.
-Setting `NO_COLOR` to any value forces color off; `FORCE_COLOR` or `CLICOLOR_FORCE` forces it on, which is useful in CI systems that render ANSI, like GitHub Actions.
-Color never carries information on its own; stripped output reads identically.
+Message formats, color behavior, and exit codes are a stable interface, documented in xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].
 
 == Diagnostics
 
@@ -60,7 +48,7 @@ Diagnostics always go to stderr.
 Stdout carries only command output, so redirections like `vulnlog suppress --reporter trivy -o - > .trivyignore.yaml` are safe at any verbosity.
 There is no log file; to capture diagnostics, redirect stderr.
 
-== Filtering Flags
+== Filtering flags
 
 Available on `report` and `suppress` commands.
 
@@ -106,32 +94,6 @@ Available on `report` and `suppress` commands.
 | Copy vulnerability entries from one Vulnlog file into one or more others.
 |===
 
-== Exit Codes
+== Exit codes
 
-[cols="1,2,3"]
-|===
-| Code | Name | Description
-
-| `0`
-| Success
-| Command completed successfully.
-
-| `1`
-| General error
-| Unexpected error (I/O failure, missing argument, file not found, unhandled exception).
-
-| `2`
-| Validation error
-| The Vulnlog file failed parsing or contains validation errors.
-
-| `3`
-| Formatting error
-| The Vulnlog file contains formatting errors.
-
-| `5`
-| Invalid flag value
-| A flag references an unknown entity or unsupported type, for example a release that is not defined in the file.
-|===
-
-The exit codes are a documented, stable interface for scripts and CI pipelines.
-Code `4` is reserved for a dedicated file-not-found error in a future release.
+Every command exits with one of the documented codes; the table lives in xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].

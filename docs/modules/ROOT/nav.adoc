@@ -33,6 +33,7 @@
 *** xref:reference/cli-add.adoc[modify add]
 *** xref:reference/cli-copy.adoc[modify copy]
 ** xref:reference/gradle-plugin.adoc[Gradle plugin]
+** xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]
 * Upgrade
 ** xref:upgrade/migrate-from-kotlin-dsl.adoc[Migrate from the Kotlin DSL]
 * xref:glossary.adoc[Glossary]
