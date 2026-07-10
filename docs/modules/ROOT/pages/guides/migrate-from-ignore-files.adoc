@@ -1,0 +1,88 @@
+= Migrate from scanner ignore files
+
+Your repository already has a hand-maintained `.trivyignore`, `.snyk`, or similar file.
+This guide moves those suppressions into a Vulnlog file without losing coverage, so the scanner keeps passing while every future decision is recorded properly.
+
+== Prerequisites
+
+* The Vulnlog CLI and an initialized Vulnlog file (see the xref:get-started/quickstart-triage.adoc[triage quickstart]).
+* The existing ignore files of your scanners.
+
+== Step 1: Inventory the existing suppressions
+
+Each line in an ignore file is a past decision, usually without its reasoning.
+For every suppressed identifier, note the affected package and, where anyone remembers, why it was suppressed.
+
+== Step 2: Record entries with known reasoning
+
+Where the reasoning is known, record a full entry with verdict and analysis, exactly as in xref:guides/triage-a-finding.adoc[Triage a new scanner finding]:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2025-1111 \
+  --package "pkg:npm/legacy-lib@1.0.0" \
+  --reporter trivy \
+  --analysis "Only reachable through the admin API, which is not exposed." \
+  --verdict "not affected" \
+  --justification "vulnerable code not in execute path"
+Added: CVE-2025-1111 to vulnlog.yaml
+----
+
+`not affected` entries are suppressed automatically, so coverage for these lines is preserved.
+
+== Step 3: Record entries with lost reasoning honestly
+
+Do not invent verdicts for suppressions nobody can explain.
+Record them as under investigation with an expiring suppression:
+
+[source,yaml]
+----
+  - id: CVE-2024-0001
+    releases: [1.0.0]
+    packages: ["pkg:npm/legacy-lib@1.0.0"]
+    reports:
+      - reporter: trivy
+        suppress:
+          expires_at: 2026-10-01
+----
+
+The explicit `suppress` block keeps the scanner quiet for now, and the expiry date forces a real triage before it lapses; after `expires_at`, the entry drops out of the generated files and the scanner flags it again.
+
+== Step 4: Compare old and new
+
+Generate the suppression files and compare them against the hand-maintained ones:
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml --reporter trivy -o .trivyignore.generated.yaml
+Wrote: /path/to/.trivyignore.generated.yaml
+diff .trivyignore.yaml .trivyignore.generated.yaml
+----
+
+The formats match the scanner's own, so differences are real coverage differences: an identifier only in the old file is a suppression you have not migrated yet.
+Formatting and field differences (for example generated `statement` texts from your analyses) are expected.
+
+== Step 5: Replace the hand-maintained file
+
+Once the generated file covers everything intentionally kept, delete the hand-maintained ignore file and generate into its place:
+
+[source,bash]
+----
+rm .trivyignore.yaml
+vulnlog suppress vulnlog.yaml --reporter trivy
+Wrote: /path/to/.trivyignore.yaml
+git add vulnlog.yaml .trivyignore.yaml
+git commit -m "Migrate Trivy suppressions to Vulnlog"
+----
+
+From now on, the ignore file is generated output; edits happen in `vulnlog.yaml` (see xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner] for keeping it static or generating it in CI).
+
+== Verify
+
+Run the scanner: it must report exactly the findings it reported before the migration, no more and no fewer.
+Then run `vulnlog validate vulnlog.yaml` to confirm the new entries are well-formed.
+
+== Related
+
+* xref:reference/suppression.adoc[Suppression] defines the rules that decide what is emitted.
+* xref:guides/triage-a-finding.adoc[Triage a new scanner finding] concludes the entries parked as under investigation.

@@ -90,3 +90,4 @@ The entry still appears as open in the release-scoped report; only the scanner n
 
 * xref:concepts/vulnerability-states.adoc[Vulnerability states] defines how a resolution changes the entry state, including the release-scoped view.
 * xref:reference/vulnerabilities.adoc#resolution-entry[Resolution entry] documents every field.
+* xref:guides/find-what-affects-a-release.adoc[Find what affects a release] reads recorded resolutions when planning the next release.

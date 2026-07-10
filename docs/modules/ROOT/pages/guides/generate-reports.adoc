@@ -1,34 +1,84 @@
 = Generate reports
 :page-aliases: overview-report.adoc
 
-The Vulnlog CLI reads the Vulnlog YAML file and generates a shareable vulnerability report.
-
-Triage decisions live next to the code in the Vulnlog file, but the people who need to see them -- peers, auditors, customers, downstream teams -- usually do not read the YAML.
-The report turns the same source of truth into a single document that summarizes every tracked vulnerability, its triage verdict, and the release that ships the fix.
-
-Vulnlog generates the report from the same YAML used to generate the xref:concepts/vulnlog-and-your-scanner.adoc[suppression files], so the suppressed findings and the published report can never drift apart.
+Turn a Vulnlog file into a shareable vulnerability report.
+Triage decisions live next to the code, but the people who need to see them (peers, auditors, customers, downstream teams) usually do not read YAML.
+The report presents the same source of truth as a single document, so the suppressed findings and the published report can never drift apart.
 
 image::vulnlog-reporting.svg[alt="Vulnlog workflow: the engineer maintains vulnlog.yaml, the Vulnlog CLI generates a shareable vulnerability report, and peers and customers consume it"]
 
-== Report Format
+== Prerequisites
 
-[#_html]
-=== HTML
+* A Vulnlog file with entries (any triage state; the report shows all of them).
 
-Vulnlog renders the report as a single, self-contained HTML document. It is fully offline and print-friendly.
+== Generate the report
 
-The document contains the project metadata, summary (totals, breakdown by state and severity), and an entry table grouped by xref:concepts/vulnerability-states.adoc[state] and severity.
-The same input file can be rendered from the project maintainer's perspective (full backlog across releases) or release-scoped via the `--release` flag for an audience that only cares about a published release.
+[source,bash]
+----
+vulnlog report vulnlog.yaml
+Wrote: vulnlog-report.html
+----
+
+The result is a single, self-contained HTML document: fully offline, print-friendly, and adapting to the reader's light or dark theme.
+It contains the project metadata, a summary (totals, breakdown by state and severity), and an entry table grouped by xref:concepts/vulnerability-states.adoc[state] and severity.
 
 .Example Vulnlog HTML Report
 image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
 
-// [#_vex]
-// === VEX (planned)
-//
-// VEX (OpenVEX, CycloneDX VEX, CSAF) output is on the roadmap, so the same Vulnlog file can feed machine-readable vulnerability disclosures alongside the human-readable HTML report.
+== Choose the perspective
 
-== See also
+Unfiltered, the report shows the maintainer's full backlog across all releases.
+For an audience that cares about one shipped release, scope it:
 
-- xref:concepts/vulnerability-states.adoc[Vulnerability States]
-- xref:reference/cli-report.adoc[CLI Report Command]
+[source,bash]
+----
+vulnlog report vulnlog.yaml --release 8.1.1 -o release-8.1.1-report.html
+Wrote: release-8.1.1-report.html
+----
+
+In the release-scoped view, a fix only counts once its target release shipped at or before the chosen release; entries whose fix is still unshipped show as open.
+xref:guides/find-what-affects-a-release.adoc[Find what affects a release] builds on this view.
+
+== Variants
+
+=== Merge multiple files
+
+Projects with xref:guides/organize-files-across-branches.adoc[several Vulnlog files] can render them as one report; the files must share the same project metadata:
+
+[source,bash]
+----
+vulnlog report frontend.vl.yaml backend.vl.yaml
+Wrote: vulnlog-report.html
+----
+
+=== From Docker
+
+[source,bash,subs="attributes"]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report vulnlog.yaml --output report.html
+Wrote: /work/report.html
+----
+
+=== From the Gradle build
+
+[source,bash]
+----
+./gradlew vulnlogReport
+----
+
+The report lands in `build/vulnlog/vulnlog-report.html` by default; the xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the task configuration.
+
+=== As a CI artifact
+
+Generating the report on every pipeline run gives stakeholders a current impact picture without a Vulnlog installation.
+xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] includes an upload step for GitHub Actions.
+
+== Verify
+
+Open the generated HTML file in a browser and check the header: it names the input files and the applied filter, so a wrongly scoped report is visible at a glance.
+
+== Related
+
+* xref:reference/cli-report.adoc[vulnlog report] documents every flag and the report contents in detail.
+* xref:concepts/vulnerability-states.adoc[Vulnerability states] defines the state model the report presents.
+* xref:get-started/quickstart-report.adoc[Quickstart: read the impact report] teaches report reading to non-developers.
