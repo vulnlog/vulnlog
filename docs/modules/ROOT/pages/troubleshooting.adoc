@@ -1,0 +1,112 @@
+= Troubleshooting
+
+Symptoms are listed by the message or behavior you see.
+Every section has a stable anchor, so guides and answers can link directly to a symptom.
+
+[[references-undefined-tags]]
+== error: References undefined tags
+
+[source]
+----
+error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
+----
+
+An entry (or a release purl) uses a tag that is not defined in the file's `tags` section.
+Add the tag to the `tags` section, or fix the spelling; the message lists the tags the file defines.
+See xref:reference/tags.adoc[Tags].
+
+[[not-canonically-formatted]]
+== warning: not canonically formatted
+
+[source]
+----
+warning: vulnlog.yaml: not canonically formatted
+  [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
+----
+
+The file is valid but deviates from the canonical style; `fmt --check` (or the Gradle `vulnlogFormat --check` task) reports each violated rule with its line.
+Run `vulnlog fmt <file>` to rewrite the file canonically.
+See xref:guides/validate-and-format.adoc[Validate and format Vulnlog files].
+
+[[contains-yaml-comments]]
+== warning: contains YAML comments; they are removed on write
+
+[source]
+----
+warning: vulnlog.yaml: contains YAML comments; they are removed on write
+  hint: record notes in schema fields (e.g. comment, analysis)
+----
+
+YAML comments are not part of the Vulnlog format; every file-writing command drops them (the `$schema` header line is the one exception).
+Move the note into a schema field before the next write: `comment` or `analysis` on an entry, `description` on a tag, `note` on a release.
+Content in fields stays visible to generated outputs; comments never were.
+See xref:reference/file-format.adoc[The Vulnlog file format].
+
+[[o-requires-single-reporter]]
+== error: -o requires a single reporter
+
+[source]
+----
+error: -o requires a single reporter, found: other, snyk, trivy
+  hint: use --reporter <name> to pick one, or --output-dir for one file per reporter
+----
+
+`vulnlog suppress -o <file>` writes exactly one suppression file, but the input contains reports from several reporters.
+Pick one with `--reporter`, or use `--output-dir` to write one file per reporter.
+See xref:reference/cli-suppress.adoc[vulnlog suppress].
+
+[[release-not-found]]
+== error: Release not found
+
+[source]
+----
+error: Release not found: 9.9.9
+  hint: Known releases: 1.0.0, 1.1.0, 1.2.0
+----
+
+The value passed to `--release` does not match any `id` in the file's `releases` section.
+Filters only accept defined releases; add the release to the file or fix the value.
+The command exits with code 5 (invalid flag value), see xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].
+
+[[finding-still-reported]]
+== The scanner still reports a suppressed finding
+
+Work through the xref:reference/suppression.adoc[suppression rules] in order:
+
+. The entry has a `resolution`: resolved findings are never suppressed.
+The scanner should stop reporting once the fixed dependency actually ships; if it still reports, the resolution is incomplete.
+. The `suppress` block's `expires_at` has passed: expired suppressions are dropped so the finding resurfaces for re-triage.
+. The verdict is `affected`, `risk acceptable`, or missing, and the report has no `suppress` block: these findings are only suppressed by explicit decision.
+. The identifier does not fit the format: some formats accept only matching identifier types, for example `.snyk` requires Snyk identifiers from `vuln_ids`.
+
+Run with `-v` to see exactly which entries were skipped and why:
+
+[source]
+----
+vulnlog -v suppress full-example.vl.yaml
+verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
+----
+
+[[docker-permission-denied]]
+== Docker: output files cannot be written or belong to root
+
+The container runs as UID 1000 by default.
+When the mounted workspace belongs to another user, output files cannot be created; when the runner requires root, generated files end up root-owned.
+Map your user into the container, or override the user where the CI runner needs it:
+
+[source,bash,subs="attributes"]
+----
+docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
+----
+
+See xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines].
+
+[[unexpected-error]]
+== error: with no explanation
+
+An unexpected error prints a single `error:` line and exits with code 1.
+Rerun with `-vv` to get the full stack trace and debug detail, and report the problem with that output at https://github.com/vulnlog/vulnlog/issues[GitHub issues].
+
+== Something else?
+
+Ask in the https://github.com/vulnlog/vulnlog/discussions/categories/q-a[Q&A discussions]; questions there regularly become new sections on this page.
