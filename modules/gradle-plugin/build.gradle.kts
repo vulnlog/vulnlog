@@ -1,16 +1,20 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.gradle.plugin.devel.tasks.PluginUnderTestMetadata
 
 plugins {
     id("vulnlog.common-convention")
     `java-gradle-plugin`
     id("com.gradle.plugin-publish") version "2.1.1"
-    id("com.gradleup.shadow") version "9.4.3"
+    id("com.gradleup.shadow") version "9.5.1"
 }
 
 description = "Vulnlog Gradle plugin"
 
 group = "dev.vulnlog"
+
+repositories {
+    // Required for shadows R8 minimization feature, see https://github.com/GradleUp/shadow/pull/2077
+    google()
+}
 
 val shaded: Configuration by configurations.creating
 
