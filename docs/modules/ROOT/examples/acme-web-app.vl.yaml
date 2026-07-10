@@ -1,0 +1,88 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Web App
+  author: Acme Corp Security Team
+
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+  - id: 1.1.0
+    published_at: 2026-03-20
+  - id: 1.2.0
+
+vulnerabilities:
+
+  - id: CVE-2026-8802
+    releases: [1.1.0]
+    packages: ["pkg:npm/session-store@1.4.0"]
+    reports:
+      - reporter: trivy
+        at: 2026-07-01
+
+  - id: CVE-2026-7791
+    description: SQL injection in query-parser
+    releases: [1.1.0]
+    packages: ["pkg:npm/query-parser@5.2.1"]
+    reports:
+      - reporter: trivy
+        at: 2026-05-15
+    analysis: >-
+      Confirmed exploitable through the search endpoint. Crafted filter expressions reach the vulnerable parser.
+    analyzed_at: 2026-05-16
+    verdict: affected
+    severity: high
+    resolution:
+      in: 1.2.0
+      at: 2026-06-20
+      ref: "https://jira.example.com/browse/SEC-201"
+      note: Updated query-parser from 5.2.1 to 5.3.0
+
+  - id: CVE-2026-6685
+    description: Denial of service in thumbnail-gen
+    aliases: [SNYK-JS-THUMBNAILGEN-2984765]
+    releases: [1.0.0]
+    packages: ["pkg:npm/thumbnail-gen@2.0.0"]
+    reports:
+      - reporter: trivy
+        at: 2026-04-02
+        suppress: {}
+    analysis: >-
+      Confirmed but only exploitable with specially crafted image dimensions that the upload validation layer rejects.
+    analyzed_at: 2026-04-03
+    verdict: risk acceptable
+    severity: low
+    comment: Risk accepted by project lead. Revisit when thumbnail-gen 3.0 is released.
+
+  - id: CVE-2026-1234
+    description: Remote code execution in example-lib
+    releases: [1.0.0]
+    packages: ["pkg:npm/example-lib@2.3.0"]
+    reports:
+      - reporter: trivy
+        at: 2026-02-01
+    analysis: >-
+      The vulnerable code path is not reachable in our application because we only use the safe subset of the API.
+    analyzed_at: 2026-02-02
+    verdict: not affected
+    justification: vulnerable code not in execute path
+
+  - id: CVE-2025-9876
+    description: Authentication bypass in auth-middleware
+    releases: [1.0.0]
+    packages: ["pkg:npm/auth-middleware@3.0.2"]
+    reports:
+      - reporter: trivy
+        at: 2026-01-20
+    analysis: Confirmed. The bypass affects every session-authenticated route.
+    analyzed_at: 2026-01-21
+    verdict: affected
+    severity: critical
+    resolution:
+      in: 1.1.0
+      at: 2026-03-18
+      ref: "https://jira.example.com/browse/SEC-158"
+      note: Updated auth-middleware from 3.0.2 to 3.1.0

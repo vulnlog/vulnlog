@@ -1,0 +1,87 @@
+= Quickstart: answer a vulnerability inquiry
+
+A customer or user reports that their scanner flags a vulnerability in your product.
+In about five minutes you find your project's recorded decision and turn it into an answer, without redoing the triage.
+
+== Prerequisites
+
+* Read access to the project's Vulnlog file, in the repository or on GitHub.
+To follow along, save the example file below as `acme-web-app.vl.yaml`.
+
+.acme-web-app.vl.yaml
+[%collapsible]
+====
+[source,yaml]
+----
+include::{examplesdir}/acme-web-app.vl.yaml[]
+----
+====
+
+The inquiry for this example: "Our Trivy scan flags CVE-2026-1234 in example-lib 2.3.0, which ships with Acme Web App 1.0.0. Are we exposed?"
+
+== Step 1: Find the entry
+
+Search the Vulnlog file for the reported identifier, with your editor, GitHub search, or grep:
+
+[source,bash]
+----
+grep -n "CVE-2026-1234" acme-web-app.vl.yaml
+60:  - id: CVE-2026-1234
+----
+
+If the identifier does not match any `id`, search again before concluding it is untracked: the customer's scanner may use a different identifier for the same vulnerability, and known ones are listed in the entry's `aliases` field.
+In the example file, a search for `SNYK-JS-THUMBNAILGEN-2984765` finds it as an alias of `CVE-2026-6685`.
+
+== Step 2: Read the recorded decision
+
+The entry holds everything the triage produced:
+
+[source,yaml]
+----
+  - id: CVE-2026-1234
+    description: Remote code execution in example-lib
+    releases: [1.0.0]
+    packages: ["pkg:npm/example-lib@2.3.0"]
+    reports:
+      - reporter: trivy
+        at: 2026-02-01
+    analysis: >-
+      The vulnerable code path is not reachable in our application because we only use the safe subset of the API.
+    analyzed_at: 2026-02-02
+    verdict: not affected
+    justification: vulnerable code not in execute path
+----
+
+Three fields make the answer:
+
+* `verdict` is the position: `not affected`.
+* `justification` is the machine-readable reason, from the VEX vocabulary: `vulnerable code not in execute path`.
+* `analysis` is the human explanation you can quote.
+
+Check that the customer's release appears in `releases`; a verdict is recorded per release line.
+
+== Step 3: Answer the inquiry
+
+An answer built only from the entry:
+
+____
+CVE-2026-1234 was reported for Acme Web App 1.0.0 by our own scans on 2026-02-01 and analysed on 2026-02-02.
+The verdict is "not affected": the vulnerable code path is not reachable in our application because we only use the safe subset of the API.
+No action is required on your side; you can suppress the finding in your scanner.
+____
+
+Every claim in the answer traces back to a field in the version-controlled file, and `git log` shows when the decision was made and by whom.
+
+== If the entry does not exist
+
+Then the finding is untriaged, and the honest answer is "under investigation".
+Record the finding so the triage starts (see xref:guides/triage-a-finding.adoc[Triage a new scanner finding]) and tell the customer when to expect the verdict.
+
+== What you did
+
+You resolved an external vulnerability question by lookup instead of re-analysis: search by identifier or xref:reference/vulnerabilities.adoc[alias], read the xref:reference/verdicts-and-justifications.adoc[verdict and justification], and quote the analysis.
+
+== Next steps
+
+* xref:guides/generate-reports.adoc[Generate reports] produces a shareable HTML report when the inquiry warrants a full overview instead of a single answer.
+* xref:concepts/vulnerability-states.adoc[Vulnerability states] explains how entries progress from under investigation to a final state.

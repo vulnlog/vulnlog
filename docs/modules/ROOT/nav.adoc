@@ -2,6 +2,9 @@
 * Get started
 ** xref:get-started/install.adoc[Install]
 ** xref:get-started/quickstart-triage.adoc[Quickstart: triage your first finding]
+** xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release]
+** xref:get-started/quickstart-report.adoc[Quickstart: read the impact report]
+** xref:get-started/quickstart-inquiry.adoc[Quickstart: answer a vulnerability inquiry]
 * Guides
 ** xref:guides/triage-a-finding.adoc[Triage a new scanner finding]
 ** xref:guides/generate-reports.adoc[Generate reports]
