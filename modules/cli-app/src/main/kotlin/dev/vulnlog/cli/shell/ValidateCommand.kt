@@ -12,8 +12,11 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.lib.core.StatusVerb
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.shell.sourceFile
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."
@@ -35,6 +38,8 @@ class ValidateCommand : CliktCommand(name = "validate") {
         if (validationFindings.hasWarnings && strict) {
             throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
         }
-        echoStatus("Validation OK")
+        inputs.forEach { input ->
+            echoStatus(formatStatus(StatusVerb.VALIDATED, input.sourceFile().name))
+        }
     }
 }

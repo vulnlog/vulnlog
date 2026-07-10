@@ -31,6 +31,8 @@ class CliMessageStyleTest :
                 TextColors.green("Created") + ": vulnlog.yaml"
             styleMessage("Wrote: reports/report.html") shouldBe
                 TextColors.green("Wrote") + ": reports/report.html"
+            styleMessage("Validated: vulnlog.yaml") shouldBe
+                TextColors.green("Validated") + ": vulnlog.yaml"
         }
 
         test("summary counts render bold") {
@@ -40,7 +42,7 @@ class CliMessageStyleTest :
 
         test("info findings and plain lines stay unstyled") {
             styleMessage("info: vulnlog.yaml: some observation") shouldBe "info: vulnlog.yaml: some observation"
-            styleMessage("Validation OK") shouldBe "Validation OK"
+            styleMessage("some plain line") shouldBe "some plain line"
         }
 
         test("multi-line messages style each line on its own") {

@@ -76,4 +76,4 @@ debug: [non-canonical-array-style] vulnerabilities[0].releases: Line 12: canonic
 - Diagnostics: lowercase, verb-first, past tense (`parsed x`, `wrote y`, `skipped z: reason`), one line per event, no
   trailing period, ASCII only.
 - Include the identifier the user would grep for: file name, vulnerability id, reporter.
-- Status lines use the shared verb grammar from `StatusVerb` (`Formatted: <file>`), plus `Validation OK`.
+- Status lines use the shared verb grammar from `StatusVerb` (`Formatted: <file>`).

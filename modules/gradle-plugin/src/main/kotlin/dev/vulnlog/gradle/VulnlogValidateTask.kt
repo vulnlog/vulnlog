@@ -7,8 +7,11 @@ import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.parseInputOrFail
 import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
 import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.lib.core.StatusVerb
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.shell.sourceFile
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -44,6 +47,8 @@ abstract class VulnlogValidateTask : DefaultTask() {
         if (validationFindings.hasWarnings && strict.get()) {
             throw GradleException("Vulnlog validation failed.")
         }
-        logger.lifecycle("Validation OK")
+        inputFiles.forEach { input ->
+            logger.lifecycle(formatStatus(StatusVerb.VALIDATED, input.sourceFile().name))
+        }
     }
 }
