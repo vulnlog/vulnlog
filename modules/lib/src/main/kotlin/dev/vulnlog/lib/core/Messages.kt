@@ -19,6 +19,7 @@ enum class StatusVerb(
     COPIED("Copied"),
     ADDED("Added"),
     UPDATED("Updated"),
+    VALIDATED("Validated"),
 }
 
 /** Status line for a successful action: `Created: vulnlog.yaml`. */

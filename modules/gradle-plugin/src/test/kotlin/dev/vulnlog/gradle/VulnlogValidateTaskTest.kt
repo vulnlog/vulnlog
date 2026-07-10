@@ -28,7 +28,7 @@ class VulnlogValidateTaskTest :
                 val result = runner(dir, "vulnlogValidate").build()
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Validation OK"
+                result.output shouldContain "Validated: test.vl.yaml"
             }
 
             test("succeeds on multiple valid files") {
@@ -48,7 +48,8 @@ class VulnlogValidateTaskTest :
                 val result = runner(dir, "vulnlogValidate").build()
 
                 result.task(":vulnlogValidate")?.outcome shouldBe TaskOutcome.SUCCESS
-                result.output shouldContain "Validation OK"
+                result.output shouldContain "Validated: a.vl.yaml"
+                result.output shouldContain "Validated: b.vl.yaml"
             }
         }
 

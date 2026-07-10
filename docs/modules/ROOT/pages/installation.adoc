@@ -39,7 +39,7 @@ vulnerabilities: []
 [source,bash,subs="attributes"]
 ----
 docker run --rm -i ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate - < vulnlog.yaml
-Validation OK
+Validated: <stdin>
 ----
 
 .Use Docker volumes to map a local directory into the Docker container.

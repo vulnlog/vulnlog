@@ -33,14 +33,15 @@ vulnlog validate <file...> [--strict]
 [source]
 ----
 vulnlog validate web-app-1.vl.yaml web-app-2.vl.yaml
-Validation OK
+Validated: web-app-1.vl.yaml
+Validated: web-app-2.vl.yaml
 ----
 
 .Validate a Vulnlog file from STDIN.
 [source]
 ----
 vulnlog validate - < vulnlog.yaml
-Validation OK
+Validated: <stdin>
 ----
 
 .Validation was not successful because an undefined tag was used.
