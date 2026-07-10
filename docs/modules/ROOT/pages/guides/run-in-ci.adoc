@@ -4,7 +4,7 @@
 The Vulnlog CLI runs on developer machines and in CI pipelines.
 
 A common pattern is dynamic suppression: generate suppression files in the CI pipeline just before the scanner runs, so they are always in sync with the Vulnlog file and never need to be committed.
-See xref:reference/suppression.adoc#_static_and_dynamic_suppression[Static and Dynamic Suppression] for more details on both approaches.
+See xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner] for both approaches.
 
 == Gradle
 

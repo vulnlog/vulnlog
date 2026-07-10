@@ -84,6 +84,7 @@ Once the fix ships, add a `resolution`:
 ----
 
 An `affected` entry without a resolution stays visible in the scanner output; that is intentional, it is a live risk.
+See xref:guides/record-a-resolution.adoc[Record a resolution] for the fix workflow.
 
 === You accept the risk
 

@@ -4,24 +4,9 @@
 Suppression directives exclude specific vulnerability findings from a scanner's output.
 The Vulnlog CLI generates scanner-specific suppression files from the Vulnlog file, keeping the triage rationale alongside the suppression rules.
 
-== Static and Dynamic Suppression
+Whether the generated files are committed or created on the fly in CI is a workflow decision, covered in xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner].
 
-Vulnlog supports two approaches for managing generated suppression files:
-
-Static (checked in)::
-The generated suppression files (e.g., `.trivyignore.yaml`, `.snyk`) are committed to the repository.
-When the Vulnlog file is edited, the suppression files are regenerated and the updated versions committed.
-This approach makes suppressions visible in code review and provides a clear history of changes.
-
-Dynamic (generated in CI)::
-The suppression files are generated on the fly in the CI pipeline, just before the SCA scanner runs.
-They exist only temporarily during the pipeline execution and are not committed to the repository.
-This approach avoids keeping generated files in the repository and ensures suppressions are always in sync with the Vulnlog file.
-
-Both approaches can be combined -- for example, using static suppression for local development and dynamic generation in CI.
-See xref:guides/run-in-ci.adoc[CI/CD Integration] for pipeline examples using dynamic generation.
-
-== Suppression Rules
+== Suppression rules
 
 Four rules decide whether an entry appears in the generated suppression file:
 
@@ -43,7 +28,7 @@ Everything else needs an explicit `suppress` block::
 `affected`, `risk acceptable`, and not-yet-triaged findings are still a live or unknown risk.
 Suppressing one is a deliberate decision, so it happens only when the report entry carries a `suppress` block.
 
-=== Permanent Suppression
+=== Permanent suppression
 
 [source,yaml]
 ----
@@ -52,7 +37,7 @@ reports:
     suppress: {}
 ----
 
-=== Temporary Suppression
+=== Temporary suppression
 
 [source,yaml]
 ----
@@ -65,7 +50,7 @@ reports:
 After the expiration date, the entry is excluded from every generated suppression file.
 Vulnlog manages expiry itself so that each generated file lists only active suppressions and never an expired one.
 
-== Multiple Reporters
+== Multiple reporters
 
 When multiple scanners report the same vulnerability, each scanner is listed as a separate report entry.
 Suppression is configured independently per reporter, allowing different suppression strategies per scanner.
@@ -91,7 +76,7 @@ The Snyk report entry includes a `vuln_ids` field with the scanner-specific iden
 Since the verdict is `not affected`, both reporters are automatically included in suppression output.
 Adding a `suppress` block to only one reporter limits suppression to that specific scanner.
 
-== Suppression Identifier Resolution
+== Suppression identifier resolution
 
 The CLI determines which identifiers to write into the suppression file using this order:
 
@@ -101,7 +86,7 @@ The CLI determines which identifiers to write into the suppression file using th
 `aliases` are not used for suppression.
 
 [[supported-reporters]]
-== Supported Reporters
+== Supported reporters
 
 [cols="1,2,2,1"]
 |===

@@ -1,0 +1,87 @@
+= Validate and format Vulnlog files
+
+Keep every Vulnlog file correct and canonically formatted, locally and in CI.
+At the end, validation runs on every change and formatting differences never reach review.
+
+== Prerequisites
+
+* One or more Vulnlog files.
+
+== Validate
+
+xref:reference/cli-validate.adoc[`vulnlog validate`] parses each file and checks all validation rules:
+
+[source,bash]
+----
+vulnlog validate web-app-1.vl.yaml web-app-2.vl.yaml
+Validated: web-app-1.vl.yaml
+Validated: web-app-2.vl.yaml
+----
+
+Findings come in three severities: errors (the file would produce incorrect output), warnings (valid, but something is likely wrong), and infos (potential improvements).
+A failed validation prints one line per finding and exits with code 2:
+
+[source]
+----
+vulnlog validate vulnlog.yaml
+error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
+1 error
+  hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
+----
+
+In CI, add `--strict` to treat warnings as errors so problems surface before they grow.
+
+== Format
+
+xref:reference/cli-fmt.adoc[`vulnlog fmt`] rewrites files in the canonical style defined by the xref:reference/file-format.adoc[file format]:
+
+[source,bash]
+----
+vulnlog fmt web-app-1.vl.yaml web-app-2.vl.yaml
+Formatted: web-app-1.vl.yaml
+Unchanged: web-app-2.vl.yaml
+----
+
+Every file-writing command produces the same canonical style, so `fmt` after `modify add` or `modify copy` is a no-op.
+YAML comments are not part of the format and are removed on writing; the command warns when it drops them.
+
+In CI, use `--check` to fail without writing changes:
+
+[source]
+----
+vulnlog fmt --check vulnlog.yaml
+warning: vulnlog.yaml: not canonically formatted
+  [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
+----
+
+== Variants
+
+=== From the Gradle build
+
+[source,bash]
+----
+./gradlew vulnlogValidate
+./gradlew vulnlogFormat --check
+----
+
+The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents both tasks, including strict mode.
+
+=== From stdin
+
+Both commands read from stdin with `-`, which suits pipelines that hold the file content in a stream:
+
+[source,bash]
+----
+vulnlog validate - < vulnlog.yaml
+Validated: <stdin>
+----
+
+== Verify
+
+The exit code is the contract: `0` clean, `2` validation errors, `3` formatting errors.
+See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table and the machine-readable message shapes.
+
+== Related
+
+* xref:reference/cli-validate.adoc[vulnlog validate] and xref:reference/cli-fmt.adoc[vulnlog fmt] document every flag.
+* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] places both commands in a pipeline.

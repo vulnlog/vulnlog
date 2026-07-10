@@ -8,6 +8,9 @@
 ** xref:get-started/quickstart-inquiry.adoc[Quickstart: answer a vulnerability inquiry]
 * Guides
 ** xref:guides/triage-a-finding.adoc[Triage a new scanner finding]
+** xref:guides/record-a-resolution.adoc[Record a resolution]
+** xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner]
+** xref:guides/validate-and-format.adoc[Validate and format Vulnlog files]
 ** xref:guides/generate-reports.adoc[Generate reports]
 ** xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines]
 ** xref:guides/organize-files-across-branches.adoc[Organize files across branches]

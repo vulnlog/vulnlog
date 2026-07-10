@@ -128,4 +128,4 @@ include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
 == See also
 
 - xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog Suppression]
-- xref:reference/suppression.adoc[Suppression Format and Rules]
+- xref:reference/suppression.adoc[Suppression]

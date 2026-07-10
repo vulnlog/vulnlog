@@ -1,0 +1,86 @@
+= Generate suppression files for your scanner
+
+Turn the verdicts recorded in your Vulnlog file into suppression files your scanners consume.
+At the end, every reviewed finding is silenced in the scanner and every live risk still shows.
+
+== Prerequisites
+
+* A Vulnlog file with triaged entries (see xref:guides/triage-a-finding.adoc[Triage a new scanner finding]).
+* One or more scanners with xref:reference/suppression.adoc#supported-reporters[suppression file support], for example Trivy or Snyk.
+
+== Generate the files
+
+xref:reference/cli-suppress.adoc[`vulnlog suppress`] writes one suppression file per reporter found in the input:
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml
+Wrote: /path/to/.snyk
+Wrote: /path/to/.trivyignore.yaml
+----
+
+Which entries are included is decided by the xref:reference/suppression.adoc[suppression rules]: `not affected` findings automatically, explicitly suppressed findings while their suppression has not expired, and resolved findings never.
+
+Configure each scanner to use its file; the file names follow each scanner's convention, so most scanners pick them up from the repository root without extra configuration.
+
+== Decide where the files live
+
+Static (checked in)::
+The generated suppression files (for example `.trivyignore.yaml`, `.snyk`) are committed to the repository.
+When the Vulnlog file changes, regenerate the suppression files and commit the updated versions.
+This makes suppressions visible in code review and usable by developers without the Vulnlog CLI.
+
+Dynamic (generated in CI)::
+The suppression files are generated in the CI pipeline just before the scanner runs, and never committed.
+They cannot drift from the Vulnlog file, and the repository stays free of generated files.
+See xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] for pipeline examples.
+
+Both approaches combine well: static for local development, dynamic in CI.
+
+== Variants
+
+=== Single reporter, custom path
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml --reporter trivy -o .myTrivy
+Wrote: /path/to/.myTrivy
+----
+
+=== Generic JSON for your own tooling
+
+For scanners without a native format, or to post-process suppressions in scripts, force the generic format:
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml --reporter trivy --format generic
+Wrote: /path/to/trivy.generic.json
+----
+
+=== From the Gradle build
+
+The Gradle plugin's `vulnlogSuppress` task generates the same files as part of the build:
+
+[source,bash]
+----
+./gradlew vulnlogSuppress
+----
+
+The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the task configuration.
+
+== Verify
+
+Rerun the scanner: triaged findings are gone, untriaged and `affected` findings still show.
+To see why an entry was left out of a suppression file, run with `-v`:
+
+[source]
+----
+vulnlog -v suppress full-example.vl.yaml
+verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
+----
+
+== Related
+
+* xref:reference/suppression.adoc[Suppression] defines the inclusion rules and identifier resolution.
+* xref:reference/cli-suppress.adoc[vulnlog suppress] documents every flag.
+* xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner] shows each scanner's file format.

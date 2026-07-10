@@ -61,5 +61,5 @@ include::{examplesdir}/suppress/Generic Suppression Example.json[]
 
 == See also
 
-- xref:reference/suppression.adoc[Suppression Format and Rules]
+- xref:reference/suppression.adoc[Suppression]
 - xref:reference/cli-suppress.adoc[CLI Suppress Command]

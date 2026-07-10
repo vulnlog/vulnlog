@@ -1,0 +1,92 @@
+= Record a resolution
+
+A vulnerable dependency was updated, or the fix is scheduled for an upcoming release.
+This guide records that as a `resolution`, so reports show the fix and suppression files stop hiding a finding the scanner should now confirm as gone.
+
+== Prerequisites
+
+* A triaged entry in your Vulnlog file (see xref:guides/triage-a-finding.adoc[Triage a new scanner finding]).
+* The release that ships the fix, defined in the `releases` section.
+
+== Record the resolution
+
+Add a `resolution` block to the entry.
+`in` names the release that ships the fix and is the only required field:
+
+[source,yaml]
+----
+    verdict: affected
+    severity: high
+    resolution:
+      in: 2.0.1
+      at: 2026-03-03
+      ref: "https://jira.example.com/browse/SEC-99"
+      note: "Updated image-lib from 3.1.0 to 3.2.0"
+----
+
+`resolution` is edited by hand; xref:reference/cli-add.adoc[`vulnlog modify add`] never changes it.
+Validate afterwards:
+
+[source,bash]
+----
+vulnlog validate vulnlog.yaml
+Validated: vulnlog.yaml
+----
+
+== Regenerate the suppression files
+
+Resolved findings are never suppressed: after the dependency update, the scanner should stop reporting the finding on its own, and if it still reports, the resolution is incomplete.
+Regenerate so the entry drops out:
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml
+Wrote: /path/to/.trivyignore.yaml
+----
+
+== Variants
+
+=== Hygiene update on a not affected entry
+
+A `resolution` is independent of the verdict.
+When a dependency is updated even though the vulnerability never affected you, record it; the entry moves from dismissed to resolved in reports and shows the release in the Fixed In column:
+
+[source,yaml]
+----
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 2.0.1
+      note: "Updated image-lib from 3.1.0 to 3.2.0 during routine upgrade"
+----
+
+=== The fix has not shipped yet
+
+When the resolution targets an unpublished release, users of the current release still run the vulnerable dependency, and a scanner pointed at the deployed release keeps flagging it.
+To keep that pipeline quiet until the fix ships, mark the report as suppressible and generate release-scoped:
+
+[source,yaml]
+----
+    reports:
+      - reporter: trivy
+        at: 2026-05-15
+        suppress: {}
+----
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml --release 8.0.0 --reporter trivy
+----
+
+With `--release 8.0.0`, a resolution targeting a later release is treated as still unresolved and the suppression entry is emitted.
+The entry still appears as open in the release-scoped report; only the scanner noise is silenced.
+
+== Verify
+
+* `vulnlog report vulnlog.yaml` shows the entry as resolved, with the fix release in the Fixed In column.
+* After the dependency update ships, the scanner run without the entry in its suppression file stays green.
+
+== Related
+
+* xref:concepts/vulnerability-states.adoc[Vulnerability states] defines how a resolution changes the entry state, including the release-scoped view.
+* xref:reference/vulnerabilities.adoc#resolution-entry[Resolution entry] documents every field.
