@@ -4,7 +4,7 @@
 Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerability entries.
 They can represent customer-facing deliverables (`binary`, `container`, `sdk`), internal usage contexts (`build-dep`, `test-infra`), or any other categorization.
 
-== Defining Tags
+== Defining tags
 
 Tags are defined in the optional `tags` section of a Vulnlog file.
 
@@ -34,11 +34,11 @@ tags:
     description: Build-time dependency only
 ----
 
-== Assigning Tags
+== Assigning tags
 
 Tags can be assigned in two places:
 
-=== On Vulnerability Entries
+=== On vulnerability entries
 
 Tags on a vulnerability entry categorize the finding and enable CLI filtering.
 
@@ -53,7 +53,7 @@ vulnerabilities:
     tags: [ container ]
 ----
 
-=== On Release PURLs
+=== On release PURLs
 
 Tags on release purl entries enable scoped output generation.
 
@@ -68,7 +68,7 @@ releases:
         tags: [ container ]
 ----
 
-== Filtering by Tags
+== Filtering by tags
 
 Use the `--tag` flag to filter CLI output by tag.
 The flag is repeatable to filter on multiple tags.

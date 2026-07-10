@@ -54,7 +54,7 @@ Required when the verdict is `affected` or `risk acceptable`.
 
 Resolution::
 A structured record that a dependency update or other corrective action was taken, stored in the `resolution` block.
-Independent of the verdict -- a vulnerability may be `not affected` yet still have a resolution.
+Independent of the verdict: a vulnerability may be `not affected` yet still have a resolution.
 
 Report (vulnerability report)::
 A record in the `reports` array indicating that a specific scanner or source reported the finding.

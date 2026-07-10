@@ -66,7 +66,7 @@ Optional top-level sections: `tags`.
 === Ordering rules
 
 Releases:: Must be in chronological order (oldest first).
-This ordering has functional significance -- the CLI uses array position to resolve `--release` range filtering.
+This ordering has functional significance: the CLI uses array position to resolve `--release` range filtering.
 A release at position N includes all releases at positions 0 through N.
 
 Vulnerabilities:: Should be in reverse chronological order (newest first).

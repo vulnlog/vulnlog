@@ -119,22 +119,22 @@ The CLI determines which identifiers to write into the suppression file using th
 
 | `semgrep`
 | Semgrep
-| --
+| (none)
 | No
 
 | `npm-audit`
 | npm audit
-| --
+| (none)
 | No
 
 | `github-dependabot`
 | GitHub Dependabot
-| --
+| (none)
 | No
 
 | `other`
 | Generic / non-scanner source
-| --
+| (none)
 | No
 |===
 

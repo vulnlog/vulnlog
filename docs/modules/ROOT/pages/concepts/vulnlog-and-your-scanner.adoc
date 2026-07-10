@@ -3,13 +3,13 @@
 
 The Vulnlog CLI reads the Vulnlog YAML file and generates suppression files (also called ignore files) for SCA scanners.
 
-Not every reported finding actually affects the project -- false positives and findings already mitigated by the project are common.
+Not every reported finding actually affects the project; false positives and findings already mitigated by the project are common.
 Suppression files tell the scanner to stop flagging them.
 Vulnlog generates one suppression file per scanner so only the reviewed findings are silenced.
 
 image::vulnlog-suppressing.svg[alt="Vulnlog workflow: SCA scanners report findings, the engineer documents the verdict in vulnlog.yaml, and the Vulnlog CLI generates one ignore file per scanner that feeds back to the scanners"]
 
-== Supported Reporters
+== Supported reporters
 
 [#_cargo_audit]
 === Cargo Audit

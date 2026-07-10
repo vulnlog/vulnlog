@@ -6,7 +6,7 @@ This guide explains what changed, why, and how to migrate.
 
 For the full background on this decision, see the https://github.com/vulnlog/vulnlog/discussions/57[discussion on GitHub].
 
-== Why the Format Changed
+== Why the format changed
 
 The Kotlin DSL approach used in Vulnlog 0.9.4 and earlier had several limitations:
 
@@ -22,11 +22,11 @@ Complex vulnerability scenarios were difficult to express in the DSL, and old vu
 
 The YAML-based format addresses these issues:
 
-- No JVM or Gradle required -- the CLI is distributed as a native binary.
+- No JVM or Gradle required; the CLI is distributed as a native binary.
 - YAML with JSON Schema validation provides IDE support (autocompletion, inline errors, and documentation) in any editor that speaks JSON Schema.
 - The format is language-agnostic and accessible to any team regardless of their primary programming language.
 
-== What Changed
+== What changed
 
 [cols="1,1,1"]
 |===
@@ -53,7 +53,7 @@ The YAML-based format addresses these issues:
 | One file per release branch (see below)
 |===
 
-== From Single File to One File Per Branch
+== From single file to one file per branch
 
 The Vulnlog Kotlin DSL used a single file on the main branch to track all release branches.
 The YAML format uses one file per release branch (see xref:guides/organize-files-across-branches.adoc[Branching Strategy] for the available strategies).
@@ -66,7 +66,7 @@ Conflicting verdicts::
 The same CVE can have different verdicts on different branches.
 A vulnerability might be `not affected` on version 3.x (where the vulnerable code path was refactored) but `affected` on version 2.x (where it is still present).
 A single file would need per-branch verdict structures, making entries more complex and harder to read.
-Separate files handle this naturally -- each file has its own verdict.
+Separate files handle this naturally: each file has its own verdict.
 
 Clean archiving::
 When a release branch reaches end of life, its Vulnlog file is done.
@@ -82,12 +82,12 @@ Separate files avoid merge contention and let each branch evolve independently.
 === What about duplication?
 
 When the same vulnerability appears on multiple branches with the same verdict, the entry is duplicated across files.
-The duplicated parts are primarily the findings (CVE ID, packages, reporter) -- the same kind of duplication when each branch has its own dependency- or lock-files with slightly different versions.
+The duplicated parts are primarily the findings (CVE ID, packages, reporter), the same kind of duplication as when each branch has its own dependency- or lock-files with slightly different versions.
 The analysis and resolution may legitimately differ per branch, which is where separate files bring their value in.
 
 The xref:reference/cli-copy.adoc[`vulnlog modify copy`] command reduces the effort of propagating identical entries across files to a one-liner.
 
-== Migration Steps
+== Migration steps
 
 There is no automated migration tool to convert `.vl.kts` files to `vulnlog.yaml` format.
 Entries must be recreated manually.

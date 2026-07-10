@@ -13,7 +13,7 @@ See xref:reference/gradle-plugin.adoc[Gradle Plugin] for details.
 
 == GitHub Actions
 
-Example workflow using dynamic suppression -- the suppression file is generated, used by the scanner, and discarded after the pipeline completes:
+Example workflow using dynamic suppression. The suppression file is generated, used by the scanner, and discarded after the pipeline completes:
 
 [source,yaml,subs="attributes"]
 ----
@@ -70,7 +70,7 @@ jobs:
           path: vulnlog-report.html
 ----
 
-== Using the Docker Image
+== Using the Docker image
 
 In most CI environments (GitHub Actions, Jenkins, GitLab CI) the runner's workspace is owned by UID 1000, so the container works without extra flags:
 

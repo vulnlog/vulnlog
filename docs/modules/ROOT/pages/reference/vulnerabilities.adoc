@@ -6,7 +6,7 @@ Each entry in the `vulnerabilities` section represents a single vulnerability fi
 NOTE: The verdict should reflect the most severe impact across all listed packages.
 If a package appears in multiple contexts, the analysis should focus on the highest-risk context.
 
-== Vulnerability Entry
+== Vulnerability entry
 
 [cols="1,1,1,3"]
 |===
@@ -89,7 +89,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 |===
 
 [[finding-package-urls]]
-== Finding Package URLs
+== Finding package URLs
 
 The `packages` field requires https://github.com/package-url/purl-spec[Package URLs (PURLs)] identifying the affected dependencies.
 PURLs follow the format `pkg:<type>/<namespace>/<name>@<version>`.
@@ -141,7 +141,7 @@ Analyzed:: The entry has a `verdict`, `analysis`, and any required conditional f
 Optionally includes a `resolution` if the dependency was updated.
 
 [[report-entry]]
-== Report Entry
+== Report entry
 
 A record indicating that a specific scanner or source reported the finding.
 
@@ -176,7 +176,7 @@ A record indicating that a specific scanner or source reported the finding.
 |===
 
 [[suppress-entry]]
-=== Suppress Entry
+=== Suppress entry
 
 [cols="1,1,1,3"]
 |===
@@ -189,7 +189,7 @@ A record indicating that a specific scanner or source reported the finding.
 |===
 
 [[resolution-entry]]
-== Resolution Entry
+== Resolution entry
 
 Records that a dependency update or other corrective action was taken, independent of the verdict.
 A vulnerability may be `not affected` (the verdict) yet still have a `resolution` (the dependency was updated defensively).

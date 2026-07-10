@@ -105,7 +105,7 @@ vulnlog -v suppress full-example.vl.yaml
 verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
 ----
 
-== Output Examples
+== Output examples
 
 .Generated Snyk suppression file
 [source,yaml]

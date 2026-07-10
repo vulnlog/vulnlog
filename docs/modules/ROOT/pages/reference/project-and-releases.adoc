@@ -58,7 +58,7 @@ This ordering is used by the CLI to resolve `--release` filtering.
 |===
 
 [[purl-entry]]
-=== PURL Entry
+=== PURL entry
 
 A release artifact identified by its https://github.com/package-url/purl-spec[Package URL], optionally tagged for scoping.
 
@@ -77,7 +77,7 @@ A release artifact identified by its https://github.com/package-url/purl-spec[Pa
 | Tags associated with this purl. Must reference tags defined in the `tags` section. See xref:reference/tags.adoc[Tags and Filtering].
 |===
 
-=== Package URL Examples
+=== Package URL examples
 
 [source]
 ----
