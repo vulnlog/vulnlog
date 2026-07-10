@@ -11,8 +11,11 @@
 ** xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines]
 ** xref:guides/organize-files-across-branches.adoc[Organize files across branches]
 * Concepts
+** xref:concepts/why-git.adoc[Why decisions live in git]
+** xref:concepts/data-model.adoc[The Vulnlog data model]
 ** xref:concepts/vulnerability-states.adoc[Vulnerability states]
 ** xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
+** xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out]
 * Reference
 ** xref:reference/file-format.adoc[The Vulnlog file format]
 *** xref:reference/project-and-releases.adoc[Project and releases]

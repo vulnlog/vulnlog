@@ -1,0 +1,43 @@
+= Why decisions live in git
+
+Why does Vulnlog store triage decisions in a YAML file in your repository, instead of a scanner's ignore file or a vulnerability management platform?
+
+== The decision is the valuable part
+
+A scanner finding is cheap: every scan reproduces it.
+The expensive part is the human work that follows: understanding the finding, deciding whether it affects the product, and standing behind that decision months later.
+Scanner ignore files throw that work away.
+A line in `.trivyignore` records that a finding is silenced, but not who decided, when, why, or for which release.
+When the next engineer, an auditor, or a customer asks, the analysis has to be done again.
+
+A Vulnlog file keeps the finding, the analysis, the verdict, and the resolution together in one reviewable place.
+The suppression files are generated from it, so silencing a finding without a recorded decision is not possible.
+
+== Git already solves the hard problems
+
+Storing the file in the repository means the surrounding questions are answered by tools you already trust:
+
+Review:: A triage decision changes in a pull request, next to the code it concerns, with the same review process as any other change.
+Attribution and history:: `git log` and `git blame` show who recorded which decision and when.
+The file itself stays free of audit boilerplate; the history is the audit trail.
+Branching:: Release branches carry their own decisions.
+A vulnerability can be `not affected` on one branch and `affected` on another, and both are recorded (see xref:guides/organize-files-across-branches.adoc[Organize files across branches]).
+Availability:: The decisions are wherever the code is: on every clone, in every fork, readable offline, with no service dependency and no account.
+
+== No platform between you and your data
+
+Vulnlog is a plain-text format plus a CLI that transforms it.
+There is no server, no database, and no vendor holding the history.
+For an open source project this means contributors and downstream users can read every decision directly on GitHub; for a company it means the audit trail survives any tooling change.
+
+== Consequences
+
+* Treat the Vulnlog file like code: change it through pull requests, protect it with the same branch rules.
+* Commit messages matter; they become part of the decision history.
+* Generated artifacts (suppression files, reports) are disposable and reproducible; the YAML file is the single source of truth.
+
+== Related
+
+* xref:concepts/data-model.adoc[The Vulnlog data model] describes what exactly is recorded.
+* xref:reference/file-format.adoc[The Vulnlog file format] defines the file's contract.
+* xref:guides/triage-a-finding.adoc[Triage a new scanner finding] puts the model to work.
