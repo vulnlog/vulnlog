@@ -297,23 +297,23 @@
                 <script id="cli-example-src" type="text/plain">
                     # Initialize a new Vulnlog file
                     $ vulnlog init --organization "Acme" --name "Web App" --author "Security Team" -o vulnlog.yaml
-                    Vulnlog file created at: vulnlog.yaml
+                    Created: vulnlog.yaml
 
                     # Add a vulnerability finding from the command line
                     $ vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
-                    Added to vulnlog.yaml: CVE-2026-1234
+                    Added: CVE-2026-1234 to vulnlog.yaml
 
                     # Validate your Vulnlog files
                     $ vulnlog validate vulnlog.yaml
-                    Validation OK
+                    Validated: vulnlog.yaml
 
                     # Generate suppression files for your scanners
                     $ vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
-                    Suppression file created at: .trivyignore.yaml
+                    Wrote: .trivyignore.yaml
 
                     # Generate an HTML vulnerability report
                     $ vulnlog report vulnlog.yaml
-                    Report written to: vulnlog-report.html
+                    Wrote: vulnlog-report.html
                 </script>
             </div>
         </div>
