@@ -1,0 +1,39 @@
+= What is Vulnlog?
+
+Vulnlog is a developer-oriented approach to software supply chain security.
+It pairs a YAML file format with a CLI and a Gradle plugin that turn the file into software composition analysis (SCA) scanner ignore files and vulnerability reports.
+The CLI is designed to run in CI pipelines and on developer machines.
+
+image::vulnlog-overview.svg[alt="How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files"]
+
+Vulnlog is open source, hosted on https://github.com/vulnlog/vulnlog[GitHub] and licensed under Apache 2.0.
+Contributions, bug reports, and feature requests are welcome.
+
+== The workflow
+
+Vulnlog is designed around the SCA scanning process:
+
+1. An SCA scanner, for example xref:concepts/vulnlog-and-your-scanner.adoc#_cargo_audit[Cargo Audit], xref:concepts/vulnlog-and-your-scanner.adoc#_snyk[Snyk], or xref:concepts/vulnlog-and-your-scanner.adoc#_trivy[Trivy], scans the project and reports one or more vulnerabilities.
+2. An engineer analyses each report, decides whether it affects the project, and records the analysis, verdict, and next steps in the Vulnlog YAML file.
++
+.Vulnerability entry for CVE-2026-1234 that was reported by Trivy but does not affect the product.
+[source,yaml]
+----
+include::{examplesdir}/quickstart.vl.yaml[lines=16..25]
+----
+3. The Vulnlog CLI reads the YAML file, validates it, and generates xref:guides/generate-reports.adoc[reports], xref:concepts/vulnlog-and-your-scanner.adoc[suppression files], or both.
+
+== How it compares to scanner ignore files
+
+Scanner ignore files (`.trivyignore`, `.snyk`) and Vulnlog solve the same immediate problem: silencing findings that were reviewed.
+The difference is what survives the review.
+An ignore file keeps one line per finding and per scanner; the reasoning lives in a ticket, a chat thread, or nobody's memory.
+A Vulnlog file keeps the analysis, the verdict, and the resolution with the finding, generates the ignore file for every scanner from it, and leaves the history to git.
+
+xref:concepts/why-git.adoc[Why decisions live in git] covers the reasoning in full.
+
+== Next steps
+
+* xref:get-started/install.adoc[Install Vulnlog] and follow the xref:get-started/quickstart-triage.adoc[triage quickstart].
+* Learn xref:concepts/data-model.adoc[the Vulnlog data model].
+* Explore xref:reference/cli.adoc[the CLI reference].

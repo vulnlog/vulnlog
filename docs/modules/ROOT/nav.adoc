@@ -1,5 +1,6 @@
-* xref:index.adoc[Overview]
+* xref:index.adoc[Welcome]
 * Get started
+** xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?]
 ** xref:get-started/install.adoc[Install]
 ** xref:get-started/quickstart-triage.adoc[Quickstart: triage your first finding]
 ** xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release]
