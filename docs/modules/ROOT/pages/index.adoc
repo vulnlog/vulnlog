@@ -25,7 +25,7 @@ include::{examplesdir}/quickstart.vl.yaml[lines=16..25]
 
 == Next steps
 
-* xref:get-started/install.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
+* xref:get-started/install.adoc[Install Vulnlog] and run through the xref:get-started/quickstart-triage.adoc[triage quickstart]
 * Learn about the xref:reference/file-format.adoc[Vulnlog YAML format]
 * Explore the xref:reference/cli.adoc[CLI commands]
 * Plan the xref:guides/organize-files-across-branches.adoc[branching strategy] for single or multi-branch projects

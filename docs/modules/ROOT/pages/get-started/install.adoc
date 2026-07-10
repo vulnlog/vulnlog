@@ -57,7 +57,7 @@ Not all Vulnlog CLI commands support the same set of input (STDIN) and output (S
 Check the corresponding command documentations for more details.
 ====
 
-== Install Script
+== Install script
 
 A POSIX install script is attached to every release.
 It detects the current OS and architecture, downloads the matching native binary,
@@ -114,7 +114,7 @@ brew install vulnlog
 brew update && brew upgrade vulnlog
 ----
 
-== Native Binary
+== Native binary
 
 Standalone native binaries are built with GraalVM and require no Java runtime.
 They start instantly and are the recommended choice for local use.
@@ -130,12 +130,12 @@ vulnlog --version
 vulnlog version {vulnlog-version}
 ----
 
-== JVM Distribution
+== JVM distribution
 
 A platform-independent JVM distribution is also published on the https://github.com/vulnlog/vulnlog/releases[releases page].
 It requires Java 21 or later to be installed.
 
-== Build from Source
+== Build from source
 
 Clone the repository and build with Gradle:
 
@@ -147,6 +147,31 @@ cd vulnlog
 ----
 
 The resulting distribution is placed in `build/install/vulnlog`.
+
+== Gradle plugin
+
+For Gradle-based builds, the Vulnlog Gradle plugin runs Vulnlog as part of the build instead of as a separate binary:
+
+[source,kotlin,subs="attributes"]
+----
+plugins {
+    id("dev.vulnlog") version "{vulnlog-version}"
+}
+----
+
+The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the tasks and configuration.
+
+== Editor setup
+
+Vulnlog's JSON Schema is published on https://vulnlog.dev/schema/vulnlog-v1.json[vulnlog.dev].
+IDEs with YAML support can automatically provide validation and autocompletion for `.vl.yaml` and `vulnlog.yaml` files.
+
+To reference the schema explicitly, add the following as the first line of the Vulnlog file:
+
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+----
 
 // Other ideas:
 // - Snap package (Linux)

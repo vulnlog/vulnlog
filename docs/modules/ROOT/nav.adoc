@@ -1,8 +1,9 @@
 * xref:index.adoc[Overview]
 * Get started
 ** xref:get-started/install.adoc[Install]
-** xref:quickstart.adoc[Quickstart]
+** xref:get-started/quickstart-triage.adoc[Quickstart: triage your first finding]
 * Guides
+** xref:guides/triage-a-finding.adoc[Triage a new scanner finding]
 ** xref:guides/generate-reports.adoc[Generate reports]
 ** xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines]
 ** xref:guides/organize-files-across-branches.adoc[Organize files across branches]

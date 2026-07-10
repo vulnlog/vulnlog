@@ -101,7 +101,7 @@ vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
 ----
 . Add the releases for that branch to the `releases` section.
 . Recreate the vulnerability entries from the old `.vl.kts` file, translating them to the YAML format.
-Refer to the xref:quickstart.adoc[Quickstart] for common workflow examples.
+Refer to xref:guides/triage-a-finding.adoc[Triage a new scanner finding] for the recording patterns.
 . Validate the new file:
 +
 [source,bash]
