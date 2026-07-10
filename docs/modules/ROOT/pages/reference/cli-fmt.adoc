@@ -1,9 +1,10 @@
 = vulnlog fmt
+:page-aliases: cli-fmt.adoc
 
 Formats one or more Vulnlog files to the canonical style, keeping files consistent and reviewable across branches.
 
 NOTE: YAML comments are not part of the format and are removed on writing.
-The xref:cli-add.adoc[modify add] and xref:cli-copy.adoc[modify copy] commands write the same canonical style to preserve the canonical Vulnlog YAML format.
+The xref:reference/cli-add.adoc[modify add] and xref:reference/cli-copy.adoc[modify copy] commands write the same canonical style to preserve the canonical Vulnlog YAML format.
 
 [source]
 ----

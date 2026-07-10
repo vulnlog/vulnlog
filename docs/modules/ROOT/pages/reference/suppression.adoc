@@ -1,4 +1,5 @@
 = Suppression
+:page-aliases: suppression.adoc
 
 Suppression directives exclude specific vulnerability findings from a scanner's output.
 The Vulnlog CLI generates scanner-specific suppression files from the Vulnlog file, keeping the triage rationale alongside the suppression rules.
@@ -18,7 +19,7 @@ They exist only temporarily during the pipeline execution and are not committed 
 This approach avoids keeping generated files in the repository and ensures suppressions are always in sync with the Vulnlog file.
 
 Both approaches can be combined -- for example, using static suppression for local development and dynamic generation in CI.
-See xref:ci-integration.adoc[CI/CD Integration] for pipeline examples using dynamic generation.
+See xref:guides/run-in-ci.adoc[CI/CD Integration] for pipeline examples using dynamic generation.
 
 == Suppression Rules
 

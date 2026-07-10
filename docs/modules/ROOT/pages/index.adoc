@@ -13,7 +13,7 @@ Contributions, bug reports, and feature requests are welcome.
 
 Vulnlog is designed around the SCA scanning process:
 
-1. An SCA scanner -- for example, xref:overview-suppress.adoc#_cargo_audit[Cargo Audit], xref:overview-suppress.adoc#_snyk[Snyk], or xref:overview-suppress.adoc#_trivy[Trivy] -- scans the project and reports one or more vulnerabilities.
+1. An SCA scanner -- for example, xref:concepts/vulnlog-and-your-scanner.adoc#_cargo_audit[Cargo Audit], xref:concepts/vulnlog-and-your-scanner.adoc#_snyk[Snyk], or xref:concepts/vulnlog-and-your-scanner.adoc#_trivy[Trivy] -- scans the project and reports one or more vulnerabilities.
 2. An engineer analyses each report, decides whether it affects the project, and records the analysis, verdict, and next steps in the Vulnlog YAML file.
 +
 .Vulnerability entry for CVE-2026-1234 that was reported by Trivy but does not affect the product.
@@ -21,11 +21,11 @@ Vulnlog is designed around the SCA scanning process:
 ----
 include::{examplesdir}/quickstart.vl.yaml[lines=16..25]
 ----
-3. The Vulnlog CLI reads the YAML file, validates it, and generates xref:overview-report.adoc[reports], xref:overview-suppress.adoc[suppression files], or both.
+3. The Vulnlog CLI reads the YAML file, validates it, and generates xref:guides/generate-reports.adoc[reports], xref:concepts/vulnlog-and-your-scanner.adoc[suppression files], or both.
 
 == Next steps
 
-* xref:installation.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
-* Learn about the xref:format-overview.adoc[Vulnlog YAML format]
-* Explore the xref:cli-overview.adoc[CLI commands]
-* Plan the xref:branching-strategy.adoc[branching strategy] for single or multi-branch projects
+* xref:get-started/install.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
+* Learn about the xref:reference/file-format.adoc[Vulnlog YAML format]
+* Explore the xref:reference/cli.adoc[CLI commands]
+* Plan the xref:guides/organize-files-across-branches.adoc[branching strategy] for single or multi-branch projects

@@ -1,4 +1,5 @@
 = vulnlog init
+:page-aliases: cli-init.adoc
 
 Scaffolds a minimal Vulnlog file containing only the required sections (`schemaVersion`, `project`, `releases`, `vulnerabilities`).
 

@@ -1,4 +1,5 @@
-= Verdicts and Justifications
+= Verdicts and justifications
+:page-aliases: verdicts-and-justifications.adoc
 
 The term "verdict" is used deliberately to distinguish from automated scanner statuses -- it reflects a deliberate human judgment about the impact of a vulnerability.
 

@@ -1,4 +1,5 @@
-= Gradle Plugin
+= Gradle plugin
+:page-aliases: gradle-plugin.adoc
 
 The Vulnlog Gradle plugin integrates Vulnlog commands into your Gradle build.
 
@@ -45,7 +46,7 @@ All tasks are registered in the `vulnlog` task group.
 === `vulnlogInit`
 
 Scaffolds a minimal Vulnlog file.
-See xref:cli-init.adoc[`vulnlog init`] for the generated structure.
+See xref:reference/cli-init.adoc[`vulnlog init`] for the generated structure.
 
 `vulnlogInit` is configured via project properties (`-P`) since it is a one-shot bootstrapping command.
 
@@ -83,7 +84,7 @@ See xref:cli-init.adoc[`vulnlog init`] for the generated structure.
 === `vulnlogValidate`
 
 Validates the configured Vulnlog files.
-See xref:cli-validate.adoc[`vulnlog validate`] for validation rules.
+See xref:reference/cli-validate.adoc[`vulnlog validate`] for validation rules.
 
 [source,kotlin]
 ----
@@ -114,7 +115,7 @@ The task uses Gradle's up-to-date checking via `@InputFiles` and `@Input`, so it
 === `vulnlogFormat`
 
 Formats the configured Vulnlog files to the canonical style, rewriting them in place.
-See xref:cli-fmt.adoc[`vulnlog fmt`] for the formatting rules.
+See xref:reference/cli-fmt.adoc[`vulnlog fmt`] for the formatting rules.
 
 [source,kotlin]
 ----
@@ -144,7 +145,7 @@ vulnlog {
 === `vulnlogSuppress`
 
 Generates suppression files for downstream scanners.
-See xref:cli-suppress.adoc[`vulnlog suppress`] for supported reporters.
+See xref:reference/cli-suppress.adoc[`vulnlog suppress`] for supported reporters.
 
 [source,kotlin]
 ----
@@ -188,7 +189,7 @@ vulnlog {
 === `vulnlogReport`
 
 Generates an HTML report from the configured Vulnlog file.
-See xref:cli-report.adoc[`vulnlog report`] for details.
+See xref:reference/cli-report.adoc[`vulnlog report`] for details.
 
 [source,kotlin]
 ----
@@ -232,7 +233,7 @@ vulnlog {
 === `VulnlogCopyTask`
 
 Copies vulnerability entries from a source Vulnlog file into one or more target files.
-See xref:cli-copy.adoc[`vulnlog modify copy`] for the underlying behavior, including merge semantics for entries that already exist in a target.
+See xref:reference/cli-copy.adoc[`vulnlog modify copy`] for the underlying behavior, including merge semantics for entries that already exist in a target.
 
 The task type is provided but no task is registered by default, since the source, targets, and IDs to copy depend on the project.
 Register a task in your build script for each propagation you want to perform:

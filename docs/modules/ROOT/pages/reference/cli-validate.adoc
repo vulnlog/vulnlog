@@ -1,4 +1,5 @@
 = vulnlog validate
+:page-aliases: cli-validate.adoc
 
 Validates one or more Vulnlog files against the schema and all validation rules.
 

@@ -1,4 +1,5 @@
-= CLI Overview
+= The Vulnlog CLI
+:page-aliases: cli-overview.adoc
 
 [source]
 ----
@@ -83,25 +84,25 @@ Available on `report` and `suppress` commands.
 |===
 | Command | Description
 
-| xref:cli-init.adoc[init]
+| xref:reference/cli-init.adoc[init]
 | Scaffold a new Vulnlog file.
 
-| xref:cli-validate.adoc[validate]
+| xref:reference/cli-validate.adoc[validate]
 | Validate files against the schema and all validation rules.
 
-| xref:cli-fmt.adoc[fmt]
+| xref:reference/cli-fmt.adoc[fmt]
 | Format files to the canonical style.
 
-| xref:cli-suppress.adoc[suppress]
+| xref:reference/cli-suppress.adoc[suppress]
 | Generate scanner-specific suppression files.
 
-| xref:cli-report.adoc[report]
+| xref:reference/cli-report.adoc[report]
 | Generate an HTML vulnerability report.
 
-| xref:cli-add.adoc[modify add]
+| xref:reference/cli-add.adoc[modify add]
 | Add a new vulnerability entry to one or more Vulnlog files.
 
-| xref:cli-copy.adoc[modify copy]
+| xref:reference/cli-copy.adoc[modify copy]
 | Copy vulnerability entries from one Vulnlog file into one or more others.
 |===
 

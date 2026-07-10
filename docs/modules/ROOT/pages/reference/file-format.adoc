@@ -1,4 +1,5 @@
-= Vulnlog YAML Format
+= The Vulnlog file format
+:page-aliases: format-overview.adoc
 
 A Vulnlog file is a YAML-based format for tracking, analyzing, and managing software vulnerabilities reported by one or multiple SCA scanners.
 Each Vulnlog file is scoped to a single release branch.
@@ -19,7 +20,7 @@ Changes are tracked through Git history rather than in-file audit trails.
 
 Vulnlog files use the naming convention `<project-name>.vl.yaml`.
 The `.vl.` infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use `vulnlog.yaml` (see also xref:branching-strategy.adoc[]).
+Simple projects may use `vulnlog.yaml` (see also xref:guides/organize-files-across-branches.adoc[]).
 
 The file location within the repository is not prescribed.
 The CLI requires an explicit file path as a positional argument; it does not search for files automatically.
@@ -35,11 +36,11 @@ To enable IDE validation and autocompletion, add a schema reference comment as t
 
 The path can point to a local bundled schema file or to the published JSON schema URL.
 The header is optional: it only enables editor support and has no effect on how the CLI reads a file.
-A file-writing command keeps the header when the file already has one and leaves it out otherwise; only xref:cli-init.adoc[init] adds it to a newly created file.
+A file-writing command keeps the header when the file already has one and leaves it out otherwise; only xref:reference/cli-init.adoc[init] adds it to a newly created file.
 
 == Canonical Formatting
 
-Vulnlog files are canonical: every file-writing command (xref:cli-fmt.adoc[fmt], xref:cli-add.adoc[modify add], xref:cli-copy.adoc[modify copy], xref:cli-init.adoc[init]) rewrites the whole file in the same style, derived only from the file's data.
+Vulnlog files are canonical: every file-writing command (xref:reference/cli-fmt.adoc[fmt], xref:reference/cli-add.adoc[modify add], xref:reference/cli-copy.adoc[modify copy], xref:reference/cli-init.adoc[init]) rewrites the whole file in the same style, derived only from the file's data.
 Any valid YAML layout is accepted as input, which makes the commands safe for automation: a file written by hand or by another tool is normalized on the next write.
 
 YAML comments are not part of the format and are not preserved; commands warn when they drop comments.
@@ -91,4 +92,4 @@ This ensures unambiguous lookup by any identifier.
 == Branching Strategy
 
 For projects with a single release line, a single `vulnlog.yaml` file is sufficient.
-For projects maintaining multiple release branches in parallel, see the xref:branching-strategy.adoc[Branching Strategy] guide for detailed options and trade-offs.
+For projects maintaining multiple release branches in parallel, see the xref:guides/organize-files-across-branches.adoc[Branching Strategy] guide for detailed options and trade-offs.

@@ -1,4 +1,5 @@
-= Branching Strategy
+= Organize files across branches
+:page-aliases: branching-strategy.adoc
 
 The organization of Vulnlog files depends on how many release branches a project maintains.
 Vulnlog supports three strategies: **single-file**, **multi-file**, and **per-branch**.
@@ -84,7 +85,7 @@ v1   o---o
 All Vulnlog files live on the main branch.
 Changes to vulnerability analysis for any release branch are committed there.
 
-When the same vulnerability needs to be tracked in multiple files, the xref:cli-copy.adoc[`vulnlog modify copy`] command propagates an entry from one file to others without manual duplication.
+When the same vulnerability needs to be tracked in multiple files, the xref:reference/cli-copy.adoc[`vulnlog modify copy`] command propagates an entry from one file to others without manual duplication.
 
 Advantages::
 * All vulnerability analysis lives in a single Git branch -- updating multiple files requires only one commit with no cherry-picking.
@@ -125,7 +126,7 @@ Disadvantages::
 
 === Git Worktrees
 
-When using the xref:branching-strategy.adoc#per-branch[per-branch] strategy, https://git-scm.com/docs/git-worktree[Git worktrees] simplify working with multiple branches simultaneously.
+When using the xref:guides/organize-files-across-branches.adoc#per-branch[per-branch] strategy, https://git-scm.com/docs/git-worktree[Git worktrees] simplify working with multiple branches simultaneously.
 Instead of switching branches, worktrees allow multiple branches to be checked out in separate directories:
 
 [source,bash]

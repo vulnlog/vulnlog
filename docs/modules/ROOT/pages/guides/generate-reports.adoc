@@ -1,11 +1,12 @@
-= Vulnlog Reporting
+= Generate reports
+:page-aliases: overview-report.adoc
 
 The Vulnlog CLI reads the Vulnlog YAML file and generates a shareable vulnerability report.
 
 Triage decisions live next to the code in the Vulnlog file, but the people who need to see them -- peers, auditors, customers, downstream teams -- usually do not read the YAML.
 The report turns the same source of truth into a single document that summarizes every tracked vulnerability, its triage verdict, and the release that ships the fix.
 
-Vulnlog generates the report from the same YAML used to generate the xref:overview-suppress.adoc[suppression files], so the suppressed findings and the published report can never drift apart.
+Vulnlog generates the report from the same YAML used to generate the xref:concepts/vulnlog-and-your-scanner.adoc[suppression files], so the suppressed findings and the published report can never drift apart.
 
 image::vulnlog-reporting.svg[alt="Vulnlog workflow: the engineer maintains vulnlog.yaml, the Vulnlog CLI generates a shareable vulnerability report, and peers and customers consume it"]
 
@@ -16,7 +17,7 @@ image::vulnlog-reporting.svg[alt="Vulnlog workflow: the engineer maintains vulnl
 
 Vulnlog renders the report as a single, self-contained HTML document. It is fully offline and print-friendly.
 
-The document contains the project metadata, summary (totals, breakdown by state and severity), and an entry table grouped by xref:vulnerability-states.adoc[state] and severity.
+The document contains the project metadata, summary (totals, breakdown by state and severity), and an entry table grouped by xref:concepts/vulnerability-states.adoc[state] and severity.
 The same input file can be rendered from the project maintainer's perspective (full backlog across releases) or release-scoped via the `--release` flag for an audience that only cares about a published release.
 
 .Example Vulnlog HTML Report
@@ -29,5 +30,5 @@ image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
 
 == See also
 
-- xref:vulnerability-states.adoc[Vulnerability States]
-- xref:cli-report.adoc[CLI Report Command]
+- xref:concepts/vulnerability-states.adoc[Vulnerability States]
+- xref:reference/cli-report.adoc[CLI Report Command]

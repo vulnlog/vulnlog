@@ -1,4 +1,5 @@
 = vulnlog modify add
+:page-aliases: cli-add.adoc
 
 Adds a new vulnerability entry to one or more Vulnlog files, or prints the entry to STDOUT when no file is given.
 This records a finding from the command line instead of editing the YAML by hand.
@@ -59,11 +60,11 @@ The positional arguments are the target files; repeat them to add the same entry
 When no file is given, the entry is written to STDOUT instead, ready to paste under a `vulnerabilities` list.
 A new entry carries no `verdict` unless you pass `--verdict`, so it starts under investigation by default.
 
-When writing to a file, the whole file is rewritten in the canonical style, exactly as xref:cli-fmt.adoc[fmt] would format it.
+When writing to a file, the whole file is rewritten in the canonical style, exactly as xref:reference/cli-fmt.adoc[fmt] would format it.
 Any valid YAML layout is accepted as input.
 YAML comments are not preserved; the command warns when it drops them.
 
-The `--verdict`, `--severity`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:cli-validate.adoc[validate].
+The `--verdict`, `--severity`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:reference/cli-validate.adoc[validate].
 
 If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated.
 The update favours adding over replacing:

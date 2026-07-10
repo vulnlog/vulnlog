@@ -1,4 +1,5 @@
 = vulnlog suppress
+:page-aliases: cli-suppress.adoc
 
 Generates suppression files for SCA scanners.
 These files contain vulnerability identifiers that instruct the scanner to exclude the corresponding findings.
@@ -126,5 +127,5 @@ include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
 
 == See also
 
-- xref:overview-suppress.adoc[Vulnlog Suppression]
-- xref:suppression.adoc[Suppression Format and Rules]
+- xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog Suppression]
+- xref:reference/suppression.adoc[Suppression Format and Rules]

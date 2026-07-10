@@ -1,4 +1,5 @@
-= Vulnlog Suppression
+= Vulnlog and your scanner
+:page-aliases: overview-suppress.adoc
 
 The Vulnlog CLI reads the Vulnlog YAML file and generates suppression files (also called ignore files) for SCA scanners.
 
@@ -60,5 +61,5 @@ include::{examplesdir}/suppress/Generic Suppression Example.json[]
 
 == See also
 
-- xref:suppression.adoc[Suppression Format and Rules]
-- xref:cli-suppress.adoc[CLI Suppress Command]
+- xref:reference/suppression.adoc[Suppression Format and Rules]
+- xref:reference/cli-suppress.adoc[CLI Suppress Command]

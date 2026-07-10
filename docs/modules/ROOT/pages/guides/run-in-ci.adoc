@@ -1,14 +1,15 @@
-= CI/CD Integration
+= Run Vulnlog in CI pipelines
+:page-aliases: ci-integration.adoc
 
 The Vulnlog CLI runs on developer machines and in CI pipelines.
 
 A common pattern is dynamic suppression: generate suppression files in the CI pipeline just before the scanner runs, so they are always in sync with the Vulnlog file and never need to be committed.
-See xref:suppression.adoc#_static_and_dynamic_suppression[Static and Dynamic Suppression] for more details on both approaches.
+See xref:reference/suppression.adoc#_static_and_dynamic_suppression[Static and Dynamic Suppression] for more details on both approaches.
 
 == Gradle
 
 For Gradle-based builds, the Vulnlog Gradle plugin wires `validate`, `suppress`, and `init` into your build.
-See xref:gradle-plugin.adoc[Gradle Plugin] for details.
+See xref:reference/gradle-plugin.adoc[Gradle Plugin] for details.
 
 == GitHub Actions
 

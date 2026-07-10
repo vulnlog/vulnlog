@@ -1,4 +1,5 @@
 = vulnlog modify copy
+:page-aliases: cli-copy.adoc
 
 Copies one or more vulnerability entries from a source file into one or more target files.
 This propagates an existing analysis across multiple branch files.
@@ -20,7 +21,7 @@ The first positional argument is the source file.
 All subsequent positional arguments are target files.
 At least one `--vuln-id` is required; repeat the flag to copy multiple entries in one invocation.
 
-Target files are rewritten in the canonical style, exactly as xref:cli-fmt.adoc[fmt] would format them, so a later `fmt` is a no-op.
+Target files are rewritten in the canonical style, exactly as xref:reference/cli-fmt.adoc[fmt] would format them, so a later `fmt` is a no-op.
 Any valid YAML layout is accepted as input.
 YAML comments are not preserved; the command warns when it drops them.
 

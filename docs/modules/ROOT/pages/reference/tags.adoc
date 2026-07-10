@@ -1,4 +1,5 @@
-= Tags and Filtering
+= Tags
+:page-aliases: tags.adoc
 
 Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerability entries.
 They can represent customer-facing deliverables (`binary`, `container`, `sdk`), internal usage contexts (`build-dep`, `test-infra`), or any other categorization.

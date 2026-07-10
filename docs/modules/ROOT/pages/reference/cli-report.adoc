@@ -1,4 +1,5 @@
 = vulnlog report
+:page-aliases: cli-report.adoc
 
 Generates an HTML report from one or more Vulnlog files.
 
@@ -77,5 +78,5 @@ image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
 
 == See also
 
-- xref:overview-report.adoc[Vulnlog Reporting]
-- xref:vulnerability-states.adoc[Vulnerability States]
+- xref:guides/generate-reports.adoc[Vulnlog Reporting]
+- xref:concepts/vulnerability-states.adoc[Vulnerability States]

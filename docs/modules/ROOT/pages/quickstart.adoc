@@ -13,7 +13,7 @@ vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
 For simple projects, `vulnlog.yaml` is the recommended file name.
 For multiple Vulnlog files, use `<project-name>.vl.yaml`.
 
-See also xref:branching-strategy.adoc[]
+See also xref:guides/organize-files-across-branches.adoc[]
 ====
 
 == A Minimal Example
@@ -244,6 +244,6 @@ When a scanner reports a finding that does not actually apply, record it as `not
 
 == Next Steps
 
-* Learn about the xref:format-overview.adoc[Vulnlog YAML format]
-* Explore the xref:cli-overview.adoc[CLI commands]
-* Set up xref:ci-integration.adoc[CI/CD integration]
+* Learn about the xref:reference/file-format.adoc[Vulnlog YAML format]
+* Explore the xref:reference/cli.adoc[CLI commands]
+* Set up xref:guides/run-in-ci.adoc[CI/CD integration]

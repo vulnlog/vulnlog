@@ -1,4 +1,5 @@
-= Project and Releases
+= Project and releases
+:page-aliases: project-and-releases.adoc
 
 == `project`
 
@@ -73,7 +74,7 @@ A release artifact identified by its https://github.com/package-url/purl-spec[Pa
 | `tags`
 | Array of String
 | No
-| Tags associated with this purl. Must reference tags defined in the `tags` section. See xref:tags.adoc[Tags and Filtering].
+| Tags associated with this purl. Must reference tags defined in the `tags` section. See xref:reference/tags.adoc[Tags and Filtering].
 |===
 
 === Package URL Examples

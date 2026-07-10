@@ -1,4 +1,5 @@
 = Vulnerabilities
+:page-aliases: vulnerabilities.adoc
 
 Each entry in the `vulnerabilities` section represents a single vulnerability finding and the human verdict about it.
 
@@ -69,17 +70,17 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `severity`
 | String (enum)
 | Conditional
-| Severity assessment. Required when `verdict` is `affected` or `risk acceptable`. See xref:verdicts-and-justifications.adoc#severity-values[Severity Values].
+| Severity assessment. Required when `verdict` is `affected` or `risk acceptable`. See xref:reference/verdicts-and-justifications.adoc#severity-values[Severity Values].
 
 | `verdict`
 | String (enum)
 | No
-| The human triage decision. See xref:verdicts-and-justifications.adoc[Verdicts and Justifications]. Absence indicates under investigation.
+| The human triage decision. See xref:reference/verdicts-and-justifications.adoc[Verdicts and Justifications]. Absence indicates under investigation.
 
 | `justification`
 | String (enum)
 | Conditional
-| Required when `verdict` is `not affected`. See xref:verdicts-and-justifications.adoc#justification-values[Justification Values].
+| Required when `verdict` is `not affected`. See xref:reference/verdicts-and-justifications.adoc#justification-values[Justification Values].
 
 | `resolution`
 | <<resolution-entry,Resolution entry>>
@@ -151,7 +152,7 @@ A record indicating that a specific scanner or source reported the finding.
 | `reporter`
 | String (enum)
 | Yes
-| The scanner or source type. See xref:suppression.adoc#supported-reporters[Supported Reporters].
+| The scanner or source type. See xref:reference/suppression.adoc#supported-reporters[Supported Reporters].
 
 | `at`
 | String (date, `YYYY-MM-DD`)

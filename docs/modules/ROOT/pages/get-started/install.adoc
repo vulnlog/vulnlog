@@ -1,4 +1,5 @@
-= Installation
+= Install Vulnlog
+:page-aliases: installation.adoc
 
 Vulnlog can be installed and used in several ways.
 

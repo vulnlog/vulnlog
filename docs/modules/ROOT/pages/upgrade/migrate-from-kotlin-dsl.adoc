@@ -1,4 +1,5 @@
-= Migration Guide: Kotlin DSL to YAML
+= Migrate from the Kotlin DSL
+:page-aliases: migration-guide.adoc
 
 Vulnlog 0.10.0 replaced the Kotlin custom scripting DSL (`.vl.kts` files) with a YAML-based format (`vulnlog.yaml` files).
 This guide explains what changed, why, and how to migrate.
@@ -55,7 +56,7 @@ The YAML-based format addresses these issues:
 == From Single File to One File Per Branch
 
 The Vulnlog Kotlin DSL used a single file on the main branch to track all release branches.
-The YAML format uses one file per release branch (see xref:branching-strategy.adoc[Branching Strategy] for the available strategies).
+The YAML format uses one file per release branch (see xref:guides/organize-files-across-branches.adoc[Branching Strategy] for the available strategies).
 
 This is the most significant workflow change.
 
@@ -84,14 +85,14 @@ When the same vulnerability appears on multiple branches with the same verdict, 
 The duplicated parts are primarily the findings (CVE ID, packages, reporter) -- the same kind of duplication when each branch has its own dependency- or lock-files with slightly different versions.
 The analysis and resolution may legitimately differ per branch, which is where separate files bring their value in.
 
-The xref:cli-copy.adoc[`vulnlog modify copy`] command reduces the effort of propagating identical entries across files to a one-liner.
+The xref:reference/cli-copy.adoc[`vulnlog modify copy`] command reduces the effort of propagating identical entries across files to a one-liner.
 
 == Migration Steps
 
 There is no automated migration tool to convert `.vl.kts` files to `vulnlog.yaml` format.
 Entries must be recreated manually.
 
-. Install Vulnlog 0.10.0 or later (see xref:installation.adoc[Installation]).
+. Install Vulnlog 0.10.0 or later (see xref:get-started/install.adoc[Installation]).
 . For each release branch, create a new Vulnlog file:
 +
 [source,bash]
