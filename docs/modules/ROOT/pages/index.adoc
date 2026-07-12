@@ -1,31 +1,27 @@
-= Vulnlog Overview
+= Vulnlog
 
-Vulnlog is a developer-oriented approach to software supply chain security.
-It pairs a YAML file format with a CLI that turns the file into software composition analysis (SCA) scanner ignore files and vulnerability reports.
-The CLI is designed to run in CI pipelines and on developer machines.
+Vulnlog records your team's vulnerability triage decisions in a git-tracked YAML file and turns them into scanner suppression files and shareable reports.
+A decision is recorded once: the scanner stops flagging it, the report explains it, and git remembers who made it and when.
 
-image::vulnlog-overview.svg[alt="How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files"]
+New to Vulnlog?
+Start with xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?], then xref:get-started/install.adoc[install] the CLI.
 
-Vulnlog is open source, hosted on https://github.com/vulnlog/vulnlog[GitHub] and licensed under Apache 2.0.
-Contributions, bug reports, and feature requests are welcome.
+== Find your path
 
-== Vulnlog Workflow
+Your scanner flagged a finding::
+Record the decision and unblock the build: xref:get-started/quickstart-triage.adoc[Quickstart: triage your first finding].
 
-Vulnlog is designed around the SCA scanning process:
+You prepare the next release::
+See which vulnerabilities affect a shipped release and which updates the next release must carry: xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release].
 
-1. An SCA scanner -- for example, xref:overview-suppress.adoc#_cargo_audit[Cargo Audit], xref:overview-suppress.adoc#_snyk[Snyk], or xref:overview-suppress.adoc#_trivy[Trivy] -- scans the project and reports one or more vulnerabilities.
-2. An engineer analyses each report, decides whether it affects the project, and records the analysis, verdict, and next steps in the Vulnlog YAML file.
-+
-.Vulnerability entry for CVE-2026-1234 that was reported by Trivy but does not affect the product.
-[source,yaml]
-----
-include::{examplesdir}/quickstart.vl.yaml[lines=16..25]
-----
-3. The Vulnlog CLI reads the YAML file, validates it, and generates xref:overview-report.adoc[reports], xref:overview-suppress.adoc[suppression files], or both.
+You need the impact picture::
+Read the report and state how the project is affected, without touching YAML or a build: xref:get-started/quickstart-report.adoc[Quickstart: read the impact report].
 
-== Next steps
+Someone asks about a vulnerability::
+Answer a customer or user from the recorded decision instead of re-analysing: xref:get-started/quickstart-inquiry.adoc[Quickstart: answer a vulnerability inquiry].
 
-* xref:installation.adoc[Install Vulnlog] and run through the xref:quickstart.adoc[Quickstart]
-* Learn about the xref:format-overview.adoc[Vulnlog YAML format]
-* Explore the xref:cli-overview.adoc[CLI commands]
-* Plan the xref:branching-strategy.adoc[branching strategy] for single or multi-branch projects
+== Returning readers
+
+* Reference: xref:reference/file-format.adoc[The Vulnlog file format], xref:reference/cli.adoc[the CLI], and xref:reference/gradle-plugin.adoc[the Gradle plugin].
+* Concepts: xref:concepts/why-git.adoc[why decisions live in git], xref:concepts/data-model.adoc[the data model], and xref:concepts/vulnerability-states.adoc[vulnerability states].
+* Stuck? Ask in the https://github.com/vulnlog/vulnlog/discussions[GitHub discussions].

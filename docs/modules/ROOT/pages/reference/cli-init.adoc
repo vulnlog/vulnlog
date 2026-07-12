@@ -1,0 +1,44 @@
+= vulnlog init
+:page-aliases: cli-init.adoc
+
+Scaffolds a minimal Vulnlog file containing only the required sections (`schemaVersion`, `project`, `releases`, `vulnerabilities`).
+
+[source]
+----
+vulnlog init [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <path>`
+| Output path for the generated file. Defaults to stdout.
+
+| `--name <text>`
+| Project name. Prompted if not provided.
+
+| `--organization <text>`
+| Organization name. Prompted if not provided.
+
+| `--author <text>`
+| Author name. Prompted if not provided.
+|===
+
+.Create a new Vulnlog project.
+[source]
+----
+vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: My App
+  author: Security Team
+
+releases: []
+
+vulnerabilities: []
+----

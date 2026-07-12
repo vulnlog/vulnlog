@@ -1,0 +1,131 @@
+= Quickstart: triage your first finding
+:page-aliases: quickstart.adoc
+
+In about ten minutes you create a Vulnlog file, record a scanner finding with your verdict, and generate a suppression file that silences the finding in your scanner.
+
+== Prerequisites
+
+* The Vulnlog CLI is installed (see xref:get-started/install.adoc[Install Vulnlog]).
+* A finding from an SCA scanner to work with.
+This quickstart uses a Trivy finding for `CVE-2026-1234` in the npm package `example-lib`; substitute your own scanner and finding as you go.
+
+== Step 1: Create the Vulnlog file
+
+Run `vulnlog init` in the root of your repository:
+
+[source,bash]
+----
+vulnlog init --organization "Acme Corp" --name "Acme Web App" --author "Acme Corp Security Team" -o vulnlog.yaml
+Created: vulnlog.yaml
+----
+
+The file contains the project metadata and empty `releases` and `vulnerabilities` sections.
+
+== Step 2: Record your release
+
+Vulnerability entries reference the releases they affect, so the file needs at least one release.
+Open `vulnlog.yaml` and replace `releases: []` with your current version:
+
+[source,yaml]
+----
+releases:
+  - id: 1.0.0
+    published_at: 2026-01-15
+----
+
+== Step 3: Record the finding
+
+Record what the scanner reported, before any analysis:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 \
+  --package "pkg:npm/example-lib@2.3.0" \
+  --reporter trivy \
+  --description "Remote code execution in example-lib"
+Added: CVE-2026-1234 to vulnlog.yaml
+----
+
+The entry starts without a verdict, so Vulnlog tracks it as under investigation.
+The report is dated with the current date.
+
+== Step 4: Record your verdict
+
+Analyse the finding, then record the outcome.
+In this example the vulnerable code path is not reachable, so the verdict is `not affected`:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 \
+  --analysis "The vulnerable code path is not reachable in our application because we only use the safe subset of the API." \
+  --verdict "not affected" \
+  --justification "vulnerable code not in execute path"
+Updated: CVE-2026-1234 in vulnlog.yaml
+----
+
+The entry in `vulnlog.yaml` now reads:
+
+[source,yaml]
+----
+  - id: CVE-2026-1234
+    description: Remote code execution in example-lib
+    releases: [1.0.0]
+    packages: ["pkg:npm/example-lib@2.3.0"]
+    reports:
+      - reporter: trivy
+        at: 2026-07-10
+    analysis: >-
+      The vulnerable code path is not reachable in our application because we only use the safe subset of the API.
+    verdict: not affected
+    justification: vulnerable code not in execute path
+----
+
+== Step 5: Validate the file
+
+[source,bash]
+----
+vulnlog validate vulnlog.yaml
+Validated: vulnlog.yaml
+----
+
+== Step 6: Generate the suppression file
+
+[source,bash]
+----
+vulnlog suppress vulnlog.yaml
+Wrote: /path/to/.trivyignore.yaml
+----
+
+Because the verdict is `not affected`, the finding is included automatically:
+
+[source,yaml]
+----
+---
+vulnerabilities:
+- id: CVE-2026-1234
+  statement: The vulnerable code path is not reachable in our application because
+    we only use the safe subset of the API.
+----
+
+Point Trivy at this file and the finding disappears from the scan, while your analysis stays in `vulnlog.yaml`.
+
+== Step 7: Commit the decision
+
+[source,bash]
+----
+git add vulnlog.yaml
+git commit -m "Triage CVE-2026-1234: not affected"
+----
+
+The git history is now the audit trail for the decision.
+
+== What you did
+
+You created a xref:reference/file-format.adoc[Vulnlog file] and recorded an entry for a scanner finding: first the facts (package, xref:reference/vulnerabilities.adoc#report-entry[report]), then your judgment (xref:reference/verdicts-and-justifications.adoc[verdict and justification]) with the analysis explaining it.
+From that single source Vulnlog generated a suppression file for the scanner, and the commit preserved the decision for everyone who asks later.
+
+== Next steps
+
+* xref:guides/triage-a-finding.adoc[Triage a new scanner finding] shows the recording patterns for every verdict, including affected and risk-accepted findings.
+* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] wires validation and suppression into your pipeline.
+* xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner] lists the supported scanners and suppression formats.

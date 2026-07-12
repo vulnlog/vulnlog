@@ -1,0 +1,33 @@
+= What Vulnlog leaves out
+
+The Vulnlog schema has no field for CVSS scores, CWE classifications, or advisory descriptions.
+This page explains why that is a design decision, not a gap.
+
+== The file stores only what only you know
+
+Everything a vulnerability database can tell you (CVSS vectors, CWE categories, advisory texts, affected version ranges) is public knowledge, keyed by the vulnerability identifier.
+Copying it into the Vulnlog file would duplicate data that ages badly: scores get revised, advisories get updated, and every copy in every repository quietly becomes stale.
+
+What no database can tell you is whether the vulnerability matters for your product.
+That analysis, the verdict, and the resolution exist only in your team's heads until they are written down.
+The Vulnlog file is reserved for exactly this: the identifier as the key, plus your decisions.
+
+Anything the identifier can look up stays out of the file; outputs that need such data can join it at generation time.
+
+== Severity is your assessment, not CVSS
+
+The `severity` field is deliberately not a CVSS score.
+It records how severely the vulnerability impacts your product in its context, which is the number your prioritization actually needs.
+A CVSS 9.8 finding in a code path your product never executes can be `not affected`; a CVSS 5.0 finding in your authentication flow can be `critical`.
+When the CVSS score influenced your reasoning, cite it in the `analysis` text.
+
+== What this means in practice
+
+* Entries stay short enough to review in a pull request.
+* Nothing in the file needs refreshing when an advisory changes; only your own decisions ever change.
+* The report shows your assessment of your product, not a repetition of what any scanner UI already shows.
+
+== Related
+
+* xref:concepts/data-model.adoc[The Vulnlog data model] describes what the file does record.
+* xref:reference/vulnerabilities.adoc[Vulnerabilities] defines the entry fields.

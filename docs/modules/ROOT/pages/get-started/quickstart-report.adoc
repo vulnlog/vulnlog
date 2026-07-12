@@ -1,0 +1,62 @@
+= Quickstart: read the impact report
+
+In about five minutes you read a Vulnlog report and can state how the project is affected, by what, and which release ships each fix.
+You do not edit any file and you do not need a development environment.
+
+== Prerequisites
+
+* A Vulnlog HTML report.
+Your team generates it with xref:reference/cli-report.adoc[`vulnlog report`], often as a CI artifact.
+The examples below describe the report generated from this file:
+
+.acme-web-app.vl.yaml
+[%collapsible]
+====
+[source,yaml]
+----
+include::{examplesdir}/acme-web-app.vl.yaml[]
+----
+====
+
+== Step 1: Open the report
+
+The report is a single HTML file that works offline and prints cleanly.
+
+.Example Vulnlog HTML Report
+image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
+
+The header shows the project, the generation timestamp, and any filter that was applied.
+Check the filter first: a report scoped to a release answers "what does a user of that release face?", an unfiltered report shows the maintainer's full backlog.
+
+== Step 2: Read the summary
+
+The summary counts entries by state and breaks open entries down by severity.
+The four states, defined in xref:concepts/vulnerability-states.adoc[Vulnerability states]:
+
+* *open*: triage confirmed impact and no fix has shipped. These entries are the live risk; their severity tells you how urgent.
+* *under investigation*: the team has not concluded triage. Impact is unknown, not zero.
+* *resolved*: a fix is recorded. The Fixed In column names the release that ships it.
+* *dismissed*: closed without remediation, either not affected or an accepted risk.
+
+== Step 3: Read the entry table
+
+For the example project, the unfiltered report reads:
+
+* `CVE-2025-9876` (critical) and `CVE-2026-7791` (high): *resolved*, fixed in 1.1.0 and 1.2.0.
+Whether your audience is protected depends on whether those releases shipped to them.
+* `CVE-2026-6685` (low): *dismissed* as an accepted risk, with the project lead's rationale in the details.
+* `CVE-2026-1234`: *dismissed* as not affected, with the justification and analysis explaining why.
+* `CVE-2026-8802`: *under investigation*.
+
+The Details cell carries the verdict, the justification, and the analysis text, so the reasoning behind every decision is in the report itself.
+
+== What you can now state
+
+"Acme Web App has no open vulnerability in the maintainer view; one finding is still under triage.
+Release 1.1.0 users face one high-severity issue whose fix ships with 1.2.0."
+Statements like these come directly from the summary, the state column, and Fixed In.
+
+== Next steps
+
+* Ask your team for a release-scoped report (`--release <id>`) when you need the exposure of a specific shipped release; the xref:get-started/quickstart-release.adoc[release quickstart] shows the difference.
+* xref:concepts/vulnerability-states.adoc[Vulnerability states] explains the state model behind the report.

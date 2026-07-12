@@ -1,0 +1,55 @@
+= vulnlog validate
+:page-aliases: cli-validate.adoc
+
+Validates one or more Vulnlog files against the schema and all validation rules.
+
+Parsing a Vulnlog is the first stage in the validation process.
+After the Vulnlog document is parsed successfully, its content is validated.
+
+The validation is either successful or reports one or multiple issues:
+
+[horizontal]
+Error:: Indicate structurally invalid or semantically broken files that would produce incorrect output.
+Warning:: File is technically valid, but something is likely wrong or will cause problems in the future.
+Info:: Informational findings that highlight potential improvements or non-critical observations.
+
+[source]
+----
+vulnlog validate <file...> [--strict]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--strict`
+| Treats warnings as errors.
+
+| `-`
+| Use to read from STDIN.
+
+|===
+
+.Validate multiple Vulnlog files.
+[source]
+----
+vulnlog validate web-app-1.vl.yaml web-app-2.vl.yaml
+Validated: web-app-1.vl.yaml
+Validated: web-app-2.vl.yaml
+----
+
+.Validate a Vulnlog file from STDIN.
+[source]
+----
+vulnlog validate - < vulnlog.yaml
+Validated: <stdin>
+----
+
+.Validation was not successful because an undefined tag was used.
+[source]
+----
+vulnlog validate vulnlog.yaml
+error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
+1 error
+  hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
+----

@@ -1,0 +1,131 @@
+= vulnlog suppress
+:page-aliases: cli-suppress.adoc
+
+Generates suppression files for SCA scanners.
+These files contain vulnerability identifiers that instruct the scanner to exclude the corresponding findings.
+
+[source]
+----
+vulnlog suppress <file> [flags]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <file>`
+| Output file path, or `-` to write to stdout.
+Requires a single reporter (either set `--reporter`, or the input must apply to only one reporter).
+Mutually exclusive with `--output-dir`.
+
+| `--output-dir <dir>`
+| Output directory for the suppression files. Defaults to the current directory.
+Mutually exclusive with `-o, --output`.
+
+| `--format <value>`
+| Output format: `auto` (default) or `generic`.
+`auto` uses each reporter's native suppression format and falls back to the generic Vulnlog JSON format for reporters that have none.
+`generic` forces the generic JSON format for every reporter, written as `<reporter>.generic.json`.
+The format only changes how findings are serialized, not which findings are included.
+
+| `--reporter <value>`
+| Filter on reporter.
+
+| `--release <text>`
+| Filter on release, include all releases up to and including that release.
+A vulnerability whose `resolution` targets a release outside this range is treated as still unresolved and a suppression entry is emitted, so scanners running against the deployed release stay quiet until the fix actually ships.
+
+| `--tag <text>`
+| Filter on tags. Use multiple times to filter on multiple tags.
+
+| `-`
+| Use as the file argument to read from STDIN.
+
+|===
+
+.Create suppression files for all reporters
+[source]
+----
+vulnlog suppress full-example.vl.yaml
+Wrote: /path/to/.snyk
+Wrote: /path/to/.trivyignore.yaml
+----
+
+.Create suppression for releases up to and including 8.1.1 and reporter snyk
+[source]
+----
+vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
+Wrote: /path/to/.snyk
+----
+
+.Write a single reporter's suppression file under a custom name
+[source]
+----
+vulnlog suppress full-example.vl.yaml --reporter trivy -o .myTrivy
+Wrote: /path/to/.myTrivy
+----
+
+.Force the generic JSON format instead of a reporter's native format
+[source]
+----
+vulnlog suppress full-example.vl.yaml --reporter trivy --format generic
+Wrote: /path/to/trivy.generic.json
+----
+
+.Suppress a not-yet-shipped fix when scanning the currently deployed release
+[source]
+----
+vulnlog suppress vulnlog.yaml --release 8.0.0 --reporter trivy
+----
+
+The CVE is fixed on the `dev` branch and the resolution targets the next, unpublished release.
+Until that release ships, the scanner running against the deployed `8.0.0` image keeps flagging the CVE.
+Generating the suppression file with `--release 8.0.0` includes the entry, so CI stays green.
+The vulnerability still appears as `open` in the HTML report under the same release.
+The pending-fix report needs an empty `suppress: { }` block on the relevant report so the entry is eligible for suppression.
+
+.Read from STDIN and write to STDOUT.
+[source]
+----
+vulnlog suppress --reporter trivy - -o - < full-example.vl.yaml > .myTrivy
+----
+
+NOTE: `-o` (including `-o -` for stdout) requires a single reporter.
+Set `--reporter` to pick one, or use an input that only applies to one reporter.
+To write all applicable suppression files in one go, use `--output-dir <dir>` instead.
+
+== Seeing what was skipped
+
+Not every entry ends up in a suppression file: a format only accepts matching identifier types (a CVE id cannot go into a `.snyk` file), resolved vulnerabilities are not suppressed, and expired suppressions are dropped.
+Run with `-v` to see each skipped entry and the reason:
+
+[source]
+----
+vulnlog -v suppress full-example.vl.yaml
+verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
+----
+
+== Output examples
+
+.Generated Snyk suppression file
+[source,yaml]
+----
+include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..5]
+----
+
+.Generated Trivy suppression file
+[source,yaml]
+----
+include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..4]
+----
+
+.Generated Cargo Audit suppression file
+[source,toml]
+----
+include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
+----
+
+== See also
+
+- xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog Suppression]
+- xref:reference/suppression.adoc[Suppression]

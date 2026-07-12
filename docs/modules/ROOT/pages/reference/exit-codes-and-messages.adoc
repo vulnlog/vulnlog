@@ -1,0 +1,55 @@
+= Exit codes and messages
+
+The CLI's exit codes and message formats are a documented, stable interface for scripts and CI pipelines.
+The Gradle plugin surfaces the same messages through the Gradle logger.
+
+== Exit codes
+
+[cols="1,2,3"]
+|===
+| Code | Name | Description
+
+| `0`
+| Success
+| Command completed successfully.
+
+| `1`
+| General error
+| Unexpected error (I/O failure, missing argument, file not found, unhandled exception).
+
+| `2`
+| Validation error
+| The Vulnlog file failed parsing or contains validation errors.
+
+| `3`
+| Formatting error
+| The Vulnlog file contains formatting errors.
+
+| `5`
+| Invalid flag value
+| A flag references an unknown entity or unsupported type, for example a release that is not defined in the file.
+|===
+
+Code `4` is reserved for a dedicated file-not-found error in a future release.
+
+== Output messages
+
+Stdout carries data, stderr carries conversation.
+Report content, suppression files, and formatted YAML go to stdout only when `-` is the target; every message addressed to a human goes to stderr.
+
+A command that worked prints one status line per action in the form `<Verb>: <path or subject>`, for example `Created: vulnlog.yaml` or `Wrote: reports/report.html`.
+
+Findings and errors print one per line in the form `<severity>: <file>[: <location>]: <message>` with the lowercase prefixes `error:`, `warning:`, and `info:`, followed by a summary line such as `2 errors, 1 warning`.
+When a next step is known, a `hint:` line follows the finding.
+The shape is stable, so `grep '^error:'` works in CI.
+
+== Color
+
+Color is on when the stream is a terminal and off when piped or redirected.
+Setting `NO_COLOR` to any value forces color off; `FORCE_COLOR` or `CLICOLOR_FORCE` forces it on, which is useful in CI systems that render ANSI, like GitHub Actions.
+Color never carries information on its own; stripped output reads identically.
+
+== Related
+
+* xref:reference/cli.adoc[The Vulnlog CLI] describes global flags and diagnostics verbosity.
+* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] uses the exit codes in pipeline steps.

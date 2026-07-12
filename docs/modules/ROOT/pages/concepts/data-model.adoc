@@ -1,0 +1,43 @@
+= The Vulnlog data model
+
+What exactly does a Vulnlog file record, and how do the pieces fit together?
+
+== One file per release line
+
+A Vulnlog file is scoped to a single line of releases.
+It lists the releases of that line in chronological order and every vulnerability entry references the releases it affects.
+When a release line reaches end of life, its file becomes a closed historical record; nothing needs archiving or pruning.
+
+== An entry separates facts, judgment, and action
+
+Each vulnerability entry keeps three kinds of information apart:
+
+Facts:: What was found and by whom: the identifier and its aliases, the affected packages, and one report per scanner that flagged it (the reporter and the date).
+Facts are append-only; a second scanner reporting the same vulnerability adds a report, not a new entry.
+Judgment:: What you decided: the `verdict` (`affected`, `not affected`, `risk acceptable`), the machine-readable `justification` for a `not affected` verdict, your own `severity` assessment, and the free-text `analysis` that carries the reasoning.
+An entry without a verdict is under investigation.
+Action:: What happened about it: the `resolution` records the release that ships the fix or update.
+It is independent of the verdict; even a `not affected` entry can record that the dependency was updated anyway.
+
+This separation is what the outputs rely on.
+Suppression files are driven by judgment (a `not affected` finding is noise and is silenced) and bounded by action (a resolved finding must not be silenced, the scanner should confirm the fix).
+Reports derive each entry's xref:concepts/vulnerability-states.adoc[state] from judgment and action.
+
+== Releases and tags scope everything
+
+Releases:: Entries reference releases, resolutions target releases, and the `--release` filter uses the chronological release list to answer questions per shipped release.
+Tags:: A team-defined taxonomy (`container`, `build-dep`, `sdk`) that scopes entries and release artifacts, and drives the `--tag` filter.
+
+== Design principles
+
+Compact and readable:: The format prioritizes ease of writing and reading over exhaustive detail.
+The common case, reporting a finding and recording a verdict, requires minimal boilerplate.
+IDE-supported:: A JSON Schema provides validation, autocompletion, and inline documentation in editors.
+Git-friendly:: The file is designed for version control.
+Changes are tracked through git history rather than in-file audit trails (see xref:concepts/why-git.adoc[Why decisions live in git]).
+
+== Related
+
+* xref:reference/file-format.adoc[The Vulnlog file format] defines every field of the model.
+* xref:concepts/vulnerability-states.adoc[Vulnerability states] shows how states derive from verdict and resolution.
+* xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out] explains why the model is deliberately small.

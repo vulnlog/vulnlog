@@ -1,0 +1,70 @@
+= Find what affects a release
+
+Answer the release planning questions from the Vulnlog file: which vulnerabilities affect a shipped release, which fixes has it already received, and which updates must the next release carry.
+
+== Prerequisites
+
+* A Vulnlog file whose `releases` section is current (every shipped release listed with its `published_at` date).
+* Recorded resolutions for fixes that shipped or are scheduled (see xref:guides/record-a-resolution.adoc[Record a resolution]).
+
+== Generate the release-scoped report
+
+[source,bash]
+----
+vulnlog report vulnlog.yaml --release 8.1.1 -o release-8.1.1.html
+Wrote: release-8.1.1.html
+----
+
+`--release 8.1.1` includes all releases up to and including 8.1.1, and classifies each entry from that release's perspective: a resolution only counts when its target release shipped at or before 8.1.1.
+
+== Read the answer
+
+The entry table, sorted open-first, is the work list:
+
+Open entries::
+Confirmed impact, no shipped fix.
+Entries whose Fixed In column names a later or unpublished release are the update list for your next release: the fix is recorded but your users do not have it yet.
+Entries without any resolution still need a remediation decision.
+
+Under investigation entries::
+Unknown impact.
+They need a verdict before the release can be assessed honestly; route them to xref:guides/triage-a-finding.adoc[triage].
+
+Resolved entries::
+Fixes this release already ships.
+This is also the changelog material for security-relevant release notes.
+
+Dismissed entries::
+No action; the verdict closed them.
+
+== Variants
+
+=== Scope by deliverable
+
+When tags mark deliverables (for example `container` versus `sdk`), combine filters to assess one artifact of the release:
+
+[source,bash]
+----
+vulnlog report vulnlog.yaml --release 8.1.1 --tag container -o container-8.1.1.html
+----
+
+The xref:reference/tags.adoc[tag reference] covers defining and assigning tags.
+
+=== Keep the deployed release's pipeline quiet
+
+The same `--release` filter works on `vulnlog suppress`: a fix recorded for an unshipped release is treated as still unresolved, and eligible entries are emitted so the scanner watching the deployed release stays green until the fix actually ships.
+See xref:guides/record-a-resolution.adoc[Record a resolution] for the required `suppress` block.
+
+=== Several release lines
+
+With one Vulnlog file per release line (see xref:guides/organize-files-across-branches.adoc[Organize files across branches]), run the report against the file of the line you are planning; verdicts and resolutions legitimately differ per line.
+
+== Verify
+
+Cross-check one entry: pick an open entry from the report and confirm in the YAML that its `resolution` is absent or targets a release after the one you scoped to.
+
+== Related
+
+* xref:concepts/vulnerability-states.adoc[Vulnerability states] defines the release-scoped state derivation precisely.
+* xref:reference/cli-report.adoc[vulnlog report] and xref:reference/cli-suppress.adoc[vulnlog suppress] document the filter flags.
+* xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release] walks a worked example.
