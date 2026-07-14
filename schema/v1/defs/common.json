@@ -24,7 +24,7 @@
       "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/"
     },
     "verdict": {
-      "description": "The human triage decision for a vulnerability. Absence indicates the vulnerability is under investigation. 'affected' and 'risk acceptable' require a severity; 'not affected' requires a justification",
+      "description": "The human triage decision for a vulnerability. Absence or 'under investigation' indicates the vulnerability is under investigation. 'affected' and 'risk acceptable' require a severity; 'not affected' requires a justification",
       "oneOf": [
         {
           "description": "The vulnerability impacts this release and remediation is expected. Requires 'severity'",
@@ -37,6 +37,10 @@
         {
           "description": "The vulnerability impacts this release but the risk has been assessed and accepted without remediation. Requires 'severity' and an explicit 'suppress' block to suppress the finding",
           "const": "risk acceptable"
+        },
+        {
+          "description": "The vulnerability is still being investigated",
+          "const": "under investigation"
         }
       ]
     },
