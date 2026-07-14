@@ -11,6 +11,7 @@ import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class SnykMapperTest :
     FunSpec({
@@ -35,7 +36,7 @@ class SnykMapperTest :
             entryList.size shouldBe 1
             val wildcardEntry = entryList.first()["*"]!!
             wildcardEntry.reason shouldBe "not exploitable"
-            wildcardEntry.expires shouldBe "2026-12-31T00:00:00.000Z"
+            wildcardEntry.expires shouldBe LocalDateTime.of(2026, 12, 31, 0, 0)
         }
 
         test("maps multiple entries to separate ignore keys") {
