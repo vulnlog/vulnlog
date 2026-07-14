@@ -4,5 +4,6 @@
 package dev.vulnlog.lib.parse.suppression.snyk.dto
 
 data class SnykSuppressionDto(
+    val version: String = "v1.25.0",
     val ignore: Map<String, List<Map<String, SnykIgnoreEntryDto>>>,
 )

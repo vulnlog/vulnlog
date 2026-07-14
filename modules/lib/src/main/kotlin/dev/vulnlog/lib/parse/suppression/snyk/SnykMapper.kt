@@ -17,11 +17,11 @@ object SnykMapper {
                             "*" to
                                 SnykIgnoreEntryDto(
                                     reason = entry.reason,
-                                    expires = entry.expiresAt,
+                                    expires = entry.expiresAt?.atStartOfDay(),
                                 ),
                         ),
                     )
             }
-        return SnykSuppressionDto(ignore)
+        return SnykSuppressionDto(ignore = ignore)
     }
 }
