@@ -25,6 +25,7 @@ private val emptyFilter = FilterDataDto(release = null, tags = emptyList(), repo
 
 private fun entry(
     primaryId: VulnId = VulnId.Cve("CVE-2026-1234"),
+    name: String? = null,
     ids: Set<VulnId> = setOf(primaryId),
     state: WorkState = WorkState.OPEN,
     impact: Impact = Impact.Affected(Severity.HIGH),
@@ -34,6 +35,7 @@ private fun entry(
     description: String? = "RCE in example-lib",
 ) = ReportingEntry(
     primaryId = primaryId,
+    name = name,
     state = state,
     ids = ids,
     shortDescription = description,
@@ -77,6 +79,12 @@ class HtmlReportRendererTest :
             html shouldContain "CVE-2026-1234"
             html shouldContain "affected"
             html shouldContain "high"
+        }
+
+        test("includes common name in serialized entry data") {
+            val html = render(listOf(entry(name = "Log4Shell")))
+
+            html shouldContain "Log4Shell"
         }
 
         test("placeholder is replaced") {
