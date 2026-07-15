@@ -85,6 +85,13 @@ class HtmlReportRendererTest :
             html shouldNotContain "VULNLOG_DATA_PLACEHOLDER"
         }
 
+        test("escapes script-breaking characters in serialized data") {
+            val html = render(listOf(entry(description = "breaks </script> & report")))
+
+            html shouldNotContain "breaks </script> & report"
+            html shouldContain "breaks \\u003c/script\\u003e \\u0026 report"
+        }
+
         test("renders with empty entries") {
             val html = render(emptyList())
 
