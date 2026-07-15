@@ -49,6 +49,20 @@ private val SOURCE_YAML =
 
 private val TARGET_YAML = vulnlogYaml(releaseId = "1.0.0", cveId = "CVE-2026-0001")
 
+private val EMPTY_RELEASE_TARGET_YAML =
+    """
+    schemaVersion: "1"
+
+    project:
+      organization: Acme Corp
+      name: Acme Web App
+      author: Acme Corp Security Team
+
+    releases: []
+
+    vulnerabilities: []
+    """.trimIndent()
+
 class CopyCommandTest :
     FunSpec({
 
@@ -116,6 +130,23 @@ class CopyCommandTest :
                         )
 
                         target.readText() shouldContain "releases: [1.0.0]"
+                    }
+                }
+            }
+
+            test("copies with empty releases when the target has no releases") {
+                withTempFile(prefix = "source", content = SOURCE_YAML) { source ->
+                    withTempFile(prefix = "target", content = EMPTY_RELEASE_TARGET_YAML) { target ->
+                        val result =
+                            CopyCommand().test(
+                                "${source.absolutePath} ${target.absolutePath} --vuln-id CVE-2026-1234",
+                            )
+
+                        result.statusCode shouldBe 0
+                        val content = target.readText()
+                        content shouldContain "CVE-2026-1234"
+                        content shouldContain "releases: []"
+                        content shouldNotContain "2.0.0"
                     }
                 }
             }

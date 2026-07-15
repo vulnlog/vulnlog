@@ -35,7 +35,8 @@ data class CopyOutcome(
  * If an entry already exists in the destination, it is merged with the source entry and keeps its
  * position: existing values win for scalars; lists (aliases, packages, tags) are unioned; reports are
  * unioned by reporter. New entries are placed at the top of the `vulnerabilities:` list. Releases on
- * every copied entry are rewritten to the destination's latest release.
+ * every copied entry are rewritten to the destination's latest release, or to an empty list when
+ * the destination has no releases yet.
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
@@ -45,8 +46,8 @@ fun copyVulnerabilities(
 ): CopyOutcome {
     val release =
         destination.content.releases
-            .last()
-            .id
+            .lastOrNull()
+            ?.id
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
     val existingById = destination.content.vulnerabilities.associateBy { it.id }
 
@@ -86,13 +87,14 @@ private fun upsertEntry(
 private fun mergeVulnerabilityEntry(
     existing: VulnerabilityEntry?,
     incoming: VulnerabilityEntry,
-    release: Release,
+    release: Release?,
 ): VulnerabilityEntry {
-    if (existing == null) return incoming.copy(releases = listOf(release))
+    val releases = release?.let(::listOf) ?: emptyList()
+    if (existing == null) return incoming.copy(releases = releases)
     return existing.copy(
         name = existing.name ?: incoming.name,
         aliases = unionPreservingOrder(existing.aliases, incoming.aliases),
-        releases = listOf(release),
+        releases = releases,
         description = existing.description ?: incoming.description,
         packages = unionPreservingOrder(existing.packages, incoming.packages),
         reports = mergeReports(existing.reports, incoming.reports),
