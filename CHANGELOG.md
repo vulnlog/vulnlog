@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0] - 2026-07-16
+
+### Changed
+- Enhance parsing and validation with detailed error reporting by @ryru in [#211](https://github.com/vulnlog/vulnlog/pull/211)
+
+### Fixed
+- Validate resolution release references in vulnerabilities by @ahfoysal in [#221](https://github.com/vulnlog/vulnlog/pull/221)
+- Allow under_investigation in schema verdicts by @ahfoysal in [#222](https://github.com/vulnlog/vulnlog/pull/222)
+- Write Snyk expiry date-time format by @ahfoysal in [#224](https://github.com/vulnlog/vulnlog/pull/224)
+- Use canonical names for generic suppressions by @ahfoysal in [#220](https://github.com/vulnlog/vulnlog/pull/220)
+- Write Trivy expired_at key by @ahfoysal in [#223](https://github.com/vulnlog/vulnlog/pull/223)
+- Show duplicate ids by value by @ahfoysal in [#212](https://github.com/vulnlog/vulnlog/pull/212)
+
+### Documentation
+- Complete overhaul of the user documentation with a greater focus on Vulnlog personas by @ryru in [#233](https://github.com/vulnlog/vulnlog/pull/233)
+- Update website with new status messages by @ryru in [#232](https://github.com/vulnlog/vulnlog/pull/232)
+- Document the new logging feature and flags by @ryru in [#230](https://github.com/vulnlog/vulnlog/pull/230)
+- Add support and help resources by @ryru in [#213](https://github.com/vulnlog/vulnlog/pull/213)
+
+### New Contributors
+* @ahfoysal made their first contribution in [#221](https://github.com/vulnlog/vulnlog/pull/221)
+
 ## [0.15.1] - 2026-06-29
 
 ### Changed
@@ -165,7 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trigger website deployment on changes by @ryru
 - Fix deploy-website workflow to set working directory and cache dependency path by @ryru
 - Add project website files to mono repo by @ryru in [#36](https://github.com/vulnlog/vulnlog/pull/36)
-- Add Github action workflow to deploy project website to Github pages by @ryru
+- Add GitHub action workflow to deploy project website to GitHub pages by @ryru
 - Move project files into new directory to create a mono repo by @ryru
 - Bump Gradle to version 9.1.0 by @ryru in [#35](https://github.com/vulnlog/vulnlog/pull/35)
 
@@ -442,6 +464,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.16.0]: https://github.com/vulnlog/vulnlog/compare/v0.15.1...v0.16.0
 [0.15.1]: https://github.com/vulnlog/vulnlog/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/vulnlog/vulnlog/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/vulnlog/vulnlog/compare/v0.13.0...v0.14.0
