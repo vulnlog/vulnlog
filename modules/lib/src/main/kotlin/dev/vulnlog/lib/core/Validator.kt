@@ -168,18 +168,36 @@ private fun validateAliasNotReferencedInAliasIds(file: VulnlogFile): List<Valida
 private fun validateVulnerabilitiesReferenceValidReleases(file: VulnlogFile): List<ValidationFinding> {
     val definedIds = file.releases.map { it.id }.toSet()
     return file.vulnerabilities.flatMap { vuln ->
-        vuln.releases
-            .filter { it !in definedIds }
-            .map { ref ->
-                ValidationFinding(
-                    severity = Severity.ERROR,
-                    rule = Rule.DANGLING_RELEASE_REFERENCE,
-                    path = "vulnerabilities[${vuln.id.canonical()}].releases",
-                    message = "References undefined release '${ref.value}'. Defined releases: ${
-                        definedIds.sortedBy { it.value }.joinToString { it.value }
-                    }",
-                )
-            }
+        val releaseFindings =
+            vuln.releases
+                .filter { it !in definedIds }
+                .map { ref ->
+                    ValidationFinding(
+                        severity = Severity.ERROR,
+                        rule = Rule.DANGLING_RELEASE_REFERENCE,
+                        path = "vulnerabilities[${vuln.id.canonical()}].releases",
+                        message = "References undefined release '${ref.value}'. Defined releases: ${
+                            definedIds.sortedBy { it.value }.joinToString { it.value }
+                        }",
+                    )
+                }
+
+        val resolutionFinding =
+            vuln.resolution
+                ?.release
+                ?.takeIf { it !in definedIds }
+                ?.let { ref ->
+                    ValidationFinding(
+                        severity = Severity.ERROR,
+                        rule = Rule.DANGLING_RELEASE_REFERENCE,
+                        path = "vulnerabilities[${vuln.id.canonical()}].resolution",
+                        message = "References undefined release '${ref.value}'. Defined releases: ${
+                            definedIds.sortedBy { it.value }.joinToString { it.value }
+                        }",
+                    )
+                }
+
+        releaseFindings + listOfNotNull(resolutionFinding)
     }
 }
 

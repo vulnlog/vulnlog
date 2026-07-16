@@ -11,6 +11,7 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.Resolution
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.TagEntry
@@ -206,6 +207,29 @@ class ValidatorTest :
                 val errors = validate(context(file)).errors
                 errors[0].message shouldContain "v1.0"
                 errors[0].message shouldContain "v1.1"
+            }
+
+            test("resolution referencing undefined release produces an error") {
+                val file =
+                    emptyFile().copy(
+                        releases = listOf(ReleaseEntry(Release("v1.0"))),
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntry(
+                                    id = VulnId.Cve("CVE-2021-1"),
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                    resolution = Resolution(Release("v2.0")),
+                                    verdict = Verdict.UnderInvestigation,
+                                ),
+                            ),
+                    )
+                val errors = validate(context(file)).errors
+                errors shouldHaveSize 1
+                errors[0].rule shouldBe Rule.DANGLING_RELEASE_REFERENCE
+                errors[0].path shouldBe "vulnerabilities[CVE-2021-1].resolution"
+                errors[0].message shouldContain "v2.0"
             }
         }
 
