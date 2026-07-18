@@ -609,7 +609,7 @@
           }
         },
         "analysis": {
-          "description": "Free-text analysis and rationale for the triage decision. Presence of this field moves the entry out of the 'under investigation' state",
+          "description": "Free-text analysis and rationale for the triage decision. The state is derived from 'verdict' and 'resolution', not from this field",
           "examples": [
             "The affected StreamReadConstraints class is not used in the application."
           ],
