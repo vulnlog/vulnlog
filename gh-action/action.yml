@@ -1,0 +1,159 @@
+name: Vulnlog
+description: Generate scanner suppression files and a vulnerability report from a Vulnlog file.
+
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  version:
+    description: Vulnlog CLI version to download, matching a released version.
+    required: false
+    # Bump together with vulnlog-version in docs/antora.yml during release preparation.
+    default: "0.16.0"
+  file:
+    description: Path to the Vulnlog file.
+    required: false
+    default: vulnlog.yaml
+  suppress:
+    description: Generate suppression files ('true' or 'false').
+    required: false
+    default: "true"
+  report:
+    description: Generate the HTML report ('true' or 'false').
+    required: false
+    default: "true"
+  output-dir:
+    description: Directory the suppression files are written to.
+    required: false
+    default: "."
+  report-output:
+    description: File path the HTML report is written to.
+    required: false
+    default: vulnlog-report.html
+  format:
+    description: Suppression file format, 'auto' or 'generic'.
+    required: false
+    default: auto
+  release:
+    description: Only include vulnerabilities up to and including this release.
+    required: false
+    default: ""
+  tags:
+    description: Comma-separated list of tags to filter on.
+    required: false
+    default: ""
+  reporter:
+    description: Only include reports from this reporter.
+    required: false
+    default: ""
+  ensure-files:
+    description: >-
+      Space-separated file names created empty in output-dir when suppression
+      generates no file for them. Set to an empty string to disable.
+    required: false
+    default: ".snyk .trivyignore.yaml"
+
+outputs:
+  report-file:
+    description: Path of the generated HTML report.
+    value: ${{ steps.report.outputs.report-file }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Vulnlog
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        case "$RUNNER_OS-$RUNNER_ARCH" in
+          Linux-X64) asset=vulnlog-linux-amd64 ;;
+          macOS-ARM64) asset=vulnlog-macos-aarch64 ;;
+          Windows-X64) asset=vulnlog-windows-amd64 ;;
+          *)
+            echo "::error::unsupported runner platform: $RUNNER_OS $RUNNER_ARCH"
+            exit 1
+            ;;
+        esac
+        install_dir="$RUNNER_TEMP/vulnlog-cli"
+        archive="$RUNNER_TEMP/$asset.zip"
+        mkdir -p "$install_dir"
+        curl -fsSL --retry 3 \
+          "https://github.com/vulnlog/vulnlog/releases/download/v$VERSION/$asset.zip" \
+          -o "$archive"
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          "$SYSTEMROOT/System32/tar.exe" -xf "$archive" -C "$install_dir"
+        else
+          unzip -oq "$archive" -d "$install_dir"
+          chmod +x "$install_dir/vulnlog"
+        fi
+        "$install_dir/vulnlog" --version
+        echo "$install_dir" >> "$GITHUB_PATH"
+
+    - name: Generate suppression files
+      if: ${{ inputs.suppress == 'true' }}
+      shell: bash
+      env:
+        FILE: ${{ inputs.file }}
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+        FORMAT: ${{ inputs.format }}
+        FILTER_RELEASE: ${{ inputs.release }}
+        FILTER_TAGS: ${{ inputs.tags }}
+        FILTER_REPORTER: ${{ inputs.reporter }}
+      run: |
+        args=(suppress "$FILE" --output-dir "$OUTPUT_DIR" --format "$FORMAT")
+        if [ -n "$FILTER_RELEASE" ]; then
+          args+=(--release "$FILTER_RELEASE")
+        fi
+        if [ -n "$FILTER_REPORTER" ]; then
+          args+=(--reporter "$FILTER_REPORTER")
+        fi
+        IFS=', ' read -ra tags <<< "$FILTER_TAGS"
+        for tag in "${tags[@]}"; do
+          if [ -n "$tag" ]; then
+            args+=(--tags "$tag")
+          fi
+        done
+        vulnlog "${args[@]}"
+
+    - name: Ensure suppression files exist
+      if: ${{ inputs.suppress == 'true' && inputs.ensure-files != '' }}
+      shell: bash
+      env:
+        OUTPUT_DIR: ${{ inputs.output-dir }}
+        ENSURE_FILES: ${{ inputs.ensure-files }}
+      run: |
+        for file in $ENSURE_FILES; do
+          path="$OUTPUT_DIR/$file"
+          if [ ! -f "$path" ]; then
+            touch "$path"
+          fi
+        done
+
+    - name: Generate report
+      id: report
+      if: ${{ inputs.report == 'true' }}
+      shell: bash
+      env:
+        FILE: ${{ inputs.file }}
+        REPORT_OUTPUT: ${{ inputs.report-output }}
+        FILTER_RELEASE: ${{ inputs.release }}
+        FILTER_TAGS: ${{ inputs.tags }}
+        FILTER_REPORTER: ${{ inputs.reporter }}
+      run: |
+        args=(report "$FILE" --output "$REPORT_OUTPUT")
+        if [ -n "$FILTER_RELEASE" ]; then
+          args+=(--release "$FILTER_RELEASE")
+        fi
+        if [ -n "$FILTER_REPORTER" ]; then
+          args+=(--reporter "$FILTER_REPORTER")
+        fi
+        IFS=', ' read -ra tags <<< "$FILTER_TAGS"
+        for tag in "${tags[@]}"; do
+          if [ -n "$tag" ]; then
+            args+=(--tags "$tag")
+          fi
+        done
+        vulnlog "${args[@]}"
+        echo "report-file=$REPORT_OUTPUT" >> "$GITHUB_OUTPUT"

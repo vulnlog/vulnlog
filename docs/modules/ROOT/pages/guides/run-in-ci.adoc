@@ -13,6 +13,9 @@ See xref:reference/gradle-plugin.adoc[Gradle Plugin] for details.
 
 == GitHub Actions
 
+The Vulnlog GitHub Action downloads the CLI and generates suppression files and the HTML report in a single step.
+It runs on Linux, macOS, and Windows runners and does not require Docker.
+
 Example workflow using dynamic suppression. The suppression file is generated, used by the scanner, and discarded after the pipeline completes:
 
 [source,yaml,subs="attributes"]
@@ -23,19 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate suppression files
-        continue-on-error: true
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            -w /work \
-            ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
-            suppress --reporter trivy vulnlog.yaml --output-dir /work
-
-      - name: Ensure suppression file exists
-        run: |
-          [ -f .trivyignore.yaml ] || touch .trivyignore.yaml
+      - name: Run Vulnlog
+        id: vulnlog
+        uses: vulnlog/vulnlog/gh-action@v{vulnlog-version}
+        with:
+          reporter: trivy
+          ensure-files: .trivyignore.yaml
 
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@master
@@ -52,23 +48,15 @@ jobs:
           sarif_file: trivy-results.sarif
           category: trivy
 
-      - name: Generate Vulnlog HTML report
-        if: always()
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            -w /work \
-            ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
-            report vulnlog.yaml -o /work
-
       - name: Upload Vulnlog HTML report
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
-          path: vulnlog-report.html
+          path: ${{ steps.vulnlog.outputs.report-file }}
 ----
+
+The action creates missing suppression files empty, so scanners always find their file, even before the first suppression exists.
+See the https://github.com/vulnlog/vulnlog/tree/main/gh-action[action README] for all inputs and outputs.
 
 == Using the Docker image
 

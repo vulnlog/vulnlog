@@ -17,18 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Generate suppression files
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:0.14.0 \
-            suppress vulnlog.yaml --output-dir /work
-
-      - name: Ensure suppression files exist
-        run: |
-          [ -f .snyk ] || touch .snyk
-          [ -f .trivyignore.yaml ] || touch .trivyignore.yaml
+      - name: Run Vulnlog
+        id: vulnlog
+        uses: ./gh-action
 
       - name: Upload suppression files
         uses: actions/upload-artifact@v7
@@ -39,19 +30,11 @@ jobs:
             .snyk
             .trivyignore.yaml
 
-      - name: Generate HTML report
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:0.14.0 \
-            report vulnlog.yaml
-
       - name: Upload HTML report
         uses: actions/upload-artifact@v7
         with:
           name: reports
-          path: vulnlog-report.html
+          path: ${{ steps.vulnlog.outputs.report-file }}
 
   snyk:
     name: Snyk Open Source
