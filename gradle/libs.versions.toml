@@ -10,7 +10,7 @@ ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
 # Add explicit SnakeYAML dependency because it is used to for formatting
 snakeYamlEngineVersion = "3.0.1" # Keep in-sync with jacksonVersion
-spotlessVersion = "8.8.0"
+spotlessVersion = "8.9.0"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
