@@ -224,6 +224,28 @@ class V1MapperTest :
             }
         }
 
+        context("toDomain — vulnerability mapping") {
+            test("common name is mapped from dto") {
+                val dto =
+                    minimalDto(
+                        vulnerabilities =
+                            listOf(
+                                VulnerabilityEntryDto(
+                                    id = "CVE-2021-44228",
+                                    name = "Log4Shell",
+                                    releases = emptyList(),
+                                    packages = emptyList(),
+                                    reports = emptyList(),
+                                ),
+                            ),
+                    )
+
+                toDomain(dto)
+                    .vulnerabilities[0]
+                    .name shouldBe "Log4Shell"
+            }
+        }
+
         context("toDomain — vulnerability verdict mapping") {
             test("null verdict maps to UnderInvestigation") {
                 val dto =
