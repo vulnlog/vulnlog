@@ -18,7 +18,7 @@ object HtmlReportWriter {
      */
     fun renderHtmlReport(reportDataDto: ReportDataDto): String {
         val template = loadTemplate()
-        val json = serializeToJson(reportDataDto)
+        val json = serializeToJson(reportDataDto).escapeForInlineScript()
         return template.replace(DATA_PLACEHOLDER, json)
     }
 
@@ -38,4 +38,9 @@ object HtmlReportWriter {
                 .build()
         return mapper.writeValueAsString(data)
     }
+
+    private fun String.escapeForInlineScript(): String =
+        replace("&", "\\u0026")
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
 }
