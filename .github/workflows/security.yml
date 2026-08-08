@@ -77,7 +77,7 @@ jobs:
 
       - name: Upload Snyk SARIF to GitHub
         if: always() && hashFiles('snyk-results.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v4.37.3
+        uses: github/codeql-action/upload-sarif@v4.37.6
         with:
           sarif_file: snyk-results.sarif
           category: snyk
@@ -106,7 +106,7 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
 
       - name: Upload Trivy SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v4.37.3
+        uses: github/codeql-action/upload-sarif@v4.37.6
         with:
           sarif_file: trivy-results.sarif
           category: trivy
