@@ -4,6 +4,7 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -47,7 +48,7 @@ private val SOURCE_YAML =
         justification: component not present
     """.trimIndent()
 
-private val TARGET_YAML = vulnlogYaml(releaseId = "1.0.0", cveId = "CVE-2026-0001")
+private val TARGET_YAML = vulnlogDocument(releaseId = "1.0.0", vulnId = "CVE-2026-0001")
 
 private val EMPTY_RELEASE_TARGET_YAML =
     """

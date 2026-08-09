@@ -14,7 +14,7 @@ class InitYamlTest :
     FunSpec({
 
         test("init produces valid yaml output") {
-            val file: VulnlogFile = init(SchemaVersion(1, 0), "acme", "widget", "alice")
+            val file: VulnlogFile = init(SchemaVersion.V1, "acme", "widget", "alice")
             val yaml: String = YamlWriter.write(file, createYamlMapper())
 
             yaml shouldBe

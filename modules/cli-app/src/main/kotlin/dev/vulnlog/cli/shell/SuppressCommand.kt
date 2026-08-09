@@ -18,6 +18,7 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
+import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
@@ -29,10 +30,10 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
-import dev.vulnlog.lib.result.Severity
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
@@ -76,11 +77,9 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     val filterOptions by FilterOptions()
 
     override fun run() {
-        val parsedSuccessfully = parseInputOrFail(listOf(input))
-        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        val validated = validateInputOrFail(input).project
 
-        val vulnlogFile = parsedSuccessfully.values.first().content
-
+        val vulnlogFile = validated.vulnlogProjectFile
         val filter = resolveFilter(filterOptions, vulnlogFile)
 
         val targetReporters =
@@ -106,7 +105,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         if (contents.size > 1 && destination !is DirectoryOutputOption) {
             val names = targetReporters.map { it.canonical() }.sorted().joinToString(", ")
-            echoMessage(formatMessage(Severity.ERROR, "-o requires a single reporter, found: $names"))
+            echoMessage(formatMessage(FindingSeverity.ERROR, "-o requires a single reporter, found: $names"))
             echoMessage(formatHint("use --reporter <name> to pick one, or --output-dir for one file per reporter"))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }

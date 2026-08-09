@@ -3,8 +3,8 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.model.finding.FormatRule
 import dev.vulnlog.lib.parse.createYamlMapper
-import dev.vulnlog.lib.result.FormatRule
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
@@ -64,13 +64,13 @@ class FormatCheckTest :
 
         fun check(content: String) = checkFormat(parsed(content), mapper)
 
-        val canonical = formatYaml(parsed(BASE_INPUT), mapper).content
+        val canonical = formatYaml(parsed(BASE_INPUT), mapper)
 
         context("drift invariants") {
 
             test("byte-canonical documents produce zero findings") {
                 listOf(BASE_INPUT, MULTILINE_INPUT)
-                    .map { formatYaml(parsed(it), mapper).content }
+                    .map { formatYaml(parsed(it), mapper) }
                     .forEach { canonicalContent ->
                         check(canonicalContent).shouldBeEmpty()
                     }

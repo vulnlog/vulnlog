@@ -3,9 +3,12 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.lib.fixtures.ValidationDocuments
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.gradle.testkit.runner.TaskOutcome
 
 private val FILES_FROM_TEST_YAML =
@@ -23,7 +26,7 @@ class VulnlogReportTaskTest :
         context("happy path") {
 
             test("writes the report to the default output file") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 
                 val result = runner(dir, "vulnlogReport").build()
 
@@ -47,7 +50,7 @@ class VulnlogReportTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogReport").build()
@@ -66,14 +69,38 @@ class VulnlogReportTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "a.vl.yaml" to vulnlogYaml(),
-                        "b.vl.yaml" to vulnlogYaml(),
+                        "a.vl.yaml" to vulnlogDocument(),
+                        "b.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogReport").build()
 
                 result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
                 dir.resolve("build/vulnlog/vulnlog-report.html").exists() shouldBe true
+            }
+        }
+
+        context("diagnostics") {
+
+            test("--info shows the parsed inputs and the written output") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
+
+                val result = runner(dir, "vulnlogReport", "--info").build()
+
+                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldContain
+                    "parsed test.vl.yaml: schema version 1, releases: 1, tags: 0, vulnerabilities: 1"
+                result.output shouldContain "wrote "
+            }
+
+            test("does not print INFO-level validation findings") {
+                val dir =
+                    gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to ValidationDocuments.UNREFERENCED_RELEASE)
+
+                val result = runner(dir, "vulnlogReport").build()
+
+                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldNotContain "info: test.vl.yaml: "
             }
         }
 
@@ -113,8 +140,8 @@ class VulnlogReportTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "a.vl.yaml" to vulnlogYaml(projectName = "Acme Web App"),
-                        "b.vl.yaml" to vulnlogYaml(projectName = "Other App", organization = "Other Corp"),
+                        "a.vl.yaml" to vulnlogDocument(projectName = "Acme Web App"),
+                        "b.vl.yaml" to vulnlogDocument(projectName = "Other App", organization = "Other Corp"),
                     )
 
                 val result = runner(dir, "vulnlogReport").buildAndFail()
@@ -139,7 +166,7 @@ class VulnlogReportTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogReport").buildAndFail()
@@ -161,7 +188,7 @@ class VulnlogReportTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogReport").buildAndFail()
@@ -184,7 +211,7 @@ class VulnlogReportTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogReport").buildAndFail()

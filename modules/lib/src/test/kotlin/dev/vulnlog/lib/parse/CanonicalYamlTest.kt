@@ -3,9 +3,9 @@
 
 package dev.vulnlog.lib.parse
 
-import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
-import dev.vulnlog.lib.parse.v1.dto.ResolutionDto
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.dto.ReportEntryDto
+import dev.vulnlog.lib.parse.dto.ResolutionDto
+import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

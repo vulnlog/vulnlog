@@ -3,20 +3,20 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.model.ParseValidationVersion
+import dev.vulnlog.lib.model.finding.FormatFinding
+import dev.vulnlog.lib.model.finding.FormatRule
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.FormatSource
 import dev.vulnlog.lib.parse.LocatedNode
 import dev.vulnlog.lib.parse.YamlWriter
+import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.parse.lineOf
 import dev.vulnlog.lib.parse.mappingKeys
 import dev.vulnlog.lib.parse.scalarValueOf
+import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.parse.walkValues
-import dev.vulnlog.lib.result.FormatFinding
-import dev.vulnlog.lib.result.FormatRule
-import dev.vulnlog.lib.result.ParseResult
 import org.snakeyaml.engine.v2.common.FlowStyle
 import org.snakeyaml.engine.v2.common.ScalarStyle
 import org.snakeyaml.engine.v2.nodes.MappingNode
@@ -25,23 +25,28 @@ import org.snakeyaml.engine.v2.nodes.SequenceNode
 import tools.jackson.databind.ObjectMapper
 
 /**
- * Explains why [parsed] is not in the canonical style as findings, one per deviation, with the
- * rule set versioned like [validate]. Each rule compares the observed presentation against the same
- * [CanonicalYaml] decision functions the writer uses, so checker and writer cannot disagree.
- * Deviations no rule names (blank lines, indentation, quoting, chomping) fall into a single
- * [FormatRule.NON_CANONICAL_LAYOUT] finding. An empty result means the content is byte-canonical.
+ * Explains why [parsedVulnlogProject] is not in the canonical style as findings, one per deviation,
+ * with the rule set versioned per schema version. Each rule compares the observed presentation
+ * against the same [CanonicalYaml] decision functions the writer uses, so checker and writer cannot
+ * disagree. Deviations no rule names (blank lines, indentation, quoting, chomping) fall into a
+ * single [FormatRule.NON_CANONICAL_LAYOUT] finding. An empty result means the content is
+ * byte-canonical.
  */
 fun checkFormat(
-    parsed: ParseResult.Ok,
+    parsedVulnlogProject: ParsedVulnlogProject,
     mapper: ObjectMapper,
 ): List<FormatFinding> {
-    val source = FormatSource(parsed.rawContent, parsed.rootNode)
+    val source =
+        FormatSource(
+            parsedVulnlogProject.inputDocument.content,
+            parsedVulnlogProject.nodeTree.rootNode,
+        )
     val context = FormatCheckContext(source, walkValues(source.root), mapper)
     val findings =
-        when (parsed.validationVersion) {
-            ParseValidationVersion.V1 -> v1FormatRules
-        }.flatMap { rule -> rule(context) }
-    return findings.ifEmpty { layoutCatchAll(parsed, mapper) }
+        when (parsedVulnlogProject.validatedDto) {
+            is VulnlogFileV1Dto -> v1FormatRules.flatMap { rule -> rule(context) }
+        }
+    return findings.ifEmpty { layoutCatchAll(parsedVulnlogProject, mapper) }
 }
 
 /** One line per finding, tagged with the kebab-case rule id, e.g. `[non-canonical-array-style]`. */
@@ -67,9 +72,7 @@ private val v1FormatRules =
     )
 
 private fun checkSchemaHeader(context: FormatCheckContext): List<FormatFinding> {
-    val lines =
-        context.source.raw.content
-            .lines()
+    val lines = context.source.raw.lines()
     val schemaVersion = scalarValueOf(context.source.root, "schemaVersion") ?: "1"
     val header = YamlWriter.schemaHeader(schemaVersion)
     val hasHeader = hasSchemaHeader(context.source.root)
@@ -162,10 +165,10 @@ private fun checkComments(context: FormatCheckContext): List<FormatFinding> =
     }
 
 private fun layoutCatchAll(
-    parsed: ParseResult.Ok,
+    parsedVulnlogProject: ParsedVulnlogProject,
     mapper: ObjectMapper,
 ): List<FormatFinding> =
-    if (formatYaml(parsed, mapper) == parsed.rawContent) {
+    if (formatYaml(parsedVulnlogProject, mapper) == parsedVulnlogProject.inputDocument.content) {
         emptyList()
     } else {
         listOf(

@@ -18,7 +18,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.result.SuppressionExclusion
+import dev.vulnlog.lib.model.suppress.SuppressionExclusion
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.maps.shouldBeEmpty
@@ -27,7 +27,7 @@ import io.kotest.matchers.shouldBe
 import java.time.LocalDate
 
 private val today = LocalDate.of(2026, 4, 3)
-private val defaultSchema = SchemaVersion(1, 0)
+private val defaultSchema = SchemaVersion.V1
 private val releaseV1 = Release("v1.0")
 private val releaseV2 = Release("v2.0")
 

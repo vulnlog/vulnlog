@@ -7,9 +7,9 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppress.SuppressionExclusion
 import dev.vulnlog.lib.model.suppress.SuppressionFormat
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
-import dev.vulnlog.lib.result.SuppressionExclusion
 import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty

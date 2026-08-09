@@ -1,8 +1,0 @@
-// Copyright the Vulnlog contributors
-// SPDX-License-Identifier: Apache-2.0
-
-package dev.vulnlog.cli.shell
-
-import dev.vulnlog.lib.model.SchemaVersion
-
-internal val CURRENT_VERSION = SchemaVersion(1, 0)

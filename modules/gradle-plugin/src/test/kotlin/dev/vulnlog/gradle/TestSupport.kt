@@ -3,46 +3,10 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 import kotlin.io.path.createTempDirectory
-
-/**
- * Builds a syntactically valid Vulnlog YAML document. Override the parameters to vary project
- * metadata, releases, or reporters without restating the entire fixture.
- */
-internal fun vulnlogYaml(
-    projectName: String = "Acme Web App",
-    organization: String = "Acme Corp",
-    author: String = "Acme Corp Security Team",
-    releaseId: String = "1.0.0",
-    publishedAt: String = "2026-01-15",
-    cveId: String = "CVE-2026-1234",
-    reporter: String = "trivy",
-): String =
-    """
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: $organization
-      name: $projectName
-      author: $author
-
-    releases:
-      - id: $releaseId
-        published_at: $publishedAt
-
-    vulnerabilities:
-      - id: $cveId
-        releases: [ $releaseId ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: $reporter
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
 
 /**
  * A YAML document with a single vulnerability reported by both `trivy` and `grype`. Used to
@@ -87,36 +51,9 @@ internal val INVALID_VULNLOG_YAML: String =
       author: Acme Corp Security Team
     """.trimIndent()
 
-/**
- * A YAML document that parses cleanly but produces validation warnings (here: a report dated
- * after the analysis timestamp).
- */
-internal val WARNING_VULNLOG_YAML: String =
-    """
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: Acme Web App
-      author: Acme Corp Security Team
-
-    releases:
-      - id: 1.0.0
-        published_at: 2026-01-15
-
-    vulnerabilities:
-      - id: CVE-2026-1234
-        releases: [ 1.0.0 ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        analyzed_at: 2025-01-01
-        reports:
-          - reporter: trivy
-            at: 2026-06-01
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
+/** A valid but non-canonical document carrying a YAML comment, which formatting drops. */
+internal val COMMENTED_VULNLOG_YAML: String =
+    vulnlogDocument().replace("vulnerabilities:", "# audit notes\nvulnerabilities:")
 
 /**
  * Wraps build script content in the standard plugin block. [extra] is appended verbatim

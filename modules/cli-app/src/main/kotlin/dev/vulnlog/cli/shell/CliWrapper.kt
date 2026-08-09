@@ -6,6 +6,10 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.convert
+import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.VulnlogFilter
@@ -13,26 +17,19 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
-import dev.vulnlog.lib.result.InputValidationResult
-import dev.vulnlog.lib.result.ParseResult
-import dev.vulnlog.lib.result.ParseResults
-import dev.vulnlog.lib.result.Severity
-import dev.vulnlog.lib.result.ValidationResults
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.FilterValidationException
-import dev.vulnlog.lib.shell.parseInputs
+import dev.vulnlog.lib.shell.InputSelectionResult
+import dev.vulnlog.lib.shell.InputValidationResult
 import dev.vulnlog.lib.shell.renderFilterResolution
-import dev.vulnlog.lib.shell.renderParseFailures
-import dev.vulnlog.lib.shell.renderParsedInputs
-import dev.vulnlog.lib.shell.renderValidationFindings
-import dev.vulnlog.lib.shell.renderValidationSummary
 import dev.vulnlog.lib.shell.resolveReleaseFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
-import dev.vulnlog.lib.shell.validateFiles
 import dev.vulnlog.lib.shell.validateInputPath
+import dev.vulnlog.lib.shell.validateInputSelection
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -42,41 +39,6 @@ private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/dis
 
 fun CliktCommand.echoHelpHint() {
     echoMessage(formatHint("ask for help at $HELP_DISCUSSIONS_URL"))
-}
-
-fun CliktCommand.parseInputOrFail(inputs: List<FileInputOption>): Map<FileInputOption, ParseResult.Ok> {
-    val parseResults: ParseResults =
-        try {
-            parseInputs(inputs)
-        } catch (e: RuntimeException) {
-            if (e !is IllegalArgumentException && e !is IllegalStateException) throw e
-            echoMessage(formatMessage(Severity.ERROR, e.message ?: "unknown error"))
-            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-        }
-    if (parseResults.failure.isNotEmpty()) {
-        renderParseFailures(parseResults).forEach { echoMessage(it) }
-        echoHelpHint()
-        throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
-    }
-    renderParsedInputs(parseResults.success).forEach { diagnosticSink().verbose(it) }
-    return parseResults.success
-}
-
-fun CliktCommand.validateParsedInputOrFailWithFailureOutput(
-    fileToResult: Map<FileInputOption, ParseResult.Ok>,
-    renderedSeverities: Set<Severity> = setOf(Severity.ERROR),
-): ValidationResults {
-    val validationFindings = validateFiles(fileToResult)
-    renderValidationSummary(validationFindings).forEach { diagnosticSink().verbose(it) }
-    val rendered = renderValidationFindings(validationFindings, renderedSeverities)
-    if (rendered.isNotBlank()) {
-        echoMessage(rendered)
-    }
-    if (validationFindings.hasErrors) {
-        echoHelpHint()
-        throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
-    }
-    return validationFindings
 }
 
 fun OptionCallTransformContext.toOutputFileOption(output: String): FileOutputOption =
@@ -97,6 +59,15 @@ fun OptionCallTransformContext.toOutputDirectoryOption(output: String): Director
     }
     return DirectoryOutputOption.Directory(outputPath)
 }
+
+fun CliktCommand.vulnlogFileInputs(help: String) =
+    argument(help = help)
+        .convert(conversion = ArgumentTransformContext::toInputFileOption)
+        .multiple(required = true)
+        .validate { inputs ->
+            val selection = validateInputSelection(inputs)
+            if (selection is InputSelectionResult.Error) fail(selection.message)
+        }
 
 fun ArgumentTransformContext.toInputFileOption(input: String): FileInputOption =
     if (input == "-") {
@@ -131,7 +102,7 @@ fun CliktCommand.resolveFilter(
         renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
         filter
     } catch (e: FilterValidationException) {
-        echoMessage(formatMessage(Severity.ERROR, e.message.orEmpty()))
+        echoMessage(formatMessage(FindingSeverity.ERROR, e.message.orEmpty()))
         echoMessage(formatHint(e.detail))
         throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
@@ -146,7 +117,7 @@ fun writeInit(
         initFile.path.writeText(content)
         out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))
     } catch (e: Exception) {
-        err(formatMessage(Severity.ERROR, "cannot write ${initFile.path}: ${e.message}"))
+        err(formatMessage(FindingSeverity.ERROR, "cannot write ${initFile.path}: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.code)
     }
 }
@@ -161,7 +132,7 @@ fun writeSuppressionFile(
         outputPath.writeText(suppressionFile.content)
         out(formatStatus(StatusVerb.WROTE, outputPath.toString()))
     } catch (e: Exception) {
-        err(formatMessage(Severity.ERROR, "cannot write $outputPath: ${e.message}"))
+        err(formatMessage(FindingSeverity.ERROR, "cannot write $outputPath: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.code)
     }
 }
@@ -176,7 +147,7 @@ fun writeReport(
         reportFile.path.writeText(content)
         out(formatStatus(StatusVerb.WROTE, reportFile.path.toString()))
     } catch (e: Exception) {
-        err(formatMessage(Severity.ERROR, "cannot write ${reportFile.path}: ${e.message}"))
+        err(formatMessage(FindingSeverity.ERROR, "cannot write ${reportFile.path}: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.code)
     }
 }

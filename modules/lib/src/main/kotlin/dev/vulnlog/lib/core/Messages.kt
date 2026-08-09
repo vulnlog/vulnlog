@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.model.finding.FindingSeverity
 
 /**
  * The verbs allowed on status lines. One vocabulary for every surface, so the CLI and the
@@ -30,7 +30,7 @@ fun formatStatus(
 
 /** Finding line: `error: vulnlog.yaml: vulnerabilities[3].resolution.in: release '9.9.9' is not defined`. */
 fun formatFinding(
-    severity: Severity,
+    severity: FindingSeverity,
     file: String,
     location: String? = null,
     message: String,
@@ -41,7 +41,7 @@ fun formatFinding(
 
 /** Severity-prefixed message without a file anchor: `error: <message>`. */
 fun formatMessage(
-    severity: Severity,
+    severity: FindingSeverity,
     message: String,
 ): String = "${severityLabel(severity)}: $message"
 
@@ -72,9 +72,9 @@ fun pluralize(
         else -> "$count $plural"
     }
 
-fun severityLabel(severity: Severity): String =
+fun severityLabel(severity: FindingSeverity): String =
     when (severity) {
-        Severity.ERROR -> "error"
-        Severity.WARNING -> "warning"
-        Severity.INFO -> "info"
+        FindingSeverity.ERROR -> "error"
+        FindingSeverity.WARNING -> "warning"
+        FindingSeverity.INFO -> "info"
     }

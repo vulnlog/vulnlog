@@ -5,41 +5,37 @@ package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.ProgramResult
-import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
-import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.arguments.convert
-import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.core.validation.ValidationConfig
+import dev.vulnlog.lib.core.validation.ValidationOutcome
+import dev.vulnlog.lib.core.validation.renderValidationSummary
+import dev.vulnlog.lib.model.finding.ALL_SEVERITIES
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.sourceFile
+import dev.vulnlog.lib.shell.ValidationRequest
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."
 
-    val inputs: List<FileInputOption> by argument(help = "Vulnlog file(s) to validate.")
-        .convert(conversion = ArgumentTransformContext::toInputFileOption)
-        .multiple(required = true)
+    val inputs: List<FileInputOption> by vulnlogFileInputs("Vulnlog file(s) to validate.")
 
     val strict: Boolean by option("--strict", help = "Treats warnings as errors.").flag(default = false)
 
+    /** The findings are the output here, so every severity is reported. */
     override fun run() {
-        val parsedSuccessfully = parseInputOrFail(inputs)
-        val validationFindings =
-            validateParsedInputOrFailWithFailureOutput(
-                parsedSuccessfully,
-                renderedSeverities = Severity.entries.toSet(),
-            )
+        val validationRequest = ValidationRequest(ValidationConfig(strict), ALL_SEVERITIES)
+        inputs
+            .map { input -> validateInputOrFail(input, validationRequest) }
+            .forEach(::printSummary)
+    }
 
-        if (validationFindings.hasWarnings && strict) {
-            throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
-        }
-        inputs.forEach { input ->
-            echoStatus(formatStatus(StatusVerb.VALIDATED, input.sourceFile().name))
-        }
+    private fun printSummary(validated: ValidationOutcome.Ok<ValidVulnlogProject>) {
+        val filename = validated.project.inputDocument.filename
+        diagnosticSink().verbose(renderValidationSummary(filename, validated.findings))
+        echoStatus(formatStatus(StatusVerb.VALIDATED, filename))
     }
 }

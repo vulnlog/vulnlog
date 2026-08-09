@@ -4,6 +4,7 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -105,7 +106,7 @@ class AddCommandTest :
         context("file write") {
 
             test("inserts the entry into the destination file and prints a success message") {
-                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
                     val result =
                         AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --release 1.0.0",
@@ -121,7 +122,7 @@ class AddCommandTest :
             }
 
             test("falls back to the latest published release when --release is omitted") {
-                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
                     val result =
                         AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999",
@@ -168,7 +169,7 @@ class AddCommandTest :
             }
 
             test("warns when the destination contains YAML comments") {
-                val commented = vulnlogYaml().replace("vulnerabilities:", "# audit notes\nvulnerabilities:")
+                val commented = vulnlogDocument().replace("vulnerabilities:", "# audit notes\nvulnerabilities:")
                 withTempFile(prefix = "target", content = commented) { target ->
                     val result = AddCommand().test("${target.absolutePath} --vuln-id CVE-2026-9999")
 
@@ -179,8 +180,8 @@ class AddCommandTest :
             }
 
             test("writes the entry to multiple destinations") {
-                withTempFile(prefix = "target1", content = vulnlogYaml()) { target1 ->
-                    withTempFile(prefix = "target2", content = vulnlogYaml()) { target2 ->
+                withTempFile(prefix = "target1", content = vulnlogDocument()) { target1 ->
+                    withTempFile(prefix = "target2", content = vulnlogDocument()) { target2 ->
                         val result =
                             AddCommand().test(
                                 "${target1.absolutePath} ${target2.absolutePath} " +
@@ -195,7 +196,7 @@ class AddCommandTest :
             }
 
             test("updates an existing entry in place and prints an 'Updated' message") {
-                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
                     val result =
                         AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-1234 " +
@@ -250,7 +251,7 @@ class AddCommandTest :
             }
 
             test("fails when --release is not defined in the file") {
-                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
                     val result =
                         AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --release 9.9.9",
@@ -262,7 +263,7 @@ class AddCommandTest :
             }
 
             test("fails when --tag is not defined in the file") {
-                withTempFile(prefix = "target", content = vulnlogYaml()) { target ->
+                withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
                     val result =
                         AddCommand().test(
                             "${target.absolutePath} --vuln-id CVE-2026-9999 --tag unknown",

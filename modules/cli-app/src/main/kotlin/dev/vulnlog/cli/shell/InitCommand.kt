@@ -10,6 +10,7 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import dev.vulnlog.lib.core.init
+import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.shell.FileOutputOption
@@ -40,7 +41,7 @@ class InitCommand : CliktCommand(name = "init") {
     private val mapper = createYamlMapper()
 
     override fun run() {
-        val vulnlogFile = init(CURRENT_VERSION, organization, project, author)
+        val vulnlogFile = init(SchemaVersion.V1, organization, project, author)
         val content = YamlWriter.write(vulnlogFile, mapper)
 
         when (val target = output) {

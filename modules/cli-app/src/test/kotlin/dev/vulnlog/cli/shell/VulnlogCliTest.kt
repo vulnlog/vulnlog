@@ -6,6 +6,7 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import dev.vulnlog.lib.shell.DiagnosticLevel
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeFalse
@@ -164,7 +165,7 @@ class VulnlogCliTest :
         context("quiet mode") {
 
             test("validate stays silent on success") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     val result = vulnlogCommand().test("-q validate ${file.absolutePath}")
 
                     result.statusCode shouldBe 0
@@ -174,7 +175,7 @@ class VulnlogCliTest :
             }
 
             test("validate without quiet prints the status line") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     val result = vulnlogCommand().test("validate ${file.absolutePath}")
 
                     result.statusCode shouldBe 0
@@ -183,7 +184,7 @@ class VulnlogCliTest :
             }
 
             test("suppress writes the file but no status line") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     withTempDir { dir ->
                         val result =
                             vulnlogCommand().test(
@@ -211,7 +212,7 @@ class VulnlogCliTest :
         context("verbose mode") {
 
             test("suppress reports parsed inputs and written outputs on stderr") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     withTempDir { dir ->
                         val result =
                             vulnlogCommand().test(
@@ -228,7 +229,7 @@ class VulnlogCliTest :
             }
 
             test("without -v no verbose lines appear") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     withTempDir { dir ->
                         val result =
                             vulnlogCommand().test(
@@ -242,7 +243,7 @@ class VulnlogCliTest :
             }
 
             test("report shows the filter expansion") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     withTempDir { dir ->
                         val output = dir.resolve("report.html")
                         val result =
@@ -258,7 +259,7 @@ class VulnlogCliTest :
             }
 
             test("suppress reports entries skipped for the output format") {
-                withTempFile(content = vulnlogYaml(reporter = "snyk")) { file ->
+                withTempFile(content = vulnlogDocument(reporter = "snyk")) { file ->
                     withTempDir { dir ->
                         val result =
                             vulnlogCommand().test(
@@ -273,7 +274,7 @@ class VulnlogCliTest :
             }
 
             test("skipped entries stay silent without -v") {
-                withTempFile(content = vulnlogYaml(reporter = "snyk")) { file ->
+                withTempFile(content = vulnlogDocument(reporter = "snyk")) { file ->
                     withTempDir { dir ->
                         val result =
                             vulnlogCommand().test(
@@ -328,7 +329,7 @@ class VulnlogCliTest :
             }
 
             test("validate shows a per-file validation summary") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     val result = vulnlogCommand().test("-v validate ${file.absolutePath}")
 
                     result.statusCode shouldBe 0
@@ -337,7 +338,7 @@ class VulnlogCliTest :
             }
 
             test("verbosity never touches stdout") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     val plain = vulnlogCommand().test("suppress ${file.absolutePath} -o -")
                     val verbose = vulnlogCommand().test("-vv suppress ${file.absolutePath} -o -")
 
@@ -351,7 +352,7 @@ class VulnlogCliTest :
         context("debug mode") {
 
             test("suppress lists included entries only at -vv") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     withTempDir { dir ->
                         val args = "suppress ${file.absolutePath} --output-dir ${dir.toAbsolutePath()}"
                         val verbose = vulnlogCommand().test("-v $args")
@@ -364,7 +365,7 @@ class VulnlogCliTest :
             }
 
             test("report counts the collected and merged entries at -vv") {
-                withTempFile(content = vulnlogYaml()) { file ->
+                withTempFile(content = vulnlogDocument()) { file ->
                     withTempDir { dir ->
                         val output = dir.resolve("report.html")
                         val result =

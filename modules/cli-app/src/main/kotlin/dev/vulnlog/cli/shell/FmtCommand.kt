@@ -6,12 +6,9 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
-import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
-import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.arguments.convert
-import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import dev.vulnlog.cli.shell.validation.parseInputOrFail
 import dev.vulnlog.lib.core.FormatOutcome
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.checkFormat
@@ -20,11 +17,10 @@ import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.core.renderFormatFinding
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
-import dev.vulnlog.lib.result.FormatFinding
-import dev.vulnlog.lib.result.ParseResult
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.shell.DiagnosticLevel
 import dev.vulnlog.lib.shell.FileInputOption
 import tools.jackson.databind.ObjectMapper
@@ -38,10 +34,8 @@ class FmtCommand : CliktCommand(name = "fmt") {
         |When read from STDIN, the command writes the formatted content to STDOUT.
         """.trimMargin()
 
-    private val inputs: List<FileInputOption> by argument(
-        help = "Vulnlog file(s) to format, or '-' to read from stdin.",
-    ).convert(conversion = ArgumentTransformContext::toInputFileOption)
-        .multiple(required = true)
+    private val inputs: List<FileInputOption> by
+        vulnlogFileInputs("Vulnlog file(s) to format, or '-' to read from stdin.")
 
     private val isCheck: Boolean by option(
         "--check",
@@ -52,50 +46,29 @@ class FmtCommand : CliktCommand(name = "fmt") {
             """.trimMargin(),
     ).flag(default = false)
 
+    /**
+     * Formatting rewrites the document as written, so it stops after the DTO stage: a file whose
+     * domain rules do not hold is still formattable, and often needs formatting to be readable.
+     */
     override fun run() {
-        val parsed = parseInputOrFail(inputs)
+        val parsed: List<ParsedVulnlogProject> =
+            inputs.map { input -> parseInputOrFail(input).project }
 
         val mapper = createYamlMapper()
         var anyUnformatted = false
-        for (input in inputs) {
-            val parsedInput = parsed.getValue(input)
-            val raw = parsedInput.rawContent
-            val outcome = formatYamlOutcome(parsedInput, mapper)
-            if (outcome is FormatOutcome.Reformatted) anyUnformatted = true
+        for (parsedInput in parsed) {
+            val source = parsedInput.inputDocument.source
+            when (val outcome = formatYamlOutcome(parsedInput, mapper)) {
+                is FormatOutcome.Unchanged -> reportUnchanged(parsedInput, source)
 
-            when (input) {
-                FileInputOption.Stdin ->
-                    when (outcome) {
-                        is FormatOutcome.Unchanged -> if (!isCheck) echo(raw.content, trailingNewline = false)
-                        is FormatOutcome.Reformatted ->
-                            if (isCheck) {
-                                echoFormatCheckFindings("<stdin>", checkFormat(parsedInput, mapper))
-                            } else {
-                                if (hasYamlComments(parsedInput.rootNode)) {
-                                    echoMessage(formatCommentsDroppedWarning("<stdin>"))
-                                }
-                                debugFormatFindings(parsedInput, mapper)
-                                echo(outcome.formatted.content, trailingNewline = false)
-                            }
+                is FormatOutcome.Reformatted -> {
+                    anyUnformatted = true
+                    if (isCheck) {
+                        echoFormatCheckFindings(parsedInput, source, mapper)
+                    } else {
+                        writeReformatted(parsedInput, source, outcome.formatted, mapper)
                     }
-
-                is FileInputOption.File ->
-                    when (outcome) {
-                        is FormatOutcome.Unchanged ->
-                            echoStatus(formatStatus(StatusVerb.UNCHANGED, input.path.toString()))
-                        is FormatOutcome.Reformatted ->
-                            if (isCheck) {
-                                echoFormatCheckFindings(input.path.toString(), checkFormat(parsedInput, mapper))
-                            } else {
-                                if (hasYamlComments(parsedInput.rootNode)) {
-                                    echoMessage(formatCommentsDroppedWarning(input.path.toString()))
-                                }
-                                debugFormatFindings(parsedInput, mapper)
-                                input.path.writeText(outcome.formatted.content)
-                                diagnosticSink().verbose("wrote ${input.path}")
-                                echoStatus(formatStatus(StatusVerb.FORMATTED, input.path.toString()))
-                            }
-                    }
+                }
             }
         }
 
@@ -104,18 +77,49 @@ class FmtCommand : CliktCommand(name = "fmt") {
         }
     }
 
-    private fun echoFormatCheckFindings(
+    private fun reportUnchanged(
+        parsedInput: ParsedVulnlogProject,
         source: String,
-        findings: List<FormatFinding>,
     ) {
-        echoMessage(formatFinding(Severity.WARNING, source, message = "not canonically formatted"))
-        findings.forEach { finding ->
+        when (parsedInput.inputDocument.path) {
+            null -> if (!isCheck) echo(parsedInput.inputDocument.content, trailingNewline = false)
+            else -> echoStatus(formatStatus(StatusVerb.UNCHANGED, source))
+        }
+    }
+
+    private fun writeReformatted(
+        parsedInput: ParsedVulnlogProject,
+        source: String,
+        formatted: String,
+        mapper: ObjectMapper,
+    ) {
+        if (hasYamlComments(parsedInput.nodeTree.rootNode)) {
+            echoMessage(formatCommentsDroppedWarning(source))
+        }
+        debugFormatFindings(parsedInput, mapper)
+        when (val path = parsedInput.inputDocument.path) {
+            null -> echo(formatted, trailingNewline = false)
+            else -> {
+                path.writeText(formatted)
+                diagnosticSink().verbose("wrote $source")
+                echoStatus(formatStatus(StatusVerb.FORMATTED, source))
+            }
+        }
+    }
+
+    private fun echoFormatCheckFindings(
+        parsedInput: ParsedVulnlogProject,
+        source: String,
+        mapper: ObjectMapper,
+    ) {
+        echoMessage(formatFinding(FindingSeverity.WARNING, source, message = "not canonically formatted"))
+        checkFormat(parsedInput, mapper).forEach { finding ->
             echoMessage("  ${renderFormatFinding(finding)}")
         }
     }
 
     private fun debugFormatFindings(
-        parsedInput: ParseResult.Ok,
+        parsedInput: ParsedVulnlogProject,
         mapper: ObjectMapper,
     ) {
         if (!diagnostics().verbosity.enables(DiagnosticLevel.DEBUG)) return

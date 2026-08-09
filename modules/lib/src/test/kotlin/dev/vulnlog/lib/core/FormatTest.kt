@@ -159,7 +159,7 @@ class FormatTest :
         ) = Regex(Regex.escape(needle)).findAll(haystack).count()
 
         test("column-0 sequences are normalised without duplicating entries") {
-            val result = formatYaml(parsed(COLUMN0_YAML), mapper).content
+            val result = formatYaml(parsed(COLUMN0_YAML), mapper)
 
             // Each entry appears exactly once (the bug duplicated them).
             occurrences(result, "id: foo") shouldBe 1
@@ -186,7 +186,7 @@ class FormatTest :
         }
 
         test("reformats every vulnerability entry in place without duplicating it") {
-            val result = formatYaml(parsed(ENTRIES_YAML), mapper).content
+            val result = formatYaml(parsed(ENTRIES_YAML), mapper)
 
             occurrences(result, "id: CVE-2026-0001") shouldBe 1
             occurrences(result, "id: CVE-2026-0002") shouldBe 1
@@ -206,7 +206,7 @@ class FormatTest :
         }
 
         test("renders multi-line values as literal and long single-line values as folded blocks") {
-            val result = formatYaml(parsed(STYLED_YAML), mapper).content
+            val result = formatYaml(parsed(STYLED_YAML), mapper)
 
             result shouldContain "analysis: |-"
             result shouldContain "comment: >-"
@@ -220,7 +220,7 @@ class FormatTest :
         }
 
         test("removes user comments and generates the schema header") {
-            val result = formatYaml(parsed(COMMENTED_YAML), mapper).content
+            val result = formatYaml(parsed(COMMENTED_YAML), mapper)
 
             result shouldNotContain "# reviewed by the security team"
             result shouldNotContain "# temporary, recheck after upgrade"
@@ -232,13 +232,13 @@ class FormatTest :
         test("renders a flow-style vulnerabilities list in the canonical block style") {
             val result = formatYaml(parsed(FLOW_YAML), mapper)
 
-            result.content shouldContain "vulnerabilities:\n\n  - id: CVE-2026-0001"
-            result.content shouldContain "releases: [1.0.0]"
+            result shouldContain "vulnerabilities:\n\n  - id: CVE-2026-0001"
+            result shouldContain "releases: [1.0.0]"
             formatYaml(parsed(result), mapper) shouldBe result
         }
 
         test("an empty vulnerabilities list renders as an empty flow array") {
-            val result = formatYaml(parsed(COLUMN0_YAML), mapper).content
+            val result = formatYaml(parsed(COLUMN0_YAML), mapper)
 
             result shouldContain "vulnerabilities: []"
         }

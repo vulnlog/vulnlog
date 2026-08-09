@@ -9,21 +9,20 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.VulnlogFileRaw
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.v1.V1Mapper
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.result.ParseResult
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.parse.mapper.DtoV1Mapper
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 
 data class CopyOutcome(
     val copied: List<VulnId>,
-    val newContent: VulnlogFileRaw,
+    val newContent: String,
 )
 
 /**
@@ -40,31 +39,36 @@ data class CopyOutcome(
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
-    destination: ParseResult.Ok,
+    destination: ValidVulnlogProject,
     vulnIds: Set<VulnId>,
     mapper: ObjectMapper = createYamlMapper(),
 ): CopyOutcome {
+    val destinationFile = destination.vulnlogProjectFile
     val release =
-        destination.content.releases
+        destinationFile.releases
             .lastOrNull()
             ?.id
     val sourceEntries = source.vulnerabilities.filter { it.id in vulnIds }
-    val existingById = destination.content.vulnerabilities.associateBy { it.id }
+    val existingById = destinationFile.vulnerabilities.associateBy { it.id }
 
+    val destinationDto = destination.parsedVulnlogProject.validatedDto
     val newDto =
-        sourceEntries.fold(destination.dto) { acc, incoming ->
-            val merged = mergeVulnerabilityEntry(existingById[incoming.id], incoming, release)
-            upsertEntry(acc, incoming.id, V1Mapper.vulnerabilityToDto(merged))
+        when (destinationDto) {
+            is VulnlogFileV1Dto ->
+                sourceEntries.fold(destinationDto) { acc, incoming ->
+                    val merged = mergeVulnerabilityEntry(existingById[incoming.id], incoming, release)
+                    upsertEntry(acc, incoming.id, DtoV1Mapper.vulnerabilityToDto(merged))
+                }
         }
+
     return CopyOutcome(
         copied = sourceEntries.map { it.id },
         newContent =
-            VulnlogFileRaw(
-                YamlWriter.renderCanonicalDocument(
-                    newDto,
-                    mapper,
-                    includeSchemaHeader = hasSchemaHeader(destination.rootNode),
-                ),
+            YamlWriter.renderCanonicalDocument(
+                newDto,
+                mapper,
+                includeSchemaHeader =
+                    hasSchemaHeader(destination.nodeTree.rootNode),
             ),
     )
 }
@@ -135,7 +139,7 @@ private fun mergeReports(
 
 fun formatVulnIdsNotInSourceMessage(missing: Set<VulnId>): String =
     formatMessage(
-        Severity.ERROR,
+        FindingSeverity.ERROR,
         "vulnerability IDs not found in source file: ${missing.joinToString(", ") { it.id }}",
     )
 

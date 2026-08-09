@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.shell
 
-import dev.vulnlog.lib.result.InputValidationResult
 import java.nio.file.Path
 
 /**
@@ -27,3 +26,16 @@ fun validateInputPath(path: Path): InputValidationResult {
 
 private fun isVulnlogFileName(name: String): Boolean =
     name == "vulnlog.yaml" || name == "vulnlog.yml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml")
+
+/** Validates how `<stdin>` combines with file inputs across a multi-input command: at most one `<stdin>`, and never mixed with files. */
+fun validateInputSelection(inputs: List<FileInputOption>): InputSelectionResult {
+    val stdinCount = inputs.count { it is FileInputOption.Stdin }
+    val hasFiles = inputs.any { it is FileInputOption.File }
+    if (stdinCount > 1) {
+        return InputSelectionResult.Error("Multiple <stdin> are not supported.")
+    }
+    if (stdinCount == 1 && hasFiles) {
+        return InputSelectionResult.Error("Mixing input files with STDIN is not allowed.")
+    }
+    return InputSelectionResult.Ok
+}

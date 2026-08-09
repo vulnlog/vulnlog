@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":lib"))
     implementation(libs.clikt)
 
+    testImplementation(testFixtures(project(":lib")))
     testImplementation(libs.kotestAssertionsCoreJvm)
     testImplementation(libs.kotestRunnerJunit5Jvm)
 }

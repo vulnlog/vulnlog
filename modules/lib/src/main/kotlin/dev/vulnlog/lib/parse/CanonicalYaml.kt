@@ -4,9 +4,9 @@
 package dev.vulnlog.lib.parse
 
 import dev.vulnlog.lib.parse.CanonicalYaml.FOLD_THRESHOLD
-import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
-import dev.vulnlog.lib.parse.v1.dto.ResolutionDto
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.dto.ReportEntryDto
+import dev.vulnlog.lib.parse.dto.ResolutionDto
+import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
 import org.snakeyaml.engine.v2.api.Dump
 import org.snakeyaml.engine.v2.api.DumpSettings
 import org.snakeyaml.engine.v2.api.RepresentToNode

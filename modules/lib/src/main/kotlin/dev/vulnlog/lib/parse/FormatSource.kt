@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.parse
 
-import dev.vulnlog.lib.model.VulnlogFileRaw
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
 import org.snakeyaml.engine.v2.nodes.ScalarNode
@@ -14,7 +13,7 @@ import org.snakeyaml.engine.v2.nodes.SequenceNode
  * tree, which carries the styles and source positions that the DTO and domain models strip.
  */
 data class FormatSource(
-    val raw: VulnlogFileRaw,
+    val raw: String,
     val root: MappingNode,
 )
 
