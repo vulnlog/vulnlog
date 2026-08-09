@@ -45,6 +45,7 @@ object HtmlReportMapper {
     private fun toReportEntryData(entry: ReportingEntry): ReportEntryDataDto =
         ReportEntryDataDto(
             primaryId = entry.primaryId.id,
+            name = entry.name,
             ids = entry.ids.map { it.id },
             state = entry.state.name.lowercase(),
             verdict = verdictLabel(entry.impact),

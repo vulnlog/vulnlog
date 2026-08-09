@@ -289,6 +289,10 @@
             font-size: 0.875rem;
         }
 
+        .vuln-name {
+            font-weight: 600;
+        }
+
         .details-label {
             font-weight: 600;
             color: var(--vl-text-secondary);
@@ -849,6 +853,15 @@
             }
 
             td.appendChild(meta);
+
+            // Common name (only if present)
+            if (e.name) {
+                var name = document.createElement('div');
+                name.className = 'details-block vuln-name';
+                name.appendChild(labelSpan('Name'));
+                name.appendChild(document.createTextNode(e.name));
+                td.appendChild(name);
+            }
 
             // Description (only if present)
             if (e.shortDescription) {
