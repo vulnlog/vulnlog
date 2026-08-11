@@ -110,13 +110,13 @@ verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
 .Generated Snyk suppression file
 [source,yaml]
 ----
-include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..5]
+include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..6]
 ----
 
 .Generated Trivy suppression file
 [source,yaml]
 ----
-include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..4]
+include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..5]
 ----
 
 .Generated Cargo Audit suppression file
