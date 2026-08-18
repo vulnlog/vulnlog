@@ -115,6 +115,10 @@ class ValidationGradleWrapperTest :
 
         context("warnings") {
 
+            test("a DTO warning does not fail the build") {
+                shouldNotThrowAny { validate(ValidationDocuments.DEPRECATED_VERDICT) }
+            }
+
             test("a domain warning does not fail the build") {
                 shouldNotThrowAny { validate(ValidationDocuments.ANALYZED_BEFORE_REPORTED) }
             }

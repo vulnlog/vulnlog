@@ -153,10 +153,10 @@
           "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/"
         },
         "verdict": {
-          "description": "The human triage decision for a vulnerability. Absence or 'under investigation' indicates the vulnerability is under investigation. 'affected' and 'risk acceptable' require a severity; 'not affected' requires a justification",
+          "description": "The human triage decision for a vulnerability. Absence or 'under investigation' indicates the vulnerability is under investigation. 'affected' require a severity; 'not affected' requires a justification",
           "oneOf": [
             {
-              "description": "The vulnerability impacts this release and remediation is expected. Requires 'severity'",
+              "description": "The vulnerability impacts this release. Requires 'severity'; an optional 'disposition' states the remediation intent",
               "const": "affected"
             },
             {
@@ -164,7 +164,8 @@
               "const": "not affected"
             },
             {
-              "description": "The vulnerability impacts this release but the risk has been assessed and accepted without remediation. Requires 'severity' and an explicit 'suppress' block to suppress the finding",
+              "description": "Deprecated: use verdict 'affected' with disposition 'wont fix' instead. Accepted until the 1.0 release. Requires 'severity'",
+              "deprecated": true,
               "const": "risk acceptable"
             },
             {
@@ -173,8 +174,21 @@
             }
           ]
         },
+        "disposition": {
+          "description": "Stated remediation intent for an 'affected' verdict. Optional with no default: absence means the intent is not stated",
+          "oneOf": [
+            {
+              "description": "The project intends to remediate the vulnerability",
+              "const": "will fix"
+            },
+            {
+              "description": "The project accepts the risk; no remediation is intended. Replaces the deprecated 'risk acceptable' verdict. Requires an explicit 'suppress' block to suppress the finding",
+              "const": "wont fix"
+            }
+          ]
+        },
         "severity": {
-          "description": "Severity assessment of a vulnerability. Required when verdict is 'affected' or 'risk acceptable'",
+          "description": "Severity assessment of a vulnerability. Required when verdict is 'affected'",
           "oneOf": [
             {
               "description": "Immediate action required. Exploitable with severe impact",
@@ -428,7 +442,7 @@
       "additionalProperties": false,
       "$defs": {
         "suppressEntry": {
-          "description": "Scanner-specific suppression configuration. Required to suppress findings with verdict 'affected' (without resolution), 'risk acceptable', or absent verdict. Not required for 'not affected' findings (included in suppression output unless a present 'expires_at' has passed) or 'affected' findings with a 'resolution' (never included). When present without 'expires_at', the suppression is permanent",
+          "description": "Scanner-specific suppression configuration. Required to suppress findings with verdict 'affected' (without resolution, regardless of disposition) or absent verdict. Not required for 'not affected' findings (included in suppression output unless a present 'expires_at' has passed) or 'affected' findings with a 'resolution' (never included). When present without 'expires_at', the suppression is permanent",
           "examples": [
             {},
             {
@@ -480,8 +494,9 @@
           ],
           "analysis": "Logback is a ktlint configuration dependency and not part of the application.",
           "analyzed_at": "2026-04-06",
-          "verdict": "risk acceptable",
+          "verdict": "affected",
           "severity": "low",
+          "disposition": "wont fix",
           "resolution": {
             "in": "0.12.0",
             "at": "2026-04-07",
@@ -531,6 +546,23 @@
           "then": {
             "not": {
               "required": [ "justification" ]
+            }
+          }
+        },
+        {
+          "if": {
+            "not": {
+              "required": [ "verdict" ],
+              "properties": {
+                "verdict": {
+                  "const": "affected"
+                }
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [ "disposition" ]
             }
           }
         }
@@ -629,6 +661,9 @@
         },
         "verdict": {
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/verdict"
+        },
+        "disposition": {
+          "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/disposition"
         },
         "justification": {
           "$ref": "#/$defs/https:~1~1vulnlog.dev~1schemas~1v1~1defs~1common.json/$defs/justification"

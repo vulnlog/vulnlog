@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
@@ -162,13 +163,40 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.DISMISSED
             }
 
-            test("derives dismissed state from RiskAcceptable verdict without resolution") {
-                val vuln = vulnerability(verdict = Verdict.RiskAcceptable(Severity.LOW))
+            test("derives dismissed state from a wont fix disposition without resolution") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX))
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))
 
                 val result = collectReportingEntries(file)
 
                 result.first().state shouldBe WorkState.DISMISSED
+            }
+
+            test("derives open state from a will fix disposition without resolution") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW, Disposition.WILL_FIX))
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.OPEN
+            }
+
+            test("derives acceptable risk impact from a wont fix disposition") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX))
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().impact shouldBe Impact.AcceptableRisk(Severity.LOW)
+            }
+
+            test("derives affected impact from a will fix disposition") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW, Disposition.WILL_FIX))
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().impact shouldBe Impact.Affected(Severity.LOW)
             }
 
             test("resolution overrides Affected verdict to resolved state") {
@@ -212,10 +240,10 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.UNDER_INVESTIGATION
             }
 
-            test("resolution overrides RiskAcceptable verdict to resolved state") {
+            test("resolution overrides a wont fix disposition to resolved state") {
                 val vuln =
                     vulnerability(
-                        verdict = Verdict.RiskAcceptable(Severity.LOW),
+                        verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
                         resolution = Resolution(release = releaseV2),
                     )
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))
@@ -268,11 +296,11 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.DISMISSED
             }
 
-            test("RiskAcceptable with resolution outside filter releases falls back to DISMISSED") {
+            test("wont fix with resolution outside filter releases falls back to DISMISSED") {
                 val vuln =
                     vulnerability(
                         releases = listOf(releaseV1),
-                        verdict = Verdict.RiskAcceptable(Severity.LOW),
+                        verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
                         resolution = Resolution(release = releaseV2),
                     )
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))

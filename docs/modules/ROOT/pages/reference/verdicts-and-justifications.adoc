@@ -3,6 +3,32 @@
 
 The term "verdict" is used deliberately to distinguish from automated scanner statuses: it reflects a deliberate human judgment about the impact of a vulnerability.
 
+Each vulnerability entry answers up to four questions:
+
+[cols="1,2,2"]
+|===
+| Question | Field | Values
+
+| Does it affect this release?
+| `verdict`
+| absent (under investigation), `affected`, `not affected`
+
+| How severe is it for us?
+| `severity`
+| `low`, `medium`, `high`, `critical`
+
+| What will we do about it?
+| `disposition`
+| `will fix`, `wont fix` (optional)
+
+| Was it remediated, and where?
+| `resolution`
+| absent, or a resolution block
+|===
+
+Severity and disposition only carry meaning once the verdict is `affected`.
+Resolution is independent of the verdict: it records the fact that the dependency was updated or the issue otherwise addressed.
+
 == Verdict values
 
 [cols="1,3"]
@@ -10,13 +36,10 @@ The term "verdict" is used deliberately to distinguish from automated scanner st
 | Value | Description
 
 | `affected`
-| The vulnerability impacts this release and remediation is expected. Requires `severity`.
+| The vulnerability impacts this release. Requires `severity`; an optional `disposition` states the remediation intent.
 
 | `not affected`
 | The vulnerability is present in a dependency but does not impact this release. Requires `justification`.
-
-| `risk acceptable`
-| The vulnerability impacts this release but the risk has been assessed and accepted without remediation. Requires `severity`.
 
 | _(absent)_
 | Not yet triaged. The entry is under investigation.
@@ -29,7 +52,7 @@ Use `verdict: not affected` with an optional `resolution` to record that a vulne
 
 === `affected`
 
-The vulnerability is confirmed to impact the project and remediation is expected.
+The vulnerability is confirmed to impact the project.
 Requires a `severity` assessment.
 Typically paired with a `resolution` block once the fix is applied.
 
@@ -64,28 +87,55 @@ analysis: >
   Our application only accepts PNG and JPEG formats.
 ----
 
-=== `risk acceptable`
+[[disposition-values]]
+== Disposition values
 
-The vulnerability is confirmed to impact the project, but a deliberate decision has been made to accept the risk without remediation.
-Requires a `severity` assessment.
+The optional `disposition` field states what the project intends to do about an `affected` vulnerability.
+It is only valid together with `verdict: affected` and has no default: absence means the intent has not been stated, which is distinct from both values.
 
-Unlike `affected`, this verdict signals that no fix is planned.
+[cols="1,3"]
+|===
+| Value | Description
+
+| `will fix`
+| The project intends to remediate the vulnerability.
+
+| `wont fix`
+| The project accepts the risk; no remediation is intended.
+|===
+
+=== Accepting a risk
+
+A deliberate decision to accept a risk is expressed as `verdict: affected` with `disposition: wont fix`.
 The vulnerable dependency remains in place and represents a live risk, so the scanner continues to report the finding.
-Suppressing a live risk must be a deliberate decision separate from the verdict, so an explicit `suppress` block on the report entry is required.
+Suppressing a live risk must be a deliberate decision separate from the triage, so an explicit `suppress` block on the report entry is required.
 
 [source,yaml]
 ----
-verdict: risk acceptable
+verdict: affected
 severity: medium
+disposition: wont fix
 analysis: >
   Vulnerability confirmed but only exploitable with
   specially crafted input that our validation layer rejects.
 ----
 
+A risk-accepted vulnerability may still be fixed passively, for example when an unrelated dependency update happens to contain the fix.
+Record that with a `resolution` block; the `wont fix` disposition and the resolution coexist.
+
+=== Migration from `risk acceptable`
+
+Earlier versions expressed risk acceptance as a dedicated verdict, `risk acceptable`.
+That verdict is deprecated: it combined the applicability judgment with the remediation intent, which are separate questions.
+
+Files carrying the legacy verdict keep parsing until the 1.0 release; the entry behaves exactly like `verdict: affected` with `disposition: wont fix`, and `vulnlog validate` prints a deprecation warning.
+Writing commands leave the legacy verdict as written; migrating is a deliberate step.
+See xref:upgrade/migrate-risk-acceptable.adoc[Migrate from the 'risk acceptable' verdict] for the migration guide.
+
 [[severity-values]]
 == Severity values
 
-Required when `verdict` is `affected` or `risk acceptable`.
+Required when `verdict` is `affected`.
 
 [cols="1,3"]
 |===
@@ -103,6 +153,8 @@ Required when `verdict` is `affected` or `risk acceptable`.
 | `low`
 | Low priority. Minimal impact or difficult to exploit.
 |===
+
+NOTE: Accepting a `critical` risk with `disposition: wont fix` is valid but unusual; `vulnlog validate` points it out with an info finding.
 
 [[justification-values]]
 == Justification values

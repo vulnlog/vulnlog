@@ -140,6 +140,14 @@ class ValidationCliWrapperTest :
 
         context("warnings") {
 
+            test("a DTO warning does not stop the command") {
+                withTempFile(content = ValidationDocuments.DEPRECATED_VERDICT) { file ->
+                    val result = validate(file)
+
+                    result.statusCode shouldBe 0
+                }
+            }
+
             test("a domain warning does not stop the command") {
                 withTempFile(content = ValidationDocuments.ANALYZED_BEFORE_REPORTED) { file ->
                     val result = validate(file)

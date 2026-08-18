@@ -73,8 +73,9 @@ vulnerabilities:
       Demo project utilizes some-other-dependency but only in rare cases. Therefore the risk is considered low and a fix would
       potentially be breaking for customer setups.
     analyzed_at: 2022-04-29
-    verdict: risk acceptable
+    verdict: affected
     severity: low
+    disposition: wont fix
     comment: >-
       Risk accepted by project lead (decision documented in RISK-12). Revisit when some-other-dependency 4.0 is released.
 

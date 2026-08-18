@@ -70,12 +70,17 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `severity`
 | String (enum)
 | Conditional
-| Severity assessment. Required when `verdict` is `affected` or `risk acceptable`. See xref:reference/verdicts-and-justifications.adoc#severity-values[Severity Values].
+| Severity assessment. Required when `verdict` is `affected`. See xref:reference/verdicts-and-justifications.adoc#severity-values[Severity Values].
 
 | `verdict`
 | String (enum)
 | No
 | The human triage decision. See xref:reference/verdicts-and-justifications.adoc[Verdicts and Justifications]. Absence indicates under investigation.
+
+| `disposition`
+| String (enum)
+| No
+| Remediation intent for an `affected` verdict: `will fix` or `wont fix`. See xref:reference/verdicts-and-justifications.adoc#disposition-values[Disposition Values].
 
 | `justification`
 | String (enum)

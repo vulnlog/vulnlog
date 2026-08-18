@@ -44,10 +44,13 @@ vulnlog modify add [<file...>] --vuln-id <id> [flags]
 | Date the analysis was performed, formatted `yyyy-MM-dd`.
 
 | `--verdict <value>`
-| Triage verdict. One of `affected`, `not affected`, `risk acceptable`.
+| Triage verdict. One of `affected`, `not affected`.
 
 | `--severity <value>`
 | Severity. One of `low`, `medium`, `high`, `critical`.
+
+| `--disposition <value>`
+| Remediation intent for an `affected` verdict. One of `will fix`, `wont fix`.
 
 | `--justification <value>`
 | VEX justification for a `not affected` verdict (e.g. `vulnerable code not in execute path`).
@@ -64,7 +67,7 @@ When writing to a file, the whole file is rewritten in the canonical style, exac
 Any valid YAML layout is accepted as input.
 YAML comments are not preserved; the command warns when it drops them.
 
-The `--verdict`, `--severity`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:reference/cli-validate.adoc[validate].
+The `--verdict`, `--severity`, `--disposition`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:reference/cli-validate.adoc[validate].
 
 If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated.
 The update favours adding over replacing:

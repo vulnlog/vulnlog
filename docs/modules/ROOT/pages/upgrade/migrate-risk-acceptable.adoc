@@ -1,0 +1,72 @@
+= Migrate from the 'risk acceptable' verdict
+
+Vulnlog deprecates the `risk acceptable` verdict.
+Risk acceptance is now expressed as `verdict: affected` together with the optional `disposition: wont fix` field.
+This guide explains what changed, why, and how to migrate existing files.
+
+== Why the verdict changed
+
+The `risk acceptable` verdict combined two separate questions in one field: whether the project is affected, and what the project intends to do about it.
+That made the choice between `affected` and `risk acceptable` ambiguous, and it hid the severity of accepted risks from the model.
+The xref:reference/verdicts-and-justifications.adoc#disposition-values[`disposition` field] gives the second question its own answer: `will fix` or `wont fix`, stated explicitly and only on `affected` entries.
+
+== What changed
+
+[cols="1,1"]
+|===
+| Before | After
+
+a|
+[source,yaml]
+----
+verdict: risk acceptable
+severity: low
+----
+a|
+[source,yaml]
+----
+verdict: affected
+severity: low
+disposition: wont fix
+----
+|===
+
+Nothing else about the entry changes: the severity keeps its meaning, an existing `resolution` stays in place, and suppression still requires an explicit `suppress` block on the report.
+Generated reports and suppression files are identical before and after the migration.
+
+== Deprecation window
+
+Files carrying the legacy verdict keep working until the 1.0 release:
+
+- The parser accepts `verdict: risk acceptable` and treats it exactly like `verdict: affected` with `disposition: wont fix`.
+- `vulnlog validate` reports a warning for every legacy entry.
+- Writing commands such as `fmt`, `modify add`, and `modify copy` leave the legacy verdict as written; nothing migrates automatically.
+- The JSON schema still lists the value but marks it deprecated, so schema-aware editors flag it inline.
+
+With the 1.0 release the legacy value is removed from the parser and the schema, and unmigrated files stop validating.
+
+== Migrate a file
+
+Migrating is a deliberate step: Vulnlog never rewrites the verdict on its own.
+The rewrite is a small jq filter.
+Vulnlog files are YAML, so run the filter through a YAML-aware jq frontend such as `yq`:
+
+[source,bash]
+----
+yq -yi '(.vulnerabilities[] | select(.verdict == "risk acceptable"))
+  |= (.verdict = "affected" | .disposition = "wont fix")' vulnlog.yaml
+----
+
+Two side effects of `yq` are worth knowing: it drops YAML comments including the `# $schema:` header, and it does not produce Vulnlog's canonical field order.
+Re-add the header manually if your editor uses it for schema support, and run `vulnlog fmt` afterwards to restore the canonical layout (see xref:guides/validate-and-format.adoc[Validate and format]).
+
+Alternatively, edit the entries by hand; each one is a two-line change.
+
+Confirm the result:
+
+[source,bash]
+----
+vulnlog validate vulnlog.yaml
+----
+
+The deprecation warnings disappear once no legacy entries remain.

@@ -24,10 +24,10 @@
       "pattern": "^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/"
     },
     "verdict": {
-      "description": "The human triage decision for a vulnerability. Absence or 'under investigation' indicates the vulnerability is under investigation. 'affected' and 'risk acceptable' require a severity; 'not affected' requires a justification",
+      "description": "The human triage decision for a vulnerability. Absence or 'under investigation' indicates the vulnerability is under investigation. 'affected' require a severity; 'not affected' requires a justification",
       "oneOf": [
         {
-          "description": "The vulnerability impacts this release and remediation is expected. Requires 'severity'",
+          "description": "The vulnerability impacts this release. Requires 'severity'; an optional 'disposition' states the remediation intent",
           "const": "affected"
         },
         {
@@ -35,7 +35,8 @@
           "const": "not affected"
         },
         {
-          "description": "The vulnerability impacts this release but the risk has been assessed and accepted without remediation. Requires 'severity' and an explicit 'suppress' block to suppress the finding",
+          "description": "Deprecated: use verdict 'affected' with disposition 'wont fix' instead. Accepted until the 1.0 release. Requires 'severity'",
+          "deprecated": true,
           "const": "risk acceptable"
         },
         {
@@ -44,8 +45,21 @@
         }
       ]
     },
+    "disposition": {
+      "description": "Stated remediation intent for an 'affected' verdict. Optional with no default: absence means the intent is not stated",
+      "oneOf": [
+        {
+          "description": "The project intends to remediate the vulnerability",
+          "const": "will fix"
+        },
+        {
+          "description": "The project accepts the risk; no remediation is intended. Replaces the deprecated 'risk acceptable' verdict. Requires an explicit 'suppress' block to suppress the finding",
+          "const": "wont fix"
+        }
+      ]
+    },
     "severity": {
-      "description": "Severity assessment of a vulnerability. Required when verdict is 'affected' or 'risk acceptable'",
+      "description": "Severity assessment of a vulnerability. Required when verdict is 'affected'",
       "oneOf": [
         {
           "description": "Immediate action required. Exploitable with severe impact",

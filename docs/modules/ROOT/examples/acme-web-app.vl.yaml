@@ -53,8 +53,9 @@ vulnerabilities:
     analysis: >-
       Confirmed but only exploitable with specially crafted image dimensions that the upload validation layer rejects.
     analyzed_at: 2026-04-03
-    verdict: risk acceptable
+    verdict: affected
     severity: low
+    disposition: wont fix
     comment: Risk accepted by project lead. Revisit when thumbnail-gen 3.0 is released.
 
   - id: CVE-2026-1234

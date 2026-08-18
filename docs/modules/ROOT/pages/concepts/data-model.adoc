@@ -14,7 +14,7 @@ Each vulnerability entry keeps three kinds of information apart:
 
 Facts:: What was found and by whom: the identifier and its aliases, the affected packages, and one report per scanner that flagged it (the reporter and the date).
 Facts are append-only; a second scanner reporting the same vulnerability adds a report, not a new entry.
-Judgment:: What you decided: the `verdict` (`affected`, `not affected`, `risk acceptable`), the machine-readable `justification` for a `not affected` verdict, your own `severity` assessment, and the free-text `analysis` that carries the reasoning.
+Judgment:: What you decided: the `verdict` (`affected`, `not affected`), the machine-readable `justification` for a `not affected` verdict, your own `severity` assessment, the optional `disposition` stating the remediation intent, and the free-text `analysis` that carries the reasoning.
 An entry without a verdict is under investigation.
 Action:: What happened about it: the `resolution` records the release that ships the fix or update.
 It is independent of the verdict; even a `not affected` entry can record that the dependency was updated anyway.

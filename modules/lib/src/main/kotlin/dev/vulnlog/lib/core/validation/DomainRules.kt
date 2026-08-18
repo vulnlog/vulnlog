@@ -4,7 +4,10 @@
 package dev.vulnlog.lib.core.validation
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
@@ -25,6 +28,7 @@ val v1DomainRules =
         ::validateTagInReleasesIsDefined,
         ::validateTagInVulnerabilityIsDefined,
         ::validateSourceInReportIsDefinedWhenOther,
+        ::validateNoAcceptedCriticalRisk,
     )
 
 private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
@@ -246,5 +250,21 @@ private fun validateSourceInReportIsDefinedWhenOther(file: VulnlogFile): List<Va
                 rule = Rule.MISSING_REPORTER_INFORMATION,
                 path = "vulnerabilities[${vuln.id.canonical()}]",
                 message = "Generic reporter without source specified.",
+            )
+        }
+
+private fun validateNoAcceptedCriticalRisk(file: VulnlogFile): List<ValidationFinding> =
+    file.vulnerabilities
+        .filter { vuln ->
+            val verdict = vuln.verdict
+            verdict is Verdict.Affected &&
+                verdict.severity == Severity.CRITICAL &&
+                verdict.disposition == Disposition.WONT_FIX
+        }.map { vuln ->
+            ValidationFinding(
+                severity = FindingSeverity.INFO,
+                rule = Rule.ACCEPTED_CRITICAL_RISK,
+                path = "vulnerabilities[${vuln.id.canonical()}].disposition",
+                message = "A critical severity vulnerability is marked 'wont fix'.",
             )
         }

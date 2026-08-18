@@ -14,10 +14,6 @@ import tools.jackson.databind.ObjectMapper
  * `---` document start, then the `schemaVersion`, `project`, `tags` (when present), `releases` and
  * `vulnerabilities` sections separated by blank lines, with a blank line before each vulnerability
  * entry. Sections and entries are rendered through [CanonicalYaml].
- *
- * The output is a pure function of the document data plus [includeSchemaHeader]: presentation found
- * in a source file, including YAML comments, is not carried over. The `# $schema:` header is the one
- * exception, kept only when [includeSchemaHeader] says the source had it; see [hasSchemaHeader].
  */
 object YamlWriter {
     fun write(

@@ -121,12 +121,17 @@ class AddCommand : CliktCommand(name = "add") {
     val verdict: String? by option(
         "--verdict",
         help = "Triage verdict for the entry.",
-    ).choice("affected", "not affected", "risk acceptable")
+    ).choice("affected", "not affected")
 
     val severity: String? by option(
         "--severity",
-        help = "Severity of an affected or risk-acceptable verdict.",
+        help = "Severity of an affected verdict.",
     ).choice("low", "medium", "high", "critical")
+
+    val disposition: String? by option(
+        "--disposition",
+        help = "Remediation intent for an affected verdict.",
+    ).choice("will fix", "wont fix")
 
     val justification: String? by option(
         "--justification",
@@ -159,6 +164,7 @@ class AddCommand : CliktCommand(name = "add") {
                 analyzedAt = analyzedAt,
                 verdict = verdict,
                 severity = severity,
+                disposition = disposition,
                 justification = justification,
                 comment = comment,
             )

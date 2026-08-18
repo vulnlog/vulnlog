@@ -13,6 +13,8 @@ import dev.vulnlog.lib.model.finding.FindingSeverity.WARNING
 import dev.vulnlog.lib.model.finding.ValidationFinding
 import dev.vulnlog.lib.model.finding.highestSeverity
 import dev.vulnlog.lib.parse.DomainMappingResult
+import dev.vulnlog.lib.parse.dto.DtoVersion
+import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.mapToDomain
 import dev.vulnlog.lib.parse.validation.DocumentResult
 import dev.vulnlog.lib.parse.validation.DtoParseResult
@@ -58,7 +60,8 @@ fun parseDocument(
             is DtoParseResult.Parsed -> result.dto
         }
 
-    return Ok(ParsedVulnlogProject(document, nodeTree, dto), emptyList())
+    val findings = dtoFindings(dto)
+    return outcomeOf(findings, config) { ParsedVulnlogProject(document, nodeTree, dto) }
 }
 
 /** Continues [parseDocument] into the domain model and runs the domain rules over it. */
@@ -86,6 +89,11 @@ fun validateDocument(
     val findings = parsed.findings + domainFindings(file)
     return outcomeOf(findings, config) { ValidVulnlogProject(parsed.project, file) }
 }
+
+private fun dtoFindings(dto: DtoVersion): List<ValidationFinding> =
+    when (dto) {
+        is VulnlogFileV1Dto -> v1DtoRules.flatMap { rule -> rule(dto) }
+    }
 
 private fun domainFindings(file: VulnlogFile): List<ValidationFinding> =
     when (file.schemaVersion) {

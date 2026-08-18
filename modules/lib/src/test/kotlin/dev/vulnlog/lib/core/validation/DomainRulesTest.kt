@@ -14,7 +14,10 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.finding.Rule
@@ -480,6 +483,36 @@ class DomainRulesTest :
                 }
             }
         }
+
+        context("accepted critical risk") {
+
+            test("a critical vulnerability marked wont fix is informational") {
+                val file = fileWithVerdict(Verdict.Affected(Severity.CRITICAL, Disposition.WONT_FIX))
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.ACCEPTED_CRITICAL_RISK }
+
+                with(findings.single()) {
+                    severity shouldBe FindingSeverity.INFO
+                    path shouldBe "vulnerabilities[CVE-2021-1].disposition"
+                }
+            }
+
+            test("a non-critical vulnerability marked wont fix produces no finding") {
+                val file = fileWithVerdict(Verdict.Affected(Severity.HIGH, Disposition.WONT_FIX))
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.ACCEPTED_CRITICAL_RISK }
+
+                findings.shouldBeEmpty()
+            }
+
+            test("a critical vulnerability that is being fixed produces no finding") {
+                val file = fileWithVerdict(Verdict.Affected(Severity.CRITICAL))
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.ACCEPTED_CRITICAL_RISK }
+
+                findings.shouldBeEmpty()
+            }
+        }
     })
 
 private fun fileAnalyzedAt(
@@ -496,3 +529,6 @@ private fun fileAnalyzedAt(
                 ),
             ),
     )
+
+private fun fileWithVerdict(verdict: Verdict): VulnlogFile =
+    vulnlogFile(vulnerabilities = listOf(vulnerability(cve("CVE-2021-1"), verdict = verdict)))

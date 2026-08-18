@@ -71,6 +71,16 @@ object ValidationDocuments {
     /** Carries a key the schema does not define: fails while building the DTO. */
     val UNKNOWN_PROPERTY: String = vulnlogDocument(extraTopLevel = "bogus: true\n")
 
+    /** Uses the deprecated verdict spelling: reaches the DTO rules and warns. */
+    val DEPRECATED_VERDICT: String =
+        vulnlogDocument(
+            verdictBlock =
+                """
+                |    verdict: risk acceptable
+                |    severity: low
+                """.trimMargin(),
+        )
+
     /** Names a vulnerability ID with no domain representation: fails while mapping to the domain. */
     val UNMAPPABLE_VULN_ID: String = vulnlogDocument(vulnId = "UNKNOWN-2026-1234")
 
