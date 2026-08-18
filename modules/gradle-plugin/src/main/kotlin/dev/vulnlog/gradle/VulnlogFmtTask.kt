@@ -4,8 +4,8 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
-import dev.vulnlog.gradle.internal.parseInputOrFail
-import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
+import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.validation.parseInputOrFail
 import dev.vulnlog.lib.core.FormatOutcome
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.checkFormat
@@ -14,10 +14,10 @@ import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.core.renderFormatFinding
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
-import dev.vulnlog.lib.result.Severity
-import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -30,6 +30,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
+import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 import kotlin.io.path.writeText
 
@@ -44,46 +45,31 @@ abstract class VulnlogFmtTask : DefaultTask() {
     @get:Option(option = "check", description = "Do not write changes; fail if any file is not already formatted.")
     abstract val check: Property<Boolean>
 
+    /**
+     * Formatting rewrites the document as written, so it stops after the DTO stage: a file whose
+     * domain rules do not hold is still formattable, and often needs formatting to be readable.
+     */
     @TaskAction
     fun format() {
-        val sink = diagnosticSink()
-        val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
-        requireNonEmptyVulnlogFiles(inputFiles)
-        val parsed = parseInputOrFail(inputFiles, sink)
+        val inputFiles = vulnlogFileInputs(files.files)
+        val parsed: List<ParsedVulnlogProject> =
+            inputFiles.map { input -> parseInputOrFail(input).project }
 
         val mapper = createYamlMapper()
         val checkOnly = check.getOrElse(false)
         val unformatted = mutableListOf<Path>()
-        for (input in inputFiles) {
-            val parsedInput = parsed.getValue(input)
+        for (parsedInput in parsed) {
+            val source = parsedInput.inputDocument.source
             when (val outcome = formatYamlOutcome(parsedInput, mapper)) {
                 is FormatOutcome.Unchanged ->
-                    logger.lifecycle(formatStatus(StatusVerb.UNCHANGED, input.path.toString()))
+                    logger.lifecycle(formatStatus(StatusVerb.UNCHANGED, source))
+
                 is FormatOutcome.Reformatted ->
                     if (checkOnly) {
-                        unformatted.add(input.path)
-                        val warning =
-                            formatFinding(
-                                Severity.WARNING,
-                                input.path.toString(),
-                                message = "not canonically formatted",
-                            )
-                        logger.warn(warning)
-                        checkFormat(parsedInput, mapper).forEach { finding ->
-                            logger.warn("  ${renderFormatFinding(finding)}")
-                        }
+                        unformatted.add(inputPathOf(parsedInput))
+                        logFormatCheckFindings(parsedInput, source, mapper)
                     } else {
-                        if (hasYamlComments(parsedInput.rootNode)) {
-                            logger.warn(formatCommentsDroppedWarning(input.path.toString()))
-                        }
-                        if (logger.isDebugEnabled) {
-                            checkFormat(parsedInput, mapper).forEach { finding ->
-                                sink.debug(renderFormatFinding(finding))
-                            }
-                        }
-                        input.path.writeText(outcome.formatted.content)
-                        sink.verbose("wrote ${input.path}")
-                        logger.lifecycle(formatStatus(StatusVerb.FORMATTED, input.path.toString()))
+                        writeReformatted(parsedInput, source, outcome.formatted, mapper)
                     }
             }
         }
@@ -94,4 +80,44 @@ abstract class VulnlogFmtTask : DefaultTask() {
             )
         }
     }
+
+    private fun writeReformatted(
+        parsedInput: ParsedVulnlogProject,
+        source: String,
+        formatted: String,
+        mapper: ObjectMapper,
+    ) {
+        if (hasYamlComments(parsedInput.nodeTree.rootNode)) {
+            logger.warn(formatCommentsDroppedWarning(source))
+        }
+        debugFormatFindings(parsedInput, mapper)
+        inputPathOf(parsedInput).writeText(formatted)
+        diagnosticSink().verbose("wrote $source")
+        logger.lifecycle(formatStatus(StatusVerb.FORMATTED, source))
+    }
+
+    private fun logFormatCheckFindings(
+        parsedInput: ParsedVulnlogProject,
+        source: String,
+        mapper: ObjectMapper,
+    ) {
+        logger.warn(formatFinding(FindingSeverity.WARNING, source, message = "not canonically formatted"))
+        checkFormat(parsedInput, mapper).forEach { finding ->
+            logger.warn("  ${renderFormatFinding(finding)}")
+        }
+    }
+
+    private fun debugFormatFindings(
+        parsedInput: ParsedVulnlogProject,
+        mapper: ObjectMapper,
+    ) {
+        if (!logger.isDebugEnabled) return
+        checkFormat(parsedInput, mapper).forEach { finding ->
+            diagnosticSink().debug(renderFormatFinding(finding))
+        }
+    }
+
+    /** Gradle inputs are always real files, unlike the CLI which also accepts STDIN. */
+    private fun inputPathOf(parsedInput: ParsedVulnlogProject): Path =
+        requireNotNull(parsedInput.inputDocument.path) { "Gradle inputs are always files" }
 }

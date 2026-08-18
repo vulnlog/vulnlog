@@ -4,16 +4,17 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
-import dev.vulnlog.gradle.internal.parseInputOrFail
-import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
-import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.result.Severity
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.sourceFile
+import dev.vulnlog.lib.core.validation.ValidationConfig
+import dev.vulnlog.lib.core.validation.ValidationOutcome
+import dev.vulnlog.lib.core.validation.renderValidationSummary
+import dev.vulnlog.lib.model.finding.ALL_SEVERITIES
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
+import dev.vulnlog.lib.shell.ValidationRequest
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -34,21 +35,15 @@ abstract class VulnlogValidateTask : DefaultTask() {
 
     @TaskAction
     fun validate() {
-        val sink = diagnosticSink()
-        val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
-        requireNonEmptyVulnlogFiles(inputFiles)
-        val parsedSuccessfully = parseInputOrFail(inputFiles, sink)
-        val validationFindings =
-            validateParsedInputOrFailWithFailureOutput(
-                parsedSuccessfully,
-                renderedSeverities = Severity.entries.toSet(),
-                sink = sink,
-            )
-        if (validationFindings.hasWarnings && strict.get()) {
-            throw GradleException("Vulnlog validation failed.")
-        }
-        inputFiles.forEach { input ->
-            logger.lifecycle(formatStatus(StatusVerb.VALIDATED, input.sourceFile().name))
-        }
+        val request = ValidationRequest(ValidationConfig(strict.get()), ALL_SEVERITIES)
+        vulnlogFileInputs(files.files)
+            .map { input -> validateInputOrFail(input, request) }
+            .forEach(::printSummary)
+    }
+
+    private fun printSummary(validated: ValidationOutcome.Ok<ValidVulnlogProject>) {
+        val filename = validated.project.inputDocument.filename
+        diagnosticSink().verbose(renderValidationSummary(filename, validated.findings))
+        logger.lifecycle(formatStatus(StatusVerb.VALIDATED, filename))
     }
 }

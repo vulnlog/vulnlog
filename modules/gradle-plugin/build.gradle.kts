@@ -27,6 +27,7 @@ dependencies {
     shaded(project(":lib"))
 
     testImplementation(gradleTestKit())
+    testImplementation(testFixtures(project(":lib")))
     testImplementation(libs.kotestAssertionsCoreJvm)
     testImplementation(libs.kotestRunnerJunit5Jvm)
 }
@@ -71,7 +72,6 @@ tasks.named<ShadowJar>("shadowJar") {
 }
 
 tasks.named<Jar>("jar") {
-    enabled = false
     dependsOn(tasks.named("shadowJar"))
 }
 

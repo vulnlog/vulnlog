@@ -6,9 +6,9 @@ package dev.vulnlog.lib.core
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppress.SuppressionExclusion
 import dev.vulnlog.lib.model.suppress.SuppressionFormat
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
-import dev.vulnlog.lib.result.SuppressionExclusion
 import kotlin.reflect.KClass
 
 /**

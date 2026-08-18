@@ -6,39 +6,35 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.ProgramResult
-import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
-import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.arguments.convert
-import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.BuildInfo
+import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.renderReportingCounts
 import dev.vulnlog.lib.core.validateSharedProject
+import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
-import dev.vulnlog.lib.shell.sourceFile
 import java.nio.file.Path
 import java.time.Instant
 
 class ReportCommand : CliktCommand(name = "report") {
     override fun help(context: Context): String = "Generate a vulnerability report."
 
-    val inputs: List<FileInputOption> by argument(
-        help = "Vulnlog file(s), or '-' to read from stdin, to create the report from.",
-    ).convert(conversion = ArgumentTransformContext::toInputFileOption)
-        .multiple(required = true)
+    val inputs: List<FileInputOption> by
+        vulnlogFileInputs("Vulnlog file(s), or '-' to read from stdin, to create the report from.")
 
     val output: FileOutputOption by option(
         "-o",
@@ -50,15 +46,16 @@ class ReportCommand : CliktCommand(name = "report") {
     val filterOptions by FilterOptions()
 
     override fun run() {
-        val parsedSuccessfully = parseInputOrFail(inputs)
-        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully)
+        val validated: List<ValidVulnlogProject> =
+            inputs.map { input -> validateInputOrFail(input).project }
 
-        val vulnlogFiles = parsedSuccessfully.values.map { it.content }
-
+        val vulnlogFiles: List<VulnlogFile> = validated.map { it.vulnlogProjectFile }
         val project =
             validateSharedProject(vulnlogFiles)
                 ?: run {
-                    echoMessage(formatMessage(Severity.ERROR, "all input files must share the same project metadata"))
+                    echoMessage(
+                        formatMessage(FindingSeverity.ERROR, "all input files must share the same project metadata"),
+                    )
                     throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
                 }
 
@@ -75,7 +72,7 @@ class ReportCommand : CliktCommand(name = "report") {
                 tags = filterOptions.tagsOptions.sorted(),
                 reporter = filterOptions.reporter?.canonical(),
             )
-        val inputNames = parsedSuccessfully.keys.map { it.sourceFile().name }
+        val inputNames = validated.map { it.inputDocument.filename }
 
         val reportData =
             toDto(

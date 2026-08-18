@@ -6,10 +6,10 @@ package dev.vulnlog.lib.core
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppress.SuppressionExclusion
 import dev.vulnlog.lib.model.suppress.SuppressionFormat
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.model.suppress.SuppressionVuln
-import dev.vulnlog.lib.result.SuppressionExclusion
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.time.LocalDate

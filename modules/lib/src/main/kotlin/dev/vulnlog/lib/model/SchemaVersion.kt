@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.model
 
-data class SchemaVersion(
-    val major: Int,
-    val minor: Int,
-)
+enum class SchemaVersion {
+    V1,
+}

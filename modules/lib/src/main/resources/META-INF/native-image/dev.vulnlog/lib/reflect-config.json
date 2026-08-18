@@ -1,54 +1,54 @@
 [
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto",
+    "name": "dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.ProjectDto",
+    "name": "dev.vulnlog.lib.parse.dto.ProjectDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.ReleaseEntryDto",
+    "name": "dev.vulnlog.lib.parse.dto.ReleaseEntryDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.ReleasePurlEntryDto",
+    "name": "dev.vulnlog.lib.parse.dto.ReleasePurlEntryDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.TagEntryDto",
+    "name": "dev.vulnlog.lib.parse.dto.TagEntryDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto",
+    "name": "dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.ReportEntryDto",
+    "name": "dev.vulnlog.lib.parse.dto.ReportEntryDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.ResolutionDto",
+    "name": "dev.vulnlog.lib.parse.dto.ResolutionDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.parse.v1.dto.SuppressionDto",
+    "name": "dev.vulnlog.lib.parse.dto.SuppressionDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true

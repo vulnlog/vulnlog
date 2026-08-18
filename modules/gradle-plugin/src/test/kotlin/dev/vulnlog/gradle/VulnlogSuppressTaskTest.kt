@@ -3,6 +3,8 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.lib.fixtures.ValidationDocuments
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
@@ -25,7 +27,7 @@ class VulnlogSuppressTaskTest :
         context("happy path") {
 
             test("writes a suppression file to the default output directory") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 
                 val result = runner(dir, "vulnlogSuppress").build()
 
@@ -49,7 +51,7 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").build()
@@ -87,7 +89,7 @@ class VulnlogSuppressTaskTest :
         context("diagnostics") {
 
             test("--info shows parsed inputs and written outputs") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 
                 val result = runner(dir, "vulnlogSuppress", "--info").build()
 
@@ -98,7 +100,7 @@ class VulnlogSuppressTaskTest :
             }
 
             test("the default log level hides diagnostics") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml())
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 
                 val result = runner(dir, "vulnlogSuppress").build()
 
@@ -106,8 +108,18 @@ class VulnlogSuppressTaskTest :
                 result.output shouldNotContain "parsed test.vl.yaml"
             }
 
+            test("does not print INFO-level validation findings") {
+                val dir =
+                    gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to ValidationDocuments.UNREFERENCED_RELEASE)
+
+                val result = runner(dir, "vulnlogSuppress").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldNotContain "info: test.vl.yaml: "
+            }
+
             test("--info shows entries skipped for the output format") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogYaml(reporter = "snyk"))
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument(reporter = "snyk"))
 
                 val result = runner(dir, "vulnlogSuppress", "--info").build()
 
@@ -132,7 +144,7 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").build()
@@ -158,7 +170,7 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
@@ -189,8 +201,8 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "a.vl.yaml" to vulnlogYaml(),
-                        "b.vl.yaml" to vulnlogYaml(),
+                        "a.vl.yaml" to vulnlogDocument(),
+                        "b.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
@@ -227,7 +239,7 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
@@ -249,7 +261,7 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
@@ -272,7 +284,7 @@ class VulnlogSuppressTaskTest :
                             }
                             """.trimIndent(),
                         ),
-                        "test.vl.yaml" to vulnlogYaml(),
+                        "test.vl.yaml" to vulnlogDocument(),
                     )
 
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()

@@ -4,9 +4,9 @@
 package dev.vulnlog.lib.parse
 
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.parse.v1.V1Mapper
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.parse.v1.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.parse.mapper.DtoV1Mapper
 import tools.jackson.databind.ObjectMapper
 
 /**
@@ -24,7 +24,7 @@ object YamlWriter {
         file: VulnlogFile,
         mapper: ObjectMapper,
         includeSchemaHeader: Boolean = true,
-    ): String = renderCanonicalDocument(V1Mapper.toDto(file), mapper, includeSchemaHeader)
+    ): String = renderCanonicalDocument(DtoV1Mapper.toDto(file), mapper, includeSchemaHeader)
 
     fun renderCanonicalDocument(
         dto: VulnlogFileV1Dto,

@@ -10,8 +10,8 @@ import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.WorkState
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
-import dev.vulnlog.lib.result.SuppressionCollectionResult
-import dev.vulnlog.lib.result.SuppressionExclusion
+import dev.vulnlog.lib.model.suppress.SuppressionCollectionResult
+import dev.vulnlog.lib.model.suppress.SuppressionExclusion
 
 /**
  * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression

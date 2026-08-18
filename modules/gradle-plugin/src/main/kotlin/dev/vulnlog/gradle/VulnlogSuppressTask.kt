@@ -5,9 +5,8 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
-import dev.vulnlog.gradle.internal.parseInputOrFail
-import dev.vulnlog.gradle.internal.requireSingleVulnlogFile
-import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.gradle.internal.singleVulnlogFileInput
+import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
@@ -17,7 +16,6 @@ import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter
-import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -60,12 +58,10 @@ abstract class VulnlogSuppressTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val sink = diagnosticSink()
-        val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
-        requireSingleVulnlogFile("vulnlogSuppress", inputFiles)
-        val parsedSuccessfully = parseInputOrFail(inputFiles, sink)
-        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully, sink = sink)
+        val inputFile = singleVulnlogFileInput(name, files.files)
+        val validated = validateInputOrFail(inputFile).project
 
-        val vulnlogFile = parsedSuccessfully.values.first().content
+        val vulnlogFile = validated.vulnlogProjectFile
         val filter = buildFilterOrFail(vulnlogFile, reporter.orNull, release.orNull, tags.get(), sink)
 
         val targetReporters =

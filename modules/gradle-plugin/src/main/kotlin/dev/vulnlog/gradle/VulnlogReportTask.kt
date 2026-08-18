@@ -5,9 +5,8 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.buildFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
-import dev.vulnlog.gradle.internal.parseInputOrFail
-import dev.vulnlog.gradle.internal.requireNonEmptyVulnlogFiles
-import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
@@ -16,12 +15,11 @@ import dev.vulnlog.lib.core.mergeReportingEntries
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.renderReportingCounts
 import dev.vulnlog.lib.core.validateSharedProject
+import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
-import dev.vulnlog.lib.result.ParseResult
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.sourceFile
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -61,13 +59,10 @@ abstract class VulnlogReportTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val sink = diagnosticSink()
-        val inputFiles = files.files.map { FileInputOption.File(it.toPath()) }
-        requireNonEmptyVulnlogFiles(inputFiles)
-        val parsedSuccessfully = parseInputOrFail(inputFiles, sink)
-        validateParsedInputOrFailWithFailureOutput(parsedSuccessfully, sink = sink)
+        val validated: List<ValidVulnlogProject> =
+            vulnlogFileInputs(files.files).map { input -> validateInputOrFail(input).project }
 
-        val vulnlogFiles = parsedSuccessfully.values.map(ParseResult.Ok::content)
-
+        val vulnlogFiles: List<VulnlogFile> = validated.map { it.vulnlogProjectFile }
         val project =
             validateSharedProject(vulnlogFiles)
                 ?: throw GradleException("All input files must share the same project metadata.")
@@ -84,7 +79,7 @@ abstract class VulnlogReportTask : DefaultTask() {
                 tags = tags.get().sorted(),
                 reporter = reporter.orNull?.let { parseReporter(it).canonical() },
             )
-        val inputNames = parsedSuccessfully.keys.map { it.sourceFile().name }
+        val inputNames = validated.map { it.inputDocument.filename }
 
         val reportData =
             HtmlReportMapper.toDto(

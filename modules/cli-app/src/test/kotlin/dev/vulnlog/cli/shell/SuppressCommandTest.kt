@@ -4,6 +4,8 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.lib.fixtures.ValidationDocuments
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -17,7 +19,7 @@ class SuppressCommandTest :
         context("happy path") {
 
             test("writes a suppression file to the configured directory") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
                             SuppressCommand().test("${input.absolutePath} --output-dir ${outputDir.toAbsolutePath()}")
@@ -29,7 +31,7 @@ class SuppressCommandTest :
             }
 
             test("-o writes the single applicable suppression file to the user-specified path") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val target = outputDir.resolve("my-ignore.yaml")
                         val result =
@@ -43,7 +45,7 @@ class SuppressCommandTest :
             }
 
             test("writes to stdout when -o is '-'") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
@@ -52,7 +54,7 @@ class SuppressCommandTest :
             }
 
             test("reads from stdin and writes to stdout") {
-                withStdin(vulnlogYaml()) {
+                withStdin(vulnlogDocument()) {
                     val result = SuppressCommand().test("- -o -")
 
                     result.statusCode shouldBe 0
@@ -62,7 +64,7 @@ class SuppressCommandTest :
 
             test("reads from stdin and writes to a directory") {
                 withTempDir(prefix = "suppress-out") { outputDir ->
-                    withStdin(vulnlogYaml()) {
+                    withStdin(vulnlogDocument()) {
                         val result = SuppressCommand().test("- --output-dir ${outputDir.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
@@ -72,7 +74,7 @@ class SuppressCommandTest :
             }
 
             test("falls back to the current working directory when no output flag is given") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-cwd") { cwd ->
                         val result = withCwd(cwd) { SuppressCommand().test(input.absolutePath) }
 
@@ -120,7 +122,7 @@ class SuppressCommandTest :
             }
 
             test("-o and --output-dir are mutually exclusive") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
                             SuppressCommand().test(
@@ -161,7 +163,7 @@ class SuppressCommandTest :
         context("output path validation") {
 
             test("--output-dir fails when the path is not a directory") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result =
                         SuppressCommand().test("${input.absolutePath} --output-dir /nonexistent/suppress-out")
 
@@ -171,7 +173,7 @@ class SuppressCommandTest :
             }
 
             test("-o fails when the path is a directory") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result = SuppressCommand().test("${input.absolutePath} -o ${outputDir.toAbsolutePath()}")
 
@@ -201,7 +203,7 @@ class SuppressCommandTest :
             }
 
             test("fails when the input file name does not match the expected pattern") {
-                withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
+                withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
@@ -234,7 +236,7 @@ class SuppressCommandTest :
                     "other",
                 ).forEach { reporter ->
                     test("--reporter $reporter is accepted") {
-                        withTempFile(content = vulnlogYaml()) { input ->
+                        withTempFile(content = vulnlogDocument()) { input ->
                             withTempDir(prefix = "suppress-out") { outputDir ->
                                 val result =
                                     SuppressCommand().test(
@@ -250,7 +252,7 @@ class SuppressCommandTest :
             }
 
             test("--reporter rejects underscored names without leaking internals") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --reporter dependency_check")
 
                     result.statusCode shouldBe 1
@@ -261,7 +263,7 @@ class SuppressCommandTest :
             }
 
             test("--reporter rejects unknown values without leaking internals") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --reporter bogus")
 
                     result.statusCode shouldBe 1
@@ -271,7 +273,7 @@ class SuppressCommandTest :
             }
 
             test("fails on an unknown release") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --release 9.9.9")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
@@ -281,7 +283,7 @@ class SuppressCommandTest :
             }
 
             test("fails on an unknown tag") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --tag missing-tag")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
@@ -302,7 +304,7 @@ class SuppressCommandTest :
         context("uniform output formatting") {
 
             test("does not print a leading blank line on stderr") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
@@ -311,7 +313,7 @@ class SuppressCommandTest :
             }
 
             test("does not print INFO-level validation findings") {
-                withTempFile(content = vulnlogYamlWithInfoFinding()) { input ->
+                withTempFile(content = ValidationDocuments.UNREFERENCED_RELEASE) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
@@ -344,7 +346,7 @@ class SuppressCommandTest :
         context("format selection") {
 
             test("--format generic writes the generic JSON file for a native reporter") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
                             SuppressCommand().test(
@@ -359,7 +361,7 @@ class SuppressCommandTest :
             }
 
             test("--format auto writes the native format for a native reporter") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
                             SuppressCommand().test(
@@ -373,7 +375,7 @@ class SuppressCommandTest :
             }
 
             test("--format is case insensitive") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
                             SuppressCommand().test(
@@ -387,7 +389,7 @@ class SuppressCommandTest :
             }
 
             test("--format generic emits generic JSON to stdout") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --format generic -o -")
 
                     result.statusCode shouldBe 0
@@ -397,7 +399,7 @@ class SuppressCommandTest :
             }
 
             test("rejects an unknown format value") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --format bogus")
 
                     result.statusCode shouldNotBe 0

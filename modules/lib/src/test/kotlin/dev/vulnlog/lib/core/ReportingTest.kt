@@ -25,7 +25,7 @@ import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-private val defaultSchema = SchemaVersion(1, 0)
+private val defaultSchema = SchemaVersion.V1
 private val defaultProject = Project("org", "project", "author")
 private val releaseV1 = Release("v1.0")
 private val releaseV2 = Release("v2.0")

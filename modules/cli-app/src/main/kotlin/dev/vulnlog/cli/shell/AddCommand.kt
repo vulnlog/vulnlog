@@ -17,6 +17,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.packageurl.PackageURL
+import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.core.AddVulnerabilityOptions
 import dev.vulnlog.lib.core.addVulnerabilityToFile
 import dev.vulnlog.lib.core.createVulnerabilityEntry
@@ -31,9 +32,9 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.hasYamlComments
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import dev.vulnlog.lib.shell.FileInputOption
 import java.time.LocalDate
 import kotlin.io.path.writeText
@@ -167,27 +168,29 @@ class AddCommand : CliktCommand(name = "add") {
             return
         }
 
-        val mapper = createYamlMapper()
-        for (destination in destinations) {
-            val parsedDestination = parseInputOrFail(listOf(destination))
-            validateParsedInputOrFailWithFailureOutput(parsedDestination)
-            val destinationFile = parsedDestination.values.first()
+        val validated: List<ValidVulnlogProject> =
+            destinations.map { input -> validateInputOrFail(input).project }
 
+        for (validDestination in validated) {
             val outcome =
                 try {
-                    addVulnerabilityToFile(destinationFile, commandOption, mapper)
+                    addVulnerabilityToFile(validDestination, commandOption)
                 } catch (e: IllegalArgumentException) {
                     echoMessage(
-                        formatFinding(Severity.ERROR, destination.path.toString(), message = e.message.orEmpty()),
+                        formatFinding(
+                            FindingSeverity.ERROR,
+                            validDestination.inputDocument.filename,
+                            message = e.message.orEmpty(),
+                        ),
                     )
                     throw ProgramResult(ExitCode.GENERAL_ERROR.code)
                 }
-            if (hasYamlComments(destinationFile.rootNode)) {
-                echoMessage(formatCommentsDroppedWarning(destination.path.toString()))
+            if (hasYamlComments(validDestination.nodeTree.rootNode)) {
+                echoMessage(formatCommentsDroppedWarning(validDestination.inputDocument.filename))
             }
-            destination.path.writeText(outcome.newContent)
-            diagnosticSink().verbose("wrote ${destination.path}")
-            echoStatus(formatAddOutcomeMessage(destination.path, outcome))
+            validDestination.inputDocument.path!!.writeText(outcome.newContent)
+            diagnosticSink().verbose("wrote ${validDestination.inputDocument.path}")
+            echoStatus(formatAddOutcomeMessage(validDestination.inputDocument.path!!, outcome))
         }
     }
 }

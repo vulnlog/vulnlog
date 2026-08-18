@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -18,7 +18,7 @@ class MessagesTest :
 
         test("finding line includes file, location, and message") {
             formatFinding(
-                severity = Severity.ERROR,
+                severity = FindingSeverity.ERROR,
                 file = "vulnlog.yaml",
                 location = "vulnerabilities[3].resolution.in",
                 message = "release '9.9.9' is not defined",
@@ -27,7 +27,7 @@ class MessagesTest :
 
         test("finding line omits a missing location") {
             formatFinding(
-                severity = Severity.WARNING,
+                severity = FindingSeverity.WARNING,
                 file = "vulnlog.yaml",
                 message = "not canonically formatted",
             ) shouldBe "warning: vulnlog.yaml: not canonically formatted"
@@ -35,7 +35,7 @@ class MessagesTest :
 
         test("finding line omits a blank location") {
             formatFinding(
-                severity = Severity.INFO,
+                severity = FindingSeverity.INFO,
                 file = "vulnlog.yaml",
                 location = "",
                 message = "some observation",
@@ -43,7 +43,7 @@ class MessagesTest :
         }
 
         test("message line carries only the severity prefix") {
-            formatMessage(Severity.ERROR, "cannot read <stdin>") shouldBe "error: cannot read <stdin>"
+            formatMessage(FindingSeverity.ERROR, "cannot read <stdin>") shouldBe "error: cannot read <stdin>"
         }
 
         test("hint line is indented under the finding") {

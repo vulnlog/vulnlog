@@ -16,7 +16,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.result.Severity
+import dev.vulnlog.lib.model.finding.FindingSeverity
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -53,7 +53,7 @@ internal fun renderUnexpectedError(
     stackTrace: Boolean,
 ): List<String> =
     listOfNotNull(
-        formatMessage(Severity.ERROR, e.message ?: e::class.simpleName ?: "unknown error"),
+        formatMessage(FindingSeverity.ERROR, e.message ?: e::class.simpleName ?: "unknown error"),
         e.stackTraceToString().takeIf { stackTrace },
     )
 

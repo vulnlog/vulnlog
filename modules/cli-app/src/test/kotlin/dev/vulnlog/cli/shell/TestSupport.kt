@@ -8,48 +8,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * Builds a syntactically valid Vulnlog YAML document. Override the parameters to vary project
- * metadata, releases, or vulnerability fields without restating the entire fixture.
- */
-internal fun vulnlogYaml(
-    projectName: String = "Acme Web App",
-    organization: String = "Acme Corp",
-    author: String = "Acme Corp Security Team",
-    releaseId: String = "1.0.0",
-    publishedAt: String = "2026-01-15",
-    cveId: String = "CVE-2026-1234",
-    reporter: String = "trivy",
-): String =
-    """
-    # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: $organization
-      name: $projectName
-      author: $author
-
-    releases:
-      - id: $releaseId
-        published_at: $publishedAt
-
-    vulnerabilities:
-
-      - id: $cveId
-        releases: [ $releaseId ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: $reporter
-        analysis: >
-          The vulnerable code path is not reachable in our application
-          because we only use the safe subset of the API.
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
-
-/**
  * Builds a Vulnlog YAML with reports from multiple reporters, so that suppress would emit more
  * than one file unless filtered.
  */
@@ -151,39 +109,6 @@ internal fun vulnlogYamlOtherReporterOnly(): String =
         reports:
           - reporter: other
             source: in-house-scanner
-        analysis: not reachable
-        verdict: not affected
-        justification: vulnerable code not in execute path
-    """.trimIndent()
-
-/**
- * A Vulnlog YAML with a release that is not referenced by any vulnerability. Triggers a single
- * INFO-severity validation finding (UNREFERENCED_RELEASE_ID) and no warnings or errors.
- */
-internal fun vulnlogYamlWithInfoFinding(): String =
-    """
-    ---
-    schemaVersion: "1"
-
-    project:
-      organization: Acme Corp
-      name: Acme Web App
-      author: Acme Corp Security Team
-
-    releases:
-      - id: 1.0.0
-        published_at: 2026-01-15
-      - id: 2.0.0
-        published_at: 2026-06-01
-
-    vulnerabilities:
-
-      - id: CVE-2026-1234
-        releases: [ 1.0.0 ]
-        description: Remote code execution in example-lib
-        packages: [ "pkg:npm/example-lib@2.3.0" ]
-        reports:
-          - reporter: trivy
         analysis: not reachable
         verdict: not affected
         justification: vulnerable code not in execute path

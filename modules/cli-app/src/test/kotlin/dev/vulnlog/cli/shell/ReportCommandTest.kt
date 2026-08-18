@@ -4,9 +4,12 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.lib.fixtures.ValidationDocuments
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 class ReportCommandTest :
     FunSpec({
@@ -14,7 +17,7 @@ class ReportCommandTest :
         context("happy path") {
 
             test("generates an HTML report from a single file") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
                             ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
@@ -31,11 +34,11 @@ class ReportCommandTest :
             test("merges entries from multiple files of the same project") {
                 withTempFile(
                     prefix = "vulnlog-1x",
-                    content = vulnlogYaml(releaseId = "1.0.0", cveId = "CVE-2026-1234"),
+                    content = vulnlogDocument(releaseId = "1.0.0", vulnId = "CVE-2026-1234"),
                 ) { f1 ->
                     withTempFile(
                         prefix = "vulnlog-2x",
-                        content = vulnlogYaml(releaseId = "2.0.0", cveId = "CVE-2026-5678"),
+                        content = vulnlogDocument(releaseId = "2.0.0", vulnId = "CVE-2026-5678"),
                     ) { f2 ->
                         withTempFile(prefix = "report", suffix = ".html") { output ->
                             val result =
@@ -53,8 +56,8 @@ class ReportCommandTest :
             }
 
             test("merges the same CVE from multiple files into a single entry") {
-                withTempFile(prefix = "vulnlog-1x", content = vulnlogYaml(releaseId = "1.0.0")) { f1 ->
-                    withTempFile(prefix = "vulnlog-2x", content = vulnlogYaml(releaseId = "2.0.0")) { f2 ->
+                withTempFile(prefix = "vulnlog-1x", content = vulnlogDocument(releaseId = "1.0.0")) { f1 ->
+                    withTempFile(prefix = "vulnlog-2x", content = vulnlogDocument(releaseId = "2.0.0")) { f2 ->
                         withTempFile(prefix = "report", suffix = ".html") { output ->
                             val result =
                                 ReportCommand().test(
@@ -73,13 +76,43 @@ class ReportCommandTest :
 
             test("reads from stdin when '-' is passed") {
                 withTempFile(prefix = "report", suffix = ".html") { output ->
-                    withStdin(vulnlogYaml()) {
+                    withStdin(vulnlogDocument()) {
                         val result = ReportCommand().test("- -o ${output.absolutePath}")
 
                         result.statusCode shouldBe 0
                         val html = output.readText()
                         html shouldContain "<!DOCTYPE html>"
                         html shouldContain "CVE-2026-1234"
+                    }
+                }
+            }
+        }
+
+        context("diagnostics") {
+
+            test("-v shows the parsed inputs and the written output") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            vulnlogCommand().test(
+                                "-v report ${input.absolutePath} -o ${output.absolutePath}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        result.stderr shouldContain
+                            "verbose: parsed ${input.name}: schema version 1, releases: 1, tags: 0, vulnerabilities: 1"
+                        result.stderr shouldContain "verbose: wrote ${output.absolutePath}"
+                    }
+                }
+            }
+
+            test("does not print INFO-level validation findings") {
+                withTempFile(content = ValidationDocuments.UNREFERENCED_RELEASE) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result = ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
+
+                        result.statusCode shouldBe 0
+                        result.stderr shouldNotContain "info: ${input.name}: "
                     }
                 }
             }
@@ -123,7 +156,7 @@ class ReportCommandTest :
             }
 
             test("fails when the input file name does not match the expected pattern") {
-                withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogYaml()) { input ->
+                withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogDocument()) { input ->
                     val result = ReportCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
@@ -138,8 +171,8 @@ class ReportCommandTest :
             }
 
             test("fails when stdin is mixed with file inputs") {
-                withTempFile(content = vulnlogYaml()) { input ->
-                    withStdin(vulnlogYaml()) {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withStdin(vulnlogDocument()) {
                         val result = ReportCommand().test("- ${input.absolutePath}")
 
                         result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
@@ -149,7 +182,7 @@ class ReportCommandTest :
             }
 
             test("fails when stdin is given more than once") {
-                withStdin(vulnlogYaml()) {
+                withStdin(vulnlogDocument()) {
                     val result = ReportCommand().test("- -")
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
@@ -161,8 +194,8 @@ class ReportCommandTest :
         context("merge validation") {
 
             test("fails when input files have different project metadata") {
-                withTempFile(prefix = "vulnlog-1x", content = vulnlogYaml(projectName = "Project A")) { f1 ->
-                    withTempFile(prefix = "vulnlog-2x", content = vulnlogYaml(projectName = "Project B")) { f2 ->
+                withTempFile(prefix = "vulnlog-1x", content = vulnlogDocument(projectName = "Project A")) { f1 ->
+                    withTempFile(prefix = "vulnlog-2x", content = vulnlogDocument(projectName = "Project B")) { f2 ->
                         val result = ReportCommand().test("${f1.absolutePath} ${f2.absolutePath}")
 
                         result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
@@ -175,7 +208,7 @@ class ReportCommandTest :
         context("filter validation") {
 
             test("fails on an unknown reporter") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --reporter bogus")
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
@@ -184,7 +217,7 @@ class ReportCommandTest :
             }
 
             test("fails on an unknown release") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --release 9.9.9")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
@@ -194,7 +227,7 @@ class ReportCommandTest :
             }
 
             test("fails on an unknown tag") {
-                withTempFile(content = vulnlogYaml()) { input ->
+                withTempFile(content = vulnlogDocument()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --tag missing-tag")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code

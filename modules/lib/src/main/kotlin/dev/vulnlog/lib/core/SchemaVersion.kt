@@ -13,8 +13,6 @@ import dev.vulnlog.lib.model.SchemaVersion
  *         is included. Otherwise, both the major and minor versions are included, separated by a dot.
  */
 fun shortenSchemaVersion(version: SchemaVersion): String =
-    if (version.minor == 0) {
-        "${version.major}"
-    } else {
-        "${version.major}.${version.minor}"
+    when (version) {
+        SchemaVersion.V1 -> "1"
     }

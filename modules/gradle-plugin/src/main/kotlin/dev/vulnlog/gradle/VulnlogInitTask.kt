@@ -34,7 +34,7 @@ abstract class VulnlogInitTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
-        val vulnlogFile = init(SchemaVersion(1, 0), organization.get(), projectName.get(), author.get())
+        val vulnlogFile = init(SchemaVersion.V1, organization.get(), projectName.get(), author.get())
         val content = YamlWriter.write(vulnlogFile, createYamlMapper())
         val file = outputFile.get().asFile
         file.writeText(content)

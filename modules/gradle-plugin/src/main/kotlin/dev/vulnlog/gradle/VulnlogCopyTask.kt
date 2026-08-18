@@ -4,16 +4,16 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
-import dev.vulnlog.gradle.internal.parseInputOrFail
-import dev.vulnlog.gradle.internal.validateParsedInputOrFailWithFailureOutput
+import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.copyVulnerabilities
 import dev.vulnlog.lib.core.findNonExistingVulnIds
 import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.formatCopiedMessage
 import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
-import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -45,37 +45,38 @@ abstract class VulnlogCopyTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val sink = diagnosticSink()
-        val sourceInput = FileInputOption.File(sourceFile.get().asFile.toPath())
-        val parsedSource = parseInputOrFail(listOf(sourceInput), sink)
-        validateParsedInputOrFailWithFailureOutput(parsedSource, sink = sink)
-        val sourceVulnlogFile = parsedSource.values.first().content
-
-        val vulnIdSet = vulnIds.get().map { parseVulnId(it) }.toSet()
-        val missing = findNonExistingVulnIds(sourceVulnlogFile.vulnerabilities, vulnIdSet)
+        val requestedIds = vulnIds.get().map { parseVulnId(it) }.toSet()
+        val validatedSource =
+            validateInputOrFail(FileInputOption.File(sourceFile.get().asFile.toPath())).project
+        val sourceVulnlogFile = validatedSource.vulnlogProjectFile
+        val missing = findNonExistingVulnIds(sourceVulnlogFile.vulnerabilities, requestedIds)
         if (missing.isNotEmpty()) {
             throw GradleException(formatVulnIdsNotInSourceMessage(missing))
         }
 
-        val mapper = createYamlMapper()
-        val destinations = destinationFiles.files.map { FileInputOption.File(it.toPath()) }
-        for (destination in destinations) {
-            val parsedDestination = parseInputOrFail(listOf(destination), sink)
-            validateParsedInputOrFailWithFailureOutput(parsedDestination, sink = sink)
-            val destinationFile = parsedDestination.values.first()
-
+        val validatedDestinations: List<ValidVulnlogProject> =
+            vulnlogFileInputs(destinationFiles.files).map { input ->
+                validateInputOrFail(input).project
+            }
+        validatedDestinations.forEach { validDestination ->
             val outcome =
                 copyVulnerabilities(
                     source = sourceVulnlogFile,
-                    destination = destinationFile,
-                    vulnIds = vulnIdSet,
-                    mapper = mapper,
+                    destination = validDestination,
+                    vulnIds = requestedIds,
                 )
-            if (hasYamlComments(destinationFile.rootNode)) {
-                logger.warn(formatCommentsDroppedWarning(destination.path.toString()))
+            val source = validDestination.inputDocument.source
+            if (hasYamlComments(validDestination.nodeTree.rootNode)) {
+                logger.warn(formatCommentsDroppedWarning(source))
             }
-            destination.path.writeText(outcome.newContent.content)
-            sink.verbose("wrote ${destination.path}")
-            logger.lifecycle(formatCopiedMessage(destination.path, outcome.copied))
+            val destinationPath =
+                requireNotNull(validDestination.inputDocument.path) { "Gradle inputs are always files" }
+            destinationPath.writeText(outcome.newContent)
+            sink.verbose("wrote $source")
+            if (outcome.copied.isNotEmpty()) {
+                sink.verbose("copied to $source: ${outcome.copied.joinToString(", ") { it.id }}")
+            }
+            logger.lifecycle(formatCopiedMessage(destinationPath, outcome.copied))
         }
     }
 }

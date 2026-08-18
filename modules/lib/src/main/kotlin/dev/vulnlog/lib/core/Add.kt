@@ -11,10 +11,11 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.createYamlMapper
+import dev.vulnlog.lib.parse.dto.ReportEntryDto
+import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.v1.dto.ReportEntryDto
-import dev.vulnlog.lib.parse.v1.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.result.ParseResult
+import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 import java.time.LocalDate
@@ -73,22 +74,26 @@ fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
  * destination.
  */
 fun addVulnerabilityToFile(
-    destination: ParseResult.Ok,
+    destination: ValidVulnlogProject,
     options: AddVulnerabilityOptions,
     mapper: ObjectMapper = createYamlMapper(),
 ): AddOutcome {
-    val knownReleases = knownReleases(destination.content)
+    val destinationFile = destination.vulnlogProjectFile
+    val knownReleases = knownReleases(destinationFile)
     val missingReleases = options.releases - knownReleases
     require(missingReleases.isEmpty()) {
         "Releases not defined in file: ${missingReleases.joinToString(", ") { it.value }}"
     }
 
-    val missingTags = options.tags - knownTags(destination.content)
+    val missingTags = options.tags - knownTags(destinationFile)
     require(missingTags.isEmpty()) {
         "Tags not defined in file: ${missingTags.joinToString(", ") { it.value }}"
     }
 
-    val dto = destination.dto
+    val dto =
+        when (destination.parsedVulnlogProject.validatedDto) {
+            is VulnlogFileV1Dto -> destination.parsedVulnlogProject.validatedDto
+        }
     val existing = dto.vulnerabilities.firstOrNull { parseVulnId(it.id) == options.vulnId }
     val (entries, updated) =
         if (existing != null) {
@@ -101,7 +106,7 @@ fun addVulnerabilityToFile(
                         emptySet()
                     } else {
                         setOf(
-                            destination.content.releases
+                            destinationFile.releases
                                 .last()
                                 .id,
                         )
@@ -114,7 +119,7 @@ fun addVulnerabilityToFile(
         YamlWriter.renderCanonicalDocument(
             dto.copy(vulnerabilities = entries),
             mapper,
-            includeSchemaHeader = hasSchemaHeader(destination.rootNode),
+            includeSchemaHeader = hasSchemaHeader(destination.nodeTree.rootNode),
         )
     return AddOutcome(newContent, options.vulnId, updated)
 }
