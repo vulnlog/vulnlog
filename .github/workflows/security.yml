@@ -7,12 +7,19 @@ on:
 
 permissions:
   contents: read
-  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VULNLOG_VERSION: "0.16.0"
 
 jobs:
   vulnlog:
     name: Generate Vulnlog files
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -22,7 +29,7 @@ jobs:
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:0.14.0 \
+            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
             suppress vulnlog.yaml --output-dir /work
 
       - name: Ensure suppression files exist
@@ -44,7 +51,7 @@ jobs:
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:0.14.0 \
+            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
             report vulnlog.yaml
 
       - name: Upload HTML report
@@ -57,6 +64,10 @@ jobs:
     name: Snyk Open Source
     needs: [ vulnlog ]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -66,6 +77,7 @@ jobs:
         with:
           name: suppressions
 
+      # Exit 1 only means "vulnerabilities found"; real errors are caught below.
       - name: Run Snyk
         id: snyk
         uses: snyk/actions/gradle@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
@@ -75,8 +87,22 @@ jobs:
         with:
           args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects --severity-threshold=medium
 
+      - name: Verify Snyk produced a report
+        run: |
+          if [ ! -s snyk-results.sarif ]; then
+            echo "::error::Snyk wrote no SARIF (outcome: ${{ steps.snyk.outcome }}); the scan errored out."
+            exit 1
+          fi
+
+      # upload-sarif honours `category` only when the SARIF carries no
+      # automationDetails. Snyk indexes its own by build position, so adding or
+      # removing a module reshuffles it and orphans the old category.
+      - name: Normalise SARIF category
+        run: |
+          jq 'del(.runs[].automationDetails)' snyk-results.sarif > snyk-results.normalised.sarif
+          mv snyk-results.normalised.sarif snyk-results.sarif
+
       - name: Upload Snyk SARIF to GitHub
-        if: always() && hashFiles('snyk-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4.37.6
         with:
           sarif_file: snyk-results.sarif
@@ -86,6 +112,10 @@ jobs:
     name: Trivy Vulnerability Scan
     needs: [ vulnlog ]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -104,6 +134,8 @@ jobs:
           output: trivy-results.sarif
           trivyignores: .trivyignore.yaml
           severity: 'CRITICAL,HIGH,MEDIUM'
+          # SARIF output ignores `severity` without this.
+          limit-severities-for-sarif: true
 
       - name: Upload Trivy SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v4.37.6
