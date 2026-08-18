@@ -1,39 +1,99 @@
 version: 2
+
+# Groups match top-down, first hit wins, so specific groups stay above catch-alls.
+# What matches nothing gets its own PR; that is how majors stay isolated.
+
 updates:
-  # Actions in workflow files and in the composite actions under .github/actions.
   - package-ecosystem: "github-actions"
     directories:
       - "/"
       - "/.github/actions/*"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
     commit-message:
       prefix: "chore"
       include: "scope"
+    cooldown:
+      default-days: 7
     groups:
+      # SHA-pinned, so each bump needs a manual check against the upstream release.
+      security-scanners:
+        patterns:
+          - "snyk/actions*"
+          - "aquasecurity/trivy-action"
+          - "github/codeql-action*"
       github-actions:
         patterns:
           - "*"
 
-  # Gradle build: version catalog (gradle/libs.versions.toml), build scripts, buildSrc.
   - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
     commit-message:
       prefix: "chore"
       include: "scope"
+    cooldown:
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    ignore:
+      # Dogfooded; the release process owns this version.
+      - dependency-name: "dev.vulnlog.plugin"
     groups:
-      gradle-minor-patch:
+      gradle-wrapper:
+        patterns:
+          - "gradle-wrapper"
+
+      # jackson-dataformat-yaml embeds the engine and libs.versions.toml pins both
+      # in sync. No update-types filter, so a major cannot split them.
+      yaml-stack:
+        patterns:
+          - "tools.jackson*"
+          - "com.fasterxml.jackson*"
+          - "org.snakeyaml:snakeyaml-engine"
+
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin*"
+
+      build-plugins:
+        patterns:
+          - "org.graalvm.buildtools*"
+          - "com.gradleup.shadow*"
+          - "com.diffplug.spotless*"
+          - "org.jlleitschuh.gradle*"
+          - "org.gradle.toolchains*"
+          - "io.gitlab.arturbosch.detekt*"
         update-types:
           - "minor"
           - "patch"
 
-  # Base image of the release Docker image.
+      test-libraries:
+        patterns:
+          - "io.kotest*"
+          - "org.junit*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      runtime-libraries:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: "docker"
     directory: "/modules/cli-app"
     schedule:
       interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
     commit-message:
       prefix: "chore"
       include: "scope"
