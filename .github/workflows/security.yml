@@ -7,12 +7,19 @@ on:
 
 permissions:
   contents: read
-  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  VULNLOG_VERSION: "0.16.0"
 
 jobs:
   vulnlog:
     name: Generate Vulnlog files
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -22,7 +29,7 @@ jobs:
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:0.14.0 \
+            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
             suppress vulnlog.yaml --output-dir /work
 
       - name: Ensure suppression files exist
@@ -44,7 +51,7 @@ jobs:
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
-            ghcr.io/${{ github.repository }}:0.14.0 \
+            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
             report vulnlog.yaml
 
       - name: Upload HTML report
@@ -53,10 +60,41 @@ jobs:
           name: reports
           path: vulnlog-report.html
 
+  artifacts:
+    name: Build release artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
+
+      # A fixed version keeps the shadowJar file name predictable.
+      - name: Build CLI distribution and Gradle plugin
+        run: ./gradlew :cli-app:installDist :gradle-plugin:shadowJar -PappVersion=scan
+
+      - name: Stage artifacts
+        run: |
+          mkdir -p release-artifacts/cli release-artifacts/gradle-plugin
+          cp modules/cli-app/build/install/vulnlog/lib/*.jar release-artifacts/cli/
+          cp modules/gradle-plugin/build/libs/gradle-plugin-scan.jar release-artifacts/gradle-plugin/
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-artifacts
+          path: release-artifacts
+
   snyk:
     name: Snyk Open Source
     needs: [ vulnlog ]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -66,6 +104,9 @@ jobs:
         with:
           name: suppressions
 
+      # Exit 1 only means "vulnerabilities found"; real errors are caught below.
+      # configuration-matching keeps this to what ships: cli-app runtimeClasspath and gradle-plugin shaded.
+      # The inner quotes are required, the action entrypoint evals the argument string.
       - name: Run Snyk
         id: snyk
         uses: snyk/actions/gradle@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
@@ -73,19 +114,37 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_API_KEY }}
         with:
-          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects --severity-threshold=medium
+          args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects --configuration-matching='^(runtimeClasspath|shaded)$' --severity-threshold=medium
+
+      - name: Verify Snyk produced a report
+        run: |
+          if [ ! -s snyk-results.sarif ]; then
+            echo "::error::Snyk wrote no SARIF (outcome: ${{ steps.snyk.outcome }}); the scan errored out."
+            exit 1
+          fi
+
+      # upload-sarif honours `category` only when the SARIF carries no
+      # automationDetails. Snyk indexes its own by build position, so adding or
+      # removing a module reshuffles it and orphans the old category.
+      - name: Normalise SARIF category
+        run: |
+          jq 'del(.runs[].automationDetails)' snyk-results.sarif > snyk-results.normalised.sarif
+          mv snyk-results.normalised.sarif snyk-results.sarif
 
       - name: Upload Snyk SARIF to GitHub
-        if: always() && hashFiles('snyk-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4.37.6
         with:
           sarif_file: snyk-results.sarif
           category: snyk
 
   trivy:
-    name: Trivy Vulnerability Scan
-    needs: [ vulnlog ]
+    name: Trivy Release Artifacts
+    needs: [ vulnlog, artifacts ]
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -95,18 +154,64 @@ jobs:
         with:
           name: suppressions
 
-      - name: Run Trivy filesystem scan
+      - name: Download release artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: release-artifacts
+          path: release-artifacts
+
+      # rootfs, not fs: the fs scanner never looks inside jars.
+      - name: Run Trivy artifact scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          scan-type: fs
-          scan-ref: .
+          scan-type: rootfs
+          scan-ref: release-artifacts
           format: sarif
           output: trivy-results.sarif
           trivyignores: .trivyignore.yaml
           severity: 'CRITICAL,HIGH,MEDIUM'
+          # SARIF output ignores `severity` without this.
+          limit-severities-for-sarif: true
 
       - name: Upload Trivy SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v4.37.6
         with:
           sarif_file: trivy-results.sarif
           category: trivy
+
+  trivy-image:
+    name: Trivy Container Image
+    needs: [ vulnlog ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download suppression files
+        uses: actions/download-artifact@v8
+        with:
+          name: suppressions
+
+      - name: Run Trivy image scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ghcr.io/${{ github.repository }}:${{ env.VULNLOG_VERSION }}
+          format: sarif
+          output: trivy-image-results.sarif
+          trivyignores: .trivyignore.yaml
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          limit-severities-for-sarif: true
+          # The Debian base carries many CVEs Debian has not fixed; without this
+          # the actionable findings drown in them.
+          ignore-unfixed: true
+
+      - name: Upload Trivy image SARIF to GitHub
+        uses: github/codeql-action/upload-sarif@v4.37.6
+        with:
+          sarif_file: trivy-image-results.sarif
+          category: trivy-image
