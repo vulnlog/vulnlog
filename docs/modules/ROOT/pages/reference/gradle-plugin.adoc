@@ -32,6 +32,9 @@ vulnlog {
 
 | `files`
 | File collection of Vulnlog YAML files to operate on. Used by all tasks except `vulnlogInit`.
+
+| `report`
+| Container for the report tasks. Each report type has its own nested block, for example `report { impact { } }`.
 |===
 
 == Diagnostics
@@ -186,19 +189,24 @@ vulnlog {
 ./gradlew vulnlogSuppress
 ----
 
-=== `vulnlogReport`
+=== `vulnlogImpactReport`
 
-Generates an HTML report from the configured Vulnlog file.
-See xref:reference/cli-report.adoc[`vulnlog report`] for details.
+Generates an HTML impact report from the configured Vulnlog files.
+Multiple files are merged and must share the same project metadata.
+See xref:reference/cli-report-impact.adoc[`vulnlog report impact`] for details.
+
+Settings live under `report { impact { } }`, so each report type keeps its own block.
 
 [source,kotlin]
 ----
 vulnlog {
     report {
-        outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-report.html"))  // optional
-        reporter = "trivy"                                                         // optional
-        release = "1.0.0"                                                          // optional
-        tags = setOf("frontend")                                                   // optional
+        impact {
+            outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-impact-report.html"))  // optional
+            reporter = "trivy"                                                                // optional
+            release = "1.0.0"                                                                 // optional
+            tags = setOf("frontend")                                                          // optional
+        }
     }
 }
 ----
@@ -208,7 +216,7 @@ vulnlog {
 | Property | Default | Description
 
 | `outputFile`
-| `build/vulnlog/vulnlog-report.html`
+| `build/vulnlog/vulnlog-impact-report.html`
 | File where the HTML report is written.
 
 | `reporter`
@@ -224,10 +232,15 @@ vulnlog {
 | Filter on tags.
 |===
 
+The task is cacheable and uses Gradle's up-to-date checking, so it is skipped when neither the files nor the filter settings have changed.
+
+The task never fails because the report contains vulnerabilities.
+It fails the build only on invalid input, for example an unknown `release` or input files with different project metadata.
+
 .Example
 [source,shell]
 ----
-./gradlew vulnlogReport
+./gradlew vulnlogImpactReport
 ----
 
 === `VulnlogCopyTask`

@@ -6,7 +6,7 @@ You do not edit any file and you do not need a development environment.
 == Prerequisites
 
 * A Vulnlog HTML report.
-Your team generates it with xref:reference/cli-report.adoc[`vulnlog report`], often as a CI artifact.
+Your team generates it with xref:reference/cli-report-impact.adoc[`vulnlog report impact`], often as a CI artifact.
 The examples below describe the report generated from this file:
 
 .acme-web-app.vl.yaml

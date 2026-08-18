@@ -1,0 +1,109 @@
+= vulnlog report impact
+:page-aliases: cli-report.adoc
+
+Generates an impact report from one or more Vulnlog files.
+The report shows which vulnerabilities affect the project and which release ships each fix.
+Use it to decide whether a bugfix release is needed and what to update.
+
+[source]
+----
+vulnlog report impact <file...> [filter flags] [-o <path>]
+----
+
+Multiple files are merged and must share the same project metadata.
+Use `-` as a file argument to read from stdin and `-o -` to write the report to stdout.
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <path>`
+| Output file path, or `-` to write to stdout. Defaults to `vulnlog-impact-report.html` in the current directory.
+
+| `--reporter <value>`
+| Filter on reporter.
+
+| `--release <text>`
+| Filter on release.
+Includes all releases up to and including that release.
+A fix only counts once it has shipped inside that range.
+A vulnerability whose `resolution` targets a later release is reported under its pre-resolution state: `open` for `affected`, `dismissed` for `not affected` and for `affected` with `disposition: wont fix`.
+The report therefore shows what is actually shipped at the chosen release.
+
+| `--tag <text>`
+| Filter on tags. Use multiple times to filter on multiple tags.
+
+| `-`
+| Use as the file argument to read from stdin.
+
+|===
+
+== Report contents
+
+The rendered HTML is a single, self-contained document.
+It contains the following sections:
+
+* *Header*: project organization, name, and author; the ISO-8601 UTC generation timestamp; the list of input file names (visible when several files are merged); and the applied filter (release, tags, reporter).
+* *Summary*: total entry count, breakdown by xref:concepts/vulnerability-states.adoc[state], and breakdown of open entries by severity.
+* *Entry table*: four columns (IDs, State, Details, Releases) sorted by state (open first), then severity (critical to low), then primary ID.
+Each row carries a coloured left stripe: green for resolved, grey for dismissed, severity-coloured for open entries, and uncoloured for entries under investigation.
+The Details cell shows the verdict, severity (where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
+* *Footer*: Vulnlog version and a link to vulnlog.dev.
+
+The report is fully offline (no network requests), CSP-locked, print-friendly, and adapts to the reader's light or dark system theme.
+
+== Examples
+
+.Generate an HTML report
+[source]
+----
+vulnlog report impact full-example.vl.yaml
+Wrote: vulnlog-impact-report.html
+----
+
+.Generate a merged report from multiple Vulnlog files
+[source]
+----
+vulnlog report impact frontend.vl.yaml backend.vl.yaml
+Wrote: vulnlog-impact-report.html
+----
+
+.Show what a filter resolved to
+[source]
+----
+vulnlog -v report impact vulnlog.yaml --release 1.1.0
+verbose: release filter expanded to releases: 1.0.0, 1.1.0
+Wrote: vulnlog-impact-report.html
+----
+
+To generate an HTML report using the Vulnlog Docker container:
+
+[source,subs="attributes"]
+----
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report impact vulnlog.yaml --output report.html
+Wrote: /work/report.html
+----
+
+This renders an example Vulnlog HTML report:
+
+.Example Vulnlog HTML Report
+image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
+
+== When the command fails
+
+The command exits non-zero on bad input.
+It never fails because the report contains vulnerabilities.
+
+* Unknown `--reporter`, `--release`, or `--tag`: the command lists the known values and exits `5`.
+* Input files with different project metadata: the command exits `2`.
+* No subcommand, as in `vulnlog report vulnlog.yaml`: the command prints the available reports and exits `1`.
+
+See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
+
+== See also
+
+- xref:get-started/quickstart-report.adoc[Quickstart: read the impact report]
+- xref:guides/generate-reports.adoc[Vulnlog Reporting]
+- xref:concepts/vulnerability-states.adoc[Vulnerability States]
+- xref:reference/gradle-plugin.adoc[Gradle plugin]
+- xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]

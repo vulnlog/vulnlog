@@ -4,9 +4,12 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.NoSuchSubcommand
+import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.subcommands
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -47,6 +50,62 @@ private inline fun <R> withCapturedStdout(block: () -> R): Pair<R, String> {
 
 class MainTest :
     FunSpec({
+
+        context("misplacedInputHint") {
+
+            test("names the group when a Vulnlog file lands where a subcommand belongs") {
+                val error = NoSuchSubcommand("vulnlog.yaml", emptyList())
+
+                val hint = misplacedInputHint(error, listOf("report", "vulnlog.yaml"))
+
+                hint.shouldNotBeNull() shouldContain "'report' expects a subcommand"
+            }
+
+            test("recognises a Vulnlog file given by path") {
+                val error = NoSuchSubcommand("acme.vl.yaml", emptyList())
+
+                val hint = misplacedInputHint(error, listOf("modify", "/tmp/acme.vl.yaml"))
+
+                hint.shouldNotBeNull() shouldContain "'modify' expects a subcommand"
+            }
+
+            test("stays quiet when the unknown subcommand is not a Vulnlog file") {
+                val error = NoSuchSubcommand("bogus", emptyList())
+
+                misplacedInputHint(error, listOf("report", "bogus")) shouldBe null
+            }
+
+            test("stays quiet for errors that are not an unknown subcommand") {
+                misplacedInputHint(UsageError("nope"), listOf("report", "vulnlog.yaml")) shouldBe null
+            }
+        }
+
+        context("command groups without a subcommand") {
+
+            test("report alone is a usage error") {
+                withCapturedStdout {
+                    runVulnlog(vulnlogCommand(), listOf("report"))
+                }.first shouldBe ExitCode.GENERAL_ERROR.code
+            }
+
+            test("modify alone is a usage error") {
+                withCapturedStdout {
+                    runVulnlog(vulnlogCommand(), listOf("modify"))
+                }.first shouldBe ExitCode.GENERAL_ERROR.code
+            }
+
+            test("report lists the reports it can generate") {
+                val (_, out) = withCapturedStdout { runVulnlog(vulnlogCommand(), listOf("report")) }
+
+                out shouldContain "impact"
+            }
+
+            test("asking for help is not an error") {
+                withCapturedStdout {
+                    runVulnlog(vulnlogCommand(), listOf("report", "--help"))
+                }.first shouldBe ExitCode.SUCCESS.code
+            }
+        }
 
         context("renderUnexpectedError") {
 

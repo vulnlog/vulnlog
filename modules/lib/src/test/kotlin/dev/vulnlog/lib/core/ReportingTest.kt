@@ -3,6 +3,10 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.core.reporting.collectReportingEntries
+import dev.vulnlog.lib.core.reporting.mergeReportingEntries
+import dev.vulnlog.lib.core.reporting.renderReportingCounts
+import dev.vulnlog.lib.core.reporting.validateSharedProject
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl

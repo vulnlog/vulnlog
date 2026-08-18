@@ -48,15 +48,17 @@ class VulnlogPlugin : Plugin<Project> {
             task.format.convention(extension.suppress.format)
         }
 
-        project.tasks.register("vulnlogReport", VulnlogReportTask::class.java) { task ->
-            task.description = "Generate an HTML vulnerability report."
+        project.tasks.register("vulnlogImpactReport", VulnlogImpactReportTask::class.java) { task ->
+            task.description = "Generate an HTML impact report."
             task.group = "vulnlog"
             task.files.from(extension.files)
-            task.reporter.convention(extension.report.reporter)
-            task.release.convention(extension.report.release)
-            task.tags.convention(extension.report.tags)
+            task.reporter.convention(extension.report.impact.reporter)
+            task.release.convention(extension.report.impact.release)
+            task.tags.convention(extension.report.impact.tags)
             task.outputFile.convention(
-                extension.report.outputFile.orElse(project.layout.buildDirectory.file("vulnlog/vulnlog-report.html")),
+                extension.report.impact.outputFile.orElse(
+                    project.layout.buildDirectory.file("vulnlog/vulnlog-impact-report.html"),
+                ),
             )
         }
     }

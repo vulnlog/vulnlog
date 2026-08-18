@@ -60,14 +60,14 @@ jobs:
             -v "${{ github.workspace }}:/work" \
             -w /work \
             ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
-            report vulnlog.yaml -o /work
+            report impact vulnlog.yaml
 
       - name: Upload Vulnlog HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
-          path: vulnlog-report.html
+          path: vulnlog-impact-report.html
 ----
 
 == Using the Docker image

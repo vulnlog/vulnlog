@@ -4,6 +4,7 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.PrintHelpMessage
 import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
@@ -17,6 +18,8 @@ import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
@@ -27,6 +30,7 @@ import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.InputSelectionResult
 import dev.vulnlog.lib.shell.InputValidationResult
 import dev.vulnlog.lib.shell.resolveReleaseFilter
+import dev.vulnlog.lib.shell.resolveReporterFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateInputPath
 import dev.vulnlog.lib.shell.validateInputSelection
@@ -36,6 +40,13 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.writeText
 
 private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
+
+/** Fails with a usage error when a command group is invoked without one of its subcommands. */
+fun CliktCommand.requireSubcommand() {
+    if (currentContext.invokedSubcommand == null) {
+        throw PrintHelpMessage(currentContext, error = true, statusCode = ExitCode.GENERAL_ERROR.code)
+    }
+}
 
 fun CliktCommand.echoHelpHint() {
     echoMessage(formatHint("ask for help at $HELP_DISCUSSIONS_URL"))
@@ -96,14 +107,17 @@ fun CliktCommand.resolveFilter(
     vulnlogFile: VulnlogFile,
 ): ResolvedFilter =
     try {
-        val releases = resolveReleaseFilter(filterOptions.releaseOption, vulnlogFile)
-        val tags = resolveTagsFilter(filterOptions.tagsOptions, vulnlogFile)
-        val filter = ResolvedFilter(filterOptions.reporter, releases, tags)
+        val releases = resolveReleaseFilter(filterOptions.releaseOption?.let(::Release), vulnlogFile)
+        val tags = resolveTagsFilter(filterOptions.tagsOptions.map(::Tag).toSet(), vulnlogFile)
+        val filter = ResolvedFilter(resolveReporterFilter(filterOptions.reporter), releases, tags)
         renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
         filter
     } catch (e: FilterValidationException) {
         echoMessage(formatMessage(FindingSeverity.ERROR, e.message.orEmpty()))
         echoMessage(formatHint(e.detail))
+        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
+    } catch (e: IllegalArgumentException) {
+        echoMessage(formatMessage(FindingSeverity.ERROR, "Invalid filter value: ${e.message}"))
         throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 

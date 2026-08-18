@@ -24,7 +24,8 @@ fun validateInputPath(path: Path): InputValidationResult {
     return InputValidationResult.Ok(path)
 }
 
-private fun isVulnlogFileName(name: String): Boolean =
+/** Whether [name] is a Vulnlog file name: `vulnlog.yaml`, `vulnlog.yml`, or `*.vl.yaml` / `*.vl.yml`. */
+fun isVulnlogFileName(name: String): Boolean =
     name == "vulnlog.yaml" || name == "vulnlog.yml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml")
 
 /** Validates how `<stdin>` combines with file inputs across a multi-input command: at most one `<stdin>`, and never mixed with files. */

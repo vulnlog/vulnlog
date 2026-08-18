@@ -62,7 +62,7 @@ On release purl entries, tags scope the release artifacts (see xref:reference/ta
 
 [source,bash]
 ----
-vulnlog report my-app.vl.yaml --release 1.1.0 --tag container
+vulnlog report impact my-app.vl.yaml --release 1.1.0 --tag container
 vulnlog suppress my-app.vl.yaml --reporter trivy --tag build-dep
 ----
 

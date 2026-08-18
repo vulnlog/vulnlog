@@ -255,8 +255,8 @@ class SuppressCommandTest :
                 withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --reporter dependency_check")
 
-                    result.statusCode shouldBe 1
-                    result.stderr shouldContain "Unsupported reporter: dependency_check"
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid reporter: dependency_check"
                     result.stderr shouldNotContain "dev.vulnlog"
                     result.stderr shouldNotContain "No enum constant"
                 }
@@ -266,8 +266,8 @@ class SuppressCommandTest :
                 withTempFile(content = vulnlogDocument()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} --reporter bogus")
 
-                    result.statusCode shouldBe 1
-                    result.stderr shouldContain "Unsupported reporter: bogus"
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid reporter: bogus"
                     result.stderr shouldNotContain "dev.vulnlog"
                 }
             }

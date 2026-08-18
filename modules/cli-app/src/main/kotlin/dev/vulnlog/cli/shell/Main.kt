@@ -6,6 +6,7 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.Context
+import com.github.ajalt.clikt.core.NoSuchSubcommand
 import com.github.ajalt.clikt.core.UsageError
 import com.github.ajalt.clikt.core.obj
 import com.github.ajalt.clikt.core.parse
@@ -15,8 +16,10 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import dev.vulnlog.cli.BuildInfo
+import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.shell.isVulnlogFileName
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -42,11 +45,22 @@ internal fun runVulnlog(
         ExitCode.SUCCESS.code
     } catch (e: CliktError) {
         cli.echoFormattedHelp(e)
+        misplacedInputHint(e, args)?.let(printError)
         e.statusCode
     } catch (e: Exception) {
         renderUnexpectedError(e, cli.verbosity.stackTraces).forEach(printError)
         ExitCode.GENERAL_ERROR.code
     }
+
+internal fun misplacedInputHint(
+    e: CliktError,
+    args: List<String>,
+): String? {
+    if (e !is NoSuchSubcommand) return null
+    val file = args.firstOrNull { isVulnlogFileName(it.substringAfterLast('/')) } ?: return null
+    val group = args.takeWhile { it != file }.lastOrNull { !it.startsWith("-") } ?: return null
+    return formatHint("'$group' expects a subcommand, run 'vulnlog $group --help' to see them")
+}
 
 internal fun renderUnexpectedError(
     e: Throwable,
