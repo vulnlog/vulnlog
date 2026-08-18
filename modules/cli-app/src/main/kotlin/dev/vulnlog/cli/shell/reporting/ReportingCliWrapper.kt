@@ -8,7 +8,7 @@ import com.github.ajalt.clikt.core.ProgramResult
 import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.cli.shell.echoMessage
 import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.core.validateSharedProject
+import dev.vulnlog.lib.core.reporting.validateSharedProject
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity

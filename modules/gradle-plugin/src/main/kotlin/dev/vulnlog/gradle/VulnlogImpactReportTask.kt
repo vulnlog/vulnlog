@@ -3,7 +3,6 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.filter.filterRequestOrFail
 import dev.vulnlog.gradle.filter.resolveFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
@@ -11,11 +10,12 @@ import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.collectReportingEntries
+import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.mergeReportingEntries
-import dev.vulnlog.lib.core.renderReportingCounts
+import dev.vulnlog.lib.core.reporting.collectReportingEntries
+import dev.vulnlog.lib.core.reporting.mergeReportingEntries
+import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.ReportingEntry
@@ -39,7 +39,7 @@ import org.gradle.api.tasks.TaskAction
 import java.time.Instant
 
 @CacheableTask
-abstract class VulnlogReportTask : DefaultTask() {
+abstract class VulnlogImpactReportTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val files: ConfigurableFileCollection
@@ -67,7 +67,7 @@ abstract class VulnlogReportTask : DefaultTask() {
         val vulnlogFiles: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
         val project = sharedProjectOrFail(vulnlogFiles)
 
-        val request = filterRequestOrFail(reporter.orNull, release.orNull, tags.get())
+        val request = FilterRequest(reporter.orNull, release.orNull, tags.get())
         val filter = resolveFilterOrFail(request, vulnlogFiles)
 
         val reported: List<ReportingEntry> = vulnlogFiles.flatMap { collectReportingEntries(it.applyFilter(filter)) }

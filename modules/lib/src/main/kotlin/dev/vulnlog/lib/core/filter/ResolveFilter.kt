@@ -4,7 +4,9 @@
 package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 
@@ -13,18 +15,19 @@ import dev.vulnlog.lib.model.VulnlogFile
  *
  * A release must be defined in every file, because the window is read from each file's own release
  * order. A tag only has to be defined in one of them, because a tag filter is set membership rather
- * than a point on a timeline.
+ * than a point on a timeline. A reporter is checked against the reporters Vulnlog supports.
  */
 fun resolveFilter(
     request: FilterRequest,
     files: List<VulnlogFile>,
 ): FilterOutcome {
+    val reporter = resolveReporter(request.reporter)
     val releases = resolveReleaseWindow(request.release, files)
     val tags = resolveTags(request.tags, files)
-    val problems = releases.problems + tags.problems
+    val problems = reporter.problems + releases.problems + tags.problems
 
     return if (problems.isEmpty()) {
-        FilterOutcome.Resolved(ResolvedFilter(request.reporter, releases.value, tags.value))
+        FilterOutcome.Resolved(ResolvedFilter(reporter.value, releases.value, tags.value))
     } else {
         FilterOutcome.Rejected(problems)
     }
@@ -51,26 +54,44 @@ private data class Dimension<T>(
     val problems: List<FilterProblem> = emptyList(),
 )
 
-private fun resolveReleaseWindow(
-    release: Release?,
-    files: List<VulnlogFile>,
-): Dimension<Set<Release>> {
-    if (release == null) return Dimension(emptySet())
+private fun resolveReporter(value: String?): Dimension<ReporterType?> {
+    if (value == null) return Dimension(null)
 
-    val known = files.flatMap { file -> file.releases.map { it.id } }.distinct()
-    if (files.any { file -> file.releases.none { it.id == release } }) {
-        return Dimension(
-            emptySet(),
+    return try {
+        Dimension(parseReporter(value))
+    } catch (_: IllegalArgumentException) {
+        Dimension(
+            null,
             listOf(
                 FilterProblem(
-                    "Release not found: ${release.value}",
-                    "Known releases: ${known.joinToString(", ") { it.value }}",
+                    "Invalid reporter: $value",
+                    "Supported reporters: ${ReporterType.entries.joinToString(", ") { it.canonical() }}",
                 ),
             ),
         )
     }
+}
+
+private fun resolveReleaseWindow(
+    value: String?,
+    files: List<VulnlogFile>,
+): Dimension<Set<Release>> {
+    if (value == null) return Dimension(emptySet())
+
+    val known = files.flatMap { file -> file.releases.map { it.id } }.distinct()
+    if (value.isBlank()) return Dimension(emptySet(), listOf(releaseProblem("Release must not be blank", known)))
+
+    val release = Release(value)
+    if (files.any { file -> file.releases.none { it.id == release } }) {
+        return Dimension(emptySet(), listOf(releaseProblem("Release not found: $value", known)))
+    }
     return Dimension(files.flatMap { file -> windowOf(release, file) }.toSet())
 }
+
+private fun releaseProblem(
+    message: String,
+    known: List<Release>,
+): FilterProblem = FilterProblem(message, "Known releases: ${known.joinToString(", ") { it.value }}")
 
 /** The requested release and every release declared before it in [file]. */
 private fun windowOf(
@@ -82,28 +103,30 @@ private fun windowOf(
 }
 
 private fun resolveTags(
-    tags: Set<Tag>,
+    values: Set<String>,
     files: List<VulnlogFile>,
 ): Dimension<Set<Tag>> {
-    if (tags.isEmpty()) return Dimension(emptySet())
+    if (values.isEmpty()) return Dimension(emptySet())
 
     val known = files.flatMap { file -> file.tags.map { it.id } }.distinct()
+    if (values.any { it.isBlank() }) return Dimension(emptySet(), listOf(tagProblem("Tag must not be blank", known)))
+
+    val tags = values.map(::Tag).toSet()
     val unknown = tags.filterNot { it in known }.sortedBy { it.value }
-    return if (unknown.isEmpty()) {
-        Dimension(tags)
-    } else {
-        Dimension(
+    if (unknown.isNotEmpty()) {
+        return Dimension(
             emptySet(),
-            listOf(
-                FilterProblem(
-                    "Tag not found: ${unknown.joinToString(", ") { it.value }}",
-                    if (known.isEmpty()) {
-                        "The input declares no tags."
-                    } else {
-                        "Known tags: ${known.joinToString(", ") { it.value }}"
-                    },
-                ),
-            ),
+            listOf(tagProblem("Tag not found: ${unknown.joinToString(", ") { it.value }}", known)),
         )
     }
+    return Dimension(tags)
 }
+
+private fun tagProblem(
+    message: String,
+    known: List<Tag>,
+): FilterProblem =
+    FilterProblem(
+        message,
+        if (known.isEmpty()) "The input declares no tags." else "Known tags: ${known.joinToString(", ") { it.value }}",
+    )

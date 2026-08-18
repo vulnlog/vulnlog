@@ -35,7 +35,7 @@
 *** xref:reference/cli-validate.adoc[validate]
 *** xref:reference/cli-fmt.adoc[fmt]
 *** xref:reference/cli-suppress.adoc[suppress]
-*** xref:reference/cli-report.adoc[report]
+*** xref:reference/cli-report-impact.adoc[report impact]
 *** xref:reference/cli-add.adoc[modify add]
 *** xref:reference/cli-copy.adoc[modify copy]
 ** xref:reference/gradle-plugin.adoc[Gradle plugin]

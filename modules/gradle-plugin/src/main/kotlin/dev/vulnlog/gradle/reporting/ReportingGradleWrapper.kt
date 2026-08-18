@@ -3,7 +3,7 @@
 
 package dev.vulnlog.gradle.reporting
 
-import dev.vulnlog.lib.core.validateSharedProject
+import dev.vulnlog.lib.core.reporting.validateSharedProject
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.VulnlogFile
 import org.gradle.api.GradleException

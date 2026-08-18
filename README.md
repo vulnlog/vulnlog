@@ -146,7 +146,7 @@ vulnlog validate vulnlog.yaml
 vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
 
 # Generate an HTML report
-vulnlog report vulnlog.yaml
+vulnlog report impact vulnlog.yaml
 ```
 
 ## Documentation

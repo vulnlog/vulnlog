@@ -4,35 +4,34 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
-import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.parseReporter
-import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
-import dev.vulnlog.lib.model.Tag
 
+/** The filter flags shared by the commands that read Vulnlog files. Values are checked by resolveFilter. */
 class FilterOptions : OptionGroup() {
-    val reporter: ReporterType? by option(
+    val reporter: String? by option(
         "--reporter",
+        metavar = "<reporter>",
         help =
             """
             Filter on reporter.
             Supported reporters: ${ReporterType.entries.joinToString(", ") { it.canonical() }}
             """.trimIndent(),
-    ).convert { parseReporter(it) }
+    )
 
-    val releaseOption: Release? by option(
+    val releaseOption: String? by option(
         "--release",
+        metavar = "<release-id>",
         help = "Filter on release, include all releases up to and including that release.",
-    ).convert { Release(it) }
+    )
 
-    val tagsOptions: Set<Tag> by option(
+    val tagsOptions: Set<String> by option(
         "--tag",
+        metavar = "<tag>",
         help = "Filter on tags. Use multiple times to filter on multiple tags.",
-    ).convert { Tag(it) }
-        .multiple()
+    ).multiple()
         .unique()
 }

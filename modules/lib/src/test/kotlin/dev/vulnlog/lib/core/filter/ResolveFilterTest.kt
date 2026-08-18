@@ -31,7 +31,7 @@ class ResolveFilterTest :
 
             test("expands a release to itself and everything declared before it") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(release = release("2.0.0"))
+                val request = FilterRequest(release = "2.0.0")
 
                 val outcome = resolveFilter(request, files)
 
@@ -40,7 +40,7 @@ class ResolveFilterTest :
 
             test("expands the first release to itself alone") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(release = release("1.0.0"))
+                val request = FilterRequest(release = "1.0.0")
 
                 val outcome = resolveFilter(request, files)
 
@@ -49,7 +49,7 @@ class ResolveFilterTest :
 
             test("expands the last release to the full history") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(release = release("3.0.0"))
+                val request = FilterRequest(release = "3.0.0")
 
                 val outcome = resolveFilter(request, files)
 
@@ -72,7 +72,7 @@ class ResolveFilterTest :
                         threeReleaseFile(),
                         vulnlogFile(releases = listOf(releaseEntry("0.9.0"), releaseEntry("2.0.0"))),
                     )
-                val request = FilterRequest(release = release("2.0.0"))
+                val request = FilterRequest(release = "2.0.0")
 
                 val outcome = resolveFilter(request, files)
 
@@ -82,7 +82,7 @@ class ResolveFilterTest :
 
             test("rejects a release no file declares") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(release = release("9.9.9"))
+                val request = FilterRequest(release = "9.9.9")
 
                 val outcome = resolveFilter(request, files)
 
@@ -90,9 +90,18 @@ class ResolveFilterTest :
                     listOf(FilterProblem("Release not found: 9.9.9", "Known releases: 1.0.0, 2.0.0, 3.0.0"))
             }
 
+            test("rejects a blank release") {
+                val files = listOf(threeReleaseFile())
+
+                val outcome = resolveFilter(FilterRequest(release = "  "), files)
+
+                outcome.problems() shouldBe
+                    listOf(FilterProblem("Release must not be blank", "Known releases: 1.0.0, 2.0.0, 3.0.0"))
+            }
+
             test("rejects a release missing from one of several files") {
                 val files = listOf(threeReleaseFile(), vulnlogFile(releases = listOf(releaseEntry("1.0.0"))))
-                val request = FilterRequest(release = release("2.0.0"))
+                val request = FilterRequest(release = "2.0.0")
 
                 val outcome = resolveFilter(request, files)
 
@@ -105,7 +114,7 @@ class ResolveFilterTest :
 
             test("passes through a tag the file declares") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(tags = setOf(tag("internal")))
+                val request = FilterRequest(tags = setOf("internal"))
 
                 val outcome = resolveFilter(request, files)
 
@@ -114,7 +123,7 @@ class ResolveFilterTest :
 
             test("accepts a tag declared in only one of several files") {
                 val files = listOf(threeReleaseFile(), vulnlogFile(tags = listOf(tagEntry("release-blocker"))))
-                val request = FilterRequest(tags = setOf(tag("release-blocker")))
+                val request = FilterRequest(tags = setOf("release-blocker"))
 
                 val outcome = resolveFilter(request, files)
 
@@ -123,7 +132,7 @@ class ResolveFilterTest :
 
             test("rejects unknown tags, naming all of them at once") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(tags = setOf(tag("zzz"), tag("aaa")))
+                val request = FilterRequest(tags = setOf("zzz", "aaa"))
 
                 val outcome = resolveFilter(request, files)
 
@@ -131,9 +140,18 @@ class ResolveFilterTest :
                     listOf(FilterProblem("Tag not found: aaa, zzz", "Known tags: internal, public"))
             }
 
+            test("rejects a blank tag") {
+                val files = listOf(threeReleaseFile())
+
+                val outcome = resolveFilter(FilterRequest(tags = setOf("")), files)
+
+                outcome.problems() shouldBe
+                    listOf(FilterProblem("Tag must not be blank", "Known tags: internal, public"))
+            }
+
             test("says so plainly when the input declares no tags at all") {
                 val files = listOf(vulnlogFile(releases = listOf(releaseEntry("1.0.0"))))
-                val request = FilterRequest(tags = setOf(tag("internal")))
+                val request = FilterRequest(tags = setOf("internal"))
 
                 val outcome = resolveFilter(request, files)
 
@@ -144,13 +162,30 @@ class ResolveFilterTest :
 
         context("reporter") {
 
-            test("passes the reporter through untouched") {
+            test("resolves a canonical reporter name to its type") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(reporter = ReporterType.DEPENDENCY_CHECK)
+                val request = FilterRequest(reporter = "dependency-check")
 
                 val outcome = resolveFilter(request, files)
 
                 outcome.filter().reporter shouldBe ReporterType.DEPENDENCY_CHECK
+            }
+
+            test("leaves the reporter unset when none is requested") {
+                val files = listOf(threeReleaseFile())
+
+                val outcome = resolveFilter(FilterRequest(), files)
+
+                outcome.filter().reporter shouldBe null
+            }
+
+            test("rejects a reporter Vulnlog does not support") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(reporter = "bogus")
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid reporter: bogus")
             }
         }
 
@@ -158,12 +193,12 @@ class ResolveFilterTest :
 
             test("reports every failing dimension in one outcome") {
                 val files = listOf(threeReleaseFile())
-                val request = FilterRequest(release = release("9.9.9"), tags = setOf(tag("missing")))
+                val request = FilterRequest(reporter = "bogus", release = "9.9.9", tags = setOf("missing"))
 
                 val outcome = resolveFilter(request, files)
 
                 outcome.problems().map { it.message } shouldBe
-                    listOf("Release not found: 9.9.9", "Tag not found: missing")
+                    listOf("Invalid reporter: bogus", "Release not found: 9.9.9", "Tag not found: missing")
             }
         }
 

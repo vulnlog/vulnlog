@@ -11,7 +11,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
-class ReportCommandTest :
+class ImpactReportCommandTest :
     FunSpec({
 
         context("happy path") {
@@ -20,7 +20,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogDocument()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
-                            ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
+                            ImpactReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
 
                         result.statusCode shouldBe 0
                         result.stderr shouldContain "Wrote: "
@@ -42,7 +42,7 @@ class ReportCommandTest :
                     ) { f2 ->
                         withTempFile(prefix = "report", suffix = ".html") { output ->
                             val result =
-                                ReportCommand().test(
+                                ImpactReportCommand().test(
                                     "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath}",
                                 )
 
@@ -60,7 +60,7 @@ class ReportCommandTest :
                     withTempFile(prefix = "vulnlog-2x", content = vulnlogDocument(releaseId = "2.0.0")) { f2 ->
                         withTempFile(prefix = "report", suffix = ".html") { output ->
                             val result =
-                                ReportCommand().test(
+                                ImpactReportCommand().test(
                                     "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath}",
                                 )
 
@@ -77,7 +77,7 @@ class ReportCommandTest :
             test("reads from stdin when '-' is passed") {
                 withTempFile(prefix = "report", suffix = ".html") { output ->
                     withStdin(vulnlogDocument()) {
-                        val result = ReportCommand().test("- -o ${output.absolutePath}")
+                        val result = ImpactReportCommand().test("- -o ${output.absolutePath}")
 
                         result.statusCode shouldBe 0
                         val html = output.readText()
@@ -95,7 +95,7 @@ class ReportCommandTest :
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
                             vulnlogCommand().test(
-                                "-v report ${input.absolutePath} -o ${output.absolutePath}",
+                                "-v report impact ${input.absolutePath} -o ${output.absolutePath}",
                             )
 
                         result.statusCode shouldBe 0
@@ -110,7 +110,7 @@ class ReportCommandTest :
                 withTempFile(content = ValidationDocuments.UNREFERENCED_RELEASE) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
-                            ReportCommand().test(
+                            ImpactReportCommand().test(
                                 "${input.absolutePath} -o ${output.absolutePath}",
                             )
 
@@ -124,12 +124,12 @@ class ReportCommandTest :
         context("input validation") {
 
             test("fails when no input is provided") {
-                val result = ReportCommand().test("")
+                val result = ImpactReportCommand().test("")
 
                 result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldBe
                     """
-                    Usage: report [<options>] <inputs>...
+                    Usage: impact [<options>] <inputs>...
 
                     Error: missing argument <inputs>
 
@@ -137,12 +137,12 @@ class ReportCommandTest :
             }
 
             test("fails when the input file does not exist") {
-                val result = ReportCommand().test("/nonexistent/vulnlog.vl.yaml")
+                val result = ImpactReportCommand().test("/nonexistent/vulnlog.vl.yaml")
 
                 result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                 result.stderr shouldBe
                     """
-                    Usage: report [<options>] <inputs>...
+                    Usage: impact [<options>] <inputs>...
 
                     Error: invalid value for <inputs>: Input path '/nonexistent/vulnlog.vl.yaml' does not exist.
 
@@ -151,7 +151,7 @@ class ReportCommandTest :
 
             test("fails when the input path is a directory") {
                 withTempDir { dir ->
-                    val result = ReportCommand().test(dir.toAbsolutePath().toString())
+                    val result = ImpactReportCommand().test(dir.toAbsolutePath().toString())
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "is a directory"
@@ -160,12 +160,12 @@ class ReportCommandTest :
 
             test("fails when the input file name does not match the expected pattern") {
                 withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogDocument()) { input ->
-                    val result = ReportCommand().test(input.absolutePath)
+                    val result = ImpactReportCommand().test(input.absolutePath)
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldBe
                         """
-                        Usage: report [<options>] <inputs>...
+                        Usage: impact [<options>] <inputs>...
 
                         Error: invalid value for <inputs>: Input '${input.absolutePath}' is not valid: File name must be [vulnlog|*.vl].[yaml|yml]: ${input.absolutePath}
 
@@ -176,7 +176,7 @@ class ReportCommandTest :
             test("fails when stdin is mixed with file inputs") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     withStdin(vulnlogDocument()) {
-                        val result = ReportCommand().test("- ${input.absolutePath}")
+                        val result = ImpactReportCommand().test("- ${input.absolutePath}")
 
                         result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                         result.stderr shouldContain "Mixing input files with STDIN is not allowed"
@@ -186,7 +186,7 @@ class ReportCommandTest :
 
             test("fails when stdin is given more than once") {
                 withStdin(vulnlogDocument()) {
-                    val result = ReportCommand().test("- -")
+                    val result = ImpactReportCommand().test("- -")
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
                     result.stderr shouldContain "Multiple <stdin> are not supported"
@@ -199,7 +199,7 @@ class ReportCommandTest :
             test("fails when input files have different project metadata") {
                 withTempFile(prefix = "vulnlog-1x", content = vulnlogDocument(projectName = "Project A")) { f1 ->
                     withTempFile(prefix = "vulnlog-2x", content = vulnlogDocument(projectName = "Project B")) { f2 ->
-                        val result = ReportCommand().test("${f1.absolutePath} ${f2.absolutePath}")
+                        val result = ImpactReportCommand().test("${f1.absolutePath} ${f2.absolutePath}")
 
                         result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                         result.stderr shouldContain "same project metadata"
@@ -212,16 +212,17 @@ class ReportCommandTest :
 
             test("fails on an unknown reporter") {
                 withTempFile(content = vulnlogDocument()) { input ->
-                    val result = ReportCommand().test("${input.absolutePath} --reporter bogus")
+                    val result = ImpactReportCommand().test("${input.absolutePath} --reporter bogus")
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
-                    result.stderr shouldContain "Unsupported reporter: bogus"
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid reporter: bogus"
+                    result.stderr shouldContain "Supported reporters:"
                 }
             }
 
             test("fails on an unknown release") {
                 withTempFile(content = vulnlogDocument()) { input ->
-                    val result = ReportCommand().test("${input.absolutePath} --release 9.9.9")
+                    val result = ImpactReportCommand().test("${input.absolutePath} --release 9.9.9")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
@@ -233,7 +234,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogDocument(reporter = "trivy")) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
-                            ReportCommand().test(
+                            ImpactReportCommand().test(
                                 "${input.absolutePath} --reporter trivy -o ${output.absolutePath}",
                             )
 
@@ -247,7 +248,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogDocument(reporter = "trivy")) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
-                            ReportCommand().test(
+                            ImpactReportCommand().test(
                                 "${input.absolutePath} --reporter snyk -o ${output.absolutePath}",
                             )
 
@@ -259,7 +260,7 @@ class ReportCommandTest :
 
             test("fails on an unknown tag") {
                 withTempFile(content = vulnlogDocument()) { input ->
-                    val result = ReportCommand().test("${input.absolutePath} --tag missing-tag")
+                    val result = ImpactReportCommand().test("${input.absolutePath} --tag missing-tag")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Tag not found: missing-tag"
@@ -273,7 +274,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
-                            ReportCommand().test(
+                            ImpactReportCommand().test(
                                 "${input.absolutePath} --release 1.0.0 -o ${output.absolutePath}",
                             )
 
@@ -289,7 +290,7 @@ class ReportCommandTest :
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
-                            ReportCommand().test(
+                            ImpactReportCommand().test(
                                 "${input.absolutePath} -o ${output.absolutePath}",
                             )
 

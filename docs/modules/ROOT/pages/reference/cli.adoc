@@ -8,7 +8,7 @@ vulnlog <command> <file...> [flags]
 
 Every command except `init` requires one or more Vulnlog files as positional arguments.
 Read-only commands like `validate` accept multiple files.
-`report` accepts multiple files; they are merged and must share the same project metadata.
+`report impact` accepts multiple files; they are merged and must share the same project metadata.
 `suppress` operates on a single file.
 No automatic file detection.
 
@@ -84,8 +84,8 @@ Available on `report` and `suppress` commands.
 | xref:reference/cli-suppress.adoc[suppress]
 | Generate scanner-specific suppression files.
 
-| xref:reference/cli-report.adoc[report]
-| Generate an HTML vulnerability report.
+| xref:reference/cli-report-impact.adoc[report impact]
+| Generate an HTML impact report.
 
 | xref:reference/cli-add.adoc[modify add]
 | Add a new vulnerability entry to one or more Vulnlog files.

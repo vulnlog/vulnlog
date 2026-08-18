@@ -11,7 +11,7 @@ Answer the release planning questions from the Vulnlog file: which vulnerabiliti
 
 [source,bash]
 ----
-vulnlog report vulnlog.yaml --release 8.1.1 -o release-8.1.1.html
+vulnlog report impact vulnlog.yaml --release 8.1.1 -o release-8.1.1.html
 Wrote: release-8.1.1.html
 ----
 
@@ -45,7 +45,7 @@ When tags mark deliverables (for example `container` versus `sdk`), combine filt
 
 [source,bash]
 ----
-vulnlog report vulnlog.yaml --release 8.1.1 --tag container -o container-8.1.1.html
+vulnlog report impact vulnlog.yaml --release 8.1.1 --tag container -o container-8.1.1.html
 ----
 
 The xref:reference/tags.adoc[tag reference] covers defining and assigning tags.
@@ -66,5 +66,5 @@ Cross-check one entry: pick an open entry from the report and confirm in the YAM
 == Related
 
 * xref:concepts/vulnerability-states.adoc[Vulnerability states] defines the release-scoped state derivation precisely.
-* xref:reference/cli-report.adoc[vulnlog report] and xref:reference/cli-suppress.adoc[vulnlog suppress] document the filter flags.
+* xref:reference/cli-report-impact.adoc[vulnlog report impact] and xref:reference/cli-suppress.adoc[vulnlog suppress] document the filter flags.
 * xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release] walks a worked example.

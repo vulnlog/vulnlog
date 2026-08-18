@@ -83,7 +83,7 @@ The entry still appears as open in the release-scoped report; only the scanner n
 
 == Verify
 
-* `vulnlog report vulnlog.yaml` shows the entry as resolved, with the fix release in the Fixed In column.
+* `vulnlog report impact vulnlog.yaml` shows the entry as resolved, with the fix release in the Fixed In column.
 * After the dependency update ships, the scanner run without the entry in its suppression file stays green.
 
 == Related

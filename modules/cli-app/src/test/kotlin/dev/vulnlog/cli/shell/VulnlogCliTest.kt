@@ -248,7 +248,7 @@ class VulnlogCliTest :
                         val output = dir.resolve("report.html")
                         val result =
                             vulnlogCommand().test(
-                                "-v report ${file.absolutePath} --release 1.0.0 -o ${output.toAbsolutePath()}",
+                                "-v report impact ${file.absolutePath} --release 1.0.0 -o ${output.toAbsolutePath()}",
                             )
 
                         result.statusCode shouldBe 0
@@ -370,7 +370,7 @@ class VulnlogCliTest :
                         val output = dir.resolve("report.html")
                         val result =
                             vulnlogCommand().test(
-                                "-vv report ${file.absolutePath} -o ${output.toAbsolutePath()}",
+                                "-vv report impact ${file.absolutePath} -o ${output.toAbsolutePath()}",
                             )
 
                         result.statusCode shouldBe 0

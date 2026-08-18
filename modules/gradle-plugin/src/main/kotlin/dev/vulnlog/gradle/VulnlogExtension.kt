@@ -60,7 +60,19 @@ interface VulnlogSuppressExtension {
     val tags: SetProperty<String>
 }
 
-interface VulnlogReportExtension {
+/** Groups the report types, so each report keeps its own settings under `report { }`. */
+abstract class VulnlogReportExtension
+    @Inject
+    constructor(
+        objects: ObjectFactory,
+    ) {
+        val impact: VulnlogImpactReportExtension =
+            objects.newInstance(VulnlogImpactReportExtension::class.java)
+
+        fun impact(action: Action<VulnlogImpactReportExtension>) = action.execute(impact)
+    }
+
+interface VulnlogImpactReportExtension {
     val outputFile: RegularFileProperty
     val reporter: Property<String>
     val release: Property<String>

@@ -18,5 +18,7 @@ class ModifyCommand : CliktCommand(name = "modify") {
         )
     }
 
-    override fun run() = Unit
+    override val invokeWithoutSubcommand: Boolean = true
+
+    override fun run() = requireSubcommand()
 }

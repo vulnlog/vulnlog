@@ -37,40 +37,11 @@ private fun twoReleaseFile(): VulnlogFile =
 class FilterGradleWrapperTest :
     FunSpec({
 
-        context("filterRequestOrFail") {
-
-            test("turns the configured text into domain types") {
-                val task = wrapperTask()
-
-                val request = task.filterRequestOrFail("trivy", "1.0.0", setOf("internal"))
-
-                request shouldBe
-                    FilterRequest(ReporterType.TRIVY, release("1.0.0"), setOf(tag("internal")))
-            }
-
-            test("leaves every dimension unset when nothing is configured") {
-                val task = wrapperTask()
-
-                val request = task.filterRequestOrFail(null, null, emptySet())
-
-                request shouldBe FilterRequest()
-            }
-
-            test("fails on a reporter Vulnlog does not support") {
-                val task = wrapperTask()
-
-                val failure = shouldThrow<GradleException> { task.filterRequestOrFail("bogus", null, emptySet()) }
-
-                failure.message.orEmpty() shouldContain "Invalid reporter: bogus"
-                failure.message.orEmpty() shouldContain "Supported reporters:"
-            }
-        }
-
         context("resolveFilterOrFail") {
 
             test("hands back the expanded release window") {
                 val task = wrapperTask()
-                val request = FilterRequest(release = release("2.0.0"))
+                val request = FilterRequest(release = "2.0.0")
 
                 val filter = task.resolveFilterOrFail(request, listOf(twoReleaseFile()))
 
@@ -79,7 +50,7 @@ class FilterGradleWrapperTest :
 
             test("hands back the tags and the reporter untouched") {
                 val task = wrapperTask()
-                val request = FilterRequest(reporter = ReporterType.TRIVY, tags = setOf(tag("internal")))
+                val request = FilterRequest(reporter = "trivy", tags = setOf("internal"))
 
                 val filter = task.resolveFilterOrFail(request, listOf(twoReleaseFile()))
 
@@ -87,9 +58,20 @@ class FilterGradleWrapperTest :
                 filter.reporter shouldBe ReporterType.TRIVY
             }
 
+            test("fails on a reporter Vulnlog does not support") {
+                val task = wrapperTask()
+                val request = FilterRequest(reporter = "bogus")
+
+                val failure =
+                    shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }
+
+                failure.message.orEmpty() shouldContain "Invalid reporter: bogus"
+                failure.message.orEmpty() shouldContain "Supported reporters:"
+            }
+
             test("fails on a release the files do not declare") {
                 val task = wrapperTask()
-                val request = FilterRequest(release = release("9.9.9"))
+                val request = FilterRequest(release = "9.9.9")
 
                 val failure =
                     shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }
@@ -100,7 +82,7 @@ class FilterGradleWrapperTest :
 
             test("names every failing dimension in one failure") {
                 val task = wrapperTask()
-                val request = FilterRequest(release = release("9.9.9"), tags = setOf(tag("missing")))
+                val request = FilterRequest(release = "9.9.9", tags = setOf("missing"))
 
                 val failure =
                     shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }

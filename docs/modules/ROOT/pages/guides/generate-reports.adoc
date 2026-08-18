@@ -15,8 +15,8 @@ image::vulnlog-reporting.svg[alt="Vulnlog workflow: the engineer maintains vulnl
 
 [source,bash]
 ----
-vulnlog report vulnlog.yaml
-Wrote: vulnlog-report.html
+vulnlog report impact vulnlog.yaml
+Wrote: vulnlog-impact-report.html
 ----
 
 The result is a single, self-contained HTML document: fully offline, print-friendly, and adapting to the reader's light or dark theme.
@@ -32,7 +32,7 @@ For an audience that cares about one shipped release, scope it:
 
 [source,bash]
 ----
-vulnlog report vulnlog.yaml --release 8.1.1 -o release-8.1.1-report.html
+vulnlog report impact vulnlog.yaml --release 8.1.1 -o release-8.1.1-report.html
 Wrote: release-8.1.1-report.html
 ----
 
@@ -47,15 +47,15 @@ Projects with xref:guides/organize-files-across-branches.adoc[several Vulnlog fi
 
 [source,bash]
 ----
-vulnlog report frontend.vl.yaml backend.vl.yaml
-Wrote: vulnlog-report.html
+vulnlog report impact frontend.vl.yaml backend.vl.yaml
+Wrote: vulnlog-impact-report.html
 ----
 
 === From Docker
 
 [source,bash,subs="attributes"]
 ----
-docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report vulnlog.yaml --output report.html
+docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report impact vulnlog.yaml --output report.html
 Wrote: /work/report.html
 ----
 
@@ -63,10 +63,10 @@ Wrote: /work/report.html
 
 [source,bash]
 ----
-./gradlew vulnlogReport
+./gradlew vulnlogImpactReport
 ----
 
-The report lands in `build/vulnlog/vulnlog-report.html` by default; the xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the task configuration.
+The report lands in `build/vulnlog/vulnlog-impact-report.html` by default; the xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the task configuration.
 
 === As a CI artifact
 
@@ -79,6 +79,6 @@ Open the generated HTML file in a browser and check the header: it names the inp
 
 == Related
 
-* xref:reference/cli-report.adoc[vulnlog report] documents every flag and the report contents in detail.
+* xref:reference/cli-report-impact.adoc[vulnlog report impact] documents every flag and the report contents in detail.
 * xref:concepts/vulnerability-states.adoc[Vulnerability states] defines the state model the report presents.
 * xref:get-started/quickstart-report.adoc[Quickstart: read the impact report] teaches report reading to non-developers.

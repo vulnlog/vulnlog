@@ -20,7 +20,7 @@ private val FILES_FROM_TEST_YAML =
         """.trimIndent(),
     )
 
-class VulnlogReportTaskTest :
+class VulnlogImpactReportTaskTest :
     FunSpec({
 
         context("happy path") {
@@ -28,11 +28,11 @@ class VulnlogReportTaskTest :
             test("writes the report to the default output file") {
                 val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 
-                val result = runner(dir, "vulnlogReport").build()
+                val result = runner(dir, "vulnlogImpactReport").build()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
                 result.output shouldContain "Wrote: "
-                val report = dir.resolve("build/vulnlog/vulnlog-report.html")
+                val report = dir.resolve("build/vulnlog/vulnlog-impact-report.html")
                 report.exists() shouldBe true
                 report.readText() shouldContain "CVE-2026-1234"
             }
@@ -45,7 +45,9 @@ class VulnlogReportTaskTest :
                             vulnlog {
                                 files.from("test.vl.yaml")
                                 report {
-                                    outputFile = layout.projectDirectory.file("custom-report.html")
+                                    impact {
+                                        outputFile = layout.projectDirectory.file("custom-report.html")
+                                    }
                                 }
                             }
                             """.trimIndent(),
@@ -53,9 +55,9 @@ class VulnlogReportTaskTest :
                         "test.vl.yaml" to vulnlogDocument(),
                     )
 
-                val result = runner(dir, "vulnlogReport").build()
+                val result = runner(dir, "vulnlogImpactReport").build()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
                 dir.resolve("custom-report.html").exists() shouldBe true
             }
 
@@ -73,10 +75,10 @@ class VulnlogReportTaskTest :
                         "b.vl.yaml" to vulnlogDocument(),
                     )
 
-                val result = runner(dir, "vulnlogReport").build()
+                val result = runner(dir, "vulnlogImpactReport").build()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
-                dir.resolve("build/vulnlog/vulnlog-report.html").exists() shouldBe true
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-impact-report.html").exists() shouldBe true
             }
         }
 
@@ -85,9 +87,9 @@ class VulnlogReportTaskTest :
             test("--info shows the parsed inputs and the written output") {
                 val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 
-                val result = runner(dir, "vulnlogReport", "--info").build()
+                val result = runner(dir, "vulnlogImpactReport", "--info").build()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
                 result.output shouldContain
                     "parsed test.vl.yaml: schema version 1, releases: 1, tags: 0, vulnerabilities: 1"
                 result.output shouldContain "wrote "
@@ -97,9 +99,9 @@ class VulnlogReportTaskTest :
                 val dir =
                     gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to ValidationDocuments.UNREFERENCED_RELEASE)
 
-                val result = runner(dir, "vulnlogReport").build()
+                val result = runner(dir, "vulnlogImpactReport").build()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
                 result.output shouldNotContain "info: test.vl.yaml: "
             }
         }
@@ -109,9 +111,9 @@ class VulnlogReportTaskTest :
             test("fails when no files are configured") {
                 val dir = gradleProject(buildFile())
 
-                val result = runner(dir, "vulnlogReport").buildAndFail()
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "No Vulnlog files configured"
             }
         }
@@ -121,9 +123,9 @@ class VulnlogReportTaskTest :
             test("fails on invalid YAML") {
                 val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to INVALID_VULNLOG_YAML)
 
-                val result = runner(dir, "vulnlogReport").buildAndFail()
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "error: test.vl.yaml: "
             }
         }
@@ -144,9 +146,9 @@ class VulnlogReportTaskTest :
                         "b.vl.yaml" to vulnlogDocument(projectName = "Other App", organization = "Other Corp"),
                     )
 
-                val result = runner(dir, "vulnlogReport").buildAndFail()
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "must share the same project metadata"
             }
         }
@@ -161,7 +163,9 @@ class VulnlogReportTaskTest :
                             vulnlog {
                                 files.from("test.vl.yaml")
                                 report {
-                                    reporter = "trivy"
+                                    impact {
+                                        reporter = "trivy"
+                                    }
                                 }
                             }
                             """.trimIndent(),
@@ -169,10 +173,10 @@ class VulnlogReportTaskTest :
                         "test.vl.yaml" to vulnlogDocument(reporter = "trivy"),
                     )
 
-                val result = runner(dir, "vulnlogReport").build()
+                val result = runner(dir, "vulnlogImpactReport").build()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
-                dir.resolve("build/vulnlog/vulnlog-report.html").readText() shouldContain "CVE-2026-1234"
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-impact-report.html").readText() shouldContain "CVE-2026-1234"
             }
 
             test("fails on an unknown reporter") {
@@ -183,7 +187,9 @@ class VulnlogReportTaskTest :
                             vulnlog {
                                 files.from("test.vl.yaml")
                                 report {
-                                    reporter = "bogus"
+                                    impact {
+                                        reporter = "bogus"
+                                    }
                                 }
                             }
                             """.trimIndent(),
@@ -191,9 +197,9 @@ class VulnlogReportTaskTest :
                         "test.vl.yaml" to vulnlogDocument(),
                     )
 
-                val result = runner(dir, "vulnlogReport").buildAndFail()
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "Invalid reporter: bogus"
             }
 
@@ -205,7 +211,9 @@ class VulnlogReportTaskTest :
                             vulnlog {
                                 files.from("test.vl.yaml")
                                 report {
-                                    release = "9.9.9"
+                                    impact {
+                                        release = "9.9.9"
+                                    }
                                 }
                             }
                             """.trimIndent(),
@@ -213,9 +221,9 @@ class VulnlogReportTaskTest :
                         "test.vl.yaml" to vulnlogDocument(),
                     )
 
-                val result = runner(dir, "vulnlogReport").buildAndFail()
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "Release not found: 9.9.9"
                 result.output shouldContain "Known releases: 1.0.0"
             }
@@ -228,7 +236,9 @@ class VulnlogReportTaskTest :
                             vulnlog {
                                 files.from("test.vl.yaml")
                                 report {
-                                    tags = setOf("missing-tag")
+                                    impact {
+                                        tags = setOf("missing-tag")
+                                    }
                                 }
                             }
                             """.trimIndent(),
@@ -236,9 +246,9 @@ class VulnlogReportTaskTest :
                         "test.vl.yaml" to vulnlogDocument(),
                     )
 
-                val result = runner(dir, "vulnlogReport").buildAndFail()
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "Tag not found: missing-tag"
             }
         }

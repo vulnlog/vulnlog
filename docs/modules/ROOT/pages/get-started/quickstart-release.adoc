@@ -25,7 +25,7 @@ Scope the report to what actually ships in 1.1.0:
 
 [source,bash]
 ----
-vulnlog report acme-web-app.vl.yaml --release 1.1.0 -o release-1.1.0.html
+vulnlog report impact acme-web-app.vl.yaml --release 1.1.0 -o release-1.1.0.html
 Wrote: release-1.1.0.html
 ----
 
@@ -51,8 +51,8 @@ Generate the same report without the release filter:
 
 [source,bash]
 ----
-vulnlog report acme-web-app.vl.yaml
-Wrote: vulnlog-report.html
+vulnlog report impact acme-web-app.vl.yaml
+Wrote: vulnlog-impact-report.html
 ----
 
 Here `CVE-2026-7791` shows as *resolved* with `1.2.0` in the Fixed In column: from the maintainer's perspective the triage work is done.
@@ -60,7 +60,7 @@ The release-scoped view and the maintainer view answer different questions; use 
 
 == What you did
 
-You used the release filter of xref:reference/cli-report.adoc[`vulnlog report`] to separate fixes that shipped from fixes that are only recorded, and read the update list for the next release straight from the open entries.
+You used the release filter of xref:reference/cli-report-impact.adoc[`vulnlog report impact`] to separate fixes that shipped from fixes that are only recorded, and read the update list for the next release straight from the open entries.
 How states derive from verdict and resolution is defined in xref:concepts/vulnerability-states.adoc[Vulnerability states].
 
 == Next steps

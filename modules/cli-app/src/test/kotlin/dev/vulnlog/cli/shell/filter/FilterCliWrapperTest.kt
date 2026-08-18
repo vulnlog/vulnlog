@@ -7,12 +7,9 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.testing.test
 import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.lib.core.filter.FilterRequest
-import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
-import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
-import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnlogFile
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -52,7 +49,7 @@ class FilterCliWrapperTest :
         context("a filter every file knows") {
 
             test("hands back the expanded release window") {
-                val request = FilterRequest(release = release("2.0.0"))
+                val request = FilterRequest(release = "2.0.0")
 
                 val result = resolve(request)
 
@@ -61,7 +58,7 @@ class FilterCliWrapperTest :
             }
 
             test("hands back the tags and the reporter untouched") {
-                val request = FilterRequest(reporter = ReporterType.TRIVY, tags = setOf(tag("internal")))
+                val request = FilterRequest(reporter = "trivy", tags = setOf("internal"))
 
                 val result = resolve(request)
 
@@ -84,7 +81,7 @@ class FilterCliWrapperTest :
         context("a filter the files do not know") {
 
             test("fails with the invalid flag value exit code") {
-                val request = FilterRequest(release = release("9.9.9"))
+                val request = FilterRequest(release = "9.9.9")
 
                 val result = resolve(request)
 
@@ -92,7 +89,7 @@ class FilterCliWrapperTest :
             }
 
             test("reports the offending value and what the files do declare") {
-                val request = FilterRequest(release = release("9.9.9"))
+                val request = FilterRequest(release = "9.9.9")
 
                 val result = resolve(request)
 
@@ -101,7 +98,7 @@ class FilterCliWrapperTest :
             }
 
             test("reports every failing dimension before giving up") {
-                val request = FilterRequest(release = release("9.9.9"), tags = setOf(tag("missing")))
+                val request = FilterRequest(release = "9.9.9", tags = setOf("missing"))
 
                 val result = resolve(request)
 
