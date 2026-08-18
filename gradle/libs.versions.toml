@@ -3,7 +3,7 @@
 #detektVersion = "1.23.7"
 cliktVersion = "5.1.0"
 graalvmNativeBuildToolsVersion = "1.1.8"
-jacksonVersion = "3.2.1" # Keep in-sync with snakeYamlEngineVersion
+jacksonVersion = "3.2.2" # Keep in-sync with snakeYamlEngineVersion
 kotestVersion = "6.2.3"
 kotlinVersion = "2.4.10"
 ktlintVersion = "14.2.0"
