@@ -104,9 +104,9 @@ jobs:
         with:
           name: suppressions
 
-      # Exit 1 only means "vulnerabilities found"; real errors are caught below.
-      # configuration-matching keeps this to what ships: cli-app runtimeClasspath and gradle-plugin shaded.
-      # The inner quotes are required, the action entrypoint evals the argument string.
+      # Exit 1 only means "vulnerabilities found"; a real failure writes no SARIF.
+      # configuration-matching narrows the scan to what ships.
+      # The inner quotes matter: the action entrypoint evals the argument string.
       - name: Run Snyk
         id: snyk
         uses: snyk/actions/gradle@9adf32b1121593767fc3c057af55b55db032dc04 # v1.0.0
@@ -123,19 +123,13 @@ jobs:
             exit 1
           fi
 
-      # upload-sarif honours `category` only when the SARIF carries no
-      # automationDetails. Snyk indexes its own by build position, so adding or
-      # removing a module reshuffles it and orphans the old category.
-      - name: Normalise SARIF category
-        run: |
-          jq 'del(.runs[].automationDetails)' snyk-results.sarif > snyk-results.normalised.sarif
-          mv snyk-results.normalised.sarif snyk-results.sarif
-
+      # One SARIF run per sub-project, each already labelled by Snyk. Those
+      # labels are the categories, and code scanning rejects the upload if two
+      # runs share one, so leave them alone: a `category` here would be ignored.
       - name: Upload Snyk SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v4.37.6
         with:
           sarif_file: snyk-results.sarif
-          category: snyk
 
   trivy:
     name: Trivy Release Artifacts
@@ -204,10 +198,9 @@ jobs:
           format: sarif
           output: trivy-image-results.sarif
           trivyignores: .trivyignore.yaml
-          severity: 'CRITICAL,HIGH,MEDIUM'
+          severity: 'CRITICAL,HIGH'
           limit-severities-for-sarif: true
-          # The Debian base carries many CVEs Debian has not fixed; without this
-          # the actionable findings drown in them.
+          # The Debian base carries many CVEs Debian has not fixed.
           ignore-unfixed: true
 
       - name: Upload Trivy image SARIF to GitHub
