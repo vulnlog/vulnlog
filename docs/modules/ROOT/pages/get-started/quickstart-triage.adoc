@@ -7,7 +7,7 @@ In about ten minutes you create a Vulnlog file, record a scanner finding with yo
 
 * The Vulnlog CLI is installed (see xref:get-started/install.adoc[Install Vulnlog]).
 * A finding from an SCA scanner to work with.
-This quickstart uses a Trivy finding for `CVE-2026-1234` in the npm package `example-lib`; substitute your own scanner and finding as you go.
+This quickstart uses a Trivy finding for `CVE-2026-1234` in the npm package `example-lib`; substitute your own scanner and finding as you go. (see xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner])
 
 == Step 1: Create the Vulnlog file
 
