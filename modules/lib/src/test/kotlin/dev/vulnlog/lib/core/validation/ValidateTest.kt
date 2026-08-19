@@ -126,6 +126,24 @@ class ValidateTest :
 
         context("warnings") {
 
+            test("a DTO warning does not stop the run") {
+                val outcome = parseDocument(document(ValidationDocuments.DEPRECATED_VERDICT))
+
+                val ok = outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ParsedVulnlogProject>>()
+                ok.findings
+                    .single()
+                    .rule shouldBe Rule.DEPRECATED_VERDICT
+            }
+
+            test("a DTO warning stops the run in strict mode, carrying the finding") {
+                val outcome = parseDocument(document(ValidationDocuments.DEPRECATED_VERDICT), STRICT)
+
+                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Rejected>()
+                stopped.findings
+                    .single()
+                    .rule shouldBe Rule.DEPRECATED_VERDICT
+            }
+
             test("a domain warning does not stop the run") {
                 val outcome = validateDocument(document(ValidationDocuments.ANALYZED_BEFORE_REPORTED))
 

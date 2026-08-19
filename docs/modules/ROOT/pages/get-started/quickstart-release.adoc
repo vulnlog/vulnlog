@@ -43,7 +43,7 @@ Shipping 1.2.0 with `query-parser 5.3.0` is the update your next release must ca
 * `CVE-2026-8802` is *under investigation*.
 Triage has not concluded, so its impact on the release is unknown; it needs a verdict before the release decision.
 
-The *dismissed* entries need no action: their verdicts (`not affected`, `risk acceptable`) closed them without remediation.
+The *dismissed* entries need no action: their triage (`not affected`, or `affected` with `disposition: wont fix`) closed them without remediation.
 
 == Step 3: Compare with the maintainer view
 

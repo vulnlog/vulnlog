@@ -14,7 +14,6 @@
 ** xref:guides/validate-and-format.adoc[Validate and format Vulnlog files]
 ** xref:guides/generate-reports.adoc[Generate reports]
 ** xref:guides/find-what-affects-a-release.adoc[Find what affects a release]
-** xref:guides/answer-a-vulnerability-inquiry.adoc[Answer a vulnerability inquiry]
 ** xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines]
 ** xref:guides/organize-files-across-branches.adoc[Organize files across branches]
 ** xref:guides/migrate-from-ignore-files.adoc[Migrate from scanner ignore files]
@@ -45,5 +44,6 @@
 ** xref:troubleshooting.adoc[Troubleshooting]
 * Upgrade
 ** xref:upgrade/migrate-from-kotlin-dsl.adoc[Migrate from the Kotlin DSL]
+** xref:upgrade/migrate-risk-acceptable.adoc[Migrate from the 'risk acceptable' verdict]
 * xref:glossary.adoc[Glossary]
 * https://github.com/vulnlog/vulnlog/discussions[Get help]

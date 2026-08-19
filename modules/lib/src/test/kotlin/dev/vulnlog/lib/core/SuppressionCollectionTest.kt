@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
@@ -353,10 +354,10 @@ class SuppressionCollectionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk acceptable with resolution is excluded regardless of suppress block") {
+            test("wont fix with resolution is excluded regardless of suppress block") {
                 val vuln =
                     vulnerability(
-                        verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
+                        verdict = Verdict.Affected(Severity.MEDIUM, Disposition.WONT_FIX),
                         resolution = Resolution(release = releaseV1),
                     )
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
@@ -385,8 +386,8 @@ class SuppressionCollectionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk acceptable is included when suppress block present") {
-                val vuln = vulnerability(verdict = Verdict.RiskAcceptable(Severity.MEDIUM))
+            test("wont fix is included when suppress block present") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.MEDIUM, Disposition.WONT_FIX))
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today)).included
@@ -394,9 +395,13 @@ class SuppressionCollectionTest :
                 result shouldHaveSize 1
             }
 
-            test("risk acceptable is excluded when suppress block absent") {
+            test("wont fix is excluded when suppress block absent") {
                 val report = trivyReport(suppress = null)
-                val vuln = vulnerability(reports = listOf(report), verdict = Verdict.RiskAcceptable(Severity.MEDIUM))
+                val vuln =
+                    vulnerability(
+                        reports = listOf(report),
+                        verdict = Verdict.Affected(Severity.MEDIUM, Disposition.WONT_FIX),
+                    )
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 
                 val result = collectSuppressedVulnerabilities(file, SuppressionFilter(today = today)).included
@@ -423,12 +428,12 @@ class SuppressionCollectionTest :
                 result.shouldBeEmpty()
             }
 
-            test("risk acceptable respects suppress expiration") {
+            test("wont fix respects suppress expiration") {
                 val report = trivyReport(suppress = Suppression(expiresAt = today.minusDays(30)))
                 val vuln =
                     vulnerability(
                         reports = listOf(report),
-                        verdict = Verdict.RiskAcceptable(Severity.MEDIUM),
+                        verdict = Verdict.Affected(Severity.MEDIUM, Disposition.WONT_FIX),
                     )
                 val file = emptyFile().copy(vulnerabilities = listOf(vuln))
 

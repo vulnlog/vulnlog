@@ -17,16 +17,10 @@ sealed interface Verdict {
          * Severity of the vulnerability.
          */
         val severity: Severity,
-    ) : Verdict
-
-    /**
-     * The vulnerability affects this release but the risk has been assessed and accepted.
-     */
-    data class RiskAcceptable(
         /**
-         * Severity of the vulnerability.
+         * Stated remediation intent. Absence means the intent is not stated.
          */
-        val severity: Severity,
+        val disposition: Disposition? = null,
     ) : Verdict
 
     /**

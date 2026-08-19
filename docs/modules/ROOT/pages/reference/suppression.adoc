@@ -25,7 +25,7 @@ The finding does not impact the release, so it is noise and is suppressed automa
 The one exception is the expiry rule above: if a `suppress` block is present and its `expires_at` has passed, the entry is dropped.
 
 Everything else needs an explicit `suppress` block::
-`affected`, `risk acceptable`, and not-yet-triaged findings are still a live or unknown risk.
+`affected` findings (with or without a `wont fix` disposition) and not-yet-triaged findings are still a live or unknown risk.
 Suppressing one is a deliberate decision, so it happens only when the report entry carries a `suppress` block.
 
 === Permanent suppression

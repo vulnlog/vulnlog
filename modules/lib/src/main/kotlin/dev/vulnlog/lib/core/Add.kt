@@ -40,6 +40,7 @@ data class AddVulnerabilityOptions(
     val analyzedAt: LocalDate? = null,
     val verdict: String? = null,
     val severity: String? = null,
+    val disposition: String? = null,
     val justification: String? = null,
     val comment: String? = null,
 )
@@ -163,6 +164,7 @@ private fun mergeOptionsIntoEntry(
         analyzedAt = options.analyzedAt ?: base.analyzedAt,
         verdict = options.verdict ?: base.verdict,
         severity = options.severity ?: base.severity,
+        disposition = options.disposition ?: base.disposition,
         justification = options.justification ?: base.justification,
         comment = options.comment ?: base.comment,
     )

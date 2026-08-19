@@ -88,7 +88,7 @@ See xref:guides/record-a-resolution.adoc[Record a resolution] for the fix workfl
 
 === You accept the risk
 
-Record `risk acceptable` with a `severity`.
+Record `verdict: affected` with a `severity` and `disposition: wont fix`.
 Suppressing a live risk is a second, deliberate decision, so it needs an explicit `suppress` block on the report:
 
 [source,yaml]
@@ -105,7 +105,8 @@ Suppressing a live risk is a second, deliberate decision, so it needs an explici
       Vulnerability confirmed but only exploitable with
       specially crafted input that our validation layer rejects.
     severity: medium
-    verdict: risk acceptable
+    verdict: affected
+    disposition: wont fix
     comment: >
       Risk accepted by project lead. Revisit when upstream
       releases a stable fix.

@@ -76,7 +76,7 @@ Work through the xref:reference/suppression.adoc[suppression rules] in order:
 . The entry has a `resolution`: resolved findings are never suppressed.
 The scanner should stop reporting once the fixed dependency actually ships; if it still reports, the resolution is incomplete.
 . The `suppress` block's `expires_at` has passed: expired suppressions are dropped so the finding resurfaces for re-triage.
-. The verdict is `affected`, `risk acceptable`, or missing, and the report has no `suppress` block: these findings are only suppressed by explicit decision.
+. The verdict is `affected` or missing, and the report has no `suppress` block: these findings are only suppressed by explicit decision.
 . The identifier does not fit the format: some formats accept only matching identifier types, for example `.snyk` requires Snyk identifiers from `vuln_ids`.
 
 Run with `-v` to see exactly which entries were skipped and why:

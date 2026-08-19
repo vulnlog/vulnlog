@@ -3,8 +3,10 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.Resolution
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
@@ -103,18 +105,36 @@ fun findWorkState(
         vulnEntry.resolution?.takeIf {
             filterReleases.isEmpty() || it.release in filterReleases
         }
-    return when (vulnEntry.verdict) {
+    return when (val verdict = vulnEntry.verdict) {
         Verdict.UnderInvestigation -> WorkState.UNDER_INVESTIGATION
-        is Verdict.Affected -> if (resolution != null) WorkState.RESOLVED else WorkState.OPEN
-        is Verdict.NotAffected -> if (resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
-        is Verdict.RiskAcceptable -> if (resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
+        is Verdict.Affected -> findAffectedWorkState(resolution, verdict)
+        is Verdict.NotAffected -> findNotAffectedWorkState(resolution)
     }
 }
 
+private fun findAffectedWorkState(
+    resolution: Resolution?,
+    verdict: Verdict.Affected,
+): WorkState =
+    when {
+        resolution != null -> WorkState.RESOLVED
+        verdict.disposition == Disposition.WONT_FIX -> WorkState.DISMISSED
+        else -> WorkState.OPEN
+    }
+
+private fun findNotAffectedWorkState(resolution: Resolution?): WorkState =
+    if (resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
+
 private fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
-    when (vulnEntry.verdict) {
-        is Verdict.Affected -> Impact.Affected(vulnEntry.verdict.severity)
-        is Verdict.NotAffected -> Impact.NotAffected(vulnEntry.verdict.justification.value)
-        is Verdict.RiskAcceptable -> Impact.AcceptableRisk(vulnEntry.verdict.severity)
+    when (val verdict = vulnEntry.verdict) {
+        is Verdict.Affected -> defineAffectedImpact(verdict)
+        is Verdict.NotAffected -> Impact.NotAffected(verdict.justification.value)
         Verdict.UnderInvestigation -> Impact.Unknown
+    }
+
+private fun defineAffectedImpact(verdict: Verdict.Affected): Impact =
+    if (verdict.disposition == Disposition.WONT_FIX) {
+        Impact.AcceptableRisk(verdict.severity)
+    } else {
+        Impact.Affected(verdict.severity)
     }
