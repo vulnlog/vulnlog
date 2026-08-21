@@ -3,8 +3,8 @@
 
 package dev.vulnlog.lib.shell
 
-import dev.vulnlog.lib.core.VulnlogFilter
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
@@ -18,23 +18,22 @@ import dev.vulnlog.lib.model.VulnlogFile
  * Validation ensures that the specified release exists in the Vulnlog file, and an exception is thrown if
  * the release is invalid or not found.
  *
- * @param releaseOption The release identifier string to filter on. If null, no releases are included in the result.
+ * @param release The release identifier string to filter on. If null, no releases are included in the result.
  * @param vulnlogFile The parsed Vulnlog file containing metadata and release definitions used for validation.
  * @return A set of releases up to and including the specified release, or an empty set if no release option is provided.
  * @throws FilterValidationException If the specified release is not valid or does not exist in the Vulnlog file.
  */
 fun resolveReleaseFilter(
-    releaseOption: String?,
+    release: Release?,
     vulnlogFile: VulnlogFile,
 ): Set<Release> =
-    if (releaseOption != null) {
+    if (release != null) {
         try {
-            val release = Release(releaseOption)
             val orderedReleases = vulnlogFile.releases.map { it.id }
             val index = orderedReleases.indexOf(release)
             if (index == -1) {
                 throw FilterValidationException(
-                    "Release not found: $releaseOption",
+                    "Release not found: ${release.value}",
                     "Known releases: ${orderedReleases.joinToString(", ") { it.value }}",
                 )
             }
@@ -52,18 +51,17 @@ fun resolveReleaseFilter(
 /**
  * Resolves and validates the tag filters provided as options against the tags defined in a given Vulnlog file.
  *
- * @param tagsOptions The set of tag strings provided as filter options. Empty set if no tags are specified.
+ * @param tags The set of tag strings provided as filter options. Empty set if no tags are specified.
  * @param vulnlogFile The `VulnlogFile` containing the available tags to validate against.
  * @return A set of `Tag` objects that match the specified filter options. Returns an empty set if no filters are specified.
  * @throws FilterValidationException If any tag in the `tagsOptions` is invalid or not found in the Vulnlog file.
  */
 fun resolveTagsFilter(
-    tagsOptions: Set<String>,
+    tags: Set<Tag>,
     vulnlogFile: VulnlogFile,
 ): Set<Tag> =
-    if (tagsOptions.isNotEmpty()) {
+    if (tags.isNotEmpty()) {
         try {
-            val tags = tagsOptions.map(::Tag).toSet()
             val unknownTags = tags.filter { tag -> tag !in vulnlogFile.tags.map { it.id } }.toSet()
             if (unknownTags.isNotEmpty()) {
                 throw FilterValidationException(
@@ -103,7 +101,7 @@ fun resolveReporterFilter(reporterOption: String?): ReporterType? =
     }
 
 /**
- * Builds a [VulnlogFilter] from raw option strings, validating each against the given Vulnlog file.
+ * Builds a [ResolvedFilter] from raw option strings, validating each against the given Vulnlog file.
  * Wraps [resolveReleaseFilter], [resolveTagsFilter], and [resolveReporterFilter] so callers that
  * receive options as strings (e.g. Gradle tasks) get a single validated entry point with a uniform
  * error contract.
@@ -113,28 +111,13 @@ fun resolveReporterFilter(reporterOption: String?): ReporterType? =
 fun buildFilter(
     vulnlogFile: VulnlogFile,
     reporterOption: String?,
-    releaseOption: String?,
-    tagsOptions: Set<String>,
-): VulnlogFilter =
-    VulnlogFilter(
+    releaseOption: Release?,
+    tagsOptions: Set<Tag>,
+): ResolvedFilter =
+    ResolvedFilter(
         releases = resolveReleaseFilter(releaseOption, vulnlogFile),
         tags = resolveTagsFilter(tagsOptions, vulnlogFile),
         reporter = resolveReporterFilter(reporterOption),
-    )
-
-/**
- * Renders one diagnostic line per active filter dimension, stating what the filter resolved to.
- * Inactive dimensions produce no line.
- */
-fun renderFilterResolution(filter: VulnlogFilter): List<String> =
-    listOfNotNull(
-        filter.releases
-            .takeIf { it.isNotEmpty() }
-            ?.let { releases -> "release filter expanded to releases: ${releases.joinToString(", ") { it.value }}" },
-        filter.tags
-            .takeIf { it.isNotEmpty() }
-            ?.let { tags -> "tag filter matched tags: ${tags.joinToString(", ") { it.value }}" },
-        filter.reporter?.let { reporter -> "reporter filter: ${reporter.canonical()}" },
     )
 
 class FilterValidationException(

@@ -15,6 +15,8 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
+import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.parse.suppression.SuppressionWriter
 import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import org.gradle.api.DefaultTask
@@ -62,7 +64,14 @@ abstract class VulnlogSuppressTask : DefaultTask() {
         val validated = validateInputOrFail(inputFile).project
 
         val vulnlogFile = validated.vulnlogProjectFile
-        val filter = buildFilterOrFail(vulnlogFile, reporter.orNull, release.orNull, tags.get(), sink)
+        val filter =
+            buildFilterOrFail(
+                vulnlogFile,
+                reporter.orNull,
+                release.orNull?.let(::Release),
+                tags.get().map(::Tag).toSet(),
+                sink,
+            )
 
         val targetReporters =
             vulnlogFile.vulnerabilities

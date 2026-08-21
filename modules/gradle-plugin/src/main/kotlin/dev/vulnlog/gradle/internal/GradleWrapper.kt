@@ -3,13 +3,15 @@
 
 package dev.vulnlog.gradle.internal
 
-import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.filter.renderFilterResolution
+import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.shell.DiagnosticSink
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.buildFilter
-import dev.vulnlog.lib.shell.renderFilterResolution
 import org.gradle.api.GradleException
 import java.io.File
 
@@ -40,10 +42,10 @@ fun singleVulnlogFileInput(
 fun buildFilterOrFail(
     vulnlogFile: VulnlogFile,
     reporterOption: String?,
-    releaseOption: String?,
-    tagsOptions: Set<String>,
+    releaseOption: Release?,
+    tagsOptions: Set<Tag>,
     sink: DiagnosticSink = DiagnosticSink.NONE,
-): VulnlogFilter =
+): ResolvedFilter =
     try {
         val filter = buildFilter(vulnlogFile, reporterOption, releaseOption, tagsOptions)
         renderFilterResolution(filter).forEach(sink::verbose)

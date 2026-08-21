@@ -109,7 +109,10 @@ class ReportCommandTest :
             test("does not print INFO-level validation findings") {
                 withTempFile(content = ValidationDocuments.UNREFERENCED_RELEASE) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
-                        val result = ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
+                        val result =
+                            ReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath}",
+                            )
 
                         result.statusCode shouldBe 0
                         result.stderr shouldNotContain "info: ${input.name}: "
@@ -226,6 +229,34 @@ class ReportCommandTest :
                 }
             }
 
+            test("a known reporter selects the entries it reported") {
+                withTempFile(content = vulnlogDocument(reporter = "trivy")) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ReportCommand().test(
+                                "${input.absolutePath} --reporter trivy -o ${output.absolutePath}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("a known reporter that reported nothing yields an empty report") {
+                withTempFile(content = vulnlogDocument(reporter = "trivy")) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ReportCommand().test(
+                                "${input.absolutePath} --reporter snyk -o ${output.absolutePath}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldNotContain "CVE-2026-1234"
+                    }
+                }
+            }
+
             test("fails on an unknown tag") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     val result = ReportCommand().test("${input.absolutePath} --tag missing-tag")
@@ -257,7 +288,10 @@ class ReportCommandTest :
             test("without --release the unshipped fix is rendered as resolved") {
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
-                        val result = ReportCommand().test("${input.absolutePath} -o ${output.absolutePath}")
+                        val result =
+                            ReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath}",
+                            )
 
                         result.statusCode shouldBe 0
                         val html = output.readText()

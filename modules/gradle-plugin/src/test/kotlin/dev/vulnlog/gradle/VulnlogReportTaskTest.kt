@@ -153,6 +153,28 @@ class VulnlogReportTaskTest :
 
         context("filter validation") {
 
+            test("a known reporter selects the entries it reported") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                report {
+                                    reporter = "trivy"
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(reporter = "trivy"),
+                    )
+
+                val result = runner(dir, "vulnlogReport").build()
+
+                result.task(":vulnlogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-report.html").readText() shouldContain "CVE-2026-1234"
+            }
+
             test("fails on an unknown reporter") {
                 val dir =
                     gradleProject(

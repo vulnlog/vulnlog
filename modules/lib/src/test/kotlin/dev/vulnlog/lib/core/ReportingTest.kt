@@ -122,17 +122,6 @@ class ReportingTest :
                 result.first().fixedIn shouldBe emptySet()
             }
 
-            test("applies filter by release") {
-                val vuln1 = vulnerability(id = cve1, releases = listOf(releaseV1))
-                val vuln2 = vulnerability(id = cve2, releases = listOf(releaseV2))
-                val file = vulnlogFile(vulnerabilities = listOf(vuln1, vuln2))
-
-                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
-
-                result shouldHaveSize 1
-                result.first().primaryId shouldBe cve1
-            }
-
             test("derives under investigation state from UnderInvestigation verdict") {
                 val vuln = vulnerability(verdict = Verdict.UnderInvestigation, analysis = null)
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))
@@ -253,21 +242,7 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.RESOLVED
             }
 
-            test("Affected with resolution outside filter releases stays OPEN") {
-                val vuln =
-                    vulnerability(
-                        releases = listOf(releaseV1),
-                        verdict = Verdict.Affected(Severity.HIGH),
-                        resolution = Resolution(release = releaseV2),
-                    )
-                val file = vulnlogFile(vulnerabilities = listOf(vuln))
-
-                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
-
-                result.first().state shouldBe WorkState.OPEN
-            }
-
-            test("Affected with resolution inside filter releases is RESOLVED") {
+            test("Affected with a resolution is RESOLVED") {
                 val vuln =
                     vulnerability(
                         releases = listOf(releaseV1, releaseV2),
@@ -276,38 +251,9 @@ class ReportingTest :
                     )
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))
 
-                val result =
-                    collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1, releaseV2)))
+                val result = collectReportingEntries(file)
 
                 result.first().state shouldBe WorkState.RESOLVED
-            }
-
-            test("NotAffected with resolution outside filter releases falls back to DISMISSED") {
-                val vuln =
-                    vulnerability(
-                        releases = listOf(releaseV1),
-                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
-                        resolution = Resolution(release = releaseV2),
-                    )
-                val file = vulnlogFile(vulnerabilities = listOf(vuln))
-
-                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
-
-                result.first().state shouldBe WorkState.DISMISSED
-            }
-
-            test("wont fix with resolution outside filter releases falls back to DISMISSED") {
-                val vuln =
-                    vulnerability(
-                        releases = listOf(releaseV1),
-                        verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
-                        resolution = Resolution(release = releaseV2),
-                    )
-                val file = vulnlogFile(vulnerabilities = listOf(vuln))
-
-                val result = collectReportingEntries(file, VulnlogFilter(releases = setOf(releaseV1)))
-
-                result.first().state shouldBe WorkState.DISMISSED
             }
         }
 
