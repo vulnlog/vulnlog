@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.core.filter.scopeResolution
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.Verdict
@@ -56,7 +57,7 @@ private fun expiredExclusion(suppression: SuppressedVulnerability): SuppressionE
 private fun isResolved(
     vulnEntry: VulnerabilityEntry,
     filterReleases: Set<Release>,
-): Boolean = findWorkState(vulnEntry, filterReleases) == WorkState.RESOLVED
+): Boolean = findWorkState(scopeResolution(vulnEntry, filterReleases)) == WorkState.RESOLVED
 
 private fun explodeOnReports(vulnerability: VulnerabilityEntry): List<SuppressedVulnerability> =
     vulnerability.reports

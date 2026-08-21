@@ -3,25 +3,27 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.internal.buildFilterOrFail
+import dev.vulnlog.gradle.filter.filterRequestOrFail
+import dev.vulnlog.gradle.filter.resolveFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectReportingEntries
+import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.mergeReportingEntries
-import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.renderReportingCounts
-import dev.vulnlog.lib.core.validateSharedProject
+import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.report.ReportingEntry
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -59,25 +61,24 @@ abstract class VulnlogReportTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val sink = diagnosticSink()
+
         val validated: List<ValidVulnlogProject> =
             vulnlogFileInputs(files.files).map { input -> validateInputOrFail(input).project }
+        val vulnlogFiles: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
+        val project = sharedProjectOrFail(vulnlogFiles)
 
-        val vulnlogFiles: List<VulnlogFile> = validated.map { it.vulnlogProjectFile }
-        val project =
-            validateSharedProject(vulnlogFiles)
-                ?: throw GradleException("All input files must share the same project metadata.")
+        val request = filterRequestOrFail(reporter.orNull, release.orNull, tags.get())
+        val filter = resolveFilterOrFail(request, vulnlogFiles)
 
-        val filter = buildFilterOrFail(vulnlogFiles.first(), reporter.orNull, release.orNull, tags.get(), sink)
-
-        val allEntries = vulnlogFiles.flatMap { collectReportingEntries(it, filter) }
-        val merged = mergeReportingEntries(allEntries)
-        sink.debug(renderReportingCounts(allEntries.size, merged.size))
+        val reported: List<ReportingEntry> = vulnlogFiles.flatMap { collectReportingEntries(it.applyFilter(filter)) }
+        val merged = mergeReportingEntries(reported)
+        sink.debug(renderReportingCounts(reported.size, merged.size))
 
         val filterData =
             FilterDataDto(
                 release = release.orNull,
-                tags = tags.get().sorted(),
-                reporter = reporter.orNull?.let { parseReporter(it).canonical() },
+                tags = filter.tags.map(Tag::value).sorted(),
+                reporter = filter.reporter?.canonical(),
             )
         val inputNames = validated.map { it.inputDocument.filename }
 

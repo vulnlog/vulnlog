@@ -12,7 +12,8 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.VulnlogFilter
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
@@ -25,7 +26,6 @@ import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.InputSelectionResult
 import dev.vulnlog.lib.shell.InputValidationResult
-import dev.vulnlog.lib.shell.renderFilterResolution
 import dev.vulnlog.lib.shell.resolveReleaseFilter
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateInputPath
@@ -94,11 +94,11 @@ fun ArgumentTransformContext.toInputFile(input: String): FileInputOption.File {
 fun CliktCommand.resolveFilter(
     filterOptions: FilterOptions,
     vulnlogFile: VulnlogFile,
-): VulnlogFilter =
+): ResolvedFilter =
     try {
         val releases = resolveReleaseFilter(filterOptions.releaseOption, vulnlogFile)
         val tags = resolveTagsFilter(filterOptions.tagsOptions, vulnlogFile)
-        val filter = VulnlogFilter(releases, tags, filterOptions.reporter)
+        val filter = ResolvedFilter(filterOptions.reporter, releases, tags)
         renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
         filter
     } catch (e: FilterValidationException) {

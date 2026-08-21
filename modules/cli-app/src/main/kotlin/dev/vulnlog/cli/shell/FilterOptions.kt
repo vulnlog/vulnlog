@@ -10,7 +10,9 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.parseReporter
+import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.Tag
 
 class FilterOptions : OptionGroup() {
     val reporter: ReporterType? by option(
@@ -22,14 +24,15 @@ class FilterOptions : OptionGroup() {
             """.trimIndent(),
     ).convert { parseReporter(it) }
 
-    val releaseOption: String? by option(
+    val releaseOption: Release? by option(
         "--release",
         help = "Filter on release, include all releases up to and including that release.",
-    )
+    ).convert { Release(it) }
 
-    val tagsOptions: Set<String> by option(
+    val tagsOptions: Set<Tag> by option(
         "--tag",
         help = "Filter on tags. Use multiple times to filter on multiple tags.",
-    ).multiple()
+    ).convert { Tag(it) }
+        .multiple()
         .unique()
 }

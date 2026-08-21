@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.model.report
 
+/** Represent the state of a vulnerability entry. */
 enum class WorkState {
     UNDER_INVESTIGATION,
     OPEN,

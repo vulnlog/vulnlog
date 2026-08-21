@@ -5,7 +5,6 @@ package dev.vulnlog.lib.core
 
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
-import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Resolution
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
@@ -29,20 +28,14 @@ fun validateSharedProject(files: Collection<VulnlogFile>): Project? {
  * and applies the specified filter to refine the results.
  *
  * @param vulnlogFile The Vulnlog file containing vulnerability definitions and related metadata.
- * @param filter An optional filter to apply to the vulnerabilities, specifying criteria such as releases, tags, or reporter type.
- *               Defaults to an empty filter which includes all vulnerabilities.
  * @return A set of reporting entries representing the filtered and processed vulnerabilities from the Vulnlog file.
  */
-fun collectReportingEntries(
-    vulnlogFile: VulnlogFile,
-    filter: VulnlogFilter = VulnlogFilter(),
-): Set<ReportingEntry> =
+fun collectReportingEntries(vulnlogFile: VulnlogFile): Set<ReportingEntry> =
     vulnlogFile.vulnerabilities
         .asSequence()
-        .applyFilter(filter)
         .map { vuln ->
             ReportingEntry(
-                state = findWorkState(vuln, filter.releases),
+                state = findWorkState(vuln),
                 primaryId = vuln.id,
                 ids = vuln.aliases.toSet(),
                 shortDescription = vuln.description,
@@ -95,22 +88,13 @@ private fun mergeTwo(
         fixedIn = a.fixedIn + b.fixedIn,
     )
 
-fun findWorkState(
-    vulnEntry: VulnerabilityEntry,
-    filterReleases: Set<Release>,
-): WorkState {
-    // Under --release X, a resolution counts only when its target release has shipped at-or-before X.
-    // Without a release context, every resolution counts (the historical default).
-    val resolution =
-        vulnEntry.resolution?.takeIf {
-            filterReleases.isEmpty() || it.release in filterReleases
-        }
-    return when (val verdict = vulnEntry.verdict) {
+/** Resolve the [WorkState] of a given [VulnerabilityEntry]. The state is calculated based on the verdict and the resolution of a [vulnEntry].  */
+fun findWorkState(vulnEntry: VulnerabilityEntry): WorkState =
+    when (val verdict = vulnEntry.verdict) {
         Verdict.UnderInvestigation -> WorkState.UNDER_INVESTIGATION
-        is Verdict.Affected -> findAffectedWorkState(resolution, verdict)
-        is Verdict.NotAffected -> findNotAffectedWorkState(resolution)
+        is Verdict.Affected -> findAffectedWorkState(vulnEntry.resolution, verdict)
+        is Verdict.NotAffected -> findNotAffectedWorkState(vulnEntry.resolution)
     }
-}
 
 private fun findAffectedWorkState(
     resolution: Resolution?,
