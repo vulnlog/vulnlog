@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.reporting
 
+import dev.vulnlog.lib.core.findDisposition
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Resolution
@@ -116,10 +117,4 @@ private fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
         is Verdict.Affected -> Impact.Affected(verdict.severity)
         is Verdict.NotAffected -> Impact.NotAffected(verdict.justification.value)
         Verdict.UnderInvestigation -> Impact.Unknown
-    }
-
-private fun findDisposition(verdict: Verdict): Disposition? =
-    when (verdict) {
-        is Verdict.Affected -> verdict.disposition
-        is Verdict.NotAffected, Verdict.UnderInvestigation -> null
     }
