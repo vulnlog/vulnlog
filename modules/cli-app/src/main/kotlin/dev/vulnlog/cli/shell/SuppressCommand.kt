@@ -76,11 +76,13 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
     val filterOptions by FilterOptions()
 
+    val renamedFilterOptions by RenamedFilterOptions()
+
     override fun run() {
         val validated = validateInputOrFail(input).project
 
         val vulnlogFile = validated.vulnlogProjectFile
-        failOnRenamedFilterFlags(filterOptions)
+        failOnRenamedFilterFlags(renamedFilterOptions)
         val filter = resolveFilter(filterOptions, vulnlogFile)
 
         val targetReporters =

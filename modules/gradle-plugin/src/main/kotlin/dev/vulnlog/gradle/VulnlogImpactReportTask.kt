@@ -20,8 +20,8 @@ import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.ReportingEntry
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.WorkState
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto

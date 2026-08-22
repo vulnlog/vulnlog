@@ -11,7 +11,7 @@ import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VerdictKind
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -29,6 +29,54 @@ private fun FilterOutcome.problems(): List<FilterProblem> = shouldBeInstanceOf<F
 
 class ResolveFilterTest :
     FunSpec({
+
+        context("fixed-in") {
+
+            test("resolves a release the input declares") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(fixedIn = "2.0.0")
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().fixedIn shouldBe release("2.0.0")
+            }
+
+            test("leaves the dimension inactive when no release is requested") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest()
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().fixedIn shouldBe null
+            }
+
+            test("rejects a release the input does not declare and names the known releases") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(fixedIn = "9.9.9")
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().single().hint shouldBe "Known releases: 1.0.0, 2.0.0, 3.0.0"
+            }
+
+            test("rejects a blank release") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(fixedIn = " ")
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().single().message shouldBe "Release must not be blank"
+            }
+
+            test("accepts a release only one of several files declares") {
+                val files = listOf(threeReleaseFile(), vulnlogFile(releases = listOf(releaseEntry("1.0.0"))))
+                val request = FilterRequest(fixedIn = "3.0.0")
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().fixedIn shouldBe release("3.0.0")
+            }
+        }
 
         context("release window") {
 

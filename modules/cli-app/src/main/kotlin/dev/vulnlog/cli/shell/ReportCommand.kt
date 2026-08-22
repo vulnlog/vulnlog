@@ -13,6 +13,7 @@ class ReportCommand : CliktCommand(name = "report") {
     init {
         subcommands(
             ImpactReportCommand(),
+            ChangelogReportCommand(),
         )
     }
 

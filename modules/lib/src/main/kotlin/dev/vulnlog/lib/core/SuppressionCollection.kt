@@ -10,7 +10,7 @@ import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.WorkState
 import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
 import dev.vulnlog.lib.model.suppress.SuppressionCollectionResult
 import dev.vulnlog.lib.model.suppress.SuppressionExclusion

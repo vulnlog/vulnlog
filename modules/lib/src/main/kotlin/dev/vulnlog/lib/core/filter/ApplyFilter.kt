@@ -41,4 +41,5 @@ private fun ResolvedFilter.matches(vuln: VulnerabilityEntry): Boolean =
         (reporter == null || vuln.reports.any { it.reporter == reporter }) &&
         (states.isEmpty() || findWorkState(vuln) in states) &&
         (verdicts.isEmpty() || vuln.verdict.kind() in verdicts) &&
-        (dispositions.isEmpty() || findDisposition(vuln.verdict) in dispositions)
+        (dispositions.isEmpty() || findDisposition(vuln.verdict) in dispositions) &&
+        (fixedIn == null || vuln.resolution?.release == fixedIn)

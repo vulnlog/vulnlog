@@ -44,11 +44,11 @@ private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/dis
 // TODO remove with 1.0.0
 
 /** Fails when a renamed filter flag is used, naming the flag that replaced it. */
-fun CliktCommand.failOnRenamedFilterFlags(filterOptions: FilterOptions) {
-    if (filterOptions.renamedReleaseRequest != null) {
+fun CliktCommand.failOnRenamedFilterFlags(renamedFilterOptions: RenamedFilterOptions) {
+    if (renamedFilterOptions.releaseRequest != null) {
         echoMessage(formatMessage(FindingSeverity.ERROR, "Option --release was renamed to --as-of."))
         echoMessage(
-            formatHint("use '--as-of ${filterOptions.renamedReleaseRequest}' to report the state at that release"),
+            formatHint("use '--as-of ${renamedFilterOptions.releaseRequest}' to report the state at that release"),
         )
         throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }

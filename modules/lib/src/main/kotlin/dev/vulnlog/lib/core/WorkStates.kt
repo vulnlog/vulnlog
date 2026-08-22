@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.WorkState
 
 fun WorkState.canonical(): String =
     when (this) {
