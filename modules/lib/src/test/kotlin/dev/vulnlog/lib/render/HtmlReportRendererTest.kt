@@ -29,6 +29,7 @@ private val emptyFilter =
         reporter = null,
         states = emptyList(),
         verdicts = emptyList(),
+        dispositions = emptyList(),
     )
 
 private fun entry(
@@ -162,6 +163,7 @@ class HtmlReportRendererTest :
                             reporter = "trivy",
                             states = listOf("open"),
                             verdicts = listOf("affected"),
+                            dispositions = listOf("will fix"),
                         ),
                 )
 
@@ -170,6 +172,7 @@ class HtmlReportRendererTest :
             html shouldContain "trivy"
             html shouldContain "\"states\":[\"open\"]"
             html shouldContain "\"verdicts\":[\"affected\"]"
+            html shouldContain "\"dispositions\":[\"will fix\"]"
         }
 
         test("includes verdictDetail for not-affected entries") {

@@ -19,6 +19,8 @@ fun canonical(disposition: Disposition): String =
         Disposition.WONT_FIX -> "wont fix"
     }
 
+fun dispositionTokens(): String = Disposition.entries.joinToString(", ") { canonical(it) }
+
 fun findDisposition(verdict: Verdict): Disposition? =
     when (verdict) {
         is Verdict.Affected -> verdict.disposition

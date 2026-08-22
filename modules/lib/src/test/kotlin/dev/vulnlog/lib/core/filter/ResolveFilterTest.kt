@@ -8,6 +8,7 @@ import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.report.WorkState
@@ -345,6 +346,69 @@ class ResolveFilterTest :
             }
         }
 
+        context("dispositions") {
+
+            test("resolves a single disposition token") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(dispositions = setOf("wont fix"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().dispositions shouldBe setOf(Disposition.WONT_FIX)
+            }
+
+            test("resolves both disposition tokens cumulatively") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(dispositions = setOf("will fix", "wont fix"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().dispositions shouldBe setOf(Disposition.WILL_FIX, Disposition.WONT_FIX)
+            }
+
+            test("leaves the dimension inactive when no disposition is requested") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest()
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().dispositions shouldBe emptySet()
+            }
+
+            test("rejects a token Vulnlog does not define") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(dispositions = setOf("bogus"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems() shouldBe
+                    listOf(
+                        FilterProblem(
+                            "Invalid disposition: bogus",
+                            "Supported dispositions: will fix, wont fix",
+                        ),
+                    )
+            }
+
+            test("rejects the hyphenated spelling") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(dispositions = setOf("wont-fix"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid disposition: wont-fix")
+            }
+
+            test("names every unknown token in one problem") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(dispositions = setOf("bogus", "andere"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid disposition: andere, bogus")
+            }
+        }
+
         context("several failing dimensions") {
 
             test("reports every failing dimension in one outcome") {
@@ -375,6 +439,21 @@ class ResolveFilterTest :
 
                 outcome.problems().map { it.message } shouldBe
                     listOf("Invalid state: nope", "Invalid verdict: bogus")
+            }
+
+            test("reports every report-only dimension that failed") {
+                val files = listOf(threeReleaseFile())
+                val request =
+                    FilterRequest(
+                        states = setOf("nope"),
+                        verdicts = setOf("bogus"),
+                        dispositions = setOf("andere"),
+                    )
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe
+                    listOf("Invalid state: nope", "Invalid verdict: bogus", "Invalid disposition: andere")
             }
         }
 
@@ -420,6 +499,14 @@ class ResolveFilterTest :
                 lines shouldBe listOf("verdict filter: not affected")
             }
 
+            test("renders the dispositions under their canonical tokens") {
+                val filter = ResolvedFilter(dispositions = setOf(Disposition.WONT_FIX))
+
+                val lines = renderFilterResolution(filter)
+
+                lines shouldBe listOf("disposition filter: wont fix")
+            }
+
             test("renders one line per active dimension") {
                 val filter =
                     ResolvedFilter(
@@ -428,6 +515,7 @@ class ResolveFilterTest :
                         tags = setOf(tag("internal")),
                         states = setOf(WorkState.OPEN),
                         verdicts = setOf(VerdictKind.AFFECTED),
+                        dispositions = setOf(Disposition.WILL_FIX),
                     )
 
                 val lines = renderFilterResolution(filter)
@@ -439,6 +527,7 @@ class ResolveFilterTest :
                         "reporter filter: trivy",
                         "state filter: open",
                         "verdict filter: affected",
+                        "disposition filter: will fix",
                     )
             }
 

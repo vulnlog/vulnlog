@@ -637,6 +637,7 @@
             if (f.reporter) parts.push('reporter=' + f.reporter);
             if (f.states && f.states.length > 0) parts.push('state=' + f.states.join(','));
             if (f.verdicts && f.verdicts.length > 0) parts.push('verdict=' + f.verdicts.join(','));
+            if (f.dispositions && f.dispositions.length > 0) parts.push('disposition=' + f.dispositions.join(','));
             return parts.join(' · ');
         }
 

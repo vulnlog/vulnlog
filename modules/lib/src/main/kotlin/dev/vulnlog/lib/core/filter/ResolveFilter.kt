@@ -4,9 +4,11 @@
 package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.dispositionTokens
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.verdictKindTokens
 import dev.vulnlog.lib.core.workStateTokens
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
@@ -27,11 +29,21 @@ fun resolveFilter(
     val tags = resolveTags(request.tags, files)
     val states = resolveStates(request.states)
     val verdicts = resolveVerdicts(request.verdicts)
-    val problems = reporter.problems + releases.problems + tags.problems + states.problems + verdicts.problems
+    val dispositions = resolveDispositions(request.dispositions)
+    val problems =
+        reporter.problems + releases.problems + tags.problems + states.problems + verdicts.problems +
+            dispositions.problems
 
     return if (problems.isEmpty()) {
         FilterOutcome.Resolved(
-            ResolvedFilter(reporter.value, releases.value, tags.value, states.value, verdicts.value),
+            ResolvedFilter(
+                reporter.value,
+                releases.value,
+                tags.value,
+                states.value,
+                verdicts.value,
+                dispositions.value,
+            ),
         )
     } else {
         FilterOutcome.Rejected(problems)
@@ -57,6 +69,9 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
         filter.verdicts
             .takeIf { it.isNotEmpty() }
             ?.let { verdicts -> "verdict filter: ${verdicts.joinToString(", ") { it.canonical() }}" },
+        filter.dispositions
+            .takeIf { it.isNotEmpty() }
+            ?.let { dispositions -> "disposition filter: ${dispositions.joinToString(", ") { canonical(it) }}" },
     )
 
 /** One resolved dimension: the value to filter with, or the problems that stopped it resolving. */
@@ -144,6 +159,25 @@ private fun resolveVerdicts(values: Set<String>): Dimension<Set<VerdictKind>> {
                 FilterProblem(
                     "Invalid verdict: ${unknown.joinToString(", ")}",
                     "Supported verdicts: ${verdictKindTokens()}",
+                ),
+            ),
+        )
+    }
+    return Dimension(values.mapNotNull { byToken[it] }.toSet())
+}
+
+private fun resolveDispositions(values: Set<String>): Dimension<Set<Disposition>> {
+    if (values.isEmpty()) return Dimension(emptySet())
+
+    val byToken = Disposition.entries.associateBy { canonical(it) }
+    val unknown = values.filterNot { it in byToken }.sorted()
+    if (unknown.isNotEmpty()) {
+        return Dimension(
+            emptySet(),
+            listOf(
+                FilterProblem(
+                    "Invalid disposition: ${unknown.joinToString(", ")}",
+                    "Supported dispositions: ${dispositionTokens()}",
                 ),
             ),
         )

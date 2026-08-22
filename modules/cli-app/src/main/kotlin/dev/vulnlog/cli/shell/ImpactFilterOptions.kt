@@ -7,6 +7,7 @@ import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
+import dev.vulnlog.lib.core.dispositionTokens
 import dev.vulnlog.lib.core.verdictKindTokens
 import dev.vulnlog.lib.core.workStateTokens
 
@@ -29,6 +30,18 @@ class ImpactFilterOptions : OptionGroup() {
             """
             Filter on triage verdict. Use multiple times to filter on multiple verdicts.
             Supported verdicts: ${verdictKindTokens()}
+            """.trimIndent(),
+    ).multiple()
+        .unique()
+
+    val dispositionsRequest: Set<String> by option(
+        "--disposition",
+        metavar = "<disposition>",
+        help =
+            """
+            Filter on the remediation intent of affected entries.
+            Entries with no stated intent are not selected.
+            Supported dispositions: ${dispositionTokens()}
             """.trimIndent(),
     ).multiple()
         .unique()
