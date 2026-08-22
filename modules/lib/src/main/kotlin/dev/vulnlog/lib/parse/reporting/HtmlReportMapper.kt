@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.parse.reporting
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.report.Impact
@@ -49,6 +50,7 @@ object HtmlReportMapper {
             state = entry.state.name.lowercase(),
             verdict = verdictLabel(entry.impact),
             severity = severityLabel(entry.impact),
+            disposition = entry.disposition?.let(::dispositionLabel),
             verdictDetail = verdictDetail(entry.impact),
             shortDescription = entry.shortDescription,
             analysis = entry.analysis,
@@ -56,18 +58,24 @@ object HtmlReportMapper {
             fixedIn = entry.fixedIn.map { it.value },
         )
 
-    private fun verdictLabel(impact: Impact): String =
+    // Null while untriaged: the state column already reads "Investigating".
+    private fun verdictLabel(impact: Impact): String? =
         when (impact) {
             is Impact.Affected -> "affected"
             is Impact.NotAffected -> "not affected"
-            is Impact.AcceptableRisk -> "risk acceptable"
-            is Impact.Unknown -> "under_investigation"
+            is Impact.Unknown -> null
+        }
+
+    // Spaced tokens, identical to what the user writes in the YAML.
+    private fun dispositionLabel(disposition: Disposition): String =
+        when (disposition) {
+            Disposition.WILL_FIX -> "will fix"
+            Disposition.WONT_FIX -> "wont fix"
         }
 
     private fun severityOf(impact: Impact): Severity? =
         when (impact) {
             is Impact.Affected -> impact.severity
-            is Impact.AcceptableRisk -> impact.severity
             is Impact.NotAffected -> null
             is Impact.Unknown -> null
         }
@@ -77,17 +85,18 @@ object HtmlReportMapper {
     private fun verdictDetail(impact: Impact): String? =
         when (impact) {
             is Impact.NotAffected -> impact.reason
-            is Impact.AcceptableRisk -> null
             is Impact.Affected -> null
             is Impact.Unknown -> null
         }
 
+    // Actionable first, unknown-is-work second, then live risk, then the two nothing-to-do states.
     private fun stateOrder(state: WorkState): Int =
         when (state) {
             WorkState.OPEN -> 0
             WorkState.UNDER_INVESTIGATION -> 1
-            WorkState.RESOLVED -> 2
-            WorkState.DISMISSED -> 3
+            WorkState.ACCEPTED -> 2
+            WorkState.RESOLVED -> 3
+            WorkState.NOT_APPLICABLE -> 4
         }
 
     private fun severityOrder(severity: Severity?): Int =

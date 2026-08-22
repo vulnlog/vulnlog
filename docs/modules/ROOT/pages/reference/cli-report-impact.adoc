@@ -27,7 +27,7 @@ Use `-` as a file argument to read from stdin and `-o -` to write the report to 
 | Report the state as of this release.
 Includes all releases up to and including that release.
 A fix only counts once it has shipped inside that range.
-A vulnerability whose `resolution` targets a later release is reported under its pre-resolution state: `open` for `affected`, `dismissed` for `not affected` and for `affected` with `disposition: wont fix`.
+A vulnerability whose `resolution` targets a later release is reported under its pre-resolution state: `open` for `affected`, `accepted` for `affected` with `disposition: wont fix`, and `not applicable` for `not affected`.
 The report therefore shows what is actually shipped at the chosen release.
 
 | `--tag <text>`
@@ -44,10 +44,11 @@ The rendered HTML is a single, self-contained document.
 It contains the following sections:
 
 * *Header*: project organization, name, and author; the ISO-8601 UTC generation timestamp; the list of input file names (visible when several files are merged); and the applied filter (release, tags, reporter).
-* *Summary*: total entry count, breakdown by xref:concepts/vulnerability-states.adoc[state], and breakdown of open entries by severity.
+* *Summary*: total entry count, breakdown by xref:concepts/vulnerability-states.adoc[state], breakdown of open entries by severity, and breakdown of accepted entries by severity.
 * *Entry table*: four columns (IDs, State, Details, Releases) sorted by state (open first), then severity (critical to low), then primary ID.
-Each row carries a coloured left stripe: green for resolved, grey for dismissed, severity-coloured for open entries, and uncoloured for entries under investigation.
-The Details cell shows the verdict, severity (where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
+Each row carries a coloured left stripe: green for resolved, violet for accepted, grey for not applicable, severity-coloured for open entries, and uncoloured for entries under investigation.
+The Details cell shows the verdict, severity, and disposition (each where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
+The verdict is omitted while an entry is still under investigation, because no verdict has been recorded yet.
 * *Footer*: Vulnlog version and a link to vulnlog.dev.
 
 The report is fully offline (no network requests), CSP-locked, print-friendly, and adapts to the reader's light or dark system theme.

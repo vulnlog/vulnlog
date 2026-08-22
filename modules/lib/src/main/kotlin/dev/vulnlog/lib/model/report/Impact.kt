@@ -12,10 +12,6 @@ sealed interface Impact {
         val severity: Severity,
     ) : Impact
 
-    data class AcceptableRisk(
-        val severity: Severity,
-    ) : Impact
-
     data class NotAffected(
         val reason: String,
     ) : Impact

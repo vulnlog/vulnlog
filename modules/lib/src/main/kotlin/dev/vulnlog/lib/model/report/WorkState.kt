@@ -3,10 +3,11 @@
 
 package dev.vulnlog.lib.model.report
 
-/** Represent the state of a vulnerability entry. */
+/** Represent the state of a vulnerability entry. Declared in lifecycle order. */
 enum class WorkState {
     UNDER_INVESTIGATION,
     OPEN,
+    ACCEPTED,
     RESOLVED,
-    DISMISSED,
+    NOT_APPLICABLE,
 }

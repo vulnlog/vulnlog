@@ -49,7 +49,7 @@ Wrote: /path/to/.trivyignore.yaml
 === Hygiene update on a not affected entry
 
 A `resolution` is independent of the verdict.
-When a dependency is updated even though the vulnerability never affected you, record it; the entry moves from dismissed to resolved in reports and shows the release in the Fixed In column:
+When a dependency is updated even though the vulnerability never affected you, record it; the entry moves from not applicable to resolved in reports and shows the release in the Fixed In column:
 
 [source,yaml]
 ----

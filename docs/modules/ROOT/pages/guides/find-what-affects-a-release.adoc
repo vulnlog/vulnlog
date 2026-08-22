@@ -34,8 +34,11 @@ Resolved entries::
 Fixes this release already ships.
 This is also the changelog material for security-relevant release notes.
 
-Dismissed entries::
-No action; the verdict closed them.
+Accepted entries::
+No action for the release, but the risk is live and deliberately carried. Review them periodically rather than treating them as closed.
+
+Not applicable entries::
+No action; the `not affected` verdict closed them.
 
 == Variants
 

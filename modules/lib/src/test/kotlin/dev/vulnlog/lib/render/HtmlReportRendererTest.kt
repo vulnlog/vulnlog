@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Severity
@@ -28,6 +29,7 @@ private fun entry(
     ids: Set<VulnId> = setOf(primaryId),
     state: WorkState = WorkState.OPEN,
     impact: Impact = Impact.Affected(Severity.HIGH),
+    disposition: Disposition? = null,
     analysis: String? = "Under review",
     releases: Set<Release> = setOf(Release("1.0.0")),
     fixedIn: Set<Release> = emptySet(),
@@ -38,6 +40,7 @@ private fun entry(
     ids = ids,
     shortDescription = description,
     impact = impact,
+    disposition = disposition,
     analysis = analysis,
     reportFor = releases,
     fixedIn = fixedIn,
@@ -166,6 +169,38 @@ class HtmlReportRendererTest :
             val html = render(listOf(e))
 
             html shouldContain "vulnerable code not in execute path"
+        }
+
+        test("renders the disposition when the intent is stated") {
+            val html = render(listOf(entry(disposition = Disposition.WILL_FIX)))
+
+            html shouldContain "will fix"
+        }
+
+        test("omits the verdict while the entry is untriaged") {
+            val html =
+                render(
+                    listOf(entry(state = WorkState.UNDER_INVESTIGATION, impact = Impact.Unknown)),
+                )
+
+            html shouldContain "\"verdict\":null"
+        }
+
+        // The verdict was retired with issue #161; the report must not resurrect it as a label.
+        test("never renders the retired risk acceptable verdict") {
+            val html =
+                render(
+                    listOf(
+                        entry(
+                            state = WorkState.ACCEPTED,
+                            impact = Impact.Affected(Severity.HIGH),
+                            disposition = Disposition.WONT_FIX,
+                        ),
+                    ),
+                )
+
+            html shouldNotContain "risk acceptable"
+            html shouldContain "wont fix"
         }
 
         test("renders generatedAt as ISO instant") {

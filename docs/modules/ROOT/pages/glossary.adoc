@@ -37,6 +37,14 @@ See xref:reference/verdicts-and-justifications.adoc[Verdicts and Justifications]
 Under investigation::
 The implicit state of a vulnerability entry when no `verdict` has been set.
 
+Accepted::
+The state of an `affected` entry carrying `disposition: wont fix` and no resolution.
+The vulnerability impacts the project and the project decided not to remediate, so the risk is live and deliberately carried.
+
+Not applicable::
+The state of a `not affected` entry with no resolution.
+The vulnerability does not impact the project, so no remediation is owed.
+
 Analysis::
 The free-text rationale for the triage decision, stored in the `analysis` field.
 Records why the team reached the verdict.

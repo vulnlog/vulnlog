@@ -40,6 +40,7 @@ fun collectReportingEntries(vulnlogFile: VulnlogFile): Set<ReportingEntry> =
                 ids = vuln.aliases.toSet(),
                 shortDescription = vuln.description,
                 impact = defineImpact(vuln),
+                disposition = findDisposition(vuln.verdict),
                 analysis = vuln.analysis,
                 reportFor = vuln.releases.toSet(),
                 fixedIn = setOfNotNull(vuln.resolution?.release),
@@ -67,13 +68,14 @@ fun mergeReportingEntries(entries: List<ReportingEntry>): List<ReportingEntry> =
         .groupBy { it.primaryId }
         .flatMap { (_, group) ->
             group
-                .groupBy { MergeKey(it.state, it.impact, it.analysis) }
+                .groupBy { MergeKey(it.state, it.impact, it.disposition, it.analysis) }
                 .map { (_, mergeable) -> mergeable.reduce(::mergeTwo) }
         }
 
 private data class MergeKey(
     val state: WorkState,
     val impact: Impact,
+    val disposition: Disposition?,
     val analysis: String?,
 )
 
@@ -102,23 +104,22 @@ private fun findAffectedWorkState(
 ): WorkState =
     when {
         resolution != null -> WorkState.RESOLVED
-        verdict.disposition == Disposition.WONT_FIX -> WorkState.DISMISSED
+        verdict.disposition == Disposition.WONT_FIX -> WorkState.ACCEPTED
         else -> WorkState.OPEN
     }
 
 private fun findNotAffectedWorkState(resolution: Resolution?): WorkState =
-    if (resolution != null) WorkState.RESOLVED else WorkState.DISMISSED
+    if (resolution != null) WorkState.RESOLVED else WorkState.NOT_APPLICABLE
 
 private fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
     when (val verdict = vulnEntry.verdict) {
-        is Verdict.Affected -> defineAffectedImpact(verdict)
+        is Verdict.Affected -> Impact.Affected(verdict.severity)
         is Verdict.NotAffected -> Impact.NotAffected(verdict.justification.value)
         Verdict.UnderInvestigation -> Impact.Unknown
     }
 
-private fun defineAffectedImpact(verdict: Verdict.Affected): Impact =
-    if (verdict.disposition == Disposition.WONT_FIX) {
-        Impact.AcceptableRisk(verdict.severity)
-    } else {
-        Impact.Affected(verdict.severity)
+private fun findDisposition(verdict: Verdict): Disposition? =
+    when (verdict) {
+        is Verdict.Affected -> verdict.disposition
+        is Verdict.NotAffected, Verdict.UnderInvestigation -> null
     }
