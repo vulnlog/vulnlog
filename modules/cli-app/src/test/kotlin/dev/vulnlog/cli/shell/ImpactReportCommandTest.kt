@@ -11,6 +11,12 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
+private val AFFECTED_VERDICT =
+    """
+    |    verdict: affected
+    |    severity: high
+    """.trimMargin()
+
 class ImpactReportCommandTest :
     FunSpec({
 
@@ -205,6 +211,118 @@ class ImpactReportCommandTest :
                         result.stderr shouldContain "same project metadata"
                     }
                 }
+            }
+        }
+
+        context("state filter") {
+
+            test("fails on a state Vulnlog does not define") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --state bogus")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid state: bogus"
+                    result.stderr shouldContain "Supported states:"
+                    result.stderr shouldNotContain "dev.vulnlog"
+                }
+            }
+
+            test("keeps an entry whose state was asked for") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} --state 'not applicable'",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("drops an entry in a state that was not asked for") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} --state open",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldNotContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("repeating the flag selects the union of both states") {
+                withTempFile(
+                    prefix = "vulnlog-1x",
+                    content = vulnlogDocument(vulnId = "CVE-2026-1234"),
+                ) { f1 ->
+                    withTempFile(
+                        prefix = "vulnlog-2x",
+                        content = vulnlogDocument(vulnId = "CVE-2026-5678", verdictBlock = AFFECTED_VERDICT),
+                    ) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ImpactReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath} " +
+                                        "--state open --state 'not applicable'",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldContain "CVE-2026-1234"
+                            html shouldContain "CVE-2026-5678"
+                        }
+                    }
+                }
+            }
+
+            test("a single state narrows a merge down to the entry in it") {
+                withTempFile(
+                    prefix = "vulnlog-1x",
+                    content = vulnlogDocument(vulnId = "CVE-2026-1234"),
+                ) { f1 ->
+                    withTempFile(
+                        prefix = "vulnlog-2x",
+                        content = vulnlogDocument(vulnId = "CVE-2026-5678", verdictBlock = AFFECTED_VERDICT),
+                    ) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ImpactReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath} --state open",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldNotContain "CVE-2026-1234"
+                            html shouldContain "CVE-2026-5678"
+                        }
+                    }
+                }
+            }
+
+            test("names the active state filter in the report banner") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        ImpactReportCommand().test(
+                            "${input.absolutePath} -o ${output.absolutePath} --state 'not applicable'",
+                        )
+
+                        output.readText() shouldContain "\"states\":[\"not applicable\"]"
+                    }
+                }
+            }
+
+            // Clikt hard-wraps the option help, so multi word tokens cannot be matched as one string.
+            test("lists the supported states in the help text") {
+                val result = ImpactReportCommand().test("--help")
+
+                result.stdout shouldContain "--state"
+                result.stdout shouldContain "Supported states:"
+                result.stdout shouldContain "accepted"
             }
         }
 

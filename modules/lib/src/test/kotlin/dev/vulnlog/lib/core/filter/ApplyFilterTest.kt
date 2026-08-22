@@ -10,10 +10,13 @@ import dev.vulnlog.lib.fixtures.resolution
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
+import dev.vulnlog.lib.model.VexJustification
+import dev.vulnlog.lib.model.report.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
@@ -38,8 +41,98 @@ private fun fixedVulnerability(
     resolution = resolution(fixedIn),
 )
 
+private fun openVulnerability() = vulnerability(first, releases = listOf(v1), verdict = Verdict.Affected(Severity.HIGH))
+
+private fun acceptedVulnerability() =
+    vulnerability(
+        second,
+        releases = listOf(v1),
+        verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
+    )
+
+private fun notApplicableVulnerability() =
+    vulnerability(
+        cve("CVE-2024-0003"),
+        releases = listOf(v1),
+        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_PRESENT),
+    )
+
 class ApplyFilterTest :
     FunSpec({
+
+        context("states") {
+
+            test("keeps only the vulnerabilities in the requested state") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), acceptedVulnerability()))
+                val filter = ResolvedFilter(states = setOf(WorkState.OPEN))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe first
+            }
+
+            test("several states select their union") {
+                val file =
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(openVulnerability(), acceptedVulnerability(), notApplicableVulnerability()),
+                    )
+                val filter = ResolvedFilter(states = setOf(WorkState.OPEN, WorkState.ACCEPTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities.map { it.id } shouldBe listOf(first, second)
+            }
+
+            test("an empty state set leaves every vulnerability in place") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), acceptedVulnerability()))
+                val filter = ResolvedFilter()
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 2
+            }
+
+            test("a state no vulnerability has selects nothing") {
+                val file = vulnlogFile(vulnerabilities = listOf(openVulnerability()))
+                val filter = ResolvedFilter(states = setOf(WorkState.UNDER_INVESTIGATION))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 0
+            }
+
+            test("a fix outside the release window does not count as resolved") {
+                val file = vulnlogFile(vulnerabilities = listOf(fixedVulnerability(listOf(v1), fixedIn = "3.0.0")))
+                val filter = ResolvedFilter(releases = setOf(v1, v2), states = setOf(WorkState.RESOLVED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 0
+            }
+
+            test("a fix outside the release window still reads as open") {
+                val file = vulnlogFile(vulnerabilities = listOf(fixedVulnerability(listOf(v1), fixedIn = "3.0.0")))
+                val filter = ResolvedFilter(releases = setOf(v1, v2), states = setOf(WorkState.OPEN))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe first
+            }
+
+            test("a fix inside the release window counts as resolved") {
+                val file = vulnlogFile(vulnerabilities = listOf(fixedVulnerability(listOf(v1), fixedIn = "2.0.0")))
+                val filter = ResolvedFilter(releases = setOf(v1, v2), states = setOf(WorkState.RESOLVED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+            }
+        }
 
         context("release window") {
 
@@ -180,6 +273,23 @@ class ApplyFilterTest :
 
                 result.vulnerabilities shouldHaveSize 1
                 result.vulnerabilities.first().id shouldBe first
+            }
+
+            test("a state narrows a set the other dimensions already matched") {
+                val file =
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(
+                                openVulnerability().copy(reports = listOf(report(ReporterType.TRIVY))),
+                                acceptedVulnerability().copy(reports = listOf(report(ReporterType.TRIVY))),
+                            ),
+                    )
+                val filter = ResolvedFilter(reporter = ReporterType.TRIVY, states = setOf(WorkState.ACCEPTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe second
             }
 
             test("leaves everything but the vulnerabilities untouched") {

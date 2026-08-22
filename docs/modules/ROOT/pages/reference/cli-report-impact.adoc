@@ -33,6 +33,13 @@ The report therefore shows what is actually shipped at the chosen release.
 | `--tag <text>`
 | Filter on tags. Use multiple times to filter on multiple tags.
 
+| `--state <state>`
+| Filter on xref:concepts/vulnerability-states.adoc[vulnerability state].
+One of `under investigation`, `open`, `accepted`, `resolved`, `not applicable`.
+Use multiple times to report several states together.
+Combined with `--as-of`, each entry is reported in the state it was in at that release, so `--as-of 1.1.0 --state open` shows what was still open when 1.1.0 shipped.
+Naming a state no entry is in is valid and produces an empty report.
+
 | `-`
 | Use as the file argument to read from stdin.
 

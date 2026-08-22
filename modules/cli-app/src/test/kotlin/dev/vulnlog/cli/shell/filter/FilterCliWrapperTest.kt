@@ -14,6 +14,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 
 /** A file declaring two releases in order and one tag, for the wrapper to resolve against. */
 private fun twoReleaseFile(): VulnlogFile =
@@ -35,6 +36,7 @@ private class WrapperCommand(
         echo("releases=${filter.releases.joinToString(",") { it.value }}", err = true)
         echo("tags=${filter.tags.joinToString(",") { it.value }}", err = true)
         echo("reporter=${filter.reporter}", err = true)
+        echo("states=${filter.states.joinToString(",")}", err = true)
     }
 }
 
@@ -65,6 +67,16 @@ class FilterCliWrapperTest :
                 result.statusCode shouldBe 0
                 result.stderr shouldContain "tags=internal"
                 result.stderr shouldContain "reporter=TRIVY"
+            }
+
+            test("hands back the resolved states") {
+                val request = FilterRequest(states = setOf("open", "not applicable"))
+
+                val result = resolve(request)
+
+                result.statusCode shouldBe 0
+                result.stderr shouldContain "OPEN"
+                result.stderr shouldContain "NOT_APPLICABLE"
             }
 
             test("resolves an empty request to an inactive filter") {
@@ -104,6 +116,33 @@ class FilterCliWrapperTest :
 
                 result.stderr shouldContain "Release not found: 9.9.9"
                 result.stderr shouldContain "Tag not found: missing"
+            }
+
+            test("fails with the invalid flag value exit code on an unknown state") {
+                val request = FilterRequest(states = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+            }
+
+            test("reports the offending state and the states Vulnlog defines") {
+                val request = FilterRequest(states = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.stderr shouldContain "Invalid state: bogus"
+                result.stderr shouldContain
+                    "Supported states: under investigation, open, accepted, resolved, not applicable"
+            }
+
+            test("keeps internals out of the message") {
+                val request = FilterRequest(states = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.stderr shouldNotContain "dev.vulnlog"
+                result.stderr shouldNotContain "No enum constant"
             }
         }
     })

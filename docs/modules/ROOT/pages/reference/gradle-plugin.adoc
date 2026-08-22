@@ -206,6 +206,7 @@ vulnlog {
             reporter = "trivy"                                                                // optional
             asOf = "1.0.0"                                                                    // optional
             tags = setOf("frontend")                                                          // optional
+            states = setOf("open", "accepted")                                                // optional
         }
     }
 }
@@ -230,6 +231,11 @@ vulnlog {
 | `tags`
 | All tags
 | Filter on tags.
+
+| `states`
+| All states
+| Filter on xref:concepts/vulnerability-states.adoc[vulnerability state]: `under investigation`, `open`, `accepted`, `resolved`, `not applicable`.
+Combined with `asOf`, each entry is reported in the state it was in at that release.
 |===
 
 The task is cacheable and uses Gradle's up-to-date checking, so it is skipped when neither the files nor the filter settings have changed.

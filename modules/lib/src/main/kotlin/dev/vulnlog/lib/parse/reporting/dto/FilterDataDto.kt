@@ -7,4 +7,5 @@ data class FilterDataDto(
     val asOf: String?,
     val tags: List<String>,
     val reporter: String?,
+    val states: List<String>,
 )

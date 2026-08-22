@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.filter
 
+import dev.vulnlog.lib.core.reporting.findWorkState
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
@@ -12,8 +13,8 @@ fun VulnlogFile.applyFilter(filter: ResolvedFilter): VulnlogFile =
     copy(
         vulnerabilities =
             vulnerabilities
-                .filter { vuln -> filter.matches(vuln) }
-                .map { vuln -> scopeResolution(vuln, filter.releases) },
+                .map { vuln -> scopeResolution(vuln, filter.releases) }
+                .filter { vuln -> filter.matches(vuln) },
     )
 
 /**
@@ -35,4 +36,5 @@ fun scopeResolution(
 private fun ResolvedFilter.matches(vuln: VulnerabilityEntry): Boolean =
     (releases.isEmpty() || vuln.releases.any { it in releases }) &&
         (tags.isEmpty() || vuln.tags.any { it in tags }) &&
-        (reporter == null || vuln.reports.any { it.reporter == reporter })
+        (reporter == null || vuln.reports.any { it.reporter == reporter }) &&
+        (states.isEmpty() || findWorkState(vuln) in states)

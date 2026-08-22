@@ -120,5 +120,6 @@ private fun goldenFixture() =
                 asOf = "1.1.0",
                 tags = listOf("production"),
                 reporter = "trivy",
+                states = listOf("open", "accepted"),
             ),
     )

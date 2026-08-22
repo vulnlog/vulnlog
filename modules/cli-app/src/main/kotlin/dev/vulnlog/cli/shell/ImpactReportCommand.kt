@@ -23,6 +23,7 @@ import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.ReportingEntry
+import dev.vulnlog.lib.model.report.WorkState
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
@@ -70,13 +71,21 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
 
     val filterOptions by FilterOptions()
 
+    val impactFilterOptions by ImpactFilterOptions()
+
     override fun run() {
         val validated: List<ValidVulnlogProject> = inputs.map { input -> validateInputOrFail(input).project }
         val files: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
         val project = sharedProjectOrFail(files)
 
         failOnRenamedFilterFlags(filterOptions)
-        val request = FilterRequest(filterOptions.reporterRequest, filterOptions.asOfRequest, filterOptions.tagsRequest)
+        val request =
+            FilterRequest(
+                reporter = filterOptions.reporterRequest,
+                asOf = filterOptions.asOfRequest,
+                tags = filterOptions.tagsRequest,
+                states = impactFilterOptions.statesRequest,
+            )
         val filter = resolveFilterOrFail(request, files)
 
         val reported: List<ReportingEntry> = files.flatMap { collectReportingEntries(it.applyFilter(filter)) }
@@ -88,6 +97,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
                 asOf = filterOptions.asOfRequest,
                 tags = filter.tags.map(Tag::value).sorted(),
                 reporter = filter.reporter?.canonical(),
+                states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
             )
         val inputNames = validated.map { it.inputDocument.filename }
 

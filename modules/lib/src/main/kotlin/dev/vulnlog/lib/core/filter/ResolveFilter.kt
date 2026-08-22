@@ -5,17 +5,16 @@ package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.parseReporter
+import dev.vulnlog.lib.core.workStateTokens
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.report.WorkState
 
 /**
- * Checks [request] against every file it will be applied to and expands the release window.
- *
- * A release must be defined in every file, because the window is read from each file's own release
- * order. A tag only has to be defined in one of them, because a tag filter is set membership rather
- * than a point on a timeline. A reporter is checked against the reporters Vulnlog supports.
+ * Resolves a given [FilterRequest] against a list of [VulnlogFile]s and determines if the requested dimensions
+ * are valid based on the provided data. The result can either be a resolved filter or a rejection with identified problems.
  */
 fun resolveFilter(
     request: FilterRequest,
@@ -24,10 +23,11 @@ fun resolveFilter(
     val reporter = resolveReporter(request.reporter)
     val releases = resolveReleaseWindow(request.asOf, files)
     val tags = resolveTags(request.tags, files)
-    val problems = reporter.problems + releases.problems + tags.problems
+    val states = resolveStates(request.states)
+    val problems = reporter.problems + releases.problems + tags.problems + states.problems
 
     return if (problems.isEmpty()) {
-        FilterOutcome.Resolved(ResolvedFilter(reporter.value, releases.value, tags.value))
+        FilterOutcome.Resolved(ResolvedFilter(reporter.value, releases.value, tags.value, states.value))
     } else {
         FilterOutcome.Rejected(problems)
     }
@@ -46,6 +46,9 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
             .takeIf { it.isNotEmpty() }
             ?.let { tags -> "tag filter matched tags: ${tags.joinToString(", ") { it.value }}" },
         filter.reporter?.let { reporter -> "reporter filter: ${reporter.canonical()}" },
+        filter.states
+            .takeIf { it.isNotEmpty() }
+            ?.let { states -> "state filter: ${states.joinToString(", ") { it.canonical() }}" },
     )
 
 /** One resolved dimension: the value to filter with, or the problems that stopped it resolving. */
@@ -100,6 +103,25 @@ private fun windowOf(
 ): List<Release> {
     val ordered = file.releases.map { it.id }
     return ordered.take(ordered.indexOf(release) + 1)
+}
+
+private fun resolveStates(values: Set<String>): Dimension<Set<WorkState>> {
+    if (values.isEmpty()) return Dimension(emptySet())
+
+    val byToken = WorkState.entries.associateBy { it.canonical() }
+    val unknown = values.filterNot { it in byToken }.sorted()
+    if (unknown.isNotEmpty()) {
+        return Dimension(
+            emptySet(),
+            listOf(
+                FilterProblem(
+                    "Invalid state: ${unknown.joinToString(", ")}",
+                    "Supported states: ${workStateTokens()}",
+                ),
+            ),
+        )
+    }
+    return Dimension(values.mapNotNull { byToken[it] }.toSet())
 }
 
 private fun resolveTags(

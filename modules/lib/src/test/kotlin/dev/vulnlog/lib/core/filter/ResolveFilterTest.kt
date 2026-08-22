@@ -9,6 +9,7 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.report.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -189,6 +190,88 @@ class ResolveFilterTest :
             }
         }
 
+        context("states") {
+
+            test("resolves a single state token") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("open"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().states shouldBe setOf(WorkState.OPEN)
+            }
+
+            test("resolves several state tokens cumulatively") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("open", "accepted"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().states shouldBe setOf(WorkState.OPEN, WorkState.ACCEPTED)
+            }
+
+            test("resolves the multi word tokens") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("under investigation", "not applicable"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().states shouldBe
+                    setOf(WorkState.UNDER_INVESTIGATION, WorkState.NOT_APPLICABLE)
+            }
+
+            test("leaves the dimension inactive when no state is requested") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest()
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().states shouldBe emptySet()
+            }
+
+            test("accepts a state no entry currently has") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("resolved"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().states shouldBe setOf(WorkState.RESOLVED)
+            }
+
+            test("rejects a token Vulnlog does not define") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("bogus"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems() shouldBe
+                    listOf(
+                        FilterProblem(
+                            "Invalid state: bogus",
+                            "Supported states: under investigation, open, accepted, resolved, not applicable",
+                        ),
+                    )
+            }
+
+            test("names every unknown token in one problem") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("bogus", "andere"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid state: andere, bogus")
+            }
+
+            test("rejects the enum spelling of a state") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("NOT_APPLICABLE"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid state: NOT_APPLICABLE")
+            }
+        }
+
         context("several failing dimensions") {
 
             test("reports every failing dimension in one outcome") {
@@ -199,6 +282,16 @@ class ResolveFilterTest :
 
                 outcome.problems().map { it.message } shouldBe
                     listOf("Invalid reporter: bogus", "Release not found: 9.9.9", "Tag not found: missing")
+            }
+
+            test("reports a bad state alongside the other failing dimensions") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(reporter = "bogus", asOf = "9.9.9", states = setOf("nope"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe
+                    listOf("Invalid reporter: bogus", "Release not found: 9.9.9", "Invalid state: nope")
             }
         }
 
@@ -228,12 +321,21 @@ class ResolveFilterTest :
                 lines shouldBe listOf("reporter filter: cargo-audit")
             }
 
+            test("renders the states under their canonical tokens") {
+                val filter = ResolvedFilter(states = setOf(WorkState.NOT_APPLICABLE))
+
+                val lines = renderFilterResolution(filter)
+
+                lines shouldBe listOf("state filter: not applicable")
+            }
+
             test("renders one line per active dimension") {
                 val filter =
                     ResolvedFilter(
                         reporter = ReporterType.TRIVY,
                         releases = setOf(release("1.0.0"), release("2.0.0")),
                         tags = setOf(tag("internal")),
+                        states = setOf(WorkState.OPEN),
                     )
 
                 val lines = renderFilterResolution(filter)
@@ -243,6 +345,7 @@ class ResolveFilterTest :
                         "as-of filter expanded to releases: 1.0.0, 2.0.0",
                         "tag filter matched tags: internal",
                         "reporter filter: trivy",
+                        "state filter: open",
                     )
             }
 
