@@ -222,7 +222,7 @@ class ImpactReportCommandTest :
 
             test("fails on an unknown release") {
                 withTempFile(content = vulnlogDocument()) { input ->
-                    val result = ImpactReportCommand().test("${input.absolutePath} --release 9.9.9")
+                    val result = ImpactReportCommand().test("${input.absolutePath} --as-of 9.9.9")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
@@ -258,6 +258,16 @@ class ImpactReportCommandTest :
                 }
             }
 
+            test("points at --as-of when the renamed --release is used") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --release 1.0.0")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Option --release was renamed to --as-of."
+                    result.stderr shouldContain "--as-of 1.0.0"
+                }
+            }
+
             test("fails on an unknown tag") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     val result = ImpactReportCommand().test("${input.absolutePath} --tag missing-tag")
@@ -270,12 +280,12 @@ class ImpactReportCommandTest :
 
         context("pending fix at deployed release") {
 
-            test("--release including only the deployed release renders an unshipped fix as open") {
+            test("--as-of including only the deployed release renders an unshipped fix as open") {
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =
                             ImpactReportCommand().test(
-                                "${input.absolutePath} --release 1.0.0 -o ${output.absolutePath}",
+                                "${input.absolutePath} --as-of 1.0.0 -o ${output.absolutePath}",
                             )
 
                         result.statusCode shouldBe 0
@@ -286,7 +296,7 @@ class ImpactReportCommandTest :
                 }
             }
 
-            test("without --release the unshipped fix is rendered as resolved") {
+            test("without --as-of the unshipped fix is rendered as resolved") {
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
                     withTempFile(prefix = "report", suffix = ".html") { output ->
                         val result =

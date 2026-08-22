@@ -248,11 +248,11 @@ class VulnlogCliTest :
                         val output = dir.resolve("report.html")
                         val result =
                             vulnlogCommand().test(
-                                "-v report impact ${file.absolutePath} --release 1.0.0 -o ${output.toAbsolutePath()}",
+                                "-v report impact ${file.absolutePath} --as-of 1.0.0 -o ${output.toAbsolutePath()}",
                             )
 
                         result.statusCode shouldBe 0
-                        result.stderr shouldContain "verbose: release filter expanded to releases: 1.0.0"
+                        result.stderr shouldContain "verbose: as-of filter expanded to releases: 1.0.0"
                         result.stderr shouldContain "verbose: wrote ${output.toAbsolutePath()}"
                     }
                 }

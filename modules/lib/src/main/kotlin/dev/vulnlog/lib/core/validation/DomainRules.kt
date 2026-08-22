@@ -29,6 +29,7 @@ val v1DomainRules =
         ::validateTagInVulnerabilityIsDefined,
         ::validateSourceInReportIsDefinedWhenOther,
         ::validateNoAcceptedCriticalRisk,
+        ::validateReleasesAreDeclaredInPublicationOrder,
     )
 
 private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
@@ -268,3 +269,24 @@ private fun validateNoAcceptedCriticalRisk(file: VulnlogFile): List<ValidationFi
                 message = "A critical severity vulnerability is marked 'wont fix'.",
             )
         }
+
+private fun validateReleasesAreDeclaredInPublicationOrder(file: VulnlogFile): List<ValidationFinding> {
+    val published = file.releases.mapNotNull { entry -> entry.publicationDate?.let { entry to it } }
+    return published
+        .zipWithNext()
+        .mapNotNull { (earlier, later) ->
+            if (later.second < earlier.second) {
+                ValidationFinding(
+                    severity = FindingSeverity.WARNING,
+                    rule = Rule.RELEASES_OUT_OF_ORDER,
+                    path = "releases[${later.first.id.value}]",
+                    message =
+                        "Release '${later.first.id.value}' published '${later.second}' is declared after " +
+                            "'${earlier.first.id.value}' published '${earlier.second}'. " +
+                            "Declare releases oldest first, because a release filter follows this order.",
+                )
+            } else {
+                null
+            }
+        }
+}

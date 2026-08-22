@@ -56,7 +56,7 @@ interface VulnlogSuppressExtension {
     val outputDir: DirectoryProperty
     val format: Property<String>
     val reporter: Property<String>
-    val release: Property<String>
+    val asOf: Property<String>
     val tags: SetProperty<String>
 }
 
@@ -75,6 +75,6 @@ abstract class VulnlogReportExtension
 interface VulnlogImpactReportExtension {
     val outputFile: RegularFileProperty
     val reporter: Property<String>
-    val release: Property<String>
+    val asOf: Property<String>
     val tags: SetProperty<String>
 }

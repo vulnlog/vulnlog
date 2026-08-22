@@ -142,8 +142,8 @@ vulnerabilities:
 # Check the file for errors
 vulnlog validate vulnlog.yaml
 
-# Generate a Trivy suppression file for release 1.0.0
-vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
+# Generate a Trivy suppression file for release as of 1.0.0
+vulnlog suppress vulnlog.yaml --reporter trivy --as-of 1.0.0
 
 # Generate an HTML report
 vulnlog report impact vulnlog.yaml

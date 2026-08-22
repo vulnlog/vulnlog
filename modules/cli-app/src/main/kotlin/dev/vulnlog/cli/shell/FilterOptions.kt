@@ -12,7 +12,7 @@ import dev.vulnlog.lib.model.ReporterType
 
 /** The filter flags shared by the commands that read Vulnlog files. Values are checked by resolveFilter. */
 class FilterOptions : OptionGroup() {
-    val reporter: String? by option(
+    val reporterRequest: String? by option(
         "--reporter",
         metavar = "<reporter>",
         help =
@@ -22,13 +22,22 @@ class FilterOptions : OptionGroup() {
             """.trimIndent(),
     )
 
-    val releaseOption: String? by option(
-        "--release",
+    val asOfRequest: String? by option(
+        "--as-of",
         metavar = "<release-id>",
-        help = "Filter on release, include all releases up to and including that release.",
+        help =
+            """
+            Report the state as of this release.
+            Every earlier release is included, and a fix that ships later counts as not yet fixed.
+            """.trimIndent(),
     )
 
-    val tagsOptions: Set<String> by option(
+    // TODO remove with 1.0.0
+
+    /** Renamed to `--as-of`. Kept so the old flag fails with a pointer instead of "no such option". */
+    val renamedReleaseRequest: String? by option("--release", hidden = true)
+
+    val tagsRequest: Set<String> by option(
         "--tag",
         metavar = "<tag>",
         help = "Filter on tags. Use multiple times to filter on multiple tags.",

@@ -11,11 +11,11 @@ Answer the release planning questions from the Vulnlog file: which vulnerabiliti
 
 [source,bash]
 ----
-vulnlog report impact vulnlog.yaml --release 8.1.1 -o release-8.1.1.html
+vulnlog report impact vulnlog.yaml --as-of 8.1.1 -o release-8.1.1.html
 Wrote: release-8.1.1.html
 ----
 
-`--release 8.1.1` includes all releases up to and including 8.1.1, and classifies each entry from that release's perspective: a resolution only counts when its target release shipped at or before 8.1.1.
+`--as-of 8.1.1` includes all releases up to and including 8.1.1, and classifies each entry from that release's perspective: a resolution only counts when its target release shipped at or before 8.1.1.
 
 == Read the answer
 
@@ -45,14 +45,14 @@ When tags mark deliverables (for example `container` versus `sdk`), combine filt
 
 [source,bash]
 ----
-vulnlog report impact vulnlog.yaml --release 8.1.1 --tag container -o container-8.1.1.html
+vulnlog report impact vulnlog.yaml --as-of 8.1.1 --tag container -o container-8.1.1.html
 ----
 
 The xref:reference/tags.adoc[tag reference] covers defining and assigning tags.
 
 === Keep the deployed release's pipeline quiet
 
-The same `--release` filter works on `vulnlog suppress`: a fix recorded for an unshipped release is treated as still unresolved, and eligible entries are emitted so the scanner watching the deployed release stays green until the fix actually ships.
+The same `--as-of` filter works on `vulnlog suppress`: a fix recorded for an unshipped release is treated as still unresolved, and eligible entries are emitted so the scanner watching the deployed release stays green until the fix actually ships.
 See xref:guides/record-a-resolution.adoc[Record a resolution] for the required `suppress` block.
 
 === Several release lines

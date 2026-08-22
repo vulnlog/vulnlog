@@ -25,7 +25,7 @@ Reports derive each entry's xref:concepts/vulnerability-states.adoc[state] from 
 
 == Releases and tags scope everything
 
-Releases:: Entries reference releases, resolutions target releases, and the `--release` filter uses the chronological release list to answer questions per shipped release.
+Releases:: Entries reference releases, resolutions target releases, and the `--as-of` filter uses the chronological release list to answer questions per shipped release.
 Tags:: A team-defined taxonomy (`container`, `build-dep`, `sdk`) that scopes entries and release artifacts, and drives the `--tag` filter.
 
 == Design principles

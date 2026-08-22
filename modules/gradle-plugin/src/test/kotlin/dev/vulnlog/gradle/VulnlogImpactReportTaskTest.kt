@@ -212,7 +212,7 @@ class VulnlogImpactReportTaskTest :
                                 files.from("test.vl.yaml")
                                 report {
                                     impact {
-                                        release = "9.9.9"
+                                        asOf = "9.9.9"
                                     }
                                 }
                             }

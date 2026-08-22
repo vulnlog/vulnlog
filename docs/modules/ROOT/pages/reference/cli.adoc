@@ -56,8 +56,8 @@ Available on `report` and `suppress` commands.
 |===
 | Flag | Description
 
-| `--release <id>`
-| Include vulnerabilities affecting all releases up to and including this release.
+| `--as-of <release-id>`
+| Report the state as of this release, including every earlier release.
 
 | `--tag <id>`
 | Filter by tag (repeatable).

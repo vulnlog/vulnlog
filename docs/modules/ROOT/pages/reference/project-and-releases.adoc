@@ -35,7 +35,8 @@ Used in report generation.
 
 Defines the releases tracked in this Vulnlog file.
 Releases must be listed in chronological order (oldest first).
-This ordering is used by the CLI to resolve `--release` filtering.
+This ordering is used by the CLI to resolve `--as-of` filtering.
+Validation warns when two releases carrying `published_at` are declared out of order.
 
 [cols="1,1,1,3"]
 |===

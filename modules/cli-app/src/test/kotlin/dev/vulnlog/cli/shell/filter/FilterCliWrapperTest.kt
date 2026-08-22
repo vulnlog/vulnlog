@@ -49,7 +49,7 @@ class FilterCliWrapperTest :
         context("a filter every file knows") {
 
             test("hands back the expanded release window") {
-                val request = FilterRequest(release = "2.0.0")
+                val request = FilterRequest(asOf = "2.0.0")
 
                 val result = resolve(request)
 
@@ -81,7 +81,7 @@ class FilterCliWrapperTest :
         context("a filter the files do not know") {
 
             test("fails with the invalid flag value exit code") {
-                val request = FilterRequest(release = "9.9.9")
+                val request = FilterRequest(asOf = "9.9.9")
 
                 val result = resolve(request)
 
@@ -89,7 +89,7 @@ class FilterCliWrapperTest :
             }
 
             test("reports the offending value and what the files do declare") {
-                val request = FilterRequest(release = "9.9.9")
+                val request = FilterRequest(asOf = "9.9.9")
 
                 val result = resolve(request)
 
@@ -98,7 +98,7 @@ class FilterCliWrapperTest :
             }
 
             test("reports every failing dimension before giving up") {
-                val request = FilterRequest(release = "9.9.9", tags = setOf("missing"))
+                val request = FilterRequest(asOf = "9.9.9", tags = setOf("missing"))
 
                 val result = resolve(request)
 

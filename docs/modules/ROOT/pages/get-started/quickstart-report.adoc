@@ -58,5 +58,5 @@ Statements like these come directly from the summary, the state column, and Fixe
 
 == Next steps
 
-* Ask your team for a release-scoped report (`--release <id>`) when you need the exposure of a specific shipped release; the xref:get-started/quickstart-release.adoc[release quickstart] shows the difference.
+* Ask your team for a release-scoped report (`--as-of <release-id>`) when you need the exposure of a specific shipped release; the xref:get-started/quickstart-release.adoc[release quickstart] shows the difference.
 * xref:concepts/vulnerability-states.adoc[Vulnerability states] explains the state model behind the report.

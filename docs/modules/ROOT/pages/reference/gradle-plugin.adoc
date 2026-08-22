@@ -156,7 +156,7 @@ vulnlog {
     suppress {
         outputDir = layout.projectDirectory.dir("suppressions")  // optional
         reporter = "trivy"                                       // optional
-        release = "1.0.0"                                        // optional
+        asOf = "1.0.0"                                           // optional
         tags = setOf("frontend")                                 // optional
     }
 }
@@ -174,9 +174,9 @@ vulnlog {
 | All reporters
 | Filter on reporter.
 
-| `release`
+| `asOf`
 | All releases
-| Filter on release, include all releases up to and including that release.
+| Report as of this release, including all releases up to and including it.
 
 | `tags`
 | All tags
@@ -204,7 +204,7 @@ vulnlog {
         impact {
             outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-impact-report.html"))  // optional
             reporter = "trivy"                                                                // optional
-            release = "1.0.0"                                                                 // optional
+            asOf = "1.0.0"                                                                    // optional
             tags = setOf("frontend")                                                          // optional
         }
     }
@@ -223,9 +223,9 @@ vulnlog {
 | All reporters
 | Filter on reporter.
 
-| `release`
+| `asOf`
 | All releases
-| Filter on release, include all releases up to and including that release.
+| Report as of this release, including all releases up to and including it.
 
 | `tags`
 | All tags
@@ -235,7 +235,7 @@ vulnlog {
 The task is cacheable and uses Gradle's up-to-date checking, so it is skipped when neither the files nor the filter settings have changed.
 
 The task never fails because the report contains vulnerabilities.
-It fails the build only on invalid input, for example an unknown `release` or input files with different project metadata.
+It fails the build only on invalid input, for example an unknown `asOf` or input files with different project metadata.
 
 .Example
 [source,shell]

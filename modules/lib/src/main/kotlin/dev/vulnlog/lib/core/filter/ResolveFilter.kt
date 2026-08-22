@@ -22,7 +22,7 @@ fun resolveFilter(
     files: List<VulnlogFile>,
 ): FilterOutcome {
     val reporter = resolveReporter(request.reporter)
-    val releases = resolveReleaseWindow(request.release, files)
+    val releases = resolveReleaseWindow(request.asOf, files)
     val tags = resolveTags(request.tags, files)
     val problems = reporter.problems + releases.problems + tags.problems
 
@@ -41,7 +41,7 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
     listOfNotNull(
         filter.releases
             .takeIf { it.isNotEmpty() }
-            ?.let { releases -> "release filter expanded to releases: ${releases.joinToString(", ") { it.value }}" },
+            ?.let { releases -> "as-of filter expanded to releases: ${releases.joinToString(", ") { it.value }}" },
         filter.tags
             .takeIf { it.isNotEmpty() }
             ?.let { tags -> "tag filter matched tags: ${tags.joinToString(", ") { it.value }}" },

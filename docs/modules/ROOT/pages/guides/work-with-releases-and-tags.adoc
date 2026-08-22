@@ -19,7 +19,9 @@ releases:
   - id: 1.1.0
 ----
 
-Keep the list in chronological order, oldest first; the `--release` filter resolves ranges by array position (see xref:reference/project-and-releases.adoc[Project and releases]).
+Keep the list in chronological order, oldest first; the `--as-of` filter resolves ranges by array position (see xref:reference/project-and-releases.adoc[Project and releases]).
+
+Validation warns when two dated releases are declared out of order.
 
 Set `published_at` on the day the release ships.
 The date matters: in release-scoped views, a recorded fix only protects users once its target release is published (see xref:concepts/vulnerability-states.adoc[Vulnerability states]).
@@ -62,11 +64,11 @@ On release purl entries, tags scope the release artifacts (see xref:reference/ta
 
 [source,bash]
 ----
-vulnlog report impact my-app.vl.yaml --release 1.1.0 --tag container
+vulnlog report impact my-app.vl.yaml --as-of 1.1.0 --tag container
 vulnlog suppress my-app.vl.yaml --reporter trivy --tag build-dep
 ----
 
-`--release` includes all releases up to and including the given one; `--tag` is repeatable.
+`--as-of` includes all releases up to and including the given one; `--tag` is repeatable.
 Entries without tags are included in all unfiltered outputs.
 
 == Verify

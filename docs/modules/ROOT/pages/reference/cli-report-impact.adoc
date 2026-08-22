@@ -23,8 +23,8 @@ Use `-` as a file argument to read from stdin and `-o -` to write the report to 
 | `--reporter <value>`
 | Filter on reporter.
 
-| `--release <text>`
-| Filter on release.
+| `--as-of <release-id>`
+| Report the state as of this release.
 Includes all releases up to and including that release.
 A fix only counts once it has shipped inside that range.
 A vulnerability whose `resolution` targets a later release is reported under its pre-resolution state: `open` for `affected`, `dismissed` for `not affected` and for `affected` with `disposition: wont fix`.
@@ -71,8 +71,8 @@ Wrote: vulnlog-impact-report.html
 .Show what a filter resolved to
 [source]
 ----
-vulnlog -v report impact vulnlog.yaml --release 1.1.0
-verbose: release filter expanded to releases: 1.0.0, 1.1.0
+vulnlog -v report impact vulnlog.yaml --as-of 1.1.0
+verbose: as-of filter expanded to releases: 1.0.0, 1.1.0
 Wrote: vulnlog-impact-report.html
 ----
 
@@ -94,7 +94,7 @@ image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
 The command exits non-zero on bad input.
 It never fails because the report contains vulnerabilities.
 
-* Unknown `--reporter`, `--release`, or `--tag`: the command lists the known values and exits `5`.
+* Unknown `--reporter`, `--as-of`, or `--tag`: the command lists the known values and exits `5`.
 * Input files with different project metadata: the command exits `2`.
 * No subcommand, as in `vulnlog report vulnlog.yaml`: the command prints the available reports and exits `1`.
 

@@ -31,8 +31,8 @@ The format only changes how findings are serialized, not which findings are incl
 | `--reporter <value>`
 | Filter on reporter.
 
-| `--release <text>`
-| Filter on release, include all releases up to and including that release.
+| `--as-of <release-id>`
+| Suppress as of this release, including all releases up to and including it.
 A vulnerability whose `resolution` targets a release outside this range is treated as still unresolved and a suppression entry is emitted, so scanners running against the deployed release stay quiet until the fix actually ships.
 
 | `--tag <text>`
@@ -51,10 +51,10 @@ Wrote: /path/to/.snyk
 Wrote: /path/to/.trivyignore.yaml
 ----
 
-.Create suppression for releases up to and including 8.1.1 and reporter snyk
+.Create suppression as of release 8.1.1 for reporter snyk
 [source]
 ----
-vulnlog suppress full-example.vl.yaml --release 8.1.1 --reporter snyk
+vulnlog suppress full-example.vl.yaml --as-of 8.1.1 --reporter snyk
 Wrote: /path/to/.snyk
 ----
 
@@ -75,12 +75,12 @@ Wrote: /path/to/trivy.generic.json
 .Suppress a not-yet-shipped fix when scanning the currently deployed release
 [source]
 ----
-vulnlog suppress vulnlog.yaml --release 8.0.0 --reporter trivy
+vulnlog suppress vulnlog.yaml --as-of 8.0.0 --reporter trivy
 ----
 
 The CVE is fixed on the `dev` branch and the resolution targets the next, unpublished release.
 Until that release ships, the scanner running against the deployed `8.0.0` image keeps flagging the CVE.
-Generating the suppression file with `--release 8.0.0` includes the entry, so CI stays green.
+Generating the suppression file with `--as-of 8.0.0` includes the entry, so CI stays green.
 The vulnerability still appears as `open` in the HTML report under the same release.
 The pending-fix report needs an empty `suppress: { }` block on the relevant report so the entry is eligible for suppression.
 

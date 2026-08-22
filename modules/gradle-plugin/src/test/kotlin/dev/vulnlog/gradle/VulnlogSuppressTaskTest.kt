@@ -256,7 +256,7 @@ class VulnlogSuppressTaskTest :
                             vulnlog {
                                 files.from("test.vl.yaml")
                                 suppress {
-                                    release = "9.9.9"
+                                    asOf = "9.9.9"
                                 }
                             }
                             """.trimIndent(),
