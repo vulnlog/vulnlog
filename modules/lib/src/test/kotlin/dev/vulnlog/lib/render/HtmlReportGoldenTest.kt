@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Severity
@@ -61,16 +62,18 @@ private fun goldenFixture() =
                     ids = setOf(VulnId.Cve("CVE-2026-1111"), VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
                     shortDescription = "Critical RCE in example-lib",
                     impact = Impact.Affected(Severity.CRITICAL),
+                    disposition = Disposition.WILL_FIX,
                     analysis = "Confirmed exploitable on the public ingress path; patch in progress.",
                     reportFor = setOf(Release("1.0.0"), Release("1.1.0")),
                     fixedIn = setOf(Release("1.2.0")),
                 ),
                 ReportingEntry(
                     primaryId = VulnId.Cve("CVE-2026-2222"),
-                    state = WorkState.OPEN,
+                    state = WorkState.NOT_APPLICABLE,
                     ids = setOf(VulnId.Cve("CVE-2026-2222")),
                     shortDescription = null,
                     impact = Impact.NotAffected("vulnerable code not in execute path"),
+                    disposition = null,
                     analysis = null,
                     reportFor = setOf(Release("1.1.0")),
                     fixedIn = emptySet(),
@@ -81,9 +84,32 @@ private fun goldenFixture() =
                     ids = setOf(VulnId.Cve("CVE-2026-3333")),
                     shortDescription = "DoS via large payload",
                     impact = Impact.Affected(Severity.MEDIUM),
+                    disposition = null,
                     analysis = "Mitigated by request size limits at the edge.",
                     reportFor = setOf(Release("1.0.0")),
                     fixedIn = setOf(Release("1.0.1")),
+                ),
+                ReportingEntry(
+                    primaryId = VulnId.Cve("CVE-2026-4444"),
+                    state = WorkState.ACCEPTED,
+                    ids = setOf(VulnId.Cve("CVE-2026-4444")),
+                    shortDescription = "Prototype pollution in a build-time helper",
+                    impact = Impact.Affected(Severity.HIGH),
+                    disposition = Disposition.WONT_FIX,
+                    analysis = "Build-time only; no upstream fix and no runtime exposure.",
+                    reportFor = setOf(Release("1.1.0")),
+                    fixedIn = emptySet(),
+                ),
+                ReportingEntry(
+                    primaryId = VulnId.Cve("CVE-2026-5555"),
+                    state = WorkState.UNDER_INVESTIGATION,
+                    ids = setOf(VulnId.Cve("CVE-2026-5555")),
+                    shortDescription = "Unbounded recursion in the XML parser",
+                    impact = Impact.Unknown,
+                    disposition = null,
+                    analysis = null,
+                    reportFor = setOf(Release("1.1.0")),
+                    fixedIn = emptySet(),
                 ),
             ),
         generatedAt = Instant.parse("2026-05-02T10:30:00Z"),

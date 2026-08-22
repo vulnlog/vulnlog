@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.model.report
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.VulnId
 
@@ -12,6 +13,7 @@ data class ReportingEntry(
     val ids: Set<VulnId>,
     val shortDescription: String?,
     val impact: Impact,
+    val disposition: Disposition?,
     val analysis: String?,
     val reportFor: Set<Release>,
     val fixedIn: Set<Release>,

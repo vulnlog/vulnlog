@@ -30,13 +30,14 @@ Check the filter first: a report scoped to a release answers "what does a user o
 
 == Step 2: Read the summary
 
-The summary counts entries by state and breaks open entries down by severity.
-The four states, defined in xref:concepts/vulnerability-states.adoc[Vulnerability states]:
+The summary counts entries by state, then breaks the open entries down by severity and the accepted entries down by severity.
+The five states, defined in xref:concepts/vulnerability-states.adoc[Vulnerability states]:
 
 * *open*: triage confirmed impact and no fix has shipped. These entries are the live risk; their severity tells you how urgent.
 * *under investigation*: the team has not concluded triage. Impact is unknown, not zero.
+* *accepted*: triage confirmed impact and the project decided not to remediate. The risk is live and deliberately carried, so these entries belong on a standing review list.
 * *resolved*: a fix is recorded. The Fixed In column names the release that ships it.
-* *dismissed*: closed without remediation, either not affected or an accepted risk.
+* *not applicable*: triage concluded the vulnerability does not impact the project. Nothing is owed.
 
 == Step 3: Read the entry table
 
@@ -44,11 +45,11 @@ For the example project, the unfiltered report reads:
 
 * `CVE-2025-9876` (critical) and `CVE-2026-7791` (high): *resolved*, fixed in 1.1.0 and 1.2.0.
 Whether your audience is protected depends on whether those releases shipped to them.
-* `CVE-2026-6685` (low): *dismissed* as an accepted risk, with the project lead's rationale in the details.
-* `CVE-2026-1234`: *dismissed* as not affected, with the justification and analysis explaining why.
+* `CVE-2026-6685` (low): *accepted*, with the project lead's rationale in the details.
+* `CVE-2026-1234`: *not applicable*, with the justification and analysis explaining why.
 * `CVE-2026-8802`: *under investigation*.
 
-The Details cell carries the verdict, the justification, and the analysis text, so the reasoning behind every decision is in the report itself.
+The Details cell carries the verdict, the severity, the stated disposition, the justification, and the analysis text, so the reasoning behind every decision is in the report itself.
 
 == What you can now state
 

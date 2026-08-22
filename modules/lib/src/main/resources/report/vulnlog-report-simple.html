@@ -25,6 +25,7 @@
             --vl-stripe-medium: #ffcc32;
             --vl-stripe-low: #1976d2;
             --vl-stripe-positive: #7cb342;
+            --vl-stripe-accepted: #7e57c2;
             --vl-stripe-muted: #9aa0a6;
         }
 
@@ -257,6 +258,10 @@
 
         tr[data-row-tone="positive"] td:first-child {
             border-left-color: var(--vl-stripe-positive);
+        }
+
+        tr[data-row-tone="accepted"] td:first-child {
+            border-left-color: var(--vl-stripe-accepted);
         }
 
         tr[data-row-tone="muted"] td:first-child {
@@ -554,11 +559,11 @@
         var COLUMN_META = {
             ids: {label: 'IDs', width: '16%', tooltip: 'Vulnerability identifiers (CVE, GHSA, SNYK)'},
             state: {label: 'State', width: '11%', tooltip: 'Workflow state'},
-            details: {label: 'Details', width: '57%', tooltip: 'Verdict, severity, description and analysis'},
+            details: {label: 'Details', width: '57%', tooltip: 'Verdict, severity, disposition, description and analysis'},
             releases: {label: 'Releases', width: '16%', tooltip: 'Affected releases (and fix releases when available)'}
         };
 
-        var STATE_ORDER = ['open', 'under_investigation', 'resolved', 'dismissed'];
+        var STATE_ORDER = ['open', 'under_investigation', 'accepted', 'resolved', 'not_applicable'];
         var SEVERITY_ORDER = ['critical', 'high', 'medium', 'low'];
 
         var SEVERITY_TOOLTIPS = {
@@ -691,17 +696,21 @@
                 return e.state;
             });
             rows.appendChild(buildCountsRow('State', stateCounts, STATE_ORDER));
+            appendSeverityRow(rows, entries, 'open', 'Open severity');
+            appendSeverityRow(rows, entries, 'accepted', 'Accepted severity');
+        }
 
-            var openSeverity = countBy(
+        function appendSeverityRow(rows, entries, state, label) {
+            var counts = countBy(
                 entries.filter(function (e) {
-                    return e.state === 'open';
+                    return e.state === state;
                 }),
                 function (e) {
                     return e.severity;
                 }
             );
-            if (Object.keys(openSeverity).length > 0) {
-                rows.appendChild(buildCountsRow('Open severity', openSeverity, SEVERITY_ORDER));
+            if (Object.keys(counts).length > 0) {
+                rows.appendChild(buildCountsRow(label, counts, SEVERITY_ORDER));
             }
         }
 
@@ -763,17 +772,17 @@
 
         // Row stripe rule:
         //   resolved              -> green (positive)
-        //   dismissed             -> grey (muted)
+        //   accepted              -> violet; never grey, an accepted risk is not a closed one
+        //   not_applicable        -> grey (muted)
         //   under_investigation   -> no stripe
         //   open + severity       -> severity colour (critical/high/medium/low)
-        //   open + not affected   -> green (positive)
         //   open (otherwise)      -> no stripe
         function rowToneFor(e) {
             if (e.state === 'resolved') return 'positive';
-            if (e.state === 'dismissed') return 'muted';
+            if (e.state === 'accepted') return 'accepted';
+            if (e.state === 'not_applicable') return 'muted';
             if (e.state === 'under_investigation') return null;
             if (e.severity && SEVERITY_ORDER.indexOf(e.severity) !== -1) return e.severity;
-            if (e.verdict === 'not affected') return 'positive';
             return null;
         }
 
@@ -822,17 +831,19 @@
             var meta = document.createElement('div');
             meta.className = 'details-meta';
 
-            // Verdict
-            var verdictSpan = document.createElement('span');
-            verdictSpan.appendChild(labelSpan('Verdict'));
-            verdictSpan.appendChild(document.createTextNode(label_(e.verdict)));
-            if (e.verdictDetail) {
-                var note = document.createElement('span');
-                note.className = 'details-note';
-                note.textContent = e.verdictDetail;
-                verdictSpan.appendChild(note);
+            // Verdict (absent while untriaged)
+            if (e.verdict) {
+                var verdictSpan = document.createElement('span');
+                verdictSpan.appendChild(labelSpan('Verdict'));
+                verdictSpan.appendChild(document.createTextNode(label_(e.verdict)));
+                if (e.verdictDetail) {
+                    var note = document.createElement('span');
+                    note.className = 'details-note';
+                    note.textContent = e.verdictDetail;
+                    verdictSpan.appendChild(note);
+                }
+                meta.appendChild(verdictSpan);
             }
-            meta.appendChild(verdictSpan);
 
             // Severity (only if present)
             if (e.severity) {
@@ -846,6 +857,14 @@
                 }
                 sevSpan.appendChild(sevValue);
                 meta.appendChild(sevSpan);
+            }
+
+            // Disposition (only if stated)
+            if (e.disposition) {
+                var dispSpan = document.createElement('span');
+                dispSpan.appendChild(labelSpan('Disposition'));
+                dispSpan.appendChild(document.createTextNode(label_(e.disposition)));
+                meta.appendChild(dispSpan);
             }
 
             td.appendChild(meta);

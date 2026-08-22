@@ -130,6 +130,9 @@ That verdict is deprecated: it combined the applicability judgment with the reme
 
 Files carrying the legacy verdict keep parsing until the 1.0 release; the entry behaves exactly like `verdict: affected` with `disposition: wont fix`, and `vulnlog validate` prints a deprecation warning.
 Writing commands leave the legacy verdict as written; migrating is a deliberate step.
+Reports never render `risk acceptable` either.
+An accepted risk appears as verdict `affected`, its severity, disposition `wont fix`, and state `accepted`, which is exactly what the file records.
+
 See xref:upgrade/migrate-risk-acceptable.adoc[Migrate from the 'risk acceptable' verdict] for the migration guide.
 
 [[severity-values]]

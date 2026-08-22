@@ -74,6 +74,7 @@ private fun reportingEntry(
     state: WorkState = WorkState.OPEN,
     ids: Set<VulnId> = setOf(primaryId),
     impact: Impact = Impact.NotAffected("vulnerable code not in execute path"),
+    disposition: Disposition? = null,
     analysis: String? = "not affected",
     reportFor: Set<Release> = setOf(releaseV1),
     fixedIn: Set<Release> = emptySet(),
@@ -84,6 +85,7 @@ private fun reportingEntry(
     ids = ids,
     shortDescription = shortDescription,
     impact = impact,
+    disposition = disposition,
     analysis = analysis,
     reportFor = reportFor,
     fixedIn = fixedIn,
@@ -144,7 +146,7 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.OPEN
             }
 
-            test("derives dismissed state from NotAffected verdict without resolution") {
+            test("derives not applicable state from NotAffected verdict without resolution") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
@@ -153,16 +155,16 @@ class ReportingTest :
 
                 val result = collectReportingEntries(file)
 
-                result.first().state shouldBe WorkState.DISMISSED
+                result.first().state shouldBe WorkState.NOT_APPLICABLE
             }
 
-            test("derives dismissed state from a wont fix disposition without resolution") {
+            test("derives accepted state from a wont fix disposition without resolution") {
                 val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX))
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))
 
                 val result = collectReportingEntries(file)
 
-                result.first().state shouldBe WorkState.DISMISSED
+                result.first().state shouldBe WorkState.ACCEPTED
             }
 
             test("derives open state from a will fix disposition without resolution") {
@@ -174,13 +176,48 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.OPEN
             }
 
-            test("derives acceptable risk impact from a wont fix disposition") {
+            test("derives affected impact and wont fix disposition from a wont fix entry") {
                 val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX))
                 val file = vulnlogFile(vulnerabilities = listOf(vuln))
 
                 val result = collectReportingEntries(file)
 
-                result.first().impact shouldBe Impact.AcceptableRisk(Severity.LOW)
+                result.first().impact shouldBe Impact.Affected(Severity.LOW)
+                result.first().disposition shouldBe Disposition.WONT_FIX
+            }
+
+            test("leaves disposition null when the intent is not stated") {
+                val vuln = vulnerability(verdict = Verdict.Affected(Severity.LOW))
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().disposition shouldBe null
+            }
+
+            test("leaves disposition null for a NotAffected verdict") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().disposition shouldBe null
+            }
+
+            test("keeps a wont fix entry resolved when a resolution is recorded") {
+                val vuln =
+                    vulnerability(
+                        verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
+                        resolution = Resolution(release = releaseV2),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+
+                val result = collectReportingEntries(file)
+
+                result.first().state shouldBe WorkState.RESOLVED
             }
 
             test("derives affected impact from a will fix disposition") {
@@ -205,7 +242,7 @@ class ReportingTest :
                 result.first().state shouldBe WorkState.RESOLVED
             }
 
-            test("NotAffected with resolution moves from dismissed to resolved and populates fixedIn") {
+            test("NotAffected with resolution moves from not applicable to resolved and populates fixedIn") {
                 val vuln =
                     vulnerability(
                         verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
@@ -325,6 +362,15 @@ class ReportingTest :
             test("keeps entries separate when analysis differs") {
                 val entry1 = reportingEntry(analysis = "not reachable")
                 val entry2 = reportingEntry(analysis = "mitigated by WAF")
+
+                val result = mergeReportingEntries(listOf(entry1, entry2))
+
+                result shouldHaveSize 2
+            }
+
+            test("keeps entries separate when disposition differs") {
+                val entry1 = reportingEntry(disposition = Disposition.WILL_FIX)
+                val entry2 = reportingEntry(disposition = Disposition.WONT_FIX)
 
                 val result = mergeReportingEntries(listOf(entry1, entry2))
 
