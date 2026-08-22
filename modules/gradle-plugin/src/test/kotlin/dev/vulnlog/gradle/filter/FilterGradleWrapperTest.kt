@@ -9,6 +9,7 @@ import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
@@ -98,6 +99,26 @@ class FilterGradleWrapperTest :
 
                 failure.message.orEmpty() shouldContain "Invalid verdict: bogus"
                 failure.message.orEmpty() shouldContain "Supported verdicts:"
+            }
+
+            test("hands back the resolved dispositions") {
+                val task = wrapperTask()
+                val request = FilterRequest(dispositions = setOf("wont fix"))
+
+                val filter = task.resolveFilterOrFail(request, listOf(twoReleaseFile()))
+
+                filter.dispositions shouldBe setOf(Disposition.WONT_FIX)
+            }
+
+            test("fails on a disposition Vulnlog does not define") {
+                val task = wrapperTask()
+                val request = FilterRequest(dispositions = setOf("bogus"))
+
+                val failure =
+                    shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }
+
+                failure.message.orEmpty() shouldContain "Invalid disposition: bogus"
+                failure.message.orEmpty() shouldContain "Supported dispositions:"
             }
 
             test("fails on a reporter Vulnlog does not support") {

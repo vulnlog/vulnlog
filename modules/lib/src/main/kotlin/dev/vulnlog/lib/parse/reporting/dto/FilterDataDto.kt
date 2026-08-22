@@ -9,4 +9,5 @@ data class FilterDataDto(
     val reporter: String?,
     val states: List<String>,
     val verdicts: List<String>,
+    val dispositions: List<String>,
 )

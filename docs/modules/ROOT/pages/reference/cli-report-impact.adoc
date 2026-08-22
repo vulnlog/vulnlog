@@ -47,6 +47,12 @@ Use multiple times to report several verdicts together.
 A verdict is what you recorded, so it does not change with `--as-of`.
 `--verdict "under investigation"` selects the same entries as `--state "under investigation"`; the other two each span several states, so `--verdict affected` covers `open`, `accepted`, and affected entries that are already resolved.
 
+| `--disposition <disposition>`
+| Filter on the xref:reference/verdicts-and-justifications.adoc#disposition-values[remediation intent] recorded for affected entries.
+One of `will fix`, `wont fix`.
+Use multiple times to report both.
+Affected entries that state no intent are not selected by either value.
+
 | `-`
 | Use as the file argument to read from stdin.
 

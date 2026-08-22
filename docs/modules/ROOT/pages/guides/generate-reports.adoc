@@ -51,6 +51,37 @@ vulnlog report impact frontend.vl.yaml backend.vl.yaml
 Wrote: vulnlog-impact-report.html
 ----
 
+=== Narrow the report
+
+Three flags choose which entries the report contains.
+Repeat a flag to include several values, and combine flags to narrow further.
+
+[source,bash]
+----
+vulnlog report impact vulnlog.yaml --state open --state accepted -o carried-risk.html
+Wrote: carried-risk.html
+----
+
+That report holds everything that still carries risk: the entries awaiting a fix and the ones whose risk the project decided to accept.
+
+[source,bash]
+----
+vulnlog report impact vulnlog.yaml --disposition "wont fix" -o accepted-risks.html
+Wrote: accepted-risks.html
+----
+
+That one is the list to bring to a periodic risk review, since it holds exactly the vulnerabilities the project chose to live with.
+
+[source,bash]
+----
+vulnlog report impact vulnlog.yaml --verdict "not affected" -o not-affected.html
+Wrote: not-affected.html
+----
+
+That one answers an auditor asking what was ruled out and why; each entry carries its justification and analysis.
+
+The report header names the filter it was generated with, so a narrowed report cannot be mistaken for the full backlog.
+
 === From Docker
 
 [source,bash,subs="attributes"]

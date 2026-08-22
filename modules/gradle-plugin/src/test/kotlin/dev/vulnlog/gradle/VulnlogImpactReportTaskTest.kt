@@ -324,6 +324,54 @@ class VulnlogImpactReportTaskTest :
                 dir.resolve("build/vulnlog/vulnlog-impact-report.html").readText() shouldNotContain "CVE-2026-1234"
             }
 
+            test("fails on a disposition Vulnlog does not define") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                report {
+                                    impact {
+                                        dispositions = setOf("bogus")
+                                    }
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Invalid disposition: bogus"
+            }
+
+            test("a disposition filter narrows the generated report") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                report {
+                                    impact {
+                                        dispositions = setOf("wont fix")
+                                    }
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogImpactReport").build()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-impact-report.html").readText() shouldNotContain "CVE-2026-1234"
+            }
+
             test("fails on an unknown tag") {
                 val dir =
                     gradleProject(

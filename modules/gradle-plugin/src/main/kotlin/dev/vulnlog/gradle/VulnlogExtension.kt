@@ -79,4 +79,5 @@ interface VulnlogImpactReportExtension {
     val tags: SetProperty<String>
     val states: SetProperty<String>
     val verdicts: SetProperty<String>
+    val dispositions: SetProperty<String>
 }

@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.filter
 
+import dev.vulnlog.lib.core.findDisposition
 import dev.vulnlog.lib.core.kind
 import dev.vulnlog.lib.core.reporting.findWorkState
 import dev.vulnlog.lib.model.Release
@@ -39,4 +40,5 @@ private fun ResolvedFilter.matches(vuln: VulnerabilityEntry): Boolean =
         (tags.isEmpty() || vuln.tags.any { it in tags }) &&
         (reporter == null || vuln.reports.any { it.reporter == reporter }) &&
         (states.isEmpty() || findWorkState(vuln) in states) &&
-        (verdicts.isEmpty() || vuln.verdict.kind() in verdicts)
+        (verdicts.isEmpty() || vuln.verdict.kind() in verdicts) &&
+        (dispositions.isEmpty() || findDisposition(vuln.verdict) in dispositions)

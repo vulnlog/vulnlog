@@ -51,6 +51,13 @@ private fun acceptedVulnerability() =
         verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
     )
 
+private fun willFixVulnerability() =
+    vulnerability(
+        first,
+        releases = listOf(v1),
+        verdict = Verdict.Affected(Severity.HIGH, Disposition.WILL_FIX),
+    )
+
 private fun notApplicableVulnerability() =
     vulnerability(
         cve("CVE-2024-0003"),
@@ -223,6 +230,82 @@ class ApplyFilterTest :
                 val result = file.applyFilter(filter)
 
                 result.vulnerabilities shouldHaveSize 0
+            }
+        }
+
+        context("dispositions") {
+
+            test("keeps only the vulnerabilities with the requested intent") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(willFixVulnerability(), acceptedVulnerability()))
+                val filter = ResolvedFilter(dispositions = setOf(Disposition.WONT_FIX))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe second
+            }
+
+            test("both dispositions select their union") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(willFixVulnerability(), acceptedVulnerability()))
+                val filter =
+                    ResolvedFilter(dispositions = setOf(Disposition.WILL_FIX, Disposition.WONT_FIX))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 2
+            }
+
+            test("an empty disposition set leaves every vulnerability in place") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), acceptedVulnerability()))
+                val filter = ResolvedFilter()
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 2
+            }
+
+            test("an affected entry with no stated intent is never selected") {
+                val file = vulnlogFile(vulnerabilities = listOf(openVulnerability()))
+                val filter =
+                    ResolvedFilter(dispositions = setOf(Disposition.WILL_FIX, Disposition.WONT_FIX))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 0
+            }
+
+            test("a not affected entry is never selected") {
+                val file = vulnlogFile(vulnerabilities = listOf(notApplicableVulnerability()))
+                val filter =
+                    ResolvedFilter(dispositions = setOf(Disposition.WILL_FIX, Disposition.WONT_FIX))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 0
+            }
+
+            test("a wont fix entry keeps its intent once the fix ships") {
+                val vuln =
+                    vulnerability(
+                        second,
+                        releases = listOf(v1),
+                        verdict = Verdict.Affected(Severity.LOW, Disposition.WONT_FIX),
+                        resolution = resolution("2.0.0"),
+                    )
+                val file = vulnlogFile(vulnerabilities = listOf(vuln))
+                val filter =
+                    ResolvedFilter(
+                        releases = setOf(v1, v2),
+                        states = setOf(WorkState.RESOLVED),
+                        dispositions = setOf(Disposition.WONT_FIX),
+                    )
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
             }
         }
 

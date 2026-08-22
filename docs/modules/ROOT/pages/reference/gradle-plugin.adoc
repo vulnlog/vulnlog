@@ -208,6 +208,7 @@ vulnlog {
             tags = setOf("frontend")                                                          // optional
             states = setOf("open", "accepted")                                                // optional
             verdicts = setOf("affected")                                                      // optional
+            dispositions = setOf("wont fix")                                                  // optional
         }
     }
 }
@@ -242,6 +243,11 @@ Combined with `asOf`, each entry is reported in the state it was in at that rele
 | All verdicts
 | Filter on xref:reference/verdicts-and-justifications.adoc[triage verdict]: `under investigation`, `affected`, `not affected`.
 A verdict is what you recorded, so it does not change with `asOf`.
+
+| `dispositions`
+| All dispositions
+| Filter on the remediation intent recorded for affected entries: `will fix`, `wont fix`.
+Affected entries that state no intent are not selected by either value.
 |===
 
 The task is cacheable and uses Gradle's up-to-date checking, so it is skipped when neither the files nor the filter settings have changed.

@@ -38,6 +38,7 @@ private class WrapperCommand(
         echo("reporter=${filter.reporter}", err = true)
         echo("states=${filter.states.joinToString(",")}", err = true)
         echo("verdicts=${filter.verdicts.joinToString(",")}", err = true)
+        echo("dispositions=${filter.dispositions.joinToString(",")}", err = true)
     }
 }
 
@@ -88,6 +89,15 @@ class FilterCliWrapperTest :
                 result.statusCode shouldBe 0
                 result.stderr shouldContain "AFFECTED"
                 result.stderr shouldContain "NOT_AFFECTED"
+            }
+
+            test("hands back the resolved dispositions") {
+                val request = FilterRequest(dispositions = setOf("wont fix"))
+
+                val result = resolve(request)
+
+                result.statusCode shouldBe 0
+                result.stderr shouldContain "WONT_FIX"
             }
 
             test("resolves an empty request to an inactive filter") {
@@ -171,6 +181,23 @@ class FilterCliWrapperTest :
 
                 result.stderr shouldContain "Invalid verdict: bogus"
                 result.stderr shouldContain "Supported verdicts: under investigation, affected, not affected"
+            }
+
+            test("fails with the invalid flag value exit code on an unknown disposition") {
+                val request = FilterRequest(dispositions = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+            }
+
+            test("reports the offending disposition and the dispositions Vulnlog defines") {
+                val request = FilterRequest(dispositions = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.stderr shouldContain "Invalid disposition: bogus"
+                result.stderr shouldContain "Supported dispositions: will fix, wont fix"
             }
         }
     })

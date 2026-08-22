@@ -16,6 +16,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
 import dev.vulnlog.lib.core.reporting.renderReportingCounts
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
@@ -63,6 +64,9 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
     @get:Input
     abstract val verdicts: SetProperty<String>
 
+    @get:Input
+    abstract val dispositions: SetProperty<String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -82,6 +86,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                 tags = tags.get(),
                 states = states.get(),
                 verdicts = verdicts.get(),
+                dispositions = dispositions.get(),
             )
         val filter = resolveFilterOrFail(request, vulnlogFiles)
 
@@ -96,6 +101,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                 reporter = filter.reporter?.canonical(),
                 states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
                 verdicts = VerdictKind.entries.filter { it in filter.verdicts }.map { it.canonical() },
+                dispositions = Disposition.entries.filter { it in filter.dispositions }.map { canonical(it) },
             )
         val inputNames = validated.map { it.inputDocument.filename }
 

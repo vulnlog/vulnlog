@@ -17,6 +17,23 @@ private val AFFECTED_VERDICT =
     |    severity: high
     """.trimMargin()
 
+private val WONT_FIX_VERDICT =
+    """
+    |    verdict: affected
+    |    severity: low
+    |    disposition: wont fix
+    """.trimMargin()
+
+private val WILL_FIX_VERDICT =
+    """
+    |    verdict: affected
+    |    severity: high
+    |    disposition: will fix
+    """.trimMargin()
+
+/** Clikt wraps option help to the terminal width, and the wrap points shift as flags are added. */
+private fun unwrapped(help: String): String = help.replace(Regex("\\s+"), " ")
+
 class ImpactReportCommandTest :
     FunSpec({
 
@@ -316,13 +333,11 @@ class ImpactReportCommandTest :
                 }
             }
 
-            // Clikt hard-wraps the option help, so multi word tokens cannot be matched as one string.
             test("lists the supported states in the help text") {
                 val result = ImpactReportCommand().test("--help")
 
-                result.stdout shouldContain "--state"
-                result.stdout shouldContain "Supported states:"
-                result.stdout shouldContain "accepted"
+                unwrapped(result.stdout) shouldContain
+                    "Supported states: under investigation, open, accepted, resolved, not applicable"
             }
         }
 
@@ -441,9 +456,117 @@ class ImpactReportCommandTest :
             test("lists the supported verdicts in the help text") {
                 val result = ImpactReportCommand().test("--help")
 
-                result.stdout shouldContain "--verdict"
-                result.stdout shouldContain "Supported verdicts:"
-                result.stdout shouldContain "affected"
+                unwrapped(result.stdout) shouldContain
+                    "Supported verdicts: under investigation, affected, not affected"
+            }
+        }
+
+        context("disposition filter") {
+
+            test("fails on a disposition Vulnlog does not define") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --disposition bogus")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid disposition: bogus"
+                    result.stderr shouldContain "Supported dispositions:"
+                    result.stderr shouldNotContain "dev.vulnlog"
+                }
+            }
+
+            test("rejects the hyphenated spelling") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --disposition wont-fix")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid disposition: wont-fix"
+                }
+            }
+
+            test("keeps an entry whose intent was asked for") {
+                withTempFile(content = vulnlogDocument(verdictBlock = WONT_FIX_VERDICT)) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} --disposition 'wont fix'",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("drops an affected entry that states no intent") {
+                withTempFile(content = vulnlogDocument(verdictBlock = AFFECTED_VERDICT)) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} " +
+                                    "--disposition 'will fix' --disposition 'wont fix'",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldNotContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("drops a not affected entry") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} --disposition 'wont fix'",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldNotContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("repeating the flag selects the union of both intents") {
+                withTempFile(
+                    prefix = "vulnlog-1x",
+                    content = vulnlogDocument(vulnId = "CVE-2026-1234", verdictBlock = WONT_FIX_VERDICT),
+                ) { f1 ->
+                    withTempFile(
+                        prefix = "vulnlog-2x",
+                        content = vulnlogDocument(vulnId = "CVE-2026-5678", verdictBlock = WILL_FIX_VERDICT),
+                    ) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ImpactReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath} " +
+                                        "--disposition 'will fix' --disposition 'wont fix'",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldContain "CVE-2026-1234"
+                            html shouldContain "CVE-2026-5678"
+                        }
+                    }
+                }
+            }
+
+            test("names the active disposition filter in the report banner") {
+                withTempFile(content = vulnlogDocument(verdictBlock = WONT_FIX_VERDICT)) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        ImpactReportCommand().test(
+                            "${input.absolutePath} -o ${output.absolutePath} --disposition 'wont fix'",
+                        )
+
+                        output.readText() shouldContain "\"dispositions\":[\"wont fix\"]"
+                    }
+                }
+            }
+
+            test("lists the supported dispositions in the help text") {
+                val result = ImpactReportCommand().test("--help")
+
+                unwrapped(result.stdout) shouldContain "Supported dispositions: will fix, wont fix"
             }
         }
 

@@ -20,6 +20,7 @@ import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
 import dev.vulnlog.lib.core.reporting.renderReportingCounts
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
@@ -87,6 +88,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
                 tags = filterOptions.tagsRequest,
                 states = impactFilterOptions.statesRequest,
                 verdicts = impactFilterOptions.verdictsRequest,
+                dispositions = impactFilterOptions.dispositionsRequest,
             )
         val filter = resolveFilterOrFail(request, files)
 
@@ -101,6 +103,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
                 reporter = filter.reporter?.canonical(),
                 states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
                 verdicts = VerdictKind.entries.filter { it in filter.verdicts }.map { it.canonical() },
+                dispositions = Disposition.entries.filter { it in filter.dispositions }.map { canonical(it) },
             )
         val inputNames = validated.map { it.inputDocument.filename }
 

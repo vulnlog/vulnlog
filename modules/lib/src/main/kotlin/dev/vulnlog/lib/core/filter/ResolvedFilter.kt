@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.filter
 
+import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
@@ -21,4 +22,5 @@ data class ResolvedFilter(
     val tags: Set<Tag> = emptySet(),
     val states: Set<WorkState> = emptySet(),
     val verdicts: Set<VerdictKind> = emptySet(),
+    val dispositions: Set<Disposition> = emptySet(),
 )
