@@ -1,11 +1,11 @@
 = Generate reports
 :page-aliases: overview-report.adoc
 
-Turn a Vulnlog file into a shareable vulnerability report.
+Turn a Vulnlog file into a shareable vulnerability impact report.
 Triage decisions live next to the code, but the people who need to see them (peers, auditors, customers, downstream teams) usually do not read YAML.
 The report presents the same source of truth as a single document, so the suppressed findings and the published report can never drift apart.
 
-image::vulnlog-reporting.svg[alt="Vulnlog workflow: the engineer maintains vulnlog.yaml, the Vulnlog CLI generates a shareable vulnerability report, and peers and customers consume it"]
+image::vulnlog-reporting.svg[alt="Vulnlog workflow: the engineer maintains vulnlog.yaml, the Vulnlog CLI generates a shareable vulnerability impact report, and peers and customers consume it"]
 
 == Prerequisites
 

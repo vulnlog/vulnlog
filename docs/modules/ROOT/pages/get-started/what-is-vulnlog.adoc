@@ -1,7 +1,7 @@
 = What is Vulnlog?
 
 Vulnlog is a developer-oriented approach to software supply chain security.
-It pairs a YAML file format with a CLI and a Gradle plugin that turn the file into software composition analysis (SCA) scanner ignore files and vulnerability reports.
+It pairs a YAML file format with a CLI and a Gradle plugin that turn the file into software composition analysis (SCA) scanner ignore files and vulnerability impact reports.
 The CLI is designed to run in CI pipelines and on developer machines.
 
 image::vulnlog-overview.svg[alt="How Vulnlog works: scanner reports a finding, engineer analyses the impact, Vulnlog generates report and ignore files"]
