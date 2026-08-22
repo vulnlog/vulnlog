@@ -10,6 +10,7 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.WorkState
 import io.kotest.assertions.throwables.shouldThrow
@@ -77,6 +78,26 @@ class FilterGradleWrapperTest :
 
                 failure.message.orEmpty() shouldContain "Invalid state: bogus"
                 failure.message.orEmpty() shouldContain "Supported states:"
+            }
+
+            test("hands back the resolved verdicts") {
+                val task = wrapperTask()
+                val request = FilterRequest(verdicts = setOf("affected", "under investigation"))
+
+                val filter = task.resolveFilterOrFail(request, listOf(twoReleaseFile()))
+
+                filter.verdicts shouldBe setOf(VerdictKind.AFFECTED, VerdictKind.UNDER_INVESTIGATION)
+            }
+
+            test("fails on a verdict Vulnlog does not define") {
+                val task = wrapperTask()
+                val request = FilterRequest(verdicts = setOf("bogus"))
+
+                val failure =
+                    shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }
+
+                failure.message.orEmpty() shouldContain "Invalid verdict: bogus"
+                failure.message.orEmpty() shouldContain "Supported verdicts:"
             }
 
             test("fails on a reporter Vulnlog does not support") {

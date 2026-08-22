@@ -9,6 +9,7 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.report.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -272,6 +273,78 @@ class ResolveFilterTest :
             }
         }
 
+        context("verdicts") {
+
+            test("resolves a single verdict token") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(verdicts = setOf("affected"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().verdicts shouldBe setOf(VerdictKind.AFFECTED)
+            }
+
+            test("resolves several verdict tokens cumulatively") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(verdicts = setOf("affected", "not affected"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().verdicts shouldBe setOf(VerdictKind.AFFECTED, VerdictKind.NOT_AFFECTED)
+            }
+
+            test("resolves the untriaged token") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(verdicts = setOf("under investigation"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().verdicts shouldBe setOf(VerdictKind.UNDER_INVESTIGATION)
+            }
+
+            test("leaves the dimension inactive when no verdict is requested") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest()
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.filter().verdicts shouldBe emptySet()
+            }
+
+            test("rejects a token Vulnlog does not define") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(verdicts = setOf("bogus"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems() shouldBe
+                    listOf(
+                        FilterProblem(
+                            "Invalid verdict: bogus",
+                            "Supported verdicts: under investigation, affected, not affected",
+                        ),
+                    )
+            }
+
+            test("names every unknown token in one problem") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(verdicts = setOf("bogus", "andere"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid verdict: andere, bogus")
+            }
+
+            test("rejects the retired risk acceptable verdict") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(verdicts = setOf("risk acceptable"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe listOf("Invalid verdict: risk acceptable")
+            }
+        }
+
         context("several failing dimensions") {
 
             test("reports every failing dimension in one outcome") {
@@ -292,6 +365,16 @@ class ResolveFilterTest :
 
                 outcome.problems().map { it.message } shouldBe
                     listOf("Invalid reporter: bogus", "Release not found: 9.9.9", "Invalid state: nope")
+            }
+
+            test("reports a bad verdict alongside a bad state") {
+                val files = listOf(threeReleaseFile())
+                val request = FilterRequest(states = setOf("nope"), verdicts = setOf("bogus"))
+
+                val outcome = resolveFilter(request, files)
+
+                outcome.problems().map { it.message } shouldBe
+                    listOf("Invalid state: nope", "Invalid verdict: bogus")
             }
         }
 
@@ -329,6 +412,14 @@ class ResolveFilterTest :
                 lines shouldBe listOf("state filter: not applicable")
             }
 
+            test("renders the verdicts under their canonical tokens") {
+                val filter = ResolvedFilter(verdicts = setOf(VerdictKind.NOT_AFFECTED))
+
+                val lines = renderFilterResolution(filter)
+
+                lines shouldBe listOf("verdict filter: not affected")
+            }
+
             test("renders one line per active dimension") {
                 val filter =
                     ResolvedFilter(
@@ -336,6 +427,7 @@ class ResolveFilterTest :
                         releases = setOf(release("1.0.0"), release("2.0.0")),
                         tags = setOf(tag("internal")),
                         states = setOf(WorkState.OPEN),
+                        verdicts = setOf(VerdictKind.AFFECTED),
                     )
 
                 val lines = renderFilterResolution(filter)
@@ -346,6 +438,7 @@ class ResolveFilterTest :
                         "tag filter matched tags: internal",
                         "reporter filter: trivy",
                         "state filter: open",
+                        "verdict filter: affected",
                     )
             }
 

@@ -15,6 +15,7 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.report.WorkState
 import io.kotest.core.spec.style.FunSpec
@@ -131,6 +132,97 @@ class ApplyFilterTest :
                 val result = file.applyFilter(filter)
 
                 result.vulnerabilities shouldHaveSize 1
+            }
+        }
+
+        context("verdicts") {
+
+            test("keeps only the vulnerabilities with the requested verdict") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), notApplicableVulnerability()))
+                val filter = ResolvedFilter(verdicts = setOf(VerdictKind.AFFECTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe first
+            }
+
+            test("several verdicts select their union") {
+                val file =
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(openVulnerability(), acceptedVulnerability(), notApplicableVulnerability()),
+                    )
+                val filter =
+                    ResolvedFilter(verdicts = setOf(VerdictKind.AFFECTED, VerdictKind.NOT_AFFECTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 3
+            }
+
+            test("an empty verdict set leaves every vulnerability in place") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), notApplicableVulnerability()))
+                val filter = ResolvedFilter()
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 2
+            }
+
+            test("the untriaged verdict selects the entries without one") {
+                val untriaged = vulnerability(cve("CVE-2024-0004"), releases = listOf(v1))
+                val file = vulnlogFile(vulnerabilities = listOf(openVulnerability(), untriaged))
+                val filter = ResolvedFilter(verdicts = setOf(VerdictKind.UNDER_INVESTIGATION))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe cve("CVE-2024-0004")
+            }
+
+            test("an affected verdict spans both the open and the accepted state") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), acceptedVulnerability()))
+                val filter = ResolvedFilter(verdicts = setOf(VerdictKind.AFFECTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities.map { it.id } shouldBe listOf(first, second)
+            }
+
+            test("a verdict ignores the release window that changes the state") {
+                val file = vulnlogFile(vulnerabilities = listOf(fixedVulnerability(listOf(v1), fixedIn = "3.0.0")))
+                val filter = ResolvedFilter(releases = setOf(v1, v2), verdicts = setOf(VerdictKind.AFFECTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+            }
+
+            test("a verdict and a state narrow each other") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), acceptedVulnerability()))
+                val filter =
+                    ResolvedFilter(states = setOf(WorkState.ACCEPTED), verdicts = setOf(VerdictKind.AFFECTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 1
+                result.vulnerabilities.first().id shouldBe second
+            }
+
+            test("a verdict and a state that cannot co-occur select nothing") {
+                val file =
+                    vulnlogFile(vulnerabilities = listOf(openVulnerability(), notApplicableVulnerability()))
+                val filter =
+                    ResolvedFilter(states = setOf(WorkState.OPEN), verdicts = setOf(VerdictKind.NOT_AFFECTED))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 0
             }
         }
 

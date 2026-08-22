@@ -121,5 +121,6 @@ private fun goldenFixture() =
                 tags = listOf("production"),
                 reporter = "trivy",
                 states = listOf("open", "accepted"),
+                verdicts = listOf("affected"),
             ),
     )

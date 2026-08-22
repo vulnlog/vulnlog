@@ -5,10 +5,12 @@ package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.parseReporter
+import dev.vulnlog.lib.core.verdictKindTokens
 import dev.vulnlog.lib.core.workStateTokens
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.WorkState
 
@@ -24,10 +26,13 @@ fun resolveFilter(
     val releases = resolveReleaseWindow(request.asOf, files)
     val tags = resolveTags(request.tags, files)
     val states = resolveStates(request.states)
-    val problems = reporter.problems + releases.problems + tags.problems + states.problems
+    val verdicts = resolveVerdicts(request.verdicts)
+    val problems = reporter.problems + releases.problems + tags.problems + states.problems + verdicts.problems
 
     return if (problems.isEmpty()) {
-        FilterOutcome.Resolved(ResolvedFilter(reporter.value, releases.value, tags.value, states.value))
+        FilterOutcome.Resolved(
+            ResolvedFilter(reporter.value, releases.value, tags.value, states.value, verdicts.value),
+        )
     } else {
         FilterOutcome.Rejected(problems)
     }
@@ -49,6 +54,9 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
         filter.states
             .takeIf { it.isNotEmpty() }
             ?.let { states -> "state filter: ${states.joinToString(", ") { it.canonical() }}" },
+        filter.verdicts
+            .takeIf { it.isNotEmpty() }
+            ?.let { verdicts -> "verdict filter: ${verdicts.joinToString(", ") { it.canonical() }}" },
     )
 
 /** One resolved dimension: the value to filter with, or the problems that stopped it resolving. */
@@ -117,6 +125,25 @@ private fun resolveStates(values: Set<String>): Dimension<Set<WorkState>> {
                 FilterProblem(
                     "Invalid state: ${unknown.joinToString(", ")}",
                     "Supported states: ${workStateTokens()}",
+                ),
+            ),
+        )
+    }
+    return Dimension(values.mapNotNull { byToken[it] }.toSet())
+}
+
+private fun resolveVerdicts(values: Set<String>): Dimension<Set<VerdictKind>> {
+    if (values.isEmpty()) return Dimension(emptySet())
+
+    val byToken = VerdictKind.entries.associateBy { it.canonical() }
+    val unknown = values.filterNot { it in byToken }.sorted()
+    if (unknown.isNotEmpty()) {
+        return Dimension(
+            emptySet(),
+            listOf(
+                FilterProblem(
+                    "Invalid verdict: ${unknown.joinToString(", ")}",
+                    "Supported verdicts: ${verdictKindTokens()}",
                 ),
             ),
         )

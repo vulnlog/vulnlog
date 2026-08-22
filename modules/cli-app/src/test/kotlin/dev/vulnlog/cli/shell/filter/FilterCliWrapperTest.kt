@@ -37,6 +37,7 @@ private class WrapperCommand(
         echo("tags=${filter.tags.joinToString(",") { it.value }}", err = true)
         echo("reporter=${filter.reporter}", err = true)
         echo("states=${filter.states.joinToString(",")}", err = true)
+        echo("verdicts=${filter.verdicts.joinToString(",")}", err = true)
     }
 }
 
@@ -77,6 +78,16 @@ class FilterCliWrapperTest :
                 result.statusCode shouldBe 0
                 result.stderr shouldContain "OPEN"
                 result.stderr shouldContain "NOT_APPLICABLE"
+            }
+
+            test("hands back the resolved verdicts") {
+                val request = FilterRequest(verdicts = setOf("affected", "not affected"))
+
+                val result = resolve(request)
+
+                result.statusCode shouldBe 0
+                result.stderr shouldContain "AFFECTED"
+                result.stderr shouldContain "NOT_AFFECTED"
             }
 
             test("resolves an empty request to an inactive filter") {
@@ -143,6 +154,23 @@ class FilterCliWrapperTest :
 
                 result.stderr shouldNotContain "dev.vulnlog"
                 result.stderr shouldNotContain "No enum constant"
+            }
+
+            test("fails with the invalid flag value exit code on an unknown verdict") {
+                val request = FilterRequest(verdicts = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+            }
+
+            test("reports the offending verdict and the verdicts Vulnlog defines") {
+                val request = FilterRequest(verdicts = setOf("bogus"))
+
+                val result = resolve(request)
+
+                result.stderr shouldContain "Invalid verdict: bogus"
+                result.stderr shouldContain "Supported verdicts: under investigation, affected, not affected"
             }
         }
     })
