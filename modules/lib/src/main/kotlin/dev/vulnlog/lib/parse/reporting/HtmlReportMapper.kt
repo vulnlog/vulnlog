@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.parse.reporting
 
-import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.report.Impact
@@ -50,7 +50,7 @@ object HtmlReportMapper {
             state = entry.state.name.lowercase(),
             verdict = verdictLabel(entry.impact),
             severity = severityLabel(entry.impact),
-            disposition = entry.disposition?.let(::dispositionLabel),
+            disposition = entry.disposition?.let { canonical(it) },
             verdictDetail = verdictDetail(entry.impact),
             shortDescription = entry.shortDescription,
             analysis = entry.analysis,
@@ -64,13 +64,6 @@ object HtmlReportMapper {
             is Impact.Affected -> "affected"
             is Impact.NotAffected -> "not affected"
             is Impact.Unknown -> null
-        }
-
-    // Spaced tokens, identical to what the user writes in the YAML.
-    private fun dispositionLabel(disposition: Disposition): String =
-        when (disposition) {
-            Disposition.WILL_FIX -> "will fix"
-            Disposition.WONT_FIX -> "wont fix"
         }
 
     private fun severityOf(impact: Impact): Severity? =

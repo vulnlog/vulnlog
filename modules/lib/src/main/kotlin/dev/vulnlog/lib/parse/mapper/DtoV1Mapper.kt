@@ -6,6 +6,8 @@ package dev.vulnlog.lib.parse.mapper
 import com.github.packageurl.MalformedPackageURLException
 import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.findDisposition
+import dev.vulnlog.lib.core.parseDisposition
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
@@ -313,13 +315,6 @@ object DtoV1Mapper {
             else -> throw IllegalArgumentException("Invalid severity: $severity")
         }
 
-    private fun parseDisposition(disposition: String): Disposition =
-        when (disposition) {
-            "will fix" -> Disposition.WILL_FIX
-            "wont fix" -> Disposition.WONT_FIX
-            else -> throw IllegalArgumentException("Invalid disposition: $disposition")
-        }
-
     private fun parseVexJustification(justification: String?): VexJustification =
         when (justification) {
             "component not present" -> COMPONENT_NOT_PRESENT
@@ -344,19 +339,7 @@ object DtoV1Mapper {
             Verdict.UnderInvestigation -> null
         }
 
-    private fun dispositionToString(verdict: Verdict): String? =
-        when (verdict) {
-            is Verdict.Affected -> {
-                when (verdict.disposition) {
-                    Disposition.WILL_FIX -> "will fix"
-                    Disposition.WONT_FIX -> "wont fix"
-                    null -> null
-                }
-            }
-
-            is Verdict.NotAffected -> null
-            Verdict.UnderInvestigation -> null
-        }
+    private fun dispositionToString(verdict: Verdict): String? = findDisposition(verdict)?.let { canonical(it) }
 
     private fun justificationToString(verdict: Verdict): String? =
         when (verdict) {
