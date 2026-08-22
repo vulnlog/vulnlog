@@ -113,3 +113,4 @@ Open the generated HTML file in a browser and check the header: it names the inp
 * xref:reference/cli-report-impact.adoc[vulnlog report impact] documents every flag and the report contents in detail.
 * xref:concepts/vulnerability-states.adoc[Vulnerability states] defines the state model the report presents.
 * xref:get-started/quickstart-report.adoc[Quickstart: read the impact report] teaches report reading to non-developers.
+* xref:guides/write-release-notes.adoc[Write release notes] covers the changelog report, which lists what each release fixed.
