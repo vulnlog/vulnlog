@@ -326,6 +326,127 @@ class ImpactReportCommandTest :
             }
         }
 
+        context("verdict filter") {
+
+            test("fails on a verdict Vulnlog does not define") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --verdict bogus")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid verdict: bogus"
+                    result.stderr shouldContain "Supported verdicts:"
+                    result.stderr shouldNotContain "dev.vulnlog"
+                }
+            }
+
+            test("rejects the retired risk acceptable verdict") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --verdict 'risk acceptable'")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Invalid verdict: risk acceptable"
+                }
+            }
+
+            test("keeps an entry whose verdict was asked for") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} --verdict 'not affected'",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("drops an entry with a verdict that was not asked for") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} -o ${output.absolutePath} --verdict affected",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldNotContain "CVE-2026-1234"
+                    }
+                }
+            }
+
+            test("repeating the flag selects the union of both verdicts") {
+                withTempFile(
+                    prefix = "vulnlog-1x",
+                    content = vulnlogDocument(vulnId = "CVE-2026-1234"),
+                ) { f1 ->
+                    withTempFile(
+                        prefix = "vulnlog-2x",
+                        content = vulnlogDocument(vulnId = "CVE-2026-5678", verdictBlock = AFFECTED_VERDICT),
+                    ) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ImpactReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath} " +
+                                        "--verdict affected --verdict 'not affected'",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldContain "CVE-2026-1234"
+                            html shouldContain "CVE-2026-5678"
+                        }
+                    }
+                }
+            }
+
+            test("a verdict and a state narrow each other") {
+                withTempFile(
+                    prefix = "vulnlog-1x",
+                    content = vulnlogDocument(vulnId = "CVE-2026-1234"),
+                ) { f1 ->
+                    withTempFile(
+                        prefix = "vulnlog-2x",
+                        content = vulnlogDocument(vulnId = "CVE-2026-5678", verdictBlock = AFFECTED_VERDICT),
+                    ) { f2 ->
+                        withTempFile(prefix = "report", suffix = ".html") { output ->
+                            val result =
+                                ImpactReportCommand().test(
+                                    "${f1.absolutePath} ${f2.absolutePath} -o ${output.absolutePath} " +
+                                        "--verdict affected --state open",
+                                )
+
+                            result.statusCode shouldBe 0
+                            val html = output.readText()
+                            html shouldNotContain "CVE-2026-1234"
+                            html shouldContain "CVE-2026-5678"
+                        }
+                    }
+                }
+            }
+
+            test("names the active verdict filter in the report banner") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".html") { output ->
+                        ImpactReportCommand().test(
+                            "${input.absolutePath} -o ${output.absolutePath} --verdict 'not affected'",
+                        )
+
+                        output.readText() shouldContain "\"verdicts\":[\"not affected\"]"
+                    }
+                }
+            }
+
+            test("lists the supported verdicts in the help text") {
+                val result = ImpactReportCommand().test("--help")
+
+                result.stdout shouldContain "--verdict"
+                result.stdout shouldContain "Supported verdicts:"
+                result.stdout shouldContain "affected"
+            }
+        }
+
         context("filter validation") {
 
             test("fails on an unknown reporter") {

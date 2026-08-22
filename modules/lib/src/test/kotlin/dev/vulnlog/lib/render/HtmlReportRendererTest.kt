@@ -22,7 +22,14 @@ import java.time.Instant
 private val defaultProject = Project("Acme Corp", "Acme Web App", "Security Team")
 private val defaultInstant: Instant = Instant.parse("2026-01-15T10:30:00Z")
 private const val DEFAULT_VERSION = "1.2.3"
-private val emptyFilter = FilterDataDto(asOf = null, tags = emptyList(), reporter = null, states = emptyList())
+private val emptyFilter =
+    FilterDataDto(
+        asOf = null,
+        tags = emptyList(),
+        reporter = null,
+        states = emptyList(),
+        verdicts = emptyList(),
+    )
 
 private fun entry(
     primaryId: VulnId = VulnId.Cve("CVE-2026-1234"),
@@ -154,6 +161,7 @@ class HtmlReportRendererTest :
                             tags = listOf("frontend", "production"),
                             reporter = "trivy",
                             states = listOf("open"),
+                            verdicts = listOf("affected"),
                         ),
                 )
 
@@ -161,6 +169,7 @@ class HtmlReportRendererTest :
             html shouldContain "frontend"
             html shouldContain "trivy"
             html shouldContain "\"states\":[\"open\"]"
+            html shouldContain "\"verdicts\":[\"affected\"]"
         }
 
         test("includes verdictDetail for not-affected entries") {

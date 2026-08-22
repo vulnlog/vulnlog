@@ -207,6 +207,7 @@ vulnlog {
             asOf = "1.0.0"                                                                    // optional
             tags = setOf("frontend")                                                          // optional
             states = setOf("open", "accepted")                                                // optional
+            verdicts = setOf("affected")                                                      // optional
         }
     }
 }
@@ -236,6 +237,11 @@ vulnlog {
 | All states
 | Filter on xref:concepts/vulnerability-states.adoc[vulnerability state]: `under investigation`, `open`, `accepted`, `resolved`, `not applicable`.
 Combined with `asOf`, each entry is reported in the state it was in at that release.
+
+| `verdicts`
+| All verdicts
+| Filter on xref:reference/verdicts-and-justifications.adoc[triage verdict]: `under investigation`, `affected`, `not affected`.
+A verdict is what you recorded, so it does not change with `asOf`.
 |===
 
 The task is cacheable and uses Gradle's up-to-date checking, so it is skipped when neither the files nor the filter settings have changed.

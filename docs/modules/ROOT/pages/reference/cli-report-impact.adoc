@@ -40,6 +40,13 @@ Use multiple times to report several states together.
 Combined with `--as-of`, each entry is reported in the state it was in at that release, so `--as-of 1.1.0 --state open` shows what was still open when 1.1.0 shipped.
 Naming a state no entry is in is valid and produces an empty report.
 
+| `--verdict <verdict>`
+| Filter on xref:reference/verdicts-and-justifications.adoc[triage verdict].
+One of `under investigation`, `affected`, `not affected`.
+Use multiple times to report several verdicts together.
+A verdict is what you recorded, so it does not change with `--as-of`.
+`--verdict "under investigation"` selects the same entries as `--state "under investigation"`; the other two each span several states, so `--verdict affected` covers `open`, `accepted`, and affected entries that are already resolved.
+
 | `-`
 | Use as the file argument to read from stdin.
 

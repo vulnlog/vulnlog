@@ -8,4 +8,5 @@ data class FilterDataDto(
     val tags: List<String>,
     val reporter: String?,
     val states: List<String>,
+    val verdicts: List<String>,
 )

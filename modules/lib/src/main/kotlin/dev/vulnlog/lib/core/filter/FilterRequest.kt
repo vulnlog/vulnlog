@@ -9,4 +9,5 @@ data class FilterRequest(
     val asOf: String? = null,
     val tags: Set<String> = emptySet(),
     val states: Set<String> = emptySet(),
+    val verdicts: Set<String> = emptySet(),
 )
