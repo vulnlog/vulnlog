@@ -25,22 +25,22 @@ understands:
 
 - **Your team** the analysis, verdict, and justification live in the repository and are reviewed in pull requests, so
   decisions are durable and never re-litigated.
-- **Your scanners** generate Trivy, Snyk, and generic suppression/ignore files (suppressions can be temporary and
-  expire automatically; machine-readable VEX is planned) so CI stays green on triaged findings.
-- **Your stakeholders and customers** a published HTML Vulnerability Report answers "are you affected by X?" without
-  pulling engineers off their work.
+- **Your scanners** generate Trivy, Snyk, and generic suppression/ignore files (suppressions can be temporary and expire
+  automatically; machine-readable VEX is planned) so CI stays green on triaged findings.
+- **Your stakeholders and customers** a published HTML Vulnerability Impact Report answers "are you affected by X?"
+  without pulling engineers off their work.
 
 And because every verdict is structured data with a recorded history and a CLI to read it, Vulnlog is the foundation for
 what comes next: automated, AI-assisted vulnerability triage in your CI pipeline.
 
 ## Who is Vulnlog for?
 
-| Audience                        | What Vulnlog gives them                                                                                                                 |
-|---------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|
-| **Software maintainers**        | Systematic, consistent triage of reported vulnerabilities, with the analysis and impact verdict recorded next to the code.              |
-| **Product managers and owners** | The HTML Vulnerability Report with every finding and verdict in one place, to plan fix releases and track the product's security state. |
-| **Customers and consumers**     | The published report, showing which vulnerabilities affect the software, their impact, and the version that fixes them.                 |
-| **SCA scanners** (Snyk, Trivy)  | Up-to-date suppression/ignore files so CI scans stay green and known or irrelevant findings are not re-reported.                        |
+| Audience                        | What Vulnlog gives them                                                                                                                        |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Software maintainers**        | Systematic, consistent triage of reported vulnerabilities, with the analysis and impact verdict recorded next to the code.                     |
+| **Product managers and owners** | The HTML Vulnerability Impact Report with every finding and verdict in one place, to plan fix releases and track the product's security state. |
+| **Customers and consumers**     | The published report, showing which vulnerabilities affect the software, their impact, and the version that fixes them.                        |
+| **SCA scanners** (Snyk, Trivy)  | Up-to-date suppression/ignore files so CI scans stay green and known or irrelevant findings are not re-reported.                               |
 
 ## Why use Vulnlog?
 
@@ -51,7 +51,7 @@ researchers disclose Log4Shell and Acme's next scan flags it as critical, Vulnlo
 1. An engineer reviews the impact on the Wiki, records the analysis and verdict, and adds a temporary three-day
    suppression to the **Vulnlog YAML** file in the Git repository.
 2. The next CI run invokes the **Vulnlog CLI**, regenerating the Trivy and Snyk **suppression/ignore files** and a fresh
-   HTML **Vulnerability Report**.
+   HTML **Vulnerability Impact Report**.
 3. The product manager reads the report and plans a release that contains the patched Log4J dependency.
 4. Acme's customers raise a support ticket; the support team answers it straight from the published report, without
    pulling in the engineers.
@@ -92,8 +92,8 @@ plugins {
 
 Native binaries and the JVM distribution are also published on the
 [releases page](https://github.com/vulnlog/vulnlog/releases). See the
-[installation docs](https://vulnlog.dev/docs/vulnlog/0.14.0/installation.html) for all
-options, including build from source.
+[installation docs](https://vulnlog.dev/docs/vulnlog/0.14.0/installation.html) for all options, including build from
+source.
 
 ### Scaffold a new Vulnlog file
 
@@ -125,8 +125,8 @@ vulnerabilities:
 
   - id: CVE-2026-1234
     description: Remote code execution in example-lib
-    releases: [1.0.0]
-    packages: ["pkg:npm/example-lib@2.3.0"]
+    releases: [ 1.0.0 ]
+    packages: [ "pkg:npm/example-lib@2.3.0" ]
     reports:
       - reporter: trivy
     analysis: >-
@@ -159,8 +159,8 @@ vulnlog report impact vulnlog.yaml
 ## Community
 
 Have a question or an idea? Join the conversation in
-[GitHub Discussions](https://github.com/vulnlog/vulnlog/discussions): ask in Q&A, propose features,
-or share how you use Vulnlog.
+[GitHub Discussions](https://github.com/vulnlog/vulnlog/discussions): ask in Q&A, propose features, or share how you use
+Vulnlog.
 
 [![Bluesky](https://img.shields.io/bluesky/followers/vulnlog.bsky.social?style=flat&logo=bluesky&labelColor=white&color=blue)](https://bsky.app/profile/vulnlog.bsky.social)
 [![Mastodon](https://img.shields.io/mastodon/follow/114149693629631038?domain=infosec.exchange&style=flat&logo=mastodon&labelColor=white&color=blue)](https://infosec.exchange/@vulnlog)
@@ -168,8 +168,8 @@ or share how you use Vulnlog.
 ## Contributing
 
 Contributions are welcome! Whether it is a bug report, a docs fix, or a new feature -- check out
-[CONTRIBUTING.md](CONTRIBUTING.md) to get started. If you are looking for something to pick up, look for issues
-labelled **good first issue**.
+[CONTRIBUTING.md](CONTRIBUTING.md) to get started. If you are looking for something to pick up, look for issues labelled
+**good first issue**.
 
 ⭐ If you find Vulnlog useful, giving it a star on GitHub helps others discover the project.
 

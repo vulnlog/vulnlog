@@ -91,7 +91,7 @@ gradlePlugin {
                 Supply chain security as code. Manage vulnerability records next to the
                 source, validate Vulnlog YAML files, generate suppression files for
                 downstream scanners (Trivy, Snyk, generic format), and produce
-                self-contained HTML vulnerability reports.
+                self-contained HTML vulnerability impact reports.
                 """.trimIndent()
             tags =
                 listOf(
