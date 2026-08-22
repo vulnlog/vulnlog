@@ -1,0 +1,154 @@
+= vulnlog report changelog
+
+Generates a report of which vulnerabilities each release fixed.
+The report groups entries by the release that shipped the fix, newest release first.
+Use it to write the security part of release notes and changelogs.
+
+[source]
+----
+vulnlog report changelog <file...> [filter flags] [--format <format>] [--brief] [-o <path>]
+----
+
+Multiple files are merged and must share the same project metadata.
+Use `-` as a file argument to read from stdin.
+The report goes to stdout, so it can be piped; `-o <path>` writes it to a file instead.
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <path>`
+| Output file path, or `-` to write to stdout. Defaults to stdout.
+
+| `--format <format>`
+| Output format. One of `text`, `markdown`. Defaults to `text`.
+`text` reads in a terminal.
+`markdown` renders one section per release in the Keep a Changelog layout, ready to paste under a heading the changelog file already has.
+
+| `--brief`
+| List identifiers and severity only. Descriptions, resolution notes, and references are left out.
+
+| `--fixed-in <release-id>`
+| Report only the vulnerabilities this release shipped a fix for.
+
+| `--as-of <release-id>`
+| Report the state as of this release, including every earlier release.
+A fix that ships later is left out, so the report holds what the chosen release actually shipped.
+
+| `--tag <text>`
+| Filter on tags. Use multiple times to filter on multiple tags.
+
+| `--reporter <value>`
+| Filter on reporter.
+
+| `-`
+| Use as the file argument to read from stdin.
+
+|===
+
+== Report contents
+
+An entry appears once it records a `resolution`, under the release named by `resolution.in`.
+Two entries never appear:
+
+* An entry with no `resolution`, because nothing has shipped for it yet.
+* An entry whose fix shipped in a release it was reported for, because that version never reached anyone under the vulnerable code.
+
+Each release section carries the release identifier, its publication date, and a summary line stating how many vulnerabilities the release fixed and how many of each severity.
+A release with no publication date is marked `unreleased`.
+
+Each entry carries its primary identifier, its severity, and any alias, named alongside the identifier it belongs to.
+Unless `--brief` is given, the entry also carries the `name` and `description` of the vulnerability and the `note` and `ref` recorded on the resolution.
+
+An entry with the verdict `not affected` appears when it records a resolution, marked `not affected` and contributing no severity.
+The dependency was updated even though the project was never exposed.
+
+The report is only as complete as the entries behind it.
+A `resolution` with `in` puts an entry in the report; a `description` and a `resolution.note` turn it into a sentence that needs no editing.
+
+== Examples
+
+.Report every release that shipped a fix
+[source]
+----
+vulnlog report changelog acme-web-app.vl.yaml
+Acme Corp / Acme Web App
+
+1.2.0 (unreleased)
+  1 fixed: 1 high
+  CVE-2026-7791 (high) SQL injection in query-parser
+    fix: Updated query-parser from 5.2.1 to 5.3.0
+    ref: https://jira.example.com/browse/SEC-201
+
+1.1.0 (2026-03-20)
+  1 fixed: 1 critical
+  CVE-2025-9876 (critical) Authentication bypass in auth-middleware
+    fix: Updated auth-middleware from 3.0.2 to 3.1.0
+    ref: https://jira.example.com/browse/SEC-158
+----
+
+.Report one release as Markdown
+[source]
+----
+vulnlog report changelog acme-web-app.vl.yaml --fixed-in 1.1.0 --format markdown
+## [1.1.0] - 2026-03-20
+
+### Security
+
+_1 fixed: 1 critical_
+
+- **CVE-2025-9876** (critical): Authentication bypass in auth-middleware. Updated auth-middleware from 3.0.2 to 3.1.0. (https://jira.example.com/browse/SEC-158)
+----
+
+.Append the release section to a changelog file
+[source]
+----
+vulnlog report changelog vulnlog.yaml --fixed-in 1.1.0 --format markdown >> CHANGELOG.md
+----
+
+.List the identifiers without the detail
+[source]
+----
+vulnlog report changelog acme-web-app.vl.yaml --brief
+Acme Corp / Acme Web App
+
+1.2.0 (unreleased)
+  1 fixed: 1 high
+  CVE-2026-7791 (high)
+
+1.1.0 (2026-03-20)
+  1 fixed: 1 critical
+  CVE-2025-9876 (critical)
+----
+
+.Merge several Vulnlog files of one project
+[source]
+----
+vulnlog report changelog frontend.vl.yaml backend.vl.yaml
+----
+
+.Write the report to a file
+[source]
+----
+vulnlog report changelog vulnlog.yaml --format markdown -o security-changelog.md
+Wrote: security-changelog.md
+----
+
+== When the command fails
+
+The command exits non-zero on bad input.
+It never fails because a release fixed vulnerabilities.
+
+* No entry records a resolution: the command prints `info: no fixed vulnerabilities to report` and exits `0`.
+* Unknown `--fixed-in`, `--as-of`, `--reporter`, or `--tag`: the command lists the known values and exits `5`.
+* Input files with different project metadata: the command exits `2`.
+* Unknown `--format`: the command lists the valid values and exits `1`.
+
+See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
+
+== See also
+
+- xref:guides/write-release-notes.adoc[Write release notes]
+- xref:guides/record-a-resolution.adoc[Record a resolution]
+- xref:reference/cli-report-impact.adoc[vulnlog report impact]
+- xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]

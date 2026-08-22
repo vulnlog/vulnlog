@@ -1,0 +1,112 @@
+= Write release notes
+
+State which vulnerabilities a release fixed, without reading the Vulnlog file entry by entry.
+A release is going out and the notes must name the security fixes it carries.
+The changelog report answers that from the triage that is already recorded.
+
+== Prerequisites
+
+* A Vulnlog file whose `releases` section lists the release you are cutting.
+* Recorded resolutions for the fixes that shipped (see xref:guides/record-a-resolution.adoc[Record a resolution]).
+
+== Generate the report
+
+[source,bash]
+----
+vulnlog report changelog vulnlog.yaml
+----
+
+The report groups the fixed vulnerabilities by the release that shipped them, newest release first.
+It goes to stdout, so it can be piped or redirected.
+
+== Read the answer
+
+Each section is one release: the version, its publication date, and how many vulnerabilities it fixed at which severity.
+A release with no `published_at` date is marked `unreleased`, which is the release you are about to cut.
+
+Under each release stands one line per vulnerability, most severe first.
+The line names the primary identifier, the severity, and the description.
+Aliases stand next to the identifier they belong to, so the number of lines is the number of vulnerabilities fixed.
+
+Two kinds of entry never appear.
+An entry without a `resolution` has not shipped anything, so it belongs in the impact report instead.
+An entry whose fix shipped in a release it was reported for never reached anyone, so there is nothing to announce.
+
+== Record what makes the report useful
+
+The report carries what the entries carry.
+Three fields do the work:
+
+`resolution.in`:: Puts the entry in the report, under that release.
+`description`:: Says what the vulnerability was, in the reader's language.
+`resolution.note`:: Says what was done about it, for example `Updated query-parser from 5.2.1 to 5.3.0`.
+
+With all three recorded, a report line is a finished release note:
+
+[source]
+----
+CVE-2026-7791 (high) SQL injection in query-parser
+  fix: Updated query-parser from 5.2.1 to 5.3.0
+  ref: https://jira.example.com/browse/SEC-201
+----
+
+Without them, the line holds an identifier and a severity, and the wording has to be invented at release time.
+Recording the resolution properly during triage is what removes that step.
+
+== Variants
+
+=== Paste into a changelog file
+
+`--format markdown` renders the Keep a Changelog layout, so the sections drop under a heading the changelog file already has:
+
+[source,bash]
+----
+vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0 --format markdown >> CHANGELOG.md
+----
+
+The project heading is left out on purpose; only the release sections are written.
+
+=== Report one release
+
+`--fixed-in` selects the release whose fixes you are announcing:
+
+[source,bash]
+----
+vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0
+----
+
+`--as-of` takes the other view: everything fixed up to and including a release, with later fixes left out.
+
+=== List the identifiers only
+
+For an advisory that carries its own wording, `--brief` reduces each line to an identifier and a severity:
+
+[source,bash]
+----
+vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0 --brief
+----
+
+=== Merge several files
+
+Projects with xref:guides/organize-files-across-branches.adoc[several Vulnlog files] report as one; the files must share the same project metadata:
+
+[source,bash]
+----
+vulnlog report changelog frontend.vl.yaml backend.vl.yaml
+----
+
+A release declared in both files appears once, and a vulnerability recorded in both appears once.
+
+== Verify
+
+Run the report with `--fixed-in` for the release you are cutting and count the lines.
+The count is the number of security fixes the release notes must mention.
+
+Under the Cyber Resilience Act, a manufacturer must inform users about fixed vulnerabilities in the products it places on the market.
+A release-scoped changelog report is that statement, generated from the record rather than assembled by hand.
+
+== Related
+
+* xref:reference/cli-report-changelog.adoc[vulnlog report changelog] documents every flag and the report contents in detail.
+* xref:guides/record-a-resolution.adoc[Record a resolution] covers the fields this report reads.
+* xref:guides/generate-reports.adoc[Generate reports] covers the impact report, which answers what still affects the project.

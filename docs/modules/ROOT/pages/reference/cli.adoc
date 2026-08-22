@@ -8,7 +8,7 @@ vulnlog <command> <file...> [flags]
 
 Every command except `init` requires one or more Vulnlog files as positional arguments.
 Read-only commands like `validate` accept multiple files.
-`report impact` accepts multiple files; they are merged and must share the same project metadata.
+The `report` commands accept multiple files; they are merged and must share the same project metadata.
 `suppress` operates on a single file.
 No automatic file detection.
 
@@ -66,6 +66,8 @@ Available on `report` and `suppress` commands.
 | Filter by reporter type.
 |===
 
+`report changelog` additionally accepts `--fixed-in <release-id>`, which selects the release a fix shipped in.
+
 == Commands
 
 [cols="1,3"]
@@ -86,6 +88,9 @@ Available on `report` and `suppress` commands.
 
 | xref:reference/cli-report-impact.adoc[report impact]
 | Generate an HTML impact report.
+
+| xref:reference/cli-report-changelog.adoc[report changelog]
+| Report which vulnerabilities each release fixed.
 
 | xref:reference/cli-add.adoc[modify add]
 | Add a new vulnerability entry to one or more Vulnlog files.

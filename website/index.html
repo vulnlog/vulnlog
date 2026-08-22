@@ -233,6 +233,11 @@
                         Stop maintaining suppression configs by hand.</p>
                 </div>
                 <div class="card">
+                    <h3>Reports for every audience</h3>
+                    <p>Generate an HTML impact report showing what affects the project, and a changelog report listing
+                        which vulnerabilities each release fixed, ready to paste into your release notes.</p>
+                </div>
+                <div class="card">
                     <h3>Multi-release tracking</h3>
                     <p>Track vulnerabilities across multiple product releases. Filter by release, tag, or reporter to
                         get
@@ -314,6 +319,10 @@
                     # Generate an HTML vulnerability impact report
                     $ vulnlog report impact vulnlog.yaml
                     Wrote: vulnlog-impact-report.html
+
+                    # List what a release fixed, ready for the release notes
+                    $ vulnlog report changelog vulnlog.yaml --fixed-in 1.0.0 --format markdown
+                    ## [1.0.0] - 2026-01-15
                 </script>
             </div>
         </div>
