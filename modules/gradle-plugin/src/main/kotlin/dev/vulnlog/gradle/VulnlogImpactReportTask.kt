@@ -19,6 +19,7 @@ import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.report.ReportingEntry
+import dev.vulnlog.lib.model.report.WorkState
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
@@ -55,6 +56,9 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
     @get:Input
     abstract val tags: SetProperty<String>
 
+    @get:Input
+    abstract val states: SetProperty<String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -67,7 +71,13 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
         val vulnlogFiles: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
         val project = sharedProjectOrFail(vulnlogFiles)
 
-        val request = FilterRequest(reporter.orNull, asOf.orNull, tags.get())
+        val request =
+            FilterRequest(
+                reporter = reporter.orNull,
+                asOf = asOf.orNull,
+                tags = tags.get(),
+                states = states.get(),
+            )
         val filter = resolveFilterOrFail(request, vulnlogFiles)
 
         val reported: List<ReportingEntry> = vulnlogFiles.flatMap { collectReportingEntries(it.applyFilter(filter)) }
@@ -79,6 +89,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                 asOf = asOf.orNull,
                 tags = filter.tags.map(Tag::value).sorted(),
                 reporter = filter.reporter?.canonical(),
+                states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
             )
         val inputNames = validated.map { it.inputDocument.filename }
 

@@ -228,6 +228,54 @@ class VulnlogImpactReportTaskTest :
                 result.output shouldContain "Known releases: 1.0.0"
             }
 
+            test("fails on a state Vulnlog does not define") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                report {
+                                    impact {
+                                        states = setOf("bogus")
+                                    }
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Invalid state: bogus"
+            }
+
+            test("a state filter narrows the generated report") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                report {
+                                    impact {
+                                        states = setOf("open")
+                                    }
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogImpactReport").build()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-impact-report.html").readText() shouldNotContain "CVE-2026-1234"
+            }
+
             test("fails on an unknown tag") {
                 val dir =
                     gradleProject(

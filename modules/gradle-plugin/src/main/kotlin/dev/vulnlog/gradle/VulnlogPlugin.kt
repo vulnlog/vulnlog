@@ -55,6 +55,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.reporter.convention(extension.report.impact.reporter)
             task.asOf.convention(extension.report.impact.asOf)
             task.tags.convention(extension.report.impact.tags)
+            task.states.convention(extension.report.impact.states)
             task.outputFile.convention(
                 extension.report.impact.outputFile.orElse(
                     project.layout.buildDirectory.file("vulnlog/vulnlog-impact-report.html"),

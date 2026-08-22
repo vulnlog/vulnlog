@@ -8,4 +8,5 @@ data class FilterRequest(
     val reporter: String? = null,
     val asOf: String? = null,
     val tags: Set<String> = emptySet(),
+    val states: Set<String> = emptySet(),
 )

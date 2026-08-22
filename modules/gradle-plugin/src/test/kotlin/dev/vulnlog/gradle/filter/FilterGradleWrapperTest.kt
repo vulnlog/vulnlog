@@ -11,6 +11,7 @@ import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.report.WorkState
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -56,6 +57,26 @@ class FilterGradleWrapperTest :
 
                 filter.tags shouldBe setOf(tag("internal"))
                 filter.reporter shouldBe ReporterType.TRIVY
+            }
+
+            test("hands back the resolved states") {
+                val task = wrapperTask()
+                val request = FilterRequest(states = setOf("open", "not applicable"))
+
+                val filter = task.resolveFilterOrFail(request, listOf(twoReleaseFile()))
+
+                filter.states shouldBe setOf(WorkState.OPEN, WorkState.NOT_APPLICABLE)
+            }
+
+            test("fails on a state Vulnlog does not define") {
+                val task = wrapperTask()
+                val request = FilterRequest(states = setOf("bogus"))
+
+                val failure =
+                    shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }
+
+                failure.message.orEmpty() shouldContain "Invalid state: bogus"
+                failure.message.orEmpty() shouldContain "Supported states:"
             }
 
             test("fails on a reporter Vulnlog does not support") {

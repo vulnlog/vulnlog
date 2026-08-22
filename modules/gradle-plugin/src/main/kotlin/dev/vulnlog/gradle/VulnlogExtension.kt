@@ -77,4 +77,5 @@ interface VulnlogImpactReportExtension {
     val reporter: Property<String>
     val asOf: Property<String>
     val tags: SetProperty<String>
+    val states: SetProperty<String>
 }

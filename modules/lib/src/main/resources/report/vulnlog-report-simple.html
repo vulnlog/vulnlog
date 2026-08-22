@@ -635,6 +635,7 @@
             if (f.asOf) parts.push('as of=' + f.asOf);
             if (f.tags && f.tags.length > 0) parts.push('tags=' + f.tags.join(','));
             if (f.reporter) parts.push('reporter=' + f.reporter);
+            if (f.states && f.states.length > 0) parts.push('state=' + f.states.join(','));
             return parts.join(' · ');
         }
 
