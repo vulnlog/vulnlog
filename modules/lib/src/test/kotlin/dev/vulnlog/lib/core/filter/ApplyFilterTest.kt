@@ -17,7 +17,7 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VexJustification
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.nulls.shouldBeNull
@@ -67,6 +67,44 @@ private fun notApplicableVulnerability() =
 
 class ApplyFilterTest :
     FunSpec({
+
+        context("fixed-in") {
+
+            test("keeps only the vulnerabilities whose fix shipped in that release") {
+                val file =
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(
+                                fixedVulnerability(listOf(v1), "2.0.0"),
+                                vulnerability(second, releases = listOf(v1), resolution = resolution("3.0.0")),
+                            ),
+                    )
+                val filter = ResolvedFilter(fixedIn = v2)
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities.single().id shouldBe first
+            }
+
+            test("drops a vulnerability that records no resolution") {
+                val file = vulnlogFile(vulnerabilities = listOf(openVulnerability()))
+                val filter = ResolvedFilter(fixedIn = v2)
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 0
+            }
+
+            test("keeps every vulnerability when no release is requested") {
+                val fixed = fixedVulnerability(listOf(v1), "2.0.0")
+                val file = vulnlogFile(vulnerabilities = listOf(openVulnerability(), fixed))
+                val filter = ResolvedFilter()
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities shouldHaveSize 2
+            }
+        }
 
         context("states") {
 

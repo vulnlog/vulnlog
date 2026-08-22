@@ -14,7 +14,7 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.WorkState
 
 /**
  * Resolves a given [FilterRequest] against a list of [VulnlogFile]s and determines if the requested dimensions
@@ -30,19 +30,21 @@ fun resolveFilter(
     val states = resolveStates(request.states)
     val verdicts = resolveVerdicts(request.verdicts)
     val dispositions = resolveDispositions(request.dispositions)
+    val fixedIn = resolveFixedIn(request.fixedIn, files)
     val problems =
         reporter.problems + releases.problems + tags.problems + states.problems + verdicts.problems +
-            dispositions.problems
+            dispositions.problems + fixedIn.problems
 
     return if (problems.isEmpty()) {
         FilterOutcome.Resolved(
             ResolvedFilter(
-                reporter.value,
-                releases.value,
-                tags.value,
-                states.value,
-                verdicts.value,
-                dispositions.value,
+                reporter = reporter.value,
+                releases = releases.value,
+                tags = tags.value,
+                states = states.value,
+                verdicts = verdicts.value,
+                dispositions = dispositions.value,
+                fixedIn = fixedIn.value,
             ),
         )
     } else {
@@ -72,6 +74,7 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
         filter.dispositions
             .takeIf { it.isNotEmpty() }
             ?.let { dispositions -> "disposition filter: ${dispositions.joinToString(", ") { canonical(it) }}" },
+        filter.fixedIn?.let { release -> "fixed-in filter: ${release.value}" },
     )
 
 /** One resolved dimension: the value to filter with, or the problems that stopped it resolving. */
@@ -183,6 +186,22 @@ private fun resolveDispositions(values: Set<String>): Dimension<Set<Disposition>
         )
     }
     return Dimension(values.mapNotNull { byToken[it] }.toSet())
+}
+
+/** Resolves the single release a fix must have shipped in. */
+private fun resolveFixedIn(
+    releaseId: String?,
+    files: List<VulnlogFile>,
+): Dimension<Release?> {
+    if (releaseId == null) return Dimension(null)
+
+    val known: List<Release> = files.flatMap { file -> file.releases.map { it.id } }.distinct()
+    if (releaseId.isBlank()) return Dimension(null, listOf(releaseProblem("Release must not be blank", known)))
+
+    val release = Release(releaseId)
+    if (release !in known) return Dimension(null, listOf(releaseProblem("Release not found: $releaseId", known)))
+
+    return Dimension(release)
 }
 
 private fun resolveTags(

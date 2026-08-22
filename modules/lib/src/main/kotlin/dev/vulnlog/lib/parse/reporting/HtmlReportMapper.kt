@@ -4,11 +4,12 @@
 package dev.vulnlog.lib.parse.reporting
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.reporting.severityOf
+import dev.vulnlog.lib.core.severityOrder
 import dev.vulnlog.lib.model.Project
-import dev.vulnlog.lib.model.Severity
-import dev.vulnlog.lib.model.report.Impact
-import dev.vulnlog.lib.model.report.ReportingEntry
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.Impact
+import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.WorkState
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.parse.reporting.dto.ProjectDataDto
 import dev.vulnlog.lib.parse.reporting.dto.ReportDataDto
@@ -66,14 +67,7 @@ object HtmlReportMapper {
             is Impact.Unknown -> null
         }
 
-    private fun severityOf(impact: Impact): Severity? =
-        when (impact) {
-            is Impact.Affected -> impact.severity
-            is Impact.NotAffected -> null
-            is Impact.Unknown -> null
-        }
-
-    private fun severityLabel(impact: Impact): String? = severityOf(impact)?.name?.lowercase()
+    private fun severityLabel(impact: Impact): String? = severityOf(impact)?.let(::canonical)
 
     private fun verdictDetail(impact: Impact): String? =
         when (impact) {
@@ -90,14 +84,5 @@ object HtmlReportMapper {
             WorkState.ACCEPTED -> 2
             WorkState.RESOLVED -> 3
             WorkState.NOT_APPLICABLE -> 4
-        }
-
-    private fun severityOrder(severity: Severity?): Int =
-        when (severity) {
-            Severity.CRITICAL -> 0
-            Severity.HIGH -> 1
-            Severity.MEDIUM -> 2
-            Severity.LOW -> 3
-            null -> 4
         }
 }

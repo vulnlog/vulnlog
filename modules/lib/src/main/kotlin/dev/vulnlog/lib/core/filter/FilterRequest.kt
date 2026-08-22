@@ -11,4 +11,5 @@ data class FilterRequest(
     val states: Set<String> = emptySet(),
     val verdicts: Set<String> = emptySet(),
     val dispositions: Set<String> = emptySet(),
+    val fixedIn: String? = null,
 )

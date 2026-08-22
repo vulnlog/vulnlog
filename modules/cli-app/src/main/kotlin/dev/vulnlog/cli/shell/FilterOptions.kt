@@ -32,15 +32,18 @@ class FilterOptions : OptionGroup() {
             """.trimIndent(),
     )
 
-    // TODO remove with 1.0.0
-
-    /** Renamed to `--as-of`. Kept so the old flag fails with a pointer instead of "no such option". */
-    val renamedReleaseRequest: String? by option("--release", hidden = true)
-
     val tagsRequest: Set<String> by option(
         "--tag",
         metavar = "<tag>",
         help = "Filter on tags. Use multiple times to filter on multiple tags.",
     ).multiple()
         .unique()
+}
+
+// TODO remove with 1.0.0
+
+/** The filter flags that were renamed. Only the commands that carried the old spelling declare them. */
+class RenamedFilterOptions : OptionGroup() {
+    /** Renamed to `--as-of`. Kept so the old flag fails with a pointer instead of "no such option". */
+    val releaseRequest: String? by option("--release", hidden = true)
 }

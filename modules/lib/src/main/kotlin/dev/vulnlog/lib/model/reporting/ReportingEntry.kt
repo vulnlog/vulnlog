@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.model.report
+package dev.vulnlog.lib.model.reporting
 
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release

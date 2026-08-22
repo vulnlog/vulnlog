@@ -24,8 +24,8 @@ import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.ReportingEntry
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.WorkState
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
@@ -73,6 +73,8 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
 
     val filterOptions by FilterOptions()
 
+    val renamedFilterOptions by RenamedFilterOptions()
+
     val impactFilterOptions by ImpactFilterOptions()
 
     override fun run() {
@@ -80,7 +82,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
         val files: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
         val project = sharedProjectOrFail(files)
 
-        failOnRenamedFilterFlags(filterOptions)
+        failOnRenamedFilterFlags(renamedFilterOptions)
         val request =
             FilterRequest(
                 reporter = filterOptions.reporterRequest,

@@ -7,12 +7,13 @@ import dev.vulnlog.lib.core.findDisposition
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Resolution
+import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.Impact
-import dev.vulnlog.lib.model.report.ReportingEntry
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.Impact
+import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.WorkState
 
 /**
  * Validates that all provided Vulnlog files share the same project metadata.
@@ -112,7 +113,13 @@ private fun findAffectedWorkState(
 private fun findNotAffectedWorkState(resolution: Resolution?): WorkState =
     if (resolution != null) WorkState.RESOLVED else WorkState.NOT_APPLICABLE
 
-private fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
+internal fun severityOf(impact: Impact): Severity? =
+    when (impact) {
+        is Impact.Affected -> impact.severity
+        is Impact.NotAffected, Impact.Unknown -> null
+    }
+
+internal fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
     when (val verdict = vulnEntry.verdict) {
         is Verdict.Affected -> Impact.Affected(verdict.severity)
         is Verdict.NotAffected -> Impact.NotAffected(verdict.justification.value)

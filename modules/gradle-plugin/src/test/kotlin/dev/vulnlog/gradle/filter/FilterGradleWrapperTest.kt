@@ -13,7 +13,7 @@ import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.report.WorkState
+import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

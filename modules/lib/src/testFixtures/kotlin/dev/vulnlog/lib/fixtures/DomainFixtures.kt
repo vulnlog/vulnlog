@@ -45,11 +45,15 @@ fun vulnerability(
     analyzedAt: LocalDate? = null,
     resolution: Resolution? = null,
     verdict: Verdict = Verdict.UnderInvestigation,
+    name: String? = null,
+    description: String? = null,
 ): VulnerabilityEntry =
     VulnerabilityEntry(
         id = id,
+        name = name,
         aliases = aliases,
         releases = releases,
+        description = description,
         packages = packages,
         reports = reports,
         tags = tags,
@@ -85,4 +89,9 @@ fun report(
     source: String? = null,
 ): ReportEntry = ReportEntry(reporter = reporter, at = at, source = source)
 
-fun resolution(release: String): Resolution = Resolution(Release(release))
+fun resolution(
+    release: String,
+    at: LocalDate? = null,
+    ref: String? = null,
+    note: String? = null,
+): Resolution = Resolution(release = Release(release), at = at, ref = ref, note = note)
