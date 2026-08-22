@@ -45,7 +45,7 @@ abstract class VulnlogSuppressTask : DefaultTask() {
 
     @get:Input
     @get:Optional
-    abstract val release: Property<String>
+    abstract val asOf: Property<String>
 
     @get:Input
     abstract val tags: SetProperty<String>
@@ -68,7 +68,7 @@ abstract class VulnlogSuppressTask : DefaultTask() {
             buildFilterOrFail(
                 vulnlogFile,
                 reporter.orNull,
-                release.orNull?.let(::Release),
+                asOf.orNull?.let(::Release),
                 tags.get().map(::Tag).toSet(),
                 sink,
             )

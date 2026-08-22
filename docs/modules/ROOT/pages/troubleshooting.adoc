@@ -64,7 +64,7 @@ error: Release not found: 9.9.9
   hint: Known releases: 1.0.0, 1.1.0, 1.2.0
 ----
 
-The value passed to `--release` does not match any `id` in the file's `releases` section.
+The value passed to `--as-of` does not match any `id` in the file's `releases` section.
 Filters only accept defined releases; add the release to the file or fix the value.
 The command exits with code 5 (invalid flag value), see xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].
 

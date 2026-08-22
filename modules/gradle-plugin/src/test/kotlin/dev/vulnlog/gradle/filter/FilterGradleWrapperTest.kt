@@ -41,7 +41,7 @@ class FilterGradleWrapperTest :
 
             test("hands back the expanded release window") {
                 val task = wrapperTask()
-                val request = FilterRequest(release = "2.0.0")
+                val request = FilterRequest(asOf = "2.0.0")
 
                 val filter = task.resolveFilterOrFail(request, listOf(twoReleaseFile()))
 
@@ -71,7 +71,7 @@ class FilterGradleWrapperTest :
 
             test("fails on a release the files do not declare") {
                 val task = wrapperTask()
-                val request = FilterRequest(release = "9.9.9")
+                val request = FilterRequest(asOf = "9.9.9")
 
                 val failure =
                     shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }
@@ -82,7 +82,7 @@ class FilterGradleWrapperTest :
 
             test("names every failing dimension in one failure") {
                 val task = wrapperTask()
-                val request = FilterRequest(release = "9.9.9", tags = setOf("missing"))
+                val request = FilterRequest(asOf = "9.9.9", tags = setOf("missing"))
 
                 val failure =
                     shouldThrow<GradleException> { task.resolveFilterOrFail(request, listOf(twoReleaseFile())) }

@@ -50,7 +50,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
 
     @get:Input
     @get:Optional
-    abstract val release: Property<String>
+    abstract val asOf: Property<String>
 
     @get:Input
     abstract val tags: SetProperty<String>
@@ -67,7 +67,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
         val vulnlogFiles: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
         val project = sharedProjectOrFail(vulnlogFiles)
 
-        val request = FilterRequest(reporter.orNull, release.orNull, tags.get())
+        val request = FilterRequest(reporter.orNull, asOf.orNull, tags.get())
         val filter = resolveFilterOrFail(request, vulnlogFiles)
 
         val reported: List<ReportingEntry> = vulnlogFiles.flatMap { collectReportingEntries(it.applyFilter(filter)) }
@@ -76,7 +76,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
 
         val filterData =
             FilterDataDto(
-                release = release.orNull,
+                asOf = asOf.orNull,
                 tags = filter.tags.map(Tag::value).sorted(),
                 reporter = filter.reporter?.canonical(),
             )

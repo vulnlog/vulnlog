@@ -67,7 +67,8 @@ fun release(value: String): Release = Release(value)
 fun releaseEntry(
     id: String,
     purls: List<PurlEntry> = emptyList(),
-): ReleaseEntry = ReleaseEntry(id = Release(id), purls = purls)
+    publishedAt: LocalDate? = null,
+): ReleaseEntry = ReleaseEntry(id = Release(id), publicationDate = publishedAt, purls = purls)
 
 fun tag(value: String): Tag = Tag(value)
 

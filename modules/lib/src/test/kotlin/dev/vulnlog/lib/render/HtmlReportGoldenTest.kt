@@ -91,7 +91,7 @@ private fun goldenFixture() =
         inputs = listOf("frontend.vl", "backend.vl"),
         filter =
             FilterDataDto(
-                release = "1.1.0",
+                asOf = "1.1.0",
                 tags = listOf("production"),
                 reporter = "trivy",
             ),

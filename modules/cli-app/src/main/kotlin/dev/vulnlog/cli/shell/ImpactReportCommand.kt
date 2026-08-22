@@ -45,9 +45,9 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
         |
         |vulnlog report impact vulnlog.yaml
         |
-        |Report what is shipped at release 1.1.0, which includes every earlier release.
+        |Report the state as of release 1.1.0, which includes every earlier release.
         |
-        |vulnlog report impact vulnlog.yaml --release 1.1.0
+        |vulnlog report impact vulnlog.yaml --as-of 1.1.0
         |
         |Merge several files of the same project into one report.
         |
@@ -75,7 +75,8 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
         val files: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
         val project = sharedProjectOrFail(files)
 
-        val request = FilterRequest(filterOptions.reporter, filterOptions.releaseOption, filterOptions.tagsOptions)
+        failOnRenamedFilterFlags(filterOptions)
+        val request = FilterRequest(filterOptions.reporterRequest, filterOptions.asOfRequest, filterOptions.tagsRequest)
         val filter = resolveFilterOrFail(request, files)
 
         val reported: List<ReportingEntry> = files.flatMap { collectReportingEntries(it.applyFilter(filter)) }
@@ -84,7 +85,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
 
         val filterData =
             FilterDataDto(
-                release = filterOptions.releaseOption,
+                asOf = filterOptions.asOfRequest,
                 tags = filter.tags.map(Tag::value).sorted(),
                 reporter = filter.reporter?.canonical(),
             )

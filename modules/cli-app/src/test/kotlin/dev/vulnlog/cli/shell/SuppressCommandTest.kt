@@ -272,9 +272,18 @@ class SuppressCommandTest :
                 }
             }
 
+            test("points at --as-of when the renamed --release is used") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = SuppressCommand().test("${input.absolutePath} --release 1.0.0")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Option --release was renamed to --as-of."
+                }
+            }
+
             test("fails on an unknown release") {
                 withTempFile(content = vulnlogDocument()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --release 9.9.9")
+                    val result = SuppressCommand().test("${input.absolutePath} --as-of 9.9.9")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
@@ -324,16 +333,16 @@ class SuppressCommandTest :
 
         context("pending fix at deployed release") {
 
-            test("--release including only the deployed release suppresses an affected CVE whose fix is unshipped") {
+            test("--as-of including only the deployed release suppresses an affected CVE whose fix is unshipped") {
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --release 1.0.0 -o -")
+                    val result = SuppressCommand().test("${input.absolutePath} --as-of 1.0.0 -o -")
 
                     result.statusCode shouldBe 0
                     result.stdout shouldContain "CVE-2026-9999"
                 }
             }
 
-            test("without --release the affected CVE with a resolution is dropped") {
+            test("without --as-of the affected CVE with a resolution is dropped") {
                 withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
                     val result = SuppressCommand().test("${input.absolutePath} -o -")
 

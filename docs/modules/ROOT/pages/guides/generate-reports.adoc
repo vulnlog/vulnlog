@@ -32,7 +32,7 @@ For an audience that cares about one shipped release, scope it:
 
 [source,bash]
 ----
-vulnlog report impact vulnlog.yaml --release 8.1.1 -o release-8.1.1-report.html
+vulnlog report impact vulnlog.yaml --as-of 8.1.1 -o release-8.1.1-report.html
 Wrote: release-8.1.1-report.html
 ----
 

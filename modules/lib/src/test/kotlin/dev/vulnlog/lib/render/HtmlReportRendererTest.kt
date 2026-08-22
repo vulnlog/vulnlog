@@ -21,7 +21,7 @@ import java.time.Instant
 private val defaultProject = Project("Acme Corp", "Acme Web App", "Security Team")
 private val defaultInstant: Instant = Instant.parse("2026-01-15T10:30:00Z")
 private const val DEFAULT_VERSION = "1.2.3"
-private val emptyFilter = FilterDataDto(release = null, tags = emptyList(), reporter = null)
+private val emptyFilter = FilterDataDto(asOf = null, tags = emptyList(), reporter = null)
 
 private fun entry(
     primaryId: VulnId = VulnId.Cve("CVE-2026-1234"),
@@ -147,7 +147,7 @@ class HtmlReportRendererTest :
                     listOf(entry()),
                     filter =
                         FilterDataDto(
-                            release = "1.2.0",
+                            asOf = "1.2.0",
                             tags = listOf("frontend", "production"),
                             reporter = "trivy",
                         ),

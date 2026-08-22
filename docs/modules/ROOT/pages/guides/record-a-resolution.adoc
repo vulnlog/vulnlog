@@ -75,10 +75,10 @@ To keep that pipeline quiet until the fix ships, mark the report as suppressible
 
 [source,bash]
 ----
-vulnlog suppress vulnlog.yaml --release 8.0.0 --reporter trivy
+vulnlog suppress vulnlog.yaml --as-of 8.0.0 --reporter trivy
 ----
 
-With `--release 8.0.0`, a resolution targeting a later release is treated as still unresolved and the suppression entry is emitted.
+With `--as-of 8.0.0`, a resolution targeting a later release is treated as still unresolved and the suppression entry is emitted.
 The entry still appears as open in the release-scoped report; only the scanner noise is silenced.
 
 == Verify

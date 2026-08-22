@@ -308,12 +308,12 @@
                     Validated: vulnlog.yaml
 
                     # Generate suppression files for your scanners
-                    $ vulnlog suppress vulnlog.yaml --reporter trivy --release 1.0.0
+                    $ vulnlog suppress vulnlog.yaml --reporter trivy --as-of 1.0.0
                     Wrote: .trivyignore.yaml
 
                     # Generate an HTML vulnerability report
-                    $ vulnlog report vulnlog.yaml
-                    Wrote: vulnlog-report.html
+                    $ vulnlog report impact vulnlog.yaml
+                    Wrote: vulnlog-impact-report.html
                 </script>
             </div>
         </div>

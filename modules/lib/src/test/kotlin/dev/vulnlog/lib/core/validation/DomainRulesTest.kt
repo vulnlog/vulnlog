@@ -484,6 +484,103 @@ class DomainRulesTest :
             }
         }
 
+        context("release declaration order") {
+
+            test("accepts dated releases declared oldest first") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", publishedAt = LocalDate.of(2026, 1, 15)),
+                                releaseEntry("1.1.0", publishedAt = LocalDate.of(2026, 3, 1)),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("1.1.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASES_OUT_OF_ORDER }
+
+                findings.shouldBeEmpty()
+            }
+
+            test("warns when a newer release is declared before an older one") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.1.0", publishedAt = LocalDate.of(2026, 3, 1)),
+                                releaseEntry("1.0.0", publishedAt = LocalDate.of(2026, 1, 15)),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("1.1.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASES_OUT_OF_ORDER }
+
+                findings shouldHaveSize 1
+                findings.first().severity shouldBe FindingSeverity.WARNING
+                findings.first().path shouldBe "releases[1.0.0]"
+                findings.first().message shouldContain "declared after"
+            }
+
+            test("ignores releases that have not been published yet") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", publishedAt = LocalDate.of(2026, 1, 15)),
+                                releaseEntry("1.1.0"),
+                                releaseEntry("1.2.0", publishedAt = LocalDate.of(2026, 3, 1)),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("1.1.0"), release("1.2.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASES_OUT_OF_ORDER }
+
+                findings.shouldBeEmpty()
+            }
+
+            test("reports each release that breaks the order") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("3.0.0", publishedAt = LocalDate.of(2026, 5, 1)),
+                                releaseEntry("1.0.0", publishedAt = LocalDate.of(2026, 1, 15)),
+                                releaseEntry("2.0.0", publishedAt = LocalDate.of(2026, 3, 1)),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("2.0.0"), release("3.0.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASES_OUT_OF_ORDER }
+
+                findings shouldHaveSize 1
+                findings.first().path shouldBe "releases[1.0.0]"
+            }
+        }
+
         context("accepted critical risk") {
 
             test("a critical vulnerability marked wont fix is informational") {

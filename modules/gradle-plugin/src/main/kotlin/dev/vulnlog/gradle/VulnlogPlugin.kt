@@ -40,7 +40,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.group = "vulnlog"
             task.files.from(extension.files)
             task.reporter.convention(extension.suppress.reporter)
-            task.release.convention(extension.suppress.release)
+            task.asOf.convention(extension.suppress.asOf)
             task.tags.convention(extension.suppress.tags)
             task.outputDir.convention(
                 extension.suppress.outputDir.orElse(project.layout.buildDirectory.dir("vulnlog/suppressions")),
@@ -53,7 +53,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.group = "vulnlog"
             task.files.from(extension.files)
             task.reporter.convention(extension.report.impact.reporter)
-            task.release.convention(extension.report.impact.release)
+            task.asOf.convention(extension.report.impact.asOf)
             task.tags.convention(extension.report.impact.tags)
             task.outputFile.convention(
                 extension.report.impact.outputFile.orElse(

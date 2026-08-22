@@ -25,11 +25,11 @@ Scope the report to what actually ships in 1.1.0:
 
 [source,bash]
 ----
-vulnlog report impact acme-web-app.vl.yaml --release 1.1.0 -o release-1.1.0.html
+vulnlog report impact acme-web-app.vl.yaml --as-of 1.1.0 -o release-1.1.0.html
 Wrote: release-1.1.0.html
 ----
 
-With `--release`, a recorded fix only counts when its target release shipped at or before 1.1.0.
+With `--as-of`, a recorded fix only counts when its target release shipped at or before 1.1.0.
 A fix that is merged but not yet released does not protect anyone running 1.1.0, and the report reflects that.
 
 == Step 2: Read the open entries
@@ -56,7 +56,7 @@ Wrote: vulnlog-impact-report.html
 ----
 
 Here `CVE-2026-7791` shows as *resolved* with `1.2.0` in the Fixed In column: from the maintainer's perspective the triage work is done.
-The release-scoped view and the maintainer view answer different questions; use `--release` whenever the question is "what does a user of this release face?".
+The release-scoped view and the maintainer view answer different questions; use `--as-of` whenever the question is "what does a user of this release face?".
 
 == What you did
 

@@ -41,6 +41,19 @@ import kotlin.io.path.writeText
 
 private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
 
+// TODO remove with 1.0.0
+
+/** Fails when a renamed filter flag is used, naming the flag that replaced it. */
+fun CliktCommand.failOnRenamedFilterFlags(filterOptions: FilterOptions) {
+    if (filterOptions.renamedReleaseRequest != null) {
+        echoMessage(formatMessage(FindingSeverity.ERROR, "Option --release was renamed to --as-of."))
+        echoMessage(
+            formatHint("use '--as-of ${filterOptions.renamedReleaseRequest}' to report the state at that release"),
+        )
+        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
+    }
+}
+
 /** Fails with a usage error when a command group is invoked without one of its subcommands. */
 fun CliktCommand.requireSubcommand() {
     if (currentContext.invokedSubcommand == null) {
@@ -107,9 +120,9 @@ fun CliktCommand.resolveFilter(
     vulnlogFile: VulnlogFile,
 ): ResolvedFilter =
     try {
-        val releases = resolveReleaseFilter(filterOptions.releaseOption?.let(::Release), vulnlogFile)
-        val tags = resolveTagsFilter(filterOptions.tagsOptions.map(::Tag).toSet(), vulnlogFile)
-        val filter = ResolvedFilter(resolveReporterFilter(filterOptions.reporter), releases, tags)
+        val releases = resolveReleaseFilter(filterOptions.asOfRequest?.let(::Release), vulnlogFile)
+        val tags = resolveTagsFilter(filterOptions.tagsRequest.map(::Tag).toSet(), vulnlogFile)
+        val filter = ResolvedFilter(resolveReporterFilter(filterOptions.reporterRequest), releases, tags)
         renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
         filter
     } catch (e: FilterValidationException) {

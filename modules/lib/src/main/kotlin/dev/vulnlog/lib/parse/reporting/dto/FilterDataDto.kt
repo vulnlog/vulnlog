@@ -4,7 +4,7 @@
 package dev.vulnlog.lib.parse.reporting.dto
 
 data class FilterDataDto(
-    val release: String?,
+    val asOf: String?,
     val tags: List<String>,
     val reporter: String?,
 )
