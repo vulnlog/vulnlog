@@ -86,6 +86,17 @@ For an advisory that carries its own wording, `--brief` reduces each line to an 
 vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0 --brief
 ----
 
+=== From the Gradle build
+
+[source,bash]
+----
+./gradlew vulnlogChangelogReport
+----
+
+The report lands in `build/vulnlog/vulnlog-changelog.txt` by default.
+Set `format` to `markdown` under `report { changelog { } }` and the default file name follows.
+The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the task settings.
+
 === Merge several files
 
 Projects with xref:guides/organize-files-across-branches.adoc[several Vulnlog files] report as one; the files must share the same project metadata:

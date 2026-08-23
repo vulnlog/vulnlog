@@ -3,8 +3,10 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.lib.shell.ChangelogFormatRequest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 
 class VulnlogPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -64,7 +66,29 @@ class VulnlogPlugin : Plugin<Project> {
                 ),
             )
         }
+
+        val changelog = extension.report.changelog
+        project.tasks.register("vulnlogChangelogReport", VulnlogChangelogReportTask::class.java) { task ->
+            task.description = "Report which vulnerabilities each release fixed."
+            task.group = "vulnlog"
+            task.files.from(extension.files)
+            task.format.convention(changelog.format.orElse("text"))
+            task.brief.convention(changelog.brief.orElse(false))
+            task.fixedIn.convention(changelog.fixedIn)
+            task.reporter.convention(changelog.reporter)
+            task.asOf.convention(changelog.asOf)
+            task.tags.convention(changelog.tags)
+            task.outputFile.convention(
+                changelog.outputFile.orElse(task.format.map { token -> project.changelogReportFile(token) }),
+            )
+        }
     }
 }
+
+/** Default report location, named after the format so the extension always matches the content. */
+private fun Project.changelogReportFile(formatToken: String): RegularFile =
+    layout.buildDirectory
+        .file("vulnlog/vulnlog-changelog.${ChangelogFormatRequest.fromToken(formatToken).fileExtension}")
+        .get()
 
 private fun Project.propertyOrNull(name: String): String? = providers.gradleProperty(name).orNull
