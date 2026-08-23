@@ -9,7 +9,6 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.init
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.createYamlMapper
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -35,7 +34,7 @@ abstract class VulnlogInitTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val vulnlogFile = init(SchemaVersion.V1, organization.get(), projectName.get(), author.get())
-        val content = YamlWriter.write(vulnlogFile, createYamlMapper())
+        val content = YamlWriter.write(vulnlogFile)
         val file = outputFile.get().asFile
         file.writeText(content)
         diagnosticSink().verbose("wrote ${file.path}")

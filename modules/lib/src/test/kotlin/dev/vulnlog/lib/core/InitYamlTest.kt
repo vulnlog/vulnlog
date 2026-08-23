@@ -6,7 +6,6 @@ package dev.vulnlog.lib.core
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -15,7 +14,7 @@ class InitYamlTest :
 
         test("init produces valid yaml output") {
             val file: VulnlogFile = init(SchemaVersion.V1, "acme", "widget", "alice")
-            val yaml: String = YamlWriter.write(file, createYamlMapper())
+            val yaml: String = YamlWriter.write(file)
 
             yaml shouldBe
                 """

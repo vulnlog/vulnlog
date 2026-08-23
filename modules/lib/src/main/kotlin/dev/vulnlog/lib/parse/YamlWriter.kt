@@ -7,7 +7,6 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.mapper.DtoV1Mapper
-import tools.jackson.databind.ObjectMapper
 
 /**
  * Writes complete Vulnlog documents in the canonical layout: the optional `# $schema:` header, the
@@ -18,22 +17,20 @@ import tools.jackson.databind.ObjectMapper
 object YamlWriter {
     fun write(
         file: VulnlogFile,
-        mapper: ObjectMapper,
         includeSchemaHeader: Boolean = true,
-    ): String = renderCanonicalDocument(DtoV1Mapper.toDto(file), mapper, includeSchemaHeader)
+    ): String = renderCanonicalDocument(DtoV1Mapper.toDto(file), includeSchemaHeader)
 
     fun renderCanonicalDocument(
         dto: VulnlogFileV1Dto,
-        mapper: ObjectMapper,
         includeSchemaHeader: Boolean = true,
     ): String {
         val sections =
             buildList {
-                add(CanonicalYaml.renderSection("schemaVersion", dto.schemaVersion, mapper).trimEnd())
-                add(CanonicalYaml.renderSection("project", dto.project, mapper).trimEnd())
-                dto.tags?.let { add(CanonicalYaml.renderSection("tags", it, mapper).trimEnd()) }
-                add(CanonicalYaml.renderSection("releases", dto.releases, mapper).trimEnd())
-                add(vulnerabilitiesSection(dto.vulnerabilities, mapper))
+                add(CanonicalYaml.renderSection("schemaVersion", dto.schemaVersion).trimEnd())
+                add(CanonicalYaml.renderSection("project", dto.project).trimEnd())
+                dto.tags?.let { add(CanonicalYaml.renderSection("tags", it).trimEnd()) }
+                add(CanonicalYaml.renderSection("releases", dto.releases).trimEnd())
+                add(vulnerabilitiesSection(dto.vulnerabilities))
             }
         val header = if (includeSchemaHeader) schemaHeader(dto.schemaVersion) + "\n" else ""
         return header + "---\n" + sections.joinToString("\n\n") + "\n"
@@ -42,14 +39,11 @@ object YamlWriter {
     fun schemaHeader(schemaVersion: String): String =
         "# \$schema: https://vulnlog.dev/schema/vulnlog-v${schemaVersion.substringBefore('.')}.json"
 
-    private fun vulnerabilitiesSection(
-        entries: List<VulnerabilityEntryDto>,
-        mapper: ObjectMapper,
-    ): String =
+    private fun vulnerabilitiesSection(entries: List<VulnerabilityEntryDto>): String =
         if (entries.isEmpty()) {
-            CanonicalYaml.renderSection("vulnerabilities", entries, mapper).trimEnd()
+            CanonicalYaml.renderSection("vulnerabilities", entries).trimEnd()
         } else {
             "vulnerabilities:\n\n" +
-                entries.joinToString("\n\n") { CanonicalYaml.renderEntryListItem(it, mapper) }
+                entries.joinToString("\n\n") { CanonicalYaml.renderEntryListItem(it) }
         }
 }

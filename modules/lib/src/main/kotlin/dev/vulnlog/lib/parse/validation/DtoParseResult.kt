@@ -5,16 +5,16 @@ package dev.vulnlog.lib.parse.validation
 
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.finding.ParseFailure
-import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.dto.DtoVersion
 import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.parse.dtoMapper
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import tools.jackson.databind.DatabindException
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.exc.UnrecognizedPropertyException
 
 /** Whether the value tree binds to the DTO of the declared schema version. */
-sealed interface DtoParseResult {
+internal sealed interface DtoParseResult {
     data class Parsed(
         val dto: DtoVersion,
     ) : DtoParseResult
@@ -25,7 +25,7 @@ sealed interface DtoParseResult {
 }
 
 /** Binds the value tree to the DTO. [rootNode] only serves to resolve where a failure sits. */
-fun bindToDto(
+internal fun bindToDto(
     document: JsonNode,
     version: SchemaVersion,
     rootNode: MappingNode,
@@ -40,7 +40,7 @@ private fun bind(
     type: Class<out DtoVersion>,
 ): DtoParseResult =
     try {
-        DtoParseResult.Parsed(createYamlMapper().treeToValue(document, type))
+        DtoParseResult.Parsed(dtoMapper.treeToValue(document, type))
     } catch (e: UnrecognizedPropertyException) {
         rejected("Unknown property '${e.propertyName}'. Try updating vulnlog.", rootNode, e)
     } catch (e: DatabindException) {

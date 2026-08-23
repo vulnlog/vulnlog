@@ -10,13 +10,11 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.parse.CanonicalYaml
 import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.dto.ReportEntryDto
 import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
-import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 import java.time.LocalDate
 
@@ -57,7 +55,7 @@ data class AddOutcome(
  */
 fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
     val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, options.releases), options)
-    return CanonicalYaml.renderEntryListItem(entry, createYamlMapper())
+    return CanonicalYaml.renderEntryListItem(entry)
 }
 
 /**
@@ -77,7 +75,6 @@ fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
 fun addVulnerabilityToFile(
     destination: ValidVulnlogProject,
     options: AddVulnerabilityOptions,
-    mapper: ObjectMapper = createYamlMapper(),
 ): AddOutcome {
     val destinationFile = destination.vulnlogProjectFile
     val knownReleases = knownReleases(destinationFile)
@@ -119,7 +116,6 @@ fun addVulnerabilityToFile(
     val newContent =
         YamlWriter.renderCanonicalDocument(
             dto.copy(vulnerabilities = entries),
-            mapper,
             includeSchemaHeader = hasSchemaHeader(destination.nodeTree.rootNode),
         )
     return AddOutcome(newContent, options.vulnId, updated)

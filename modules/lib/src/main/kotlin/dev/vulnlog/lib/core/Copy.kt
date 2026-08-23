@@ -11,13 +11,11 @@ import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.mapper.DtoV1Mapper
 import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
-import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 
 data class CopyOutcome(
@@ -41,7 +39,6 @@ fun copyVulnerabilities(
     source: VulnlogFile,
     destination: ValidVulnlogProject,
     vulnIds: Set<VulnId>,
-    mapper: ObjectMapper = createYamlMapper(),
 ): CopyOutcome {
     val destinationFile = destination.vulnlogProjectFile
     val release =
@@ -66,9 +63,7 @@ fun copyVulnerabilities(
         newContent =
             YamlWriter.renderCanonicalDocument(
                 newDto,
-                mapper,
-                includeSchemaHeader =
-                    hasSchemaHeader(destination.nodeTree.rootNode),
+                includeSchemaHeader = hasSchemaHeader(destination.nodeTree.rootNode),
             ),
     )
 }

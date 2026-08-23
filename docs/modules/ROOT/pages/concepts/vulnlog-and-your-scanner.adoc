@@ -30,7 +30,7 @@ Vulnlog supports the https://docs.snyk.io/manage-risk/policies/the-.snyk-file#us
 .Snyk yaml-based suppression file example.
 [source,yaml]
 ----
-include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..6]
+include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..7]
 ----
 
 [#_trivy]

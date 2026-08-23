@@ -17,7 +17,6 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -69,7 +68,7 @@ private fun vulnlogFile(
     vulnerabilities = vulnerabilities,
 )
 
-private fun render(file: VulnlogFile): String = YamlWriter.write(file, createYamlMapper())
+private fun render(file: VulnlogFile): String = YamlWriter.write(file)
 
 class CopyTest :
     FunSpec({
@@ -290,20 +289,18 @@ class CopyTest :
                     |  verdict: not affected
                     |  justification: vulnerable code not in execute path
                     """.trimMargin() + "\n"
-                val mapper = createYamlMapper()
 
                 val outcome =
                     copyVulnerabilities(
                         source = source,
                         destination = validated(destinationContent),
                         vulnIds = setOf(cve2),
-                        mapper = mapper,
                     )
 
                 outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-5678"
                 outcome.newContent shouldContain "releases:\n  - id: 1.0.0"
                 "CVE-2026-1234".toRegex().findAll(outcome.newContent).count() shouldBe 1
-                formatYaml(parsed(outcome.newContent), mapper) shouldBe outcome.newContent
+                formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
             }
 
             test("preserves the schema header when the destination has one") {

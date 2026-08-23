@@ -18,12 +18,10 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.shell.DiagnosticLevel
 import dev.vulnlog.lib.shell.FileInputOption
-import tools.jackson.databind.ObjectMapper
 import kotlin.io.path.writeText
 
 class FmtCommand : CliktCommand(name = "fmt") {
@@ -54,19 +52,18 @@ class FmtCommand : CliktCommand(name = "fmt") {
         val parsed: List<ParsedVulnlogProject> =
             inputs.map { input -> parseInputOrFail(input).project }
 
-        val mapper = createYamlMapper()
         var anyUnformatted = false
         for (parsedInput in parsed) {
             val source = parsedInput.inputDocument.source
-            when (val outcome = formatYamlOutcome(parsedInput, mapper)) {
+            when (val outcome = formatYamlOutcome(parsedInput)) {
                 is FormatOutcome.Unchanged -> reportUnchanged(parsedInput, source)
 
                 is FormatOutcome.Reformatted -> {
                     anyUnformatted = true
                     if (isCheck) {
-                        echoFormatCheckFindings(parsedInput, source, mapper)
+                        echoFormatCheckFindings(parsedInput, source)
                     } else {
-                        writeReformatted(parsedInput, source, outcome.formatted, mapper)
+                        writeReformatted(parsedInput, source, outcome.formatted)
                     }
                 }
             }
@@ -91,12 +88,11 @@ class FmtCommand : CliktCommand(name = "fmt") {
         parsedInput: ParsedVulnlogProject,
         source: String,
         formatted: String,
-        mapper: ObjectMapper,
     ) {
         if (hasYamlComments(parsedInput.nodeTree.rootNode)) {
             echoMessage(formatCommentsDroppedWarning(source))
         }
-        debugFormatFindings(parsedInput, mapper)
+        debugFormatFindings(parsedInput)
         when (val path = parsedInput.inputDocument.path) {
             null -> echo(formatted, trailingNewline = false)
             else -> {
@@ -110,20 +106,16 @@ class FmtCommand : CliktCommand(name = "fmt") {
     private fun echoFormatCheckFindings(
         parsedInput: ParsedVulnlogProject,
         source: String,
-        mapper: ObjectMapper,
     ) {
         echoMessage(formatFinding(FindingSeverity.WARNING, source, message = "not canonically formatted"))
-        checkFormat(parsedInput, mapper).forEach { finding ->
+        checkFormat(parsedInput).forEach { finding ->
             echoMessage("  ${renderFormatFinding(finding)}")
         }
     }
 
-    private fun debugFormatFindings(
-        parsedInput: ParsedVulnlogProject,
-        mapper: ObjectMapper,
-    ) {
+    private fun debugFormatFindings(parsedInput: ParsedVulnlogProject) {
         if (!diagnostics().verbosity.enables(DiagnosticLevel.DEBUG)) return
-        checkFormat(parsedInput, mapper).forEach { finding ->
+        checkFormat(parsedInput).forEach { finding ->
             diagnosticSink().debug(renderFormatFinding(finding))
         }
     }

@@ -8,7 +8,6 @@ import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.parse.hasSchemaHeader
 import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
-import tools.jackson.databind.ObjectMapper
 
 /**
  * Rewrites a parsed schema-v1 document in the canonical style: the whole file is rendered from the
@@ -16,19 +15,12 @@ import tools.jackson.databind.ObjectMapper
  * The optional `# $schema:` header is kept only when the source already had it; YAML comments are
  * not part of the format and do not survive.
  */
-fun formatYaml(
-    parsedVulnlogProject: ParsedVulnlogProject,
-    mapper: ObjectMapper,
-): String {
+fun formatYaml(parsedVulnlogProject: ParsedVulnlogProject): String {
     val dto =
         when (parsedVulnlogProject.validatedDto) {
             is VulnlogFileV1Dto -> parsedVulnlogProject.validatedDto
         }
-    return YamlWriter.renderCanonicalDocument(
-        dto,
-        mapper,
-        hasSchemaHeader(parsedVulnlogProject.nodeTree.rootNode),
-    )
+    return YamlWriter.renderCanonicalDocument(dto, hasSchemaHeader(parsedVulnlogProject.nodeTree.rootNode))
 }
 
 sealed interface FormatOutcome {
@@ -39,11 +31,8 @@ sealed interface FormatOutcome {
     ) : FormatOutcome
 }
 
-fun formatYamlOutcome(
-    parsedVulnlogProject: ParsedVulnlogProject,
-    mapper: ObjectMapper,
-): FormatOutcome {
-    val formatted = formatYaml(parsedVulnlogProject, mapper)
+fun formatYamlOutcome(parsedVulnlogProject: ParsedVulnlogProject): FormatOutcome {
+    val formatted = formatYaml(parsedVulnlogProject)
     return if (formatted == parsedVulnlogProject.inputDocument.content) {
         FormatOutcome.Unchanged
     } else {
