@@ -25,7 +25,7 @@ fun collectChangelogReleases(files: List<VulnlogFile>): List<ReportingChangelogR
     val declaration: Map<Release, ReleaseEntry> = declared.associateBy { it.id }
     val oldestFirst: List<Release> = declared.map { it.id }
 
-    return selectFixedVulnerabilities(files)
+    return selectFixedVulnerabilities(files, oldestFirst)
         .groupBy { fixed -> fixed.resolution.release }
         .map { (release, fixed) -> changelogRelease(release, declaration[release], fixed) }
         .sortedByDescending { release -> oldestFirst.indexOf(release.fixedIn) }
@@ -36,17 +36,35 @@ internal fun declaredReleases(files: List<VulnlogFile>): List<ReleaseEntry> =
     files.flatMap { file -> file.releases }.distinctBy { it.id }
 
 /** The vulnerabilities whose fix reached users, paired with the resolution that shipped it. */
-internal fun selectFixedVulnerabilities(files: List<VulnlogFile>): List<FixedVulnerability> =
+internal fun selectFixedVulnerabilities(
+    files: List<VulnlogFile>,
+    oldestFirst: List<Release>,
+): List<FixedVulnerability> =
     files
         .asSequence()
         .flatMap { file -> file.vulnerabilities }
         .mapNotNull { vuln -> vuln.resolution?.let { FixedVulnerability(vuln, it) } }
-        .filterNot(::neverShippedVulnerable)
+        .filter { fixed -> shippedVulnerable(fixed, oldestFirst) }
         .toList()
 
-/** A fix that shipped in a release the vulnerability was reported for never reached a user. */
-private fun neverShippedVulnerable(fixed: FixedVulnerability): Boolean =
-    fixed.resolution.release in fixed.vulnerability.releases
+/**
+ * Whether users ever ran a release containing the vulnerability.
+ *
+ * They did once it was reported for a release declared before the one that fixed it. A
+ * vulnerability reported only for the fix release, or only for releases after it, exposed nobody
+ * and so has nothing to announce. A vulnerability carried by an earlier release still counts even
+ * when the fix release is among the releases it was reported for.
+ */
+private fun shippedVulnerable(
+    fixed: FixedVulnerability,
+    oldestFirst: List<Release>,
+): Boolean {
+    val fixedAt = oldestFirst.indexOf(fixed.resolution.release)
+    return fixed.vulnerability.releases.any { reportedFor ->
+        val reportedAt = oldestFirst.indexOf(reportedFor)
+        reportedAt in 0..<fixedAt
+    }
+}
 
 private fun changelogRelease(
     release: Release,

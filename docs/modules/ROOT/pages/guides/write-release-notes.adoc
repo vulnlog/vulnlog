@@ -30,7 +30,8 @@ Aliases stand next to the identifier they belong to, so the number of lines is t
 
 Two kinds of entry never appear.
 An entry without a `resolution` has not shipped anything, so it belongs in the impact report instead.
-An entry whose fix shipped in a release it was reported for never reached anyone, so there is nothing to announce.
+An entry that no earlier release was affected by never reached anyone, so there is nothing to announce.
+An entry found in one release and fixed in the next does appear, whether or not the fix release is still listed among its `releases`.
 
 == Record what makes the report useful
 

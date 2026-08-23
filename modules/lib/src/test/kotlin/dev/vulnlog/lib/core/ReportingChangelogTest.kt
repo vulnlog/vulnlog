@@ -41,15 +41,16 @@ private val threeReleases =
         releaseEntry("1.2.0"),
     )
 
-/** An affected vulnerability reported for 1.0.0 whose fix shipped in [fixedIn]. */
+/** An affected vulnerability reported for [reportedFor] whose fix shipped in [fixedIn]. */
 private fun fixedVulnerability(
     id: VulnId = first,
     fixedIn: String = "1.1.0",
     severity: Severity = Severity.HIGH,
     aliases: List<VulnId> = emptyList(),
+    reportedFor: List<String> = listOf("1.0.0"),
 ) = vulnerability(
     id,
-    releases = listOf(release("1.0.0")),
+    releases = reportedFor.map(::release),
     aliases = aliases,
     verdict = Verdict.Affected(severity),
     resolution = resolution(fixedIn),
@@ -67,6 +68,10 @@ private fun fileOf(
     vulnerabilities: List<VulnerabilityEntry>,
     releases: List<ReleaseEntry> = threeReleases,
 ) = vulnlogFile(releases = releases, vulnerabilities = vulnerabilities)
+
+/** The fixes selected from one file declaring [threeReleases]. */
+private fun selectedFixesOf(vulnerabilities: List<VulnerabilityEntry>) =
+    selectFixedVulnerabilities(listOf(fileOf(vulnerabilities)), threeReleases.map { it.id })
 
 private fun changelogOf(vulnerabilities: List<VulnerabilityEntry>) =
     collectChangelogReleases(listOf(fileOf(vulnerabilities)))
@@ -102,9 +107,9 @@ class ReportingChangelogTest :
         context("fixed vulnerabilities") {
 
             test("selects a vulnerability that records a resolution") {
-                val files = listOf(fileOf(listOf(fixedVulnerability())))
+                val resolved = fixedVulnerability()
 
-                val fixed = selectFixedVulnerabilities(files)
+                val fixed = selectedFixesOf(listOf(resolved))
 
                 fixed.single().vulnerability.id shouldBe first
             }
@@ -113,29 +118,40 @@ class ReportingChangelogTest :
                 val open =
                     vulnerability(first, releases = listOf(release("1.0.0")), verdict = Verdict.Affected(Severity.HIGH))
 
-                val fixed = selectFixedVulnerabilities(listOf(fileOf(listOf(open))))
+                val fixed = selectedFixesOf(listOf(open))
 
                 fixed.shouldBeEmpty()
             }
 
-            test("skips a vulnerability fixed in a release it was reported for") {
-                val neverShipped =
-                    vulnerability(
-                        first,
-                        releases = listOf(release("1.2.0")),
-                        verdict = Verdict.Affected(Severity.HIGH),
-                        resolution = resolution("1.2.0"),
-                    )
+            test("selects a vulnerability reported for an earlier release and for the release that fixed it") {
+                val carriedOver =
+                    fixedVulnerability(fixedIn = "1.2.0", reportedFor = listOf("1.1.0", "1.2.0"))
 
-                val fixed = selectFixedVulnerabilities(listOf(fileOf(listOf(neverShipped))))
+                val fixed = selectedFixesOf(listOf(carriedOver))
+
+                fixed.single().vulnerability.id shouldBe first
+            }
+
+            test("skips a vulnerability reported only for the release that fixed it") {
+                val neverShipped = fixedVulnerability(fixedIn = "1.2.0", reportedFor = listOf("1.2.0"))
+
+                val fixed = selectedFixesOf(listOf(neverShipped))
+
+                fixed.shouldBeEmpty()
+            }
+
+            test("skips a vulnerability reported only for releases after the one that fixed it") {
+                val notYetShipped = fixedVulnerability(fixedIn = "1.1.0", reportedFor = listOf("1.2.0"))
+
+                val fixed = selectedFixesOf(listOf(notYetShipped))
 
                 fixed.shouldBeEmpty()
             }
 
             test("selects a vulnerability judged not affected that still records a resolution") {
-                val files = listOf(fileOf(listOf(notAffectedButResolved())))
+                val notAffected = notAffectedButResolved()
 
-                val fixed = selectFixedVulnerabilities(files)
+                val fixed = selectedFixesOf(listOf(notAffected))
 
                 fixed.single().vulnerability.id shouldBe first
             }

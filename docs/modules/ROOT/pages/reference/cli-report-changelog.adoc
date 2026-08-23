@@ -52,7 +52,8 @@ An entry appears once it records a `resolution`, under the release named by `res
 Two entries never appear:
 
 * An entry with no `resolution`, because nothing has shipped for it yet.
-* An entry whose fix shipped in a release it was reported for, because that version never reached anyone under the vulnerable code.
+* An entry that no release before the fix was affected by, because nobody ever ran a release carrying it.
+An entry listed for `1.0.1` and `1.0.2` and fixed in `1.0.2` does appear, because `1.0.1` shipped with the vulnerability.
 
 Each release section carries the release identifier, its publication date, and a summary line stating how many vulnerabilities the release fixed and how many of each severity.
 A release with no publication date is marked `unreleased`.
