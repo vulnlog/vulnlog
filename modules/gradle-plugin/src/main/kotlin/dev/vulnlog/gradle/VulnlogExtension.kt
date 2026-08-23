@@ -69,7 +69,12 @@ abstract class VulnlogReportExtension
         val impact: VulnlogImpactReportExtension =
             objects.newInstance(VulnlogImpactReportExtension::class.java)
 
+        val changelog: VulnlogChangelogReportExtension =
+            objects.newInstance(VulnlogChangelogReportExtension::class.java)
+
         fun impact(action: Action<VulnlogImpactReportExtension>) = action.execute(impact)
+
+        fun changelog(action: Action<VulnlogChangelogReportExtension>) = action.execute(changelog)
     }
 
 interface VulnlogImpactReportExtension {
@@ -80,4 +85,14 @@ interface VulnlogImpactReportExtension {
     val states: SetProperty<String>
     val verdicts: SetProperty<String>
     val dispositions: SetProperty<String>
+}
+
+interface VulnlogChangelogReportExtension {
+    val outputFile: RegularFileProperty
+    val format: Property<String>
+    val brief: Property<Boolean>
+    val fixedIn: Property<String>
+    val reporter: Property<String>
+    val asOf: Property<String>
+    val tags: SetProperty<String>
 }

@@ -34,7 +34,7 @@ vulnlog {
 | File collection of Vulnlog YAML files to operate on. Used by all tasks except `vulnlogInit`.
 
 | `report`
-| Container for the report tasks. Each report type has its own nested block, for example `report { impact { } }`.
+| Container for the report tasks. Each report type has its own nested block: `report { impact { } }` and `report { changelog { } }`.
 |===
 
 == Diagnostics
@@ -259,6 +259,81 @@ It fails the build only on invalid input, for example an unknown `asOf` or input
 [source,shell]
 ----
 ./gradlew vulnlogImpactReport
+----
+
+=== `vulnlogChangelogReport`
+
+Reports which vulnerabilities each release fixed, newest release first.
+Multiple files are merged and must share the same project metadata.
+See xref:reference/cli-report-changelog.adoc[`vulnlog report changelog`] for the report contents and for what it leaves out.
+
+Settings live under `report { changelog { } }`.
+
+[source,kotlin]
+----
+vulnlog {
+    report {
+        changelog {
+            outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-changelog.md"))  // optional
+            format = "markdown"                                                         // optional
+            brief = false                                                               // optional
+            fixedIn = "1.2.0"                                                           // optional
+            reporter = "trivy"                                                          // optional
+            asOf = "1.1.0"                                                              // optional
+            tags = setOf("frontend")                                                    // optional
+        }
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `outputFile`
+| `build/vulnlog/vulnlog-changelog.<ext>`
+| File where the report is written.
+The default file name follows `format`, so it ends in `.txt` for `text` and `.md` for `markdown`.
+
+| `format`
+| `text`
+| Output format: `text` or `markdown`.
+`markdown` renders one section per release in the Keep a Changelog layout, ready to paste under a heading the changelog file already has.
+
+| `brief`
+| `false`
+| List identifiers and severity only. Descriptions, resolution notes, and references are left out.
+
+| `fixedIn`
+| All releases
+| Report only the vulnerabilities this release shipped a fix for.
+
+| `reporter`
+| All reporters
+| Filter on reporter.
+
+| `asOf`
+| All releases
+| Report as of this release, including all releases up to and including it.
+A fix that ships later is left out.
+
+| `tags`
+| All tags
+| Filter on tags.
+|===
+
+The report holds no timestamp, so the output depends only on the inputs and the settings.
+The task is cacheable and is skipped when neither has changed.
+
+The task always writes its output file.
+When no entry records a resolution it writes the report for zero releases and logs `info: no fixed vulnerabilities to report`.
+
+It fails the build only on invalid input, for example an unknown `fixedIn` or input files with different project metadata.
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogChangelogReport
 ----
 
 === `VulnlogCopyTask`

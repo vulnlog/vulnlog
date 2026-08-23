@@ -151,4 +151,5 @@ See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the
 - xref:guides/write-release-notes.adoc[Write release notes]
 - xref:guides/record-a-resolution.adoc[Record a resolution]
 - xref:reference/cli-report-impact.adoc[vulnlog report impact]
+- xref:reference/gradle-plugin.adoc#_vulnlogchangelogreport[The vulnlogChangelogReport Gradle task]
 - xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]
