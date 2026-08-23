@@ -3,13 +3,13 @@
 #detektVersion = "1.23.7"
 cliktVersion = "5.1.0"
 graalvmNativeBuildToolsVersion = "1.1.8"
-jacksonVersion = "3.2.1" # Keep in-sync with snakeYamlEngineVersion
+jacksonVersion = "3.2.1"
 kotestVersion = "6.2.3"
 kotlinVersion = "2.4.10"
 ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
-# Add explicit SnakeYAML dependency because it is used to for formatting
-snakeYamlEngineVersion = "3.1.1" # Keep in-sync with jacksonVersion
+# The only YAML library: it parses every file Vulnlog reads and emits every file Vulnlog writes.
+snakeYamlEngineVersion = "3.1.1"
 spotlessVersion = "8.9.0"
 
 [libraries]
@@ -17,7 +17,6 @@ clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" 
 graalvmNativeGradlePlugin = { module = "org.graalvm.buildtools:native-gradle-plugin", version.ref = "graalvmNativeBuildToolsVersion" }
 # detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion" }
 jacksonKotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jacksonVersion"}
-jacksonYaml = { module = "tools.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jacksonVersion"}
 kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotestVersion" }
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }

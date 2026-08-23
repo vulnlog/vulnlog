@@ -15,11 +15,10 @@ import org.snakeyaml.engine.v2.common.ScalarStyle
 import org.snakeyaml.engine.v2.nodes.Node
 import org.snakeyaml.engine.v2.nodes.Tag
 import org.snakeyaml.engine.v2.representer.StandardRepresenter
-import tools.jackson.databind.ObjectMapper
 import java.time.LocalDate
 
 /**
- * Renders Vulnlog DTOs to the canonical YAML style:
+ * Renders DTOs to the canonical YAML style. Every YAML file Vulnlog writes is emitted here:
  *  - stable field order, taken from DTO declaration order
  *  - single-element lists as flow arrays, e.g. `releases: [0.11.0]`
  *  - multi-line strings as literal block scalars (`|-`)
@@ -30,9 +29,8 @@ import java.time.LocalDate
  *
  * The style is a pure function of the value: presentation found in the source file is not consulted.
  *
- * Jackson converts the DTO to an ordered Map/List/scalar tree (reusing `@JsonProperty` renames,
- * `@JsonInclude` omission and `@JsonFormat` date formatting); snakeyaml-engine then dumps that tree
- * with a [VulnlogRepresenter] that applies the per-node flow and scalar-style rules.
+ * [dtoMapper] converts the DTO to an ordered Map/List/scalar tree; snakeyaml-engine then dumps that
+ * tree with a [VulnlogRepresenter] that applies the per-node flow and scalar-style rules.
  */
 object CanonicalYaml {
     /** Indentation (spaces) for YAML blocks; entry list items derive their indent from this. */
@@ -72,29 +70,25 @@ object CanonicalYaml {
             .setBestLineBreak("\n")
             .build()
 
+    /** Renders a complete document: the `---` start marker followed by the canonical body. */
+    fun renderDocument(dto: Any): String = "---\n" + dump(dtoMapper.convertValue(dto, Map::class.java))
+
     /** Renders a single vulnerability entry as a top-level mapping (no list indicator). */
-    fun renderEntry(
-        dto: VulnerabilityEntryDto,
-        mapper: ObjectMapper,
-    ): String = dump(mapper.convertValue(dto, Map::class.java))
+    fun renderEntry(dto: VulnerabilityEntryDto): String = dump(dtoMapper.convertValue(dto, Map::class.java))
 
     /** Renders a single top-level section (e.g. `project:`, `releases:`) as a fragment. */
     fun renderSection(
         key: String,
         value: Any?,
-        mapper: ObjectMapper,
-    ): String = dump(mapper.convertValue(mapOf(key to value), Map::class.java))
+    ): String = dump(dtoMapper.convertValue(mapOf(key to value), Map::class.java))
 
     /**
      * Renders a vulnerability entry as a `vulnerabilities:` list item: the first line gets a `-` list
      * indicator and the remaining lines are indented to sit under it.
      */
-    fun renderEntryListItem(
-        dto: VulnerabilityEntryDto,
-        mapper: ObjectMapper,
-    ): String {
+    fun renderEntryListItem(dto: VulnerabilityEntryDto): String {
         val lines =
-            renderEntry(dto, mapper)
+            renderEntry(dto)
                 .lines()
                 .dropWhile { it.isBlank() }
                 .dropLastWhile { it.isBlank() }
@@ -130,8 +124,8 @@ object CanonicalYaml {
     ): FlowStyle = if (itemCount <= 1 && scalarItemsOnly) FlowStyle.FLOW else FlowStyle.BLOCK
 
     /** The canonical key order of a vulnerability entry, derived from [VulnerabilityEntryDto]. */
-    fun canonicalEntryFieldOrder(mapper: ObjectMapper): List<String> =
-        mapper.convertValue(SAMPLE_FULL_ENTRY, Map::class.java).keys.map { it.toString() }
+    fun canonicalEntryFieldOrder(): List<String> =
+        dtoMapper.convertValue(SAMPLE_FULL_ENTRY, Map::class.java).keys.map { it.toString() }
 
     private val SAMPLE_FULL_ENTRY =
         VulnerabilityEntryDto(

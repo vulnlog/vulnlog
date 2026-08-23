@@ -8,10 +8,10 @@ description = "Vulnlog core library"
 group = "dev.vulnlog"
 
 dependencies {
-    api(libs.jacksonKotlin)
-    api(libs.jacksonYaml)
+    // snakeyaml-engine is api: MappingNode surfaces on NodeTreeResult, which consumers read.
+    api(libs.snakeyamlEngine)
     api(libs.packageUrl)
-    implementation(libs.snakeyamlEngine)
+    implementation(libs.jacksonKotlin)
 
     testImplementation(libs.kotestAssertionsCoreJvm)
     testImplementation(libs.kotestRunnerJunit5Jvm)

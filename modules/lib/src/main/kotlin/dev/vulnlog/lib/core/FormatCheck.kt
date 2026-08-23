@@ -22,7 +22,6 @@ import org.snakeyaml.engine.v2.common.ScalarStyle
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.ScalarNode
 import org.snakeyaml.engine.v2.nodes.SequenceNode
-import tools.jackson.databind.ObjectMapper
 
 /**
  * Explains why [parsedVulnlogProject] is not in the canonical style as findings, one per deviation,
@@ -32,21 +31,18 @@ import tools.jackson.databind.ObjectMapper
  * single [FormatRule.NON_CANONICAL_LAYOUT] finding. An empty result means the content is
  * byte-canonical.
  */
-fun checkFormat(
-    parsedVulnlogProject: ParsedVulnlogProject,
-    mapper: ObjectMapper,
-): List<FormatFinding> {
+fun checkFormat(parsedVulnlogProject: ParsedVulnlogProject): List<FormatFinding> {
     val source =
         FormatSource(
             parsedVulnlogProject.inputDocument.content,
             parsedVulnlogProject.nodeTree.rootNode,
         )
-    val context = FormatCheckContext(source, walkValues(source.root), mapper)
+    val context = FormatCheckContext(source, walkValues(source.root))
     val findings =
         when (parsedVulnlogProject.validatedDto) {
             is VulnlogFileV1Dto -> v1FormatRules.flatMap { rule -> rule(context) }
         }
-    return findings.ifEmpty { layoutCatchAll(parsedVulnlogProject, mapper) }
+    return findings.ifEmpty { layoutCatchAll(parsedVulnlogProject) }
 }
 
 /** One line per finding, tagged with the kebab-case rule id, e.g. `[non-canonical-array-style]`. */
@@ -59,7 +55,6 @@ fun renderFormatFinding(finding: FormatFinding): String {
 data class FormatCheckContext(
     val source: FormatSource,
     val nodes: List<LocatedNode>,
-    val mapper: ObjectMapper,
 )
 
 private val v1FormatRules =
@@ -107,7 +102,7 @@ private fun checkSequenceStyles(context: FormatCheckContext): List<FormatFinding
     }
 
 private fun checkEntryFieldOrder(context: FormatCheckContext): List<FormatFinding> {
-    val canonicalOrder = CanonicalYaml.canonicalEntryFieldOrder(context.mapper)
+    val canonicalOrder = CanonicalYaml.canonicalEntryFieldOrder()
     return context.nodes
         .filter { it.path.startsWith("vulnerabilities[") && '.' !in it.path && it.node is MappingNode }
         .mapNotNull { located ->
@@ -164,11 +159,8 @@ private fun checkComments(context: FormatCheckContext): List<FormatFinding> =
         emptyList()
     }
 
-private fun layoutCatchAll(
-    parsedVulnlogProject: ParsedVulnlogProject,
-    mapper: ObjectMapper,
-): List<FormatFinding> =
-    if (formatYaml(parsedVulnlogProject, mapper) == parsedVulnlogProject.inputDocument.content) {
+private fun layoutCatchAll(parsedVulnlogProject: ParsedVulnlogProject): List<FormatFinding> =
+    if (formatYaml(parsedVulnlogProject) == parsedVulnlogProject.inputDocument.content) {
         emptyList()
     } else {
         listOf(

@@ -15,7 +15,6 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.core.renderFormatFinding
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.createYamlMapper
 import dev.vulnlog.lib.parse.hasYamlComments
 import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 import org.gradle.api.DefaultTask
@@ -30,7 +29,6 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
-import tools.jackson.databind.ObjectMapper
 import java.nio.file.Path
 import kotlin.io.path.writeText
 
@@ -55,21 +53,20 @@ abstract class VulnlogFmtTask : DefaultTask() {
         val parsed: List<ParsedVulnlogProject> =
             inputFiles.map { input -> parseInputOrFail(input).project }
 
-        val mapper = createYamlMapper()
         val checkOnly = check.getOrElse(false)
         val unformatted = mutableListOf<Path>()
         for (parsedInput in parsed) {
             val source = parsedInput.inputDocument.source
-            when (val outcome = formatYamlOutcome(parsedInput, mapper)) {
+            when (val outcome = formatYamlOutcome(parsedInput)) {
                 is FormatOutcome.Unchanged ->
                     logger.lifecycle(formatStatus(StatusVerb.UNCHANGED, source))
 
                 is FormatOutcome.Reformatted ->
                     if (checkOnly) {
                         unformatted.add(inputPathOf(parsedInput))
-                        logFormatCheckFindings(parsedInput, source, mapper)
+                        logFormatCheckFindings(parsedInput, source)
                     } else {
-                        writeReformatted(parsedInput, source, outcome.formatted, mapper)
+                        writeReformatted(parsedInput, source, outcome.formatted)
                     }
             }
         }
@@ -85,12 +82,11 @@ abstract class VulnlogFmtTask : DefaultTask() {
         parsedInput: ParsedVulnlogProject,
         source: String,
         formatted: String,
-        mapper: ObjectMapper,
     ) {
         if (hasYamlComments(parsedInput.nodeTree.rootNode)) {
             logger.warn(formatCommentsDroppedWarning(source))
         }
-        debugFormatFindings(parsedInput, mapper)
+        debugFormatFindings(parsedInput)
         inputPathOf(parsedInput).writeText(formatted)
         diagnosticSink().verbose("wrote $source")
         logger.lifecycle(formatStatus(StatusVerb.FORMATTED, source))
@@ -99,20 +95,16 @@ abstract class VulnlogFmtTask : DefaultTask() {
     private fun logFormatCheckFindings(
         parsedInput: ParsedVulnlogProject,
         source: String,
-        mapper: ObjectMapper,
     ) {
         logger.warn(formatFinding(FindingSeverity.WARNING, source, message = "not canonically formatted"))
-        checkFormat(parsedInput, mapper).forEach { finding ->
+        checkFormat(parsedInput).forEach { finding ->
             logger.warn("  ${renderFormatFinding(finding)}")
         }
     }
 
-    private fun debugFormatFindings(
-        parsedInput: ParsedVulnlogProject,
-        mapper: ObjectMapper,
-    ) {
+    private fun debugFormatFindings(parsedInput: ParsedVulnlogProject) {
         if (!logger.isDebugEnabled) return
-        checkFormat(parsedInput, mapper).forEach { finding ->
+        checkFormat(parsedInput).forEach { finding ->
             diagnosticSink().debug(renderFormatFinding(finding))
         }
     }

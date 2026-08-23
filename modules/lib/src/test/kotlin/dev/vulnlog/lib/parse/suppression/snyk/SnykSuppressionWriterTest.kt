@@ -29,6 +29,6 @@ class SnykSuppressionWriterTest :
             val result = SnykSuppressionWriter.write(input)
 
             result shouldContain "version: v1.25.0"
-            result shouldContain "expires: 2026-08-01T00:00:00.000Z"
+            result shouldContain "expires: \"2026-08-01T00:00:00.000Z\""
         }
     })

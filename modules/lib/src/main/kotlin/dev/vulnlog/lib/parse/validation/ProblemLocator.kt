@@ -27,7 +27,7 @@ fun locationOf(node: Node): FailureLocation? =
  * Turns a binding failure into a finding that names both the entry it sits at and its position.
  * The entry path uses the same spelling as the domain rules, so both read alike.
  */
-fun failureAt(
+internal fun failureAt(
     root: MappingNode,
     references: List<JacksonException.Reference>,
     message: String,

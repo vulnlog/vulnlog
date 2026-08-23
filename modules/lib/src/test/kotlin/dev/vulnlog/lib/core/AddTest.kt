@@ -18,7 +18,6 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.createYamlMapper
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
@@ -42,7 +41,7 @@ private fun vulnlogFile(
         vulnerabilities = vulnerabilities,
     )
 
-private fun renderContent(file: VulnlogFile): String = YamlWriter.write(file, createYamlMapper())
+private fun renderContent(file: VulnlogFile): String = YamlWriter.write(file)
 
 /**
  * Builds a Vulnlog YAML content string with hand-picked source notation (quoting, block lists),
@@ -226,10 +225,9 @@ class AddTest :
 
             test("inserts the entry in the canonical fmt style, so re-formatting is a no-op") {
                 val file = vulnlogFile()
-                val mapper = createYamlMapper()
-                val outcome = addVulnerabilityToFile(validated(renderContent(file)), DEFAULT_OPTIONS, mapper)
+                val outcome = addVulnerabilityToFile(validated(renderContent(file)), DEFAULT_OPTIONS)
 
-                formatYaml(parsed(outcome.newContent), mapper) shouldBe outcome.newContent
+                formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
             }
 
             test("preserves the schema header when the destination has one") {
@@ -290,14 +288,13 @@ class AddTest :
                     |  packages: []
                     |  reports: []
                     """.trimMargin() + "\n"
-                val mapper = createYamlMapper()
 
-                val outcome = addVulnerabilityToFile(validated(content), DEFAULT_OPTIONS, mapper)
+                val outcome = addVulnerabilityToFile(validated(content), DEFAULT_OPTIONS)
 
                 outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-1234"
                 outcome.newContent shouldContain "releases:\n  - id: 1.0.0"
                 outcome.newContent.split("CVE-2026-0001").size - 1 shouldBe 1
-                formatYaml(parsed(outcome.newContent), mapper) shouldBe outcome.newContent
+                formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
             }
 
             test("update of an entry in a column-0 file rewrites the whole file canonically") {
@@ -324,19 +321,17 @@ class AddTest :
                     |  packages: []
                     |  reports: []
                     """.trimMargin() + "\n"
-                val mapper = createYamlMapper()
 
                 val outcome =
                     addVulnerabilityToFile(
                         validated(content),
                         DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/lib@1.0.0"))),
-                        mapper,
                     )
 
                 outcome.updated shouldBe true
                 outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-1234"
                 outcome.newContent.split("CVE-2026-1234").size - 1 shouldBe 1
-                formatYaml(parsed(outcome.newContent), mapper) shouldBe outcome.newContent
+                formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
             }
 
             test("update renders a multi-line description as a literal block scalar") {
