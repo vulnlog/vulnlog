@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VULNLOG_VERSION: "0.16.0"
+  VULNLOG_VERSION: "0.17.0"
 
 jobs:
   vulnlog:
@@ -46,19 +46,29 @@ jobs:
             .snyk
             .trivyignore.yaml
 
-      - name: Generate HTML report
+      - name: Generate impact report
         run: |
           docker run --rm \
             -u "$(id -u):$(id -g)" \
             -v "${{ github.workspace }}:/work" \
             "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
-            report vulnlog.yaml
+            report impact vulnlog.yaml
 
-      - name: Upload HTML report
+      - name: Generate changelog report
+        run: |
+          docker run --rm \
+            -u "$(id -u):$(id -g)" \
+            -v "${{ github.workspace }}:/work" \
+            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
+            report changelog vulnlog.yaml --output vulnlog-changelog-report.txt
+
+      - name: Upload reports
         uses: actions/upload-artifact@v7
         with:
           name: reports
-          path: vulnlog-report.html
+          path: |
+            vulnlog-impact-report.html
+            vulnlog-changelog-report.txt
 
   artifacts:
     name: Build release artifacts

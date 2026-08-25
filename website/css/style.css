@@ -762,9 +762,24 @@ code {
     color: var(--vl-text-secondary);
 }
 
+.footer-note {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--vl-text-secondary);
+}
+
 @media (min-width: 640px) {
     .footer-grid {
-        grid-template-columns: 2fr repeat(3, 1fr);
+        grid-template-columns: 2fr repeat(2, 1fr);
+    }
+}
+
+/* Five columns need room for the widest heading; below this the links reflow. */
+@media (min-width: 1024px) {
+    .footer-grid {
+        column-gap: 1.5rem;
+        grid-template-columns: 1.3fr repeat(4, 1fr);
     }
 }
 

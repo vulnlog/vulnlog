@@ -1,5 +1,7 @@
+import com.github.gradle.node.npm.task.NpxTask
+
 plugins {
-    id("dev.vulnlog.plugin") version "0.16.0"
+    id("dev.vulnlog.plugin") version "0.17.0"
     id("com.github.node-gradle.node") version "7.1.0"
 }
 
@@ -56,7 +58,7 @@ tasks.register("installGitHooks") {
     }
 }
 
-tasks.register<com.github.gradle.node.npm.task.NpxTask>("docsBuild") {
+tasks.register<NpxTask>("docsBuild") {
     group = "documentation"
     description = "Builds the docs site locally into build/docs using Antora"
     command.set("antora")
@@ -68,4 +70,11 @@ tasks.register<com.github.gradle.node.npm.task.NpxTask>("docsBuild") {
 
 vulnlog {
     files = files.from("vulnlog.yaml")
+
+    report {
+        changelog {
+            brief = true
+            format = "markdown"
+        }
+    }
 }
