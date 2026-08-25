@@ -31,6 +31,8 @@ releases:
   - id: 0.16.0
     published_at: 2026-07-16
   - id: 0.17.0
+    published_at: 2026-08-24
+  - id: 0.18.0
 
 vulnerabilities:
 
@@ -47,6 +49,11 @@ vulnerabilities:
       in the build.
     verdict: not affected
     justification: vulnerable code cannot be controlled by adversary
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: >-
       The issue is fixed in `ch.qos.logback:logback-core:1.5.33` however the Gradle Ktlint plugin `org.jlleitschuh.gradle:ktlint-gradle`
       does not yet use the fixed version.
@@ -64,6 +71,11 @@ vulnerabilities:
       in the build.
     verdict: not affected
     justification: vulnerable code cannot be controlled by adversary
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: >-
       The issue is fixed in `ch.qos.logback:logback-classic:1.5.33` however the Gradle Ktlint plugin `org.jlleitschuh.gradle:ktlint-gradle`
       does not yet use the fixed version.
@@ -81,6 +93,11 @@ vulnerabilities:
       in the build.
     verdict: not affected
     justification: vulnerable code cannot be controlled by adversary
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: >-
       The issue is fixed in `ch.qos.logback:logback-core:1.5.36` however the Gradle Ktlint plugin `org.jlleitschuh.gradle:ktlint-gradle`
       does not yet use the fixed version.
@@ -361,6 +378,11 @@ vulnerabilities:
     analyzed_at: 2026-04-07
     verdict: risk acceptable
     severity: low
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
 
   - id: CVE-2024-12798
@@ -385,6 +407,11 @@ vulnerabilities:
     analyzed_at: 2026-04-07
     verdict: risk acceptable
     severity: low
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
 
   - id: CVE-2026-1225
@@ -405,6 +432,11 @@ vulnerabilities:
     analyzed_at: 2026-04-06
     verdict: risk acceptable
     severity: low
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"
 
   - id: CVE-2024-12801
@@ -425,4 +457,9 @@ vulnerabilities:
     analyzed_at: 2026-04-06
     verdict: risk acceptable
     severity: low
+    resolution:
+      in: 0.17.0
+      at: 2026-08-18
+      ref: "https://github.com/vulnlog/vulnlog/pull/253"
+      note: Security scans now cover release artifacts only, where ktlint's logback is not present.
     comment: "Fix will be in 1.3.15; Check for newer ktlint versions https://github.com/JLLeitschuh/ktlint-gradle"

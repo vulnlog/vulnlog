@@ -24,7 +24,7 @@
             </g>
         </symbol>
 
-        <!-- Step icons (same as on the website) — stroked, 24x24 -->
+        <!-- Step icons (same as on the website), stroked, 24x24 -->
         <symbol id="ic-doc" viewBox="0 0 24 24">
             <g fill="none" stroke="#e84ab5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -71,7 +71,7 @@
     <text x="200" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#e4e4ef">Scanner</text>
     <text x="200" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#e4e4ef">reports a finding</text>
 
-    <!-- Connector 1 → 2 -->
+    <!-- Connector 1 to 2 -->
     <line x1="320" y1="260" x2="480" y2="260" stroke="#e84ab5" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
 
     <!-- Step 2 -->
@@ -80,7 +80,7 @@
     <text x="600" y="430" text-anchor="middle" font-size="26" font-weight="800" fill="#e4e4ef">Engineer analyses</text>
     <text x="600" y="462" text-anchor="middle" font-size="26" font-weight="800" fill="#e4e4ef">the impact</text>
 
-    <!-- Connector 2 → 3 -->
+    <!-- Connector 2 to 3 -->
     <line x1="720" y1="260" x2="880" y2="260" stroke="#e84ab5" stroke-width="5" stroke-linecap="round" stroke-dasharray="2 12"/>
 
     <!-- Step 3 -->
@@ -91,6 +91,6 @@
 
     <!-- Bottom tagline -->
     <text x="600" y="575" text-anchor="middle" font-size="22" font-weight="600" fill="#a0a0b8">
-        Streamline your vulnerability tracking — from developers, for developers.
+        Streamline your vulnerability tracking. From developers, for developers.
     </text>
 </svg>

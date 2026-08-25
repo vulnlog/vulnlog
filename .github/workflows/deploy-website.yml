@@ -3,7 +3,7 @@ name: Deploy website and docs to GitHub Pages
 # Single implementation of the Pages deploy. Invoked three ways:
 # - workflow_call from release.yaml on final release tags
 # - workflow_dispatch for manual deploys from main
-# - workflow_run after the weekly security scan, to refresh the bundled report
+# - workflow_run after the weekly security scan, to refresh the bundled reports
 
 on:
   workflow_call:
@@ -69,7 +69,7 @@ jobs:
           else
             echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
           fi
-      - name: Download latest security report
+      - name: Download latest security reports
         if: steps.report-run.outputs.run-id != ''
         uses: actions/download-artifact@v8
         with:
@@ -94,10 +94,15 @@ jobs:
           cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
           cp -r build/docs/* _site/docs/
           cp schema/*.json _site/schema/
-          if [ -f _report/vulnlog-report.html ]; then
-            cp _report/vulnlog-report.html _site/security-report.html
+          if [ -f _report/vulnlog-impact-report.html ]; then
+            cp _report/vulnlog-impact-report.html _site/security-report.html
           else
-            echo "Skipping security report bundle (no artifact downloaded)."
+            echo "Skipping impact report bundle (no artifact downloaded)."
+          fi
+          if [ -f _report/vulnlog-changelog-report.txt ]; then
+            cp _report/vulnlog-changelog-report.txt _site/security-changelog.txt
+          else
+            echo "Skipping changelog report bundle (no artifact downloaded)."
           fi
           sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
               install/install.sh.template > _site/install
