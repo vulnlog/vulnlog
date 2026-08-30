@@ -24,13 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Set up Vulnlog CLI
+        uses: vulnlog/setup-vulnlog@v1
+        with:
+          version: ${{ env.VULNLOG_VERSION }}
+
       - name: Generate suppression files
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
-            suppress vulnlog.yaml --output-dir /work
+        run: vulnlog suppress vulnlog.yaml
 
       - name: Ensure suppression files exist
         run: |
@@ -47,20 +47,10 @@ jobs:
             .trivyignore.yaml
 
       - name: Generate impact report
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
-            report impact vulnlog.yaml
+        run: vulnlog report impact vulnlog.yaml
 
       - name: Generate changelog report
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            "ghcr.io/${{ github.repository }}:${VULNLOG_VERSION}" \
-            report changelog vulnlog.yaml --output vulnlog-changelog-report.txt
+        run: vulnlog report changelog vulnlog.yaml --output vulnlog-changelog-report.txt
 
       - name: Upload reports
         uses: actions/upload-artifact@v7
