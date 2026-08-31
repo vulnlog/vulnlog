@@ -127,7 +127,7 @@ jobs:
       # labels are the categories, and code scanning rejects the upload if two
       # runs share one, so leave them alone: a `category` here would be ignored.
       - name: Upload Snyk SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v4.37.6
+        uses: github/codeql-action/upload-sarif@v4.37.8
         with:
           sarif_file: snyk-results.sarif
 
@@ -168,7 +168,7 @@ jobs:
           limit-severities-for-sarif: true
 
       - name: Upload Trivy SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v4.37.6
+        uses: github/codeql-action/upload-sarif@v4.37.8
         with:
           sarif_file: trivy-results.sarif
           category: trivy
@@ -204,7 +204,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Upload Trivy image SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v4.37.6
+        uses: github/codeql-action/upload-sarif@v4.37.8
         with:
           sarif_file: trivy-image-results.sarif
           category: trivy-image
