@@ -2,7 +2,7 @@
 # Disable until fully supported in JDK 25 with Kotlin 2.3.0
 #detektVersion = "1.23.7"
 cliktVersion = "5.1.0"
-graalvmNativeBuildToolsVersion = "1.1.10"
+graalvmNativeBuildToolsVersion = "1.1.11"
 jacksonVersion = "3.2.2"
 kotestVersion = "6.2.4"
 kotlinVersion = "2.4.10"
@@ -10,7 +10,7 @@ ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
 # The only YAML library: it parses every file Vulnlog reads and emits every file Vulnlog writes.
 snakeYamlEngineVersion = "3.1.1"
-spotlessVersion = "8.9.0"
+spotlessVersion = "8.10.0"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
