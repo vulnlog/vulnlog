@@ -148,6 +148,21 @@ cd vulnlog
 
 The resulting distribution is placed in `build/install/vulnlog`.
 
+== GitHub Actions
+
+On a GitHub Actions runner, the Setup Vulnlog CLI action installs the CLI and puts it on `PATH`:
+
+[source,yaml,subs="attributes"]
+----
+- name: Set up Vulnlog CLI
+  uses: vulnlog/setup-vulnlog@v1
+  with:
+    version: {vulnlog-version}
+----
+
+Every later step in the job calls `vulnlog` directly.
+The xref:reference/github-action.adoc[GitHub Action reference] documents the inputs, outputs, and supported runners.
+
 == Gradle plugin
 
 For Gradle-based builds, the Vulnlog Gradle plugin runs Vulnlog as part of the build instead of as a separate binary:

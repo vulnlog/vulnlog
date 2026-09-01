@@ -22,6 +22,6 @@ Answer a customer or user from the recorded decision instead of re-analysing: xr
 
 == Returning readers
 
-* Reference: xref:reference/file-format.adoc[The Vulnlog file format], xref:reference/cli.adoc[the CLI], and xref:reference/gradle-plugin.adoc[the Gradle plugin].
+* Reference: xref:reference/file-format.adoc[The Vulnlog file format], xref:reference/cli.adoc[the CLI], xref:reference/gradle-plugin.adoc[the Gradle plugin], and xref:reference/github-action.adoc[the GitHub Action].
 * Concepts: xref:concepts/why-git.adoc[why decisions live in git], xref:concepts/data-model.adoc[the data model], and xref:concepts/vulnerability-states.adoc[vulnerability states].
 * Stuck? Ask in the https://github.com/vulnlog/vulnlog/discussions[GitHub discussions].

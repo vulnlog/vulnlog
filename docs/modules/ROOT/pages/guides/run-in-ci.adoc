@@ -13,7 +13,11 @@ See xref:reference/gradle-plugin.adoc[Gradle Plugin] for details.
 
 == GitHub Actions
 
-Example workflow using dynamic suppression. The suppression file is generated, used by the scanner, and discarded after the pipeline completes:
+The https://github.com/marketplace/actions/setup-vulnlog-cli[Setup Vulnlog CLI] action installs the CLI on the runner and puts it on `PATH`.
+Install it once per job, every later step calls `vulnlog` directly.
+
+Example workflow using dynamic suppression.
+The suppression file is generated, used by the scanner, and discarded after the pipeline completes:
 
 [source,yaml,subs="attributes"]
 ----
@@ -23,15 +27,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Vulnlog CLI
+        uses: vulnlog/setup-vulnlog@v1
+        with:
+          version: {vulnlog-version}
+
       - name: Generate suppression files
         continue-on-error: true
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            -w /work \
-            ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
-            suppress --reporter trivy vulnlog.yaml --output-dir /work
+        run: vulnlog suppress --reporter trivy vulnlog.yaml
 
       - name: Ensure suppression file exists
         run: |
@@ -54,13 +57,7 @@ jobs:
 
       - name: Generate Vulnlog HTML report
         if: always()
-        run: |
-          docker run --rm \
-            -u "$(id -u):$(id -g)" \
-            -v "${{ github.workspace }}:/work" \
-            -w /work \
-            ghcr.io/vulnlog/vulnlog:{vulnlog-version} \
-            report impact vulnlog.yaml
+        run: vulnlog report impact vulnlog.yaml
 
       - name: Upload Vulnlog HTML report
         if: always()
@@ -70,9 +67,13 @@ jobs:
           path: vulnlog-impact-report.html
 ----
 
+Pin the `version` input so the pipeline does not change when a new Vulnlog release ships.
+See xref:reference/github-action.adoc[GitHub Action] for the inputs, outputs, and supported runners.
+
 == Using the Docker image
 
-In most CI environments (GitHub Actions, Jenkins, GitLab CI) the runner's workspace is owned by UID 1000, so the container works without extra flags:
+On CI systems without a Vulnlog integration, run the container image.
+In most CI environments (Jenkins, GitLab CI, GitHub Actions) the runner's workspace is owned by UID 1000, so the container works without extra flags:
 
 [source,bash,subs="attributes"]
 ----

@@ -251,8 +251,8 @@
                 </div>
                 <div class="card">
                     <h3>Runs where you build</h3>
-                    <p>Ship a single binary with no runtime dependencies, or integrate Vulnlog as a Gradle plugin. Also
-                        available as a JVM distribution or Docker image.</p>
+                    <p>Ship a single binary with no runtime dependencies, or integrate Vulnlog as a Gradle plugin or a
+                        GitHub Action. Also available as a JVM distribution or Docker image.</p>
                 </div>
             </div>
         </div>
@@ -282,6 +282,15 @@
                     <div class="code-block" id="install-docker"></div>
                     <script id="install-docker-src" type="text/plain">
                         docker pull ghcr.io/vulnlog/vulnlog:VULNLOG_VERSION
+                    </script>
+                </div>
+                <div class="install-option">
+                    <h3>GitHub Actions</h3>
+                    <div class="code-block" id="install-action"></div>
+                    <script id="install-action-src" type="text/plain">
+                        - uses: vulnlog/setup-vulnlog@v1
+                          with:
+                            version: VULNLOG_VERSION
                     </script>
                 </div>
                 <div class="install-option">
@@ -517,6 +526,7 @@
     renderExample('install-script', 'install-script-src', highlightPlain);
     renderExample('install-brew', 'install-brew-src', highlightPlain);
     renderExample('install-docker', 'install-docker-src', highlightPlain);
+    renderExample('install-action', 'install-action-src', highlightPlain);
     renderExample('install-gradle', 'install-gradle-src', highlightPlain);
 </script>
 
