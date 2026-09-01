@@ -82,6 +82,15 @@ Or pull the Docker image:
 docker pull ghcr.io/vulnlog/vulnlog:latest
 ```
 
+On a GitHub Actions runner, install the CLI with the
+[Setup Vulnlog CLI](https://github.com/marketplace/actions/setup-vulnlog-cli) action:
+
+```yaml
+- uses: vulnlog/setup-vulnlog@v1
+  with:
+    version: <version>
+```
+
 To integrate Vulnlog into a Gradle build, add the plugin:
 
 ```kotlin

@@ -1,0 +1,112 @@
+= GitHub Action
+
+The Setup Vulnlog CLI action installs the Vulnlog CLI on a GitHub Actions runner and puts it on `PATH`.
+Install it once per job, every later step calls `vulnlog` directly.
+
+The action is published on the https://github.com/marketplace/actions/setup-vulnlog-cli[GitHub Marketplace] and developed at https://github.com/vulnlog/setup-vulnlog[vulnlog/setup-vulnlog].
+
+== Usage
+
+[source,yaml,subs="attributes"]
+----
+steps:
+  - uses: actions/checkout@v4
+
+  - name: Set up Vulnlog CLI
+    uses: vulnlog/setup-vulnlog@v1
+    with:
+      version: {vulnlog-version}
+
+  - run: vulnlog validate vulnlog.yaml --strict
+
+  - run: vulnlog report impact vulnlog.yaml
+----
+
+The action needs no token and no `permissions` block.
+It only downloads public release assets from GitHub.
+
+== Inputs
+
+[cols="1,1,3"]
+|===
+| Input | Default | Description
+
+| `version`
+| `latest`
+| Version to install, for example `{vulnlog-version}` or `v{vulnlog-version}`. `latest` resolves the newest stable release and never selects a pre-release.
+|===
+
+Pin `version` in every pipeline you rely on.
+`latest` picks up a new release the moment it ships, which suits a nightly job and not a release pipeline.
+
+== Outputs
+
+[cols="1,3"]
+|===
+| Output | Description
+
+| `version`
+| The installed version, without the leading `v`.
+
+| `distribution`
+| `native` or `jvm`.
+
+| `path`
+| Absolute path to the `vulnlog` executable.
+
+| `cache-hit`
+| `true` when the version came from the runner tool cache and nothing was downloaded.
+|===
+
+== Runner support
+
+The action installs the native binary where one exists, and the JVM distribution everywhere else.
+
+[cols="2,1,1"]
+|===
+| Runner | Distribution | Java required
+
+| `ubuntu-latest`, `ubuntu-24.04` (x64)
+| native
+| No
+
+| `macos-latest`, `macos-14` and later (arm64)
+| native
+| No
+
+| `windows-latest` (x64)
+| native
+| No
+
+| `ubuntu-24.04-arm` (arm64)
+| jvm
+| Yes
+
+| `macos-15-intel` (Intel x64)
+| jvm
+| Yes
+|===
+
+On a runner without a native build, install Java 21 or later first.
+Otherwise the step fails and tells you to:
+
+[source,yaml]
+----
+- uses: actions/setup-java@v6
+  with:
+    distribution: temurin
+    java-version: '21'
+
+- uses: vulnlog/setup-vulnlog@v1
+----
+
+[NOTE]
+====
+Vulnlog releases do not yet publish checksums or build attestations, so the action cannot verify the download.
+It will verify by default once they are published.
+====
+
+== See also
+
+* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] shows a complete workflow.
+* xref:reference/cli.adoc[The Vulnlog CLI] documents the commands to run after the setup step.
