@@ -139,10 +139,23 @@ fun writeInit(
     err: (String) -> Unit,
     initFile: FileOutputOption.File,
     content: String,
+    force: Boolean = false,
 ) {
     try {
-        initFile.path.writeText(content)
-        out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))
+        val path = initFile.path
+        if (path.toFile().exists() && !force) {
+            err(
+                formatMessage(
+                    FindingSeverity.ERROR,
+                    "refusing to overwrite existing file ${path}: pass --force to replace it",
+                ),
+            )
+            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
+        }
+        path.writeText(content)
+        out(formatStatus(StatusVerb.CREATED, path.toString()))
+    } catch (e: ProgramResult) {
+        throw e
     } catch (e: Exception) {
         err(formatMessage(FindingSeverity.ERROR, "cannot write ${initFile.path}: ${e.message}"))
         throw ProgramResult(ExitCode.GENERAL_ERROR.code)
