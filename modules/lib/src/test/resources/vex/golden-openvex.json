@@ -1,0 +1,61 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79",
+  "author": "Acme Security Team (security@acme.example)",
+  "timestamp": "2026-04-25T00:00:00Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2026-1111"
+      },
+      "products": [
+        {
+          "@id": "pkg:maven/com.acme/acme-cli@1.0.0"
+        },
+        {
+          "@id": "pkg:maven/com.acme/acme-web-app@1.0.0"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-2222"
+      },
+      "products": [
+        {
+          "@id": "pkg:maven/com.acme/acme-cli@1.0.0"
+        },
+        {
+          "@id": "pkg:maven/com.acme/acme-web-app@1.0.0"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update to release 1.0.1. Bumped log4j to 2.17.1."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-2222"
+      },
+      "products": [
+        {
+          "@id": "pkg:maven/com.acme/acme-cli@1.0.1"
+        }
+      ],
+      "status": "fixed"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2026-3333"
+      },
+      "products": [
+        {
+          "@id": "pkg:maven/com.acme/acme-cli@1.0.1"
+        }
+      ],
+      "status": "under_investigation"
+    }
+  ]
+}

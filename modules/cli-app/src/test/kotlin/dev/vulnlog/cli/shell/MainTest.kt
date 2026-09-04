@@ -94,6 +94,18 @@ class MainTest :
                 }.first shouldBe ExitCode.GENERAL_ERROR.code
             }
 
+            test("vex alone is a usage error") {
+                withCapturedStdout {
+                    runVulnlog(vulnlogCommand(), listOf("vex"))
+                }.first shouldBe ExitCode.GENERAL_ERROR.code
+            }
+
+            test("vex lists the VEX formats it can generate") {
+                val (_, out) = withCapturedStdout { runVulnlog(vulnlogCommand(), listOf("vex")) }
+
+                out shouldContain "openvex"
+            }
+
             test("report lists the reports it can generate") {
                 val (_, out) = withCapturedStdout { runVulnlog(vulnlogCommand(), listOf("report")) }
 
