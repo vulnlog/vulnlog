@@ -168,7 +168,6 @@ Only `not_affected` and `fixed` statements remove a finding.
 * Scoping the document to one release, or to the purls carrying a given tag.
 * Continuing an existing document's identity, so `@id` stays stable and `version` counts up.
 * Subcomponents, vulnerability aliases and descriptions, statement timestamps, and the analysis text.
-* A Gradle task.
 
 == When the command fails
 

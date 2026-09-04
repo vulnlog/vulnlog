@@ -35,6 +35,9 @@ vulnlog {
 
 | `report`
 | Container for the report tasks. Each report type has its own nested block: `report { impact { } }` and `report { changelog { } }`.
+
+| `vex`
+| Container for the VEX tasks. Each format has its own nested block: `vex { openvex { } }`.
 |===
 
 == Diagnostics
@@ -334,6 +337,45 @@ It fails the build only on invalid input, for example an unknown `fixedIn` or in
 [source,shell]
 ----
 ./gradlew vulnlogChangelogReport
+----
+
+=== `vulnlogOpenVex`
+
+Generates an OpenVEX document from a single Vulnlog file.
+See xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`] for the document contents and for which entries it leaves out.
+
+Settings live under `vex { openvex { } }`.
+
+[source,kotlin]
+----
+vulnlog {
+    vex {
+        openvex {
+            outputFile.set(layout.buildDirectory.file("vulnlog/vex.json"))  // optional
+        }
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `outputFile`
+| `build/vulnlog/vex.json`
+| File where the document is written.
+|===
+
+Only one input file is supported, since a document is anchored on the purls of one project.
+The task fails when `files` holds more than one entry.
+
+It also fails when no statement applies, either because no release declares purls or because no vulnerability entry references a release that does.
+Releases without purls are left out of the document and named in a `warning:` line.
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogOpenVex
 ----
 
 === `VulnlogCopyTask`

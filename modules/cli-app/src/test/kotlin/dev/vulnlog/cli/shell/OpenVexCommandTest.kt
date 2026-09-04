@@ -4,6 +4,7 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.lib.fixtures.openVexDocument
 import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -15,7 +16,7 @@ class OpenVexCommandTest :
         context("happy path") {
 
             test("writes the document to stdout and warns about the release without purls") {
-                withTempFile(content = vulnlogYamlWithPurls()) { input ->
+                withTempFile(content = openVexDocument()) { input ->
                     val result = OpenVexCommand().test("${input.absolutePath} -o -")
 
                     result.statusCode shouldBe 0
@@ -28,7 +29,7 @@ class OpenVexCommandTest :
             }
 
             test("-o writes the document to the given path") {
-                withTempFile(content = vulnlogYamlWithPurls()) { input ->
+                withTempFile(content = openVexDocument()) { input ->
                     withTempDir(prefix = "openvex-out") { outputDir ->
                         val target = outputDir.resolve("vex.json")
 
