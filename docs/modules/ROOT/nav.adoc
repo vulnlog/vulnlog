@@ -40,6 +40,7 @@
 *** xref:reference/cli-report-changelog.adoc[report changelog]
 *** xref:reference/cli-add.adoc[modify add]
 *** xref:reference/cli-copy.adoc[modify copy]
+*** xref:reference/cli-vex-openvex.adoc[vex openvex]
 ** xref:reference/gradle-plugin.adoc[Gradle plugin]
 ** xref:reference/github-action.adoc[GitHub Action]
 ** xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]

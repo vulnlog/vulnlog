@@ -1,0 +1,186 @@
+= vulnlog vex openvex
+
+Generates an https://github.com/openvex/spec[OpenVEX] document from a Vulnlog file.
+VEX (Vulnerability Exploitability eXchange) tells a scanner which findings do not apply to your product, so consumers of your release can filter their own scan results with your triage.
+
+[source]
+----
+vulnlog vex openvex <file> [-o <path>]
+----
+
+The document covers every release that declares `purls`.
+Filtering, release scoping and document identity across runs are not available yet; see <<not-yet-available>>.
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `-o, --output <path>`
+| Output file path, or `-` to write to stdout.
+Defaults to `vex.json` in the current directory.
+
+| `-`
+| Use as the file argument to read from stdin.
+
+|===
+
+== What the document contains
+
+The document carries the fields the OpenVEX specification requires, and one statement per vulnerability entry and release.
+
+`author` is the project `author`, with `contact` in parentheses when the file records one.
+`version` is always `1`, and `@id` is a fresh identifier on every run: without a baseline to continue from, each run issues a new document.
+
+Each statement names the vulnerability by its entry `id`, the products it applies to, and the status.
+
+=== Products come from release purls
+
+The products of a statement are the `purls` of the release, not the `packages` of the vulnerability entry.
+`packages` names the vulnerable dependency, which OpenVEX models as a subcomponent; subcomponents are not written yet.
+
+A release that declares no `purls` has nothing to anchor a statement to, so it is left out and named in a warning.
+When that leaves no statement at all, the command fails rather than write a document the specification rejects.
+
+See xref:reference/project-and-releases.adoc[Project and releases] for how to declare `purls`.
+
+=== Status
+
+[cols="1,3"]
+|===
+| Status | When
+
+| `not_affected`
+| The entry's verdict is `not affected`. The statement carries the matching OpenVEX `justification`.
+
+| `affected`
+| The entry's verdict is `affected`. The statement carries an `action_statement` derived from the `disposition` and the fix release.
+
+| `fixed`
+| The release is the one named by `resolution.in`.
+
+| `under_investigation`
+| The entry has no verdict yet.
+|===
+
+`fixed` wins: a release listed under `releases` and named by `resolution.in` at the same time is reported as fixed.
+
+The action statement is derived, never copied from `analysis`:
+
+[cols="1,1,2"]
+|===
+| `disposition` | Fix release | `action_statement`
+
+| _(absent)_
+| yes
+| `Update to release <id>.` followed by the resolution `note`
+
+| _(absent)_
+| no
+| `No remediation is available yet.`
+
+| `will fix`
+| yes
+| `Update to release <id>.` followed by the resolution `note`
+
+| `will fix`
+| no
+| `A fix is planned but not yet available.`
+
+| `wont fix`
+| yes
+| `The risk is accepted for this release. A fix ships with release <id>.`
+
+| `wont fix`
+| no
+| `The risk is accepted. No fix is planned.`
+|===
+
+The resolution note is appended to update actions only, so a note can never soften an accepted risk.
+
+== Examples
+
+.Write the document to vex.json
+[source]
+----
+vulnlog vex openvex vulnlog.yaml
+Wrote: vex.json
+----
+
+.Write the document to stdout
+[source]
+----
+vulnlog vex openvex full-example.vl.yaml -o -
+warning: releases without purls are not part of the document: '8.1.2'
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://vulnlog.dev/vex/8fce68a8-f9eb-483d-8b7d-19cb626826f7",
+  "author": "Demo Security Team (security@demo.com)",
+  "timestamp": "2026-09-04T11:29:56Z",
+  "version": 1,
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2021-002"
+      },
+      "products": [
+        {
+          "@id": "pkg:docker/demo-project@8.1.1"
+        },
+        {
+          "@id": "pkg:generic/demo-project@8.1.1"
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2021-44228"
+      },
+      "products": [
+        {
+          "@id": "pkg:docker/demo-project@8.1.1"
+        },
+        {
+          "@id": "pkg:generic/demo-project@8.1.1"
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Update to release 8.1.2. Updated Log4J from 2.14.1 to 2.17.1"
+    }
+  ]
+}
+----
+
+.Filter scanner findings with the generated document
+[source]
+----
+vulnlog vex openvex vulnlog.yaml -o vex.json
+trivy image --vex vex.json demo-project:8.1.1
+----
+
+Only `not_affected` and `fixed` statements remove a finding.
+`affected` and `under_investigation` leave the finding in place.
+
+[[not-yet-available]]
+== Not yet available
+
+* Scoping the document to one release, or to the purls carrying a given tag.
+* Continuing an existing document's identity, so `@id` stays stable and `version` counts up.
+* Subcomponents, vulnerability aliases and descriptions, statement timestamps, and the analysis text.
+* A Gradle task.
+
+== When the command fails
+
+* The Vulnlog file fails validation: the command reports the findings and exits `2`.
+* No statement applies, because no release declares `purls` or no entry references a release that does: the command exits `2`.
+  OpenVEX requires at least one statement, so no file is written.
+
+See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
+
+== See also
+
+- xref:reference/project-and-releases.adoc[Project and releases] for declaring release purls
+- xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications] for the justification vocabulary
+- xref:reference/cli-suppress.adoc[vulnlog suppress] for scanners that read ignore files instead of VEX
+- xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]

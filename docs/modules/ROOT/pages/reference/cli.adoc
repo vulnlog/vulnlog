@@ -97,6 +97,9 @@ Available on `report` and `suppress` commands.
 
 | xref:reference/cli-copy.adoc[modify copy]
 | Copy vulnerability entries from one Vulnlog file into one or more others.
+
+| xref:reference/cli-vex-openvex.adoc[vex openvex]
+| Generate an OpenVEX document for the releases that declare purls.
 |===
 
 == Exit codes
