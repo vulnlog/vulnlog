@@ -4,10 +4,12 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.lib.fixtures.openVexDocument
+import dev.vulnlog.lib.fixtures.openVexScopedDocument
 import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import org.gradle.testkit.runner.TaskOutcome
 
 private val FILES_FROM_TEST_YAML =
@@ -115,6 +117,122 @@ class VulnlogOpenVexTaskTest :
 
                 result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "vulnlogOpenVex supports a single Vulnlog file, but 2 are configured."
+            }
+        }
+
+        context("scoping") {
+
+            test("asOf covers the named release and every earlier one") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""asOf = "1.1.0""""),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVex").build()
+
+                result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                val document = dir.resolve("build/vulnlog/vex.json").readText()
+                document shouldContain "pkg:docker/acme/web-app@1.0.0"
+                document shouldContain "pkg:docker/acme/web-app@1.1.0"
+            }
+
+            test("tags keep only the purls carrying one of them") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""tags = setOf("container")"""),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVex").build()
+
+                result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                val document = dir.resolve("build/vulnlog/vex.json").readText()
+                document shouldContain "pkg:docker/acme/web-app@1.0.0"
+                document shouldNotContain "pkg:maven/com.acme/acme-lib@1.0.0"
+            }
+
+            test("fails on an unknown tag") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""tags = setOf("binary")"""),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "Tag not found: binary"
+            }
+        }
+
+        context("baseline") {
+
+            test("keeps the identifier and counts the version up when the content changed") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile(
+                            """
+                            baseline = layout.projectDirectory.file("previous.json")
+                            tags = setOf("container")
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+                val previous = dir.resolve("previous.json")
+                previous.writeText(
+                    """
+                    {
+                      "@context": "https://openvex.dev/ns/v0.2.0",
+                      "@id": "https://vulnlog.dev/vex/kept-across-runs",
+                      "author": "Acme Corp Security Team (security@acme.example)",
+                      "timestamp": "2026-04-25T00:00:00Z",
+                      "version": 7,
+                      "statements": []
+                    }
+                    """.trimIndent(),
+                )
+
+                val result = runner(dir, "vulnlogOpenVex").build()
+
+                result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                val document = dir.resolve("build/vulnlog/vex.json").readText()
+                document shouldContain "\"@id\": \"https://vulnlog.dev/vex/kept-across-runs\""
+                document shouldContain "\"timestamp\": \"2026-04-25T00:00:00Z\""
+                document shouldContain "\"version\": 8"
+            }
+
+            test("writes the baseline bytes back and reports it when nothing changed") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to openVexDocument())
+                runner(dir, "vulnlogOpenVex").build()
+                val previous = dir.resolve("previous.json")
+                previous.writeText(dir.resolve("build/vulnlog/vex.json").readText())
+                dir
+                    .resolve("build.gradle.kts")
+                    .writeText(openVexBuildFile("""baseline = layout.projectDirectory.file("previous.json")"""))
+
+                val result = runner(dir, "vulnlogOpenVex").build()
+
+                result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.output shouldContain "Unchanged: "
+                dir.resolve("build/vulnlog/vex.json").readText() shouldBe previous.readText()
+            }
+
+            test("fails when the baseline is the output file") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile(
+                            """
+                            outputFile = layout.projectDirectory.file("vex.json")
+                            baseline = layout.projectDirectory.file("vex.json")
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+                dir.resolve("vex.json").writeText("{}")
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "Gradle cannot read and write one file in a single task"
             }
         }
 

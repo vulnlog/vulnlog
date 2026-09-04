@@ -6,40 +6,62 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.validation.validateInputOrFail
+import dev.vulnlog.gradle.vex.buildOpenVexScopeOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
-import dev.vulnlog.lib.core.vex.openvex.releasesWithoutPurls
+import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedReleases
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexStatementCounts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexWritten
-import dev.vulnlog.lib.model.ReleaseEntry
+import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexWriter
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
+import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
+import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import java.io.File
 import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-
-private const val DOCUMENT_ID_PREFIX = "https://vulnlog.dev/vex/"
 
 @CacheableTask
 abstract class VulnlogOpenVexTask : DefaultTask() {
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val files: ConfigurableFileCollection
+
+    @get:Input
+    @get:Optional
+    abstract val asOf: Property<String>
+
+    @get:Input
+    abstract val tags: SetProperty<String>
+
+    @get:InputFile
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val baseline: RegularFileProperty
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -49,51 +71,66 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val sink = diagnosticSink()
         val inputFile = singleVulnlogFileInput(name, files.files)
         val vulnlogFile = validateInputOrFail(inputFile).project.vulnlogProjectFile
-
-        warnAboutSkippedReleases(vulnlogFile)
-        renderOpenVexProducts(vulnlogFile)?.let(sink::verbose)
-        val document =
-            buildOpenVexDocument(
-                vulnlogFile = vulnlogFile,
-                id = DOCUMENT_ID_PREFIX + UUID.randomUUID(),
-                timestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS),
-            )
-        renderOpenVexSkippedEntries(vulnlogFile).forEach(sink::debug)
-        if (document.statements.isEmpty()) failOnEmptyDocument(vulnlogFile)
-        sink.verbose(renderOpenVexStatementCounts(document))
-
+        val scope =
+            buildOpenVexScopeOrFail(vulnlogFile, asOf.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
         val out = outputFile.get().asFile
-        out.parentFile?.mkdirs()
-        out.writeText(OpenVexWriter.write(document))
-        sink.verbose(renderOpenVexWritten(out.path, document))
-        logger.lifecycle(formatStatus(StatusVerb.WROTE, out.absolutePath))
-    }
+        val baselineDocument = readBaseline(out)
 
-    /** Names the releases a statement was meant for that carry no purl, because they silently drop out. */
-    private fun warnAboutSkippedReleases(vulnlogFile: VulnlogFile) {
-        val skipped =
-            vulnlogFile.vulnerabilities
-                .flatMap { vulnEntry -> releasesWithoutPurls(vulnlogFile, vulnEntry) }
-                .toSet()
-        if (skipped.isEmpty()) return
-        // Named in the order the file declares them, not the order the entries happen to mention them.
-        val names =
-            vulnlogFile.releases
-                .map(ReleaseEntry::id)
-                .filter { it in skipped }
-                .joinToString(", ") { "'${it.value}'" }
-        logger.warn(
-            formatMessage(FindingSeverity.WARNING, "releases without purls are not part of the document: $names"),
-        )
-    }
-
-    private fun failOnEmptyDocument(vulnlogFile: VulnlogFile): Nothing {
-        val hint =
-            if (vulnlogFile.releases.none { it.purls.isNotEmpty() }) {
-                "Declare 'purls' on the releases you want the document to cover."
-            } else {
-                "No vulnerability entry references a release that declares purls."
+        val outcome = generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now())
+        logCollection(outcome.collection, sink)
+        val generated =
+            when (outcome) {
+                is OpenVexOutcome.Empty -> failOnEmptyDocument(vulnlogFile, scope)
+                is OpenVexOutcome.Generated -> outcome
             }
-        throw GradleException("No statement applies. $hint")
+        sink.verbose(renderOpenVexStatementCounts(generated.document))
+
+        out.parentFile?.mkdirs()
+        out.writeText(generated.content)
+        sink.verbose(renderOpenVexWritten(out.path, generated.document))
+        val verb = if (generated.unchanged) StatusVerb.UNCHANGED else StatusVerb.WROTE
+        logger.lifecycle(formatStatus(verb, out.absolutePath))
+    }
+
+    /** The warning and the diagnostics that say what the collection holds and what it left out. */
+    private fun logCollection(
+        collection: OpenVexCollection,
+        sink: DiagnosticSink,
+    ) {
+        renderOpenVexSkippedReleases(collection)?.let { logger.warn(formatMessage(FindingSeverity.WARNING, it)) }
+        renderOpenVexProducts(collection)?.let(sink::verbose)
+        renderOpenVexSkippedEntries(collection).forEach(sink::debug)
+    }
+
+    /**
+     * Reads the configured baseline. Gradle forbids one file being both an input and the output of a task, so
+     * continuing a document in place stays a CLI workflow and is rejected here with a message that says so.
+     */
+    private fun readBaseline(out: File): OpenVexBaseline? {
+        val file = baseline.orNull?.asFile ?: return null
+        if (file.canonicalFile == out.canonicalFile) {
+            throw GradleException(
+                "baseline and outputFile are the same file (${file.path}). " +
+                    "Gradle cannot read and write one file in a single task. " +
+                    "Point baseline at a committed document, or continue in place with 'vulnlog vex openvex --baseline'.",
+            )
+        }
+        return OpenVexReader.readBaseline(file.readText()) ?: run {
+            logger.warn(
+                formatMessage(
+                    FindingSeverity.WARNING,
+                    "baseline '${file.path}' is not an OpenVEX document, issuing a new one",
+                ),
+            )
+            null
+        }
+    }
+
+    private fun failOnEmptyDocument(
+        vulnlogFile: VulnlogFile,
+        scope: OpenVexScope,
+    ): Nothing {
+        val hint = renderOpenVexEmptyHint(vulnlogFile, scope).replaceFirstChar(Char::uppercase)
+        throw GradleException("No statement applies. $hint.")
     }
 }

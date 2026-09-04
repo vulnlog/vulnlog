@@ -114,4 +114,7 @@ abstract class VulnlogVexExtension
 
 interface VulnlogOpenVexExtension {
     val outputFile: RegularFileProperty
+    val asOf: Property<String>
+    val tags: SetProperty<String>
+    val baseline: RegularFileProperty
 }

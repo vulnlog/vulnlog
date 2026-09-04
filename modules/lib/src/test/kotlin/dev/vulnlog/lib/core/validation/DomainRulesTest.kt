@@ -24,6 +24,7 @@ import dev.vulnlog.lib.model.finding.Rule
 import dev.vulnlog.lib.model.finding.ValidationFinding
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -606,6 +607,74 @@ class DomainRulesTest :
                 val file = fileWithVerdict(Verdict.Affected(Severity.CRITICAL))
 
                 val findings = applyV1Rules(file).filter { it.rule == Rule.ACCEPTED_CRITICAL_RISK }
+
+                findings.shouldBeEmpty()
+            }
+        }
+
+        context("releases without purls") {
+
+            test("a file that declares no purls anywhere produces no finding") {
+                val file =
+                    vulnlogFile(
+                        releases = listOf(releaseEntry("1.0.0"), releaseEntry("1.1.0")),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("1.1.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASE_WITHOUT_PURLS }
+
+                findings.shouldBeEmpty()
+            }
+
+            test("warns for each release without purls once another release declares them") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))),
+                                releaseEntry("1.1.0"),
+                                releaseEntry("1.2.0"),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("1.1.0"), release("1.2.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASE_WITHOUT_PURLS }
+
+                findings.map { it.path } shouldContainExactly listOf("releases[1.1.0]", "releases[1.2.0]")
+                findings.first().severity shouldBe FindingSeverity.WARNING
+                findings.first().message shouldContain "declares no purls"
+            }
+
+            test("releases that all declare purls produce no finding") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))),
+                                releaseEntry("1.1.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.1.0"))),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0"), release("1.1.0")),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASE_WITHOUT_PURLS }
 
                 findings.shouldBeEmpty()
             }

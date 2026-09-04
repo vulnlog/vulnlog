@@ -16,16 +16,19 @@ import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexVulnerabilityDto
 import java.time.format.DateTimeFormatter
 
 object OpenVexMapper {
-    fun toDto(document: OpenVexDocument): OpenVexDocumentDto =
-        OpenVexDocumentDto(
+    fun toDto(document: OpenVexDocument): OpenVexDocumentDto {
+        val identity = document.identity
+        return OpenVexDocumentDto(
             context = OPEN_VEX_CONTEXT,
-            id = document.id,
+            id = identity.id,
             author = document.author,
             // Formatted here rather than left to Jackson, whose date handling is version dependent.
-            timestamp = DateTimeFormatter.ISO_INSTANT.format(document.timestamp),
-            version = document.version,
+            timestamp = DateTimeFormatter.ISO_INSTANT.format(identity.timestamp),
+            lastUpdated = identity.lastUpdated?.let(DateTimeFormatter.ISO_INSTANT::format),
+            version = identity.version,
             statements = document.statements.map(::toStatementDto),
         )
+    }
 
     private fun toStatementDto(statement: OpenVexStatement): OpenVexStatementDto =
         OpenVexStatementDto(

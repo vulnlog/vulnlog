@@ -12,28 +12,37 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.unique
+import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.cli.shell.vex.resolveOpenVexScope
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
-import dev.vulnlog.lib.core.vex.openvex.releasesWithoutPurls
+import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedReleases
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexStatementCounts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexWritten
-import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexWriter
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
+import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
+import java.io.IOException
 import java.nio.file.Path
 import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-
-private const val DOCUMENT_ID_PREFIX = "https://vulnlog.dev/vex/"
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.readText
 
 class OpenVexCommand : CliktCommand(name = "openvex") {
     override fun help(context: Context): String = "Generate OpenVEX files from Vulnlog files."
@@ -49,11 +58,50 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         |Write the document to stdout.
         |
         |vulnlog vex openvex vulnlog.yaml -o -
+        |
+        |Write a document covering the container artifacts of release 1.2.0 and everything before it.
+        |
+        |vulnlog vex openvex vulnlog.yaml --as-of 1.2.0 --tag container -o vex-1.2.0.json
+        |
+        |Continue an existing document, so its identifier stays stable and the version counts up.
+        |
+        |vulnlog vex openvex vulnlog.yaml --baseline vex.json -o vex.json
         """.trimMargin()
 
     val input: FileInputOption by argument(
         help = "Vulnlog file, or '-' to read from stdin.",
     ).convert(conversion = ArgumentTransformContext::toInputFileOption)
+
+    val asOfRequest: String? by option(
+        "--as-of",
+        metavar = "<release-id>",
+        help =
+            """
+            Cover the state as of this release.
+            Every earlier release is covered too. A fix shipping later is still named by the action statement.
+            """.trimIndent(),
+    )
+
+    val tagsRequest: Set<String> by option(
+        "--tag",
+        metavar = "<tag>",
+        help =
+            """
+            Keep only the release purls carrying this tag.
+            Use multiple times to keep the purls carrying any of them.
+            """.trimIndent(),
+    ).multiple()
+        .unique()
+
+    val baselineRequest: Path? by option(
+        "--baseline",
+        metavar = "<path>",
+        help =
+            """
+            Existing OpenVEX document whose identity is continued.
+            Its '@id' and 'timestamp' are kept and 'version' counts up. Without it every run issues a new document.
+            """.trimIndent(),
+    ).path(canBeDir = false)
 
     val output: FileOutputOption by option(
         "-o",
@@ -65,59 +113,83 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
 
     override fun run() {
         val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
+        val scope = resolveOpenVexScope(asOfRequest, tagsRequest, vulnlogFile)
+        val baseline = baselineRequest?.let(::readBaselineOrFail)
 
-        warnAboutSkippedReleases(vulnlogFile)
-        renderOpenVexProducts(vulnlogFile)?.let { diagnosticSink().verbose(it) }
-        val document =
-            buildOpenVexDocument(
-                vulnlogFile = vulnlogFile,
-                id = DOCUMENT_ID_PREFIX + UUID.randomUUID(),
-                timestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS),
-            )
-        renderOpenVexSkippedEntries(vulnlogFile).forEach { diagnosticSink().debug(it) }
-        if (document.statements.isEmpty()) failOnEmptyDocument(vulnlogFile)
-        diagnosticSink().verbose(renderOpenVexStatementCounts(document))
+        val outcome = generateOpenVex(vulnlogFile, scope, baseline, Instant.now())
+        echoCollection(outcome.collection)
+        val generated =
+            when (outcome) {
+                is OpenVexOutcome.Empty -> failOnEmptyDocument(vulnlogFile, scope)
+                is OpenVexOutcome.Generated -> outcome
+            }
+        diagnosticSink().verbose(renderOpenVexStatementCounts(generated.document))
+        write(generated)
+    }
 
-        val content = OpenVexWriter.write(document)
+    /** The warning and the diagnostics that say what the collection holds and what it left out. */
+    private fun echoCollection(collection: OpenVexCollection) {
+        renderOpenVexSkippedReleases(collection)?.let { echoMessage(formatMessage(FindingSeverity.WARNING, it)) }
+        renderOpenVexProducts(collection)?.let { diagnosticSink().verbose(it) }
+        renderOpenVexSkippedEntries(collection).forEach { diagnosticSink().debug(it) }
+    }
+
+    private fun write(generated: OpenVexOutcome.Generated) {
         when (val target = output) {
             is FileOutputOption.File -> {
-                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, content)
-                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), document))
+                if (generated.unchanged && isBaselinePath(target.path)) {
+                    echoStatus(formatStatus(StatusVerb.UNCHANGED, target.path.toString()))
+                    return
+                }
+                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, generated.content)
+                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), generated.document))
             }
+
             FileOutputOption.Stdout -> {
-                echo(content, trailingNewline = false)
-                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", document))
+                echo(generated.content, trailingNewline = false)
+                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", generated.document))
             }
         }
     }
 
-    /** Names the releases a statement was meant for that carry no purl, because they silently drop out. */
-    private fun warnAboutSkippedReleases(vulnlogFile: VulnlogFile) {
-        val skipped =
-            vulnlogFile.vulnerabilities
-                .flatMap { vulnEntry -> releasesWithoutPurls(vulnlogFile, vulnEntry) }
-                .toSet()
-        if (skipped.isEmpty()) return
-        // Named in the order the file declares them, not the order the entries happen to mention them.
-        val names =
-            vulnlogFile.releases
-                .map(ReleaseEntry::id)
-                .filter { it in skipped }
-                .joinToString(", ") { "'${it.value}'" }
-        echoMessage(
-            formatMessage(FindingSeverity.WARNING, "releases without purls are not part of the document: $names"),
-        )
+    /** True when [target] is the file the baseline was read from, so writing it back would only bump the version. */
+    private fun isBaselinePath(target: Path): Boolean =
+        baselineRequest?.toAbsolutePath()?.normalize() == target.toAbsolutePath().normalize()
+
+    /**
+     * Reads the baseline at [path]. A missing file is an error, because the caller asked to continue a document that
+     * is not there. A file that is not an OpenVEX document only warns: garbage in, new identity out.
+     */
+    private fun readBaselineOrFail(path: Path): OpenVexBaseline? {
+        if (!path.isRegularFile()) {
+            echoMessage(formatMessage(FindingSeverity.ERROR, "baseline '$path' does not exist"))
+            echoMessage(formatHint("omit --baseline to issue a new document"))
+            throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
+        }
+        val content =
+            try {
+                path.readText()
+            } catch (e: IOException) {
+                echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
+                throw ProgramResult(ExitCode.GENERAL_ERROR.code)
+            }
+        return OpenVexReader.readBaseline(content) ?: run {
+            echoMessage(
+                formatMessage(
+                    FindingSeverity.WARNING,
+                    "baseline '$path' is not an OpenVEX document, issuing a new one",
+                ),
+            )
+            null
+        }
     }
 
-    private fun failOnEmptyDocument(vulnlogFile: VulnlogFile): Nothing {
+    private fun failOnEmptyDocument(
+        vulnlogFile: VulnlogFile,
+        scope: OpenVexScope,
+    ): Nothing {
         echoMessage(formatMessage(FindingSeverity.ERROR, "no statement applies"))
-        val hint =
-            if (vulnlogFile.releases.none { it.purls.isNotEmpty() }) {
-                "declare 'purls' on the releases you want the document to cover"
-            } else {
-                "no vulnerability entry references a release that declares purls"
-            }
-        echoMessage(formatHint(hint))
+        echoMessage(formatHint(renderOpenVexEmptyHint(vulnlogFile, scope)))
         throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
     }
 }

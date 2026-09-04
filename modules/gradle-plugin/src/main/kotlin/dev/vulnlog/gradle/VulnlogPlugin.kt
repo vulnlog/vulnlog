@@ -90,6 +90,9 @@ class VulnlogPlugin : Plugin<Project> {
             task.description = "Generate an OpenVEX document."
             task.group = "vulnlog"
             task.files.from(extension.files)
+            task.asOf.convention(extension.vex.openvex.asOf)
+            task.tags.convention(extension.vex.openvex.tags)
+            task.baseline.convention(extension.vex.openvex.baseline)
             task.outputFile.convention(
                 extension.vex.openvex.outputFile
                     .orElse(project.layout.buildDirectory.file("vulnlog/vex.json")),

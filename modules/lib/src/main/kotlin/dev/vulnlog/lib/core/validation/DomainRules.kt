@@ -30,6 +30,7 @@ val v1DomainRules =
         ::validateSourceInReportIsDefinedWhenOther,
         ::validateNoAcceptedCriticalRisk,
         ::validateReleasesAreDeclaredInPublicationOrder,
+        ::validateReleasesDeclarePurls,
     )
 
 private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
@@ -288,5 +289,21 @@ private fun validateReleasesAreDeclaredInPublicationOrder(file: VulnlogFile): Li
             } else {
                 null
             }
+        }
+}
+
+/** Meaningful only once the file uses purls: a release without them drops out of every VEX document. */
+private fun validateReleasesDeclarePurls(file: VulnlogFile): List<ValidationFinding> {
+    if (file.releases.none { release -> release.purls.isNotEmpty() }) return emptyList()
+
+    return file.releases
+        .filter { release -> release.purls.isEmpty() }
+        .map { release ->
+            ValidationFinding(
+                severity = FindingSeverity.WARNING,
+                rule = Rule.RELEASE_WITHOUT_PURLS,
+                path = "releases[${release.id.value}]",
+                message = "Release '${release.id.value}' declares no purls and is left out of VEX documents.",
+            )
         }
 }
