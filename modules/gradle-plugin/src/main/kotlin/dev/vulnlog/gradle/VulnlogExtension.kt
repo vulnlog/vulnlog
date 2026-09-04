@@ -30,6 +30,9 @@ abstract class VulnlogExtension
         val report: VulnlogReportExtension =
             objects.newInstance(VulnlogReportExtension::class.java)
 
+        val vex: VulnlogVexExtension =
+            objects.newInstance(VulnlogVexExtension::class.java)
+
         val fmt: VulnlogFmtExtension =
             objects.newInstance(VulnlogFmtExtension::class.java).apply {
                 check.convention(false)
@@ -40,6 +43,8 @@ abstract class VulnlogExtension
         fun suppress(action: Action<VulnlogSuppressExtension>) = action.execute(suppress)
 
         fun report(action: Action<VulnlogReportExtension>) = action.execute(report)
+
+        fun vex(action: Action<VulnlogVexExtension>) = action.execute(vex)
 
         fun fmt(action: Action<VulnlogFmtExtension>) = action.execute(fmt)
     }
@@ -95,4 +100,18 @@ interface VulnlogChangelogReportExtension {
     val reporter: Property<String>
     val asOf: Property<String>
     val tags: SetProperty<String>
+}
+
+abstract class VulnlogVexExtension
+    @Inject
+    constructor(
+        objects: ObjectFactory,
+    ) {
+        val openvex: VulnlogOpenVexExtension = objects.newInstance(VulnlogOpenVexExtension::class.java)
+
+        fun openvex(action: Action<VulnlogOpenVexExtension>) = action.execute(openvex)
+    }
+
+interface VulnlogOpenVexExtension {
+    val outputFile: RegularFileProperty
 }

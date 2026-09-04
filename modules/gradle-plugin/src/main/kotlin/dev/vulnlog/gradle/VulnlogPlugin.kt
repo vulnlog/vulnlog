@@ -82,6 +82,16 @@ class VulnlogPlugin : Plugin<Project> {
                 changelog.outputFile.orElse(task.format.map { token -> project.changelogReportFile(token) }),
             )
         }
+
+        project.tasks.register("vulnlogOpenVex", VulnlogOpenVexTask::class.java) { task ->
+            task.description = "Generate an OpenVEX document."
+            task.group = "vulnlog"
+            task.files.from(extension.files)
+            task.outputFile.convention(
+                extension.vex.openvex.outputFile
+                    .orElse(project.layout.buildDirectory.file("vulnlog/vex.json")),
+            )
+        }
     }
 }
 
