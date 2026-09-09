@@ -139,7 +139,13 @@ fun writeInit(
     err: (String) -> Unit,
     initFile: FileOutputOption.File,
     content: String,
+    force: Boolean = false,
 ) {
+    if (!force && initFile.path.exists()) {
+        val message = "The file ${initFile.path} already exists. Pass --force to replace it."
+        err(formatMessage(FindingSeverity.ERROR, message))
+        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
+    }
     try {
         initFile.path.writeText(content)
         out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))

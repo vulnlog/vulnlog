@@ -33,9 +33,41 @@ class VulnlogInitTaskTest :
                 content shouldContain "Alice"
                 content shouldContain "schemaVersion:"
             }
+
+            test("overwrites output file when --force is passed") {
+                val dir = gradleProject(buildFile())
+                dir.resolve("vulnlog.yaml").writeText("existing content")
+
+                val result = runner(dir, "vulnlogInit", *REQUIRED_PROPS, "--force").build()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.SUCCESS
+                val content = dir.resolve("vulnlog.yaml").readText()
+                content shouldContain "Acme Corp"
+            }
+
+            test("overwrites output file when -Pvulnlog.force=true is passed") {
+                val dir = gradleProject(buildFile())
+                dir.resolve("vulnlog.yaml").writeText("existing content")
+
+                val result = runner(dir, "vulnlogInit", *REQUIRED_PROPS, "-Pvulnlog.force=true").build()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.SUCCESS
+                val content = dir.resolve("vulnlog.yaml").readText()
+                content shouldContain "Acme Corp"
+            }
         }
 
         context("argument validation") {
+
+            test("fails when output file already exists without --force") {
+                val dir = gradleProject(buildFile())
+                dir.resolve("vulnlog.yaml").writeText("existing content")
+
+                val result = runner(dir, "vulnlogInit", *REQUIRED_PROPS).buildAndFail()
+
+                result.task(":vulnlogInit")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "already exists. Pass --force to replace it."
+            }
 
             test("fails when -Pvulnlog.organization is missing") {
                 val dir = gradleProject(buildFile())
