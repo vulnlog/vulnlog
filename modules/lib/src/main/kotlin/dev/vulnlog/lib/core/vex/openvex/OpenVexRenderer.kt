@@ -18,7 +18,7 @@ fun renderOpenVexScope(scope: OpenVexScope): List<String> =
     listOfNotNull(
         scope.releases
             .takeIf { it.isNotEmpty() }
-            ?.let { releases -> "as-of scope expanded to releases: ${releases.joinToString(", ") { it.value }}" },
+            ?.let { releases -> "release scope: ${releases.joinToString(", ") { it.value }}" },
         scope.tags
             .takeIf { it.isNotEmpty() }
             ?.let { tags -> "tag scope matched tags: ${tags.joinToString(", ") { it.value }}" },
@@ -73,7 +73,7 @@ fun renderOpenVexEmptyHint(
             "declare 'purls' on the releases you want the document to cover"
 
         scope.tags.isNotEmpty() -> "no release purl in scope carries one of the requested tags"
-        scope.releases.isNotEmpty() -> "no vulnerability entry references a release in scope that declares purls"
+        scope.releases.isNotEmpty() -> "no vulnerability entry applies to the release in scope"
         else -> "no vulnerability entry references a release that declares purls"
     }
 

@@ -63,7 +63,7 @@ class OpenVexRendererTest :
                 val scope = OpenVexScope(releases = setOf(release("1.0.0")), tags = setOf(tag("container")))
 
                 renderOpenVexScope(scope) shouldContainExactly
-                    listOf("as-of scope expanded to releases: 1.0.0", "tag scope matched tags: container")
+                    listOf("release scope: 1.0.0", "tag scope matched tags: container")
             }
 
             test("is silent without a scope") {
@@ -124,7 +124,12 @@ class OpenVexRendererTest :
 
         context("document lines") {
 
-            val document = buildOpenVexDocument(file, freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
+            val document =
+                buildOpenVexDocument(
+                    file.project,
+                    freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT),
+                    collectOpenVexStatements(file).statements,
+                )
 
             test("renderOpenVexStatementCounts breaks the total down by status") {
                 renderOpenVexStatementCounts(document) shouldBe "collected 1 statement: 1 under_investigation"
@@ -152,7 +157,7 @@ class OpenVexRendererTest :
 
             test("blames the release scope when one is active") {
                 renderOpenVexEmptyHint(file, OpenVexScope(releases = setOf(release("1.0.1")))) shouldBe
-                    "no vulnerability entry references a release in scope that declares purls"
+                    "no vulnerability entry applies to the release in scope"
             }
 
             test("blames the entries otherwise") {

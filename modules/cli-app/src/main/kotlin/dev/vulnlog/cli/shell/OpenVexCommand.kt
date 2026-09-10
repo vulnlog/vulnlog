@@ -16,6 +16,7 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.path
+import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.cli.shell.vex.resolveOpenVexScope
 import dev.vulnlog.lib.core.StatusVerb
@@ -23,6 +24,7 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
+import dev.vulnlog.lib.core.vex.openvex.openVexTooling
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -59,9 +61,9 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         |
         |vulnlog vex openvex vulnlog.yaml -o -
         |
-        |Write a document covering the container artifacts of release 1.2.0 and everything before it.
+        |Write the document for the container image of release 1.2.0.
         |
-        |vulnlog vex openvex vulnlog.yaml --as-of 1.2.0 --tag container -o vex-1.2.0.json
+        |vulnlog vex openvex vulnlog.yaml --release 1.2.0 --tag container -o vex-1.2.0-container.json
         |
         |Continue an existing document, so its identifier stays stable and the version counts up.
         |
@@ -72,13 +74,13 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         help = "Vulnlog file, or '-' to read from stdin.",
     ).convert(conversion = ArgumentTransformContext::toInputFileOption)
 
-    val asOfRequest: String? by option(
-        "--as-of",
+    val releaseRequest: String? by option(
+        "--release",
         metavar = "<release-id>",
         help =
             """
-            Cover the state as of this release.
-            Every earlier release is covered too. A fix shipping later is still named by the action statement.
+            Write the document for this release only.
+            Without it the document covers every release that declares purls.
             """.trimIndent(),
     )
 
@@ -113,10 +115,11 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
 
     override fun run() {
         val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
-        val scope = resolveOpenVexScope(asOfRequest, tagsRequest, vulnlogFile)
+        val scope = resolveOpenVexScope(releaseRequest, tagsRequest, vulnlogFile)
         val baseline = baselineRequest?.let(::readBaselineOrFail)
 
-        val outcome = generateOpenVex(vulnlogFile, scope, baseline, Instant.now())
+        val outcome =
+            generateOpenVex(vulnlogFile, scope, baseline, Instant.now(), openVexTooling("CLI", BuildInfo.VERSION))
         echoCollection(outcome.collection)
         val generated =
             when (outcome) {

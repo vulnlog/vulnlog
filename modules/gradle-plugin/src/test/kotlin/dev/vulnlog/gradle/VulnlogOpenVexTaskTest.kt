@@ -122,10 +122,10 @@ class VulnlogOpenVexTaskTest :
 
         context("scoping") {
 
-            test("asOf covers the named release and every earlier one") {
+            test("release covers only the named release") {
                 val dir =
                     gradleProject(
-                        openVexBuildFile("""asOf = "1.1.0""""),
+                        openVexBuildFile("""release = "1.1.0""""),
                         "test.vl.yaml" to openVexScopedDocument(),
                     )
 
@@ -133,8 +133,9 @@ class VulnlogOpenVexTaskTest :
 
                 result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
                 val document = dir.resolve("build/vulnlog/vex.json").readText()
-                document shouldContain "pkg:docker/acme/web-app@1.0.0"
                 document shouldContain "pkg:docker/acme/web-app@1.1.0"
+                document shouldNotContain "pkg:docker/acme/web-app@1.0.0"
+                document shouldContain "\"status\": \"fixed\""
             }
 
             test("tags keep only the purls carrying one of them") {
@@ -197,8 +198,9 @@ class VulnlogOpenVexTaskTest :
                 result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
                 val document = dir.resolve("build/vulnlog/vex.json").readText()
                 document shouldContain "\"@id\": \"https://vulnlog.dev/vex/kept-across-runs\""
-                document shouldContain "\"timestamp\": \"2026-04-25T00:00:00Z\""
+                document shouldNotContain "2026-04-25T00:00:00Z"
                 document shouldContain "\"version\": 8"
+                document shouldContain "\"tooling\": \"Vulnlog Gradle plugin version "
             }
 
             test("writes the baseline bytes back and reports it when nothing changed") {

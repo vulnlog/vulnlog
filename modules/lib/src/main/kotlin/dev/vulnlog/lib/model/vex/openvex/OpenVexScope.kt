@@ -13,7 +13,7 @@ import dev.vulnlog.lib.model.Tag
  */
 data class OpenVexScope(
     /**
-     * The releases that may anchor a statement. Set by `--as-of`, which resolves to the window up to that release.
+     * The releases that may anchor a statement. `--release` narrows it to one; empty covers every release.
      */
     val releases: Set<Release> = emptySet(),
     /**

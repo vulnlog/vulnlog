@@ -31,6 +31,7 @@ val v1DomainRules =
         ::validateNoAcceptedCriticalRisk,
         ::validateReleasesAreDeclaredInPublicationOrder,
         ::validateReleasesDeclarePurls,
+        ::validateVulnerabilitiesAreDated,
     )
 
 private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
@@ -304,6 +305,27 @@ private fun validateReleasesDeclarePurls(file: VulnlogFile): List<ValidationFind
                 rule = Rule.RELEASE_WITHOUT_PURLS,
                 path = "releases[${release.id.value}]",
                 message = "Release '${release.id.value}' declares no purls and is left out of VEX documents.",
+            )
+        }
+}
+
+/**
+ * Meaningful only once the file uses purls: an undated entry cannot date its VEX statements from the file, so the
+ * writer falls back to the time of the run and the document changes on every run.
+ */
+private fun validateVulnerabilitiesAreDated(file: VulnlogFile): List<ValidationFinding> {
+    if (file.releases.none { release -> release.purls.isNotEmpty() }) return emptyList()
+
+    return file.vulnerabilities
+        .filter { vuln -> vuln.analyzedAt == null && vuln.reports.none { report -> report.at != null } }
+        .map { vuln ->
+            ValidationFinding(
+                severity = FindingSeverity.WARNING,
+                rule = Rule.VULNERABILITY_WITHOUT_DATE,
+                path = "vulnerabilities[${vuln.id.canonical()}]",
+                message =
+                    "Vulnerability '${vuln.id.canonical()}' records no date. " +
+                        "Set 'analyzed_at' or a report 'at' date, so its VEX statements are dated from the file.",
             )
         }
 }

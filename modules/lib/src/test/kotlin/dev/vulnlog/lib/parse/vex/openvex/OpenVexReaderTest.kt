@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.parse.vex.openvex
 
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
+import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
 import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
 import dev.vulnlog.lib.core.vex.openvex.nextOpenVexIdentity
 import dev.vulnlog.lib.fixtures.cve
@@ -14,6 +15,8 @@ import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -50,6 +53,11 @@ private fun fileWith(releases: List<String>): VulnlogFile =
         vulnerabilities = listOf(vulnerability(id = cve("CVE-2026-1111"), releases = releases.map(::release))),
     )
 
+private fun documentOf(
+    file: VulnlogFile,
+    identity: OpenVexIdentity,
+): OpenVexDocument = buildOpenVexDocument(file.project, identity, collectOpenVexStatements(file).statements)
+
 class OpenVexReaderTest :
     FunSpec({
 
@@ -61,7 +69,6 @@ class OpenVexReaderTest :
                 val baseline = OpenVexReader.readBaseline(content)
 
                 baseline?.id shouldBe DOCUMENT_ID
-                baseline?.timestamp shouldBe ISSUED_AT
                 baseline?.version shouldBe 3
                 baseline?.content shouldBe content
             }
@@ -82,12 +89,12 @@ class OpenVexReaderTest :
                 baseline?.id shouldBe DOCUMENT_ID
             }
 
-            test("a timestamp with an offset is normalized to UTC") {
+            test("a timestamp with an offset still counts as a document") {
                 val content = document(timestamp = "2026-04-25T02:00:00+02:00")
 
                 val baseline = OpenVexReader.readBaseline(content)
 
-                baseline?.timestamp shouldBe ISSUED_AT
+                baseline?.id shouldBe DOCUMENT_ID
             }
 
             test("a foreign context is not a baseline") {
@@ -127,14 +134,14 @@ class OpenVexReaderTest :
 
             test("a rerun over the same file changes nothing but the version and the clock") {
                 val file = fileWith(listOf("1.0.0"))
-                val first = buildOpenVexDocument(file, freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
+                val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
                 val baseline =
-                    OpenVexBaseline(DOCUMENT_ID, ISSUED_AT, version = 1, content = OpenVexWriter.write(first))
+                    OpenVexBaseline(DOCUMENT_ID, version = 1, content = OpenVexWriter.write(first))
 
                 val unchanged =
                     OpenVexReader.isUnchanged(
                         baseline,
-                        buildOpenVexDocument(file, nextOpenVexIdentity(baseline, UPDATED_AT)),
+                        documentOf(file, nextOpenVexIdentity(baseline, UPDATED_AT)),
                     )
 
                 unchanged shouldBe true
@@ -142,24 +149,24 @@ class OpenVexReaderTest :
 
             test("an added statement is a change") {
                 val first =
-                    buildOpenVexDocument(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
+                    documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
                 val baseline =
-                    OpenVexBaseline(DOCUMENT_ID, ISSUED_AT, version = 1, content = OpenVexWriter.write(first))
+                    OpenVexBaseline(DOCUMENT_ID, version = 1, content = OpenVexWriter.write(first))
                 val grown = fileWith(listOf("1.0.0", "1.1.0"))
 
                 val unchanged =
                     OpenVexReader.isUnchanged(
                         baseline,
-                        buildOpenVexDocument(grown, nextOpenVexIdentity(baseline, UPDATED_AT)),
+                        documentOf(grown, nextOpenVexIdentity(baseline, UPDATED_AT)),
                     )
 
                 unchanged shouldBe false
             }
 
             test("a baseline that cannot be parsed is a change") {
-                val baseline = OpenVexBaseline(DOCUMENT_ID, ISSUED_AT, version = 1, content = "{ not json")
+                val baseline = OpenVexBaseline(DOCUMENT_ID, version = 1, content = "{ not json")
                 val document =
-                    buildOpenVexDocument(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
+                    documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
 
                 val unchanged = OpenVexReader.isUnchanged(baseline, document)
 
@@ -169,17 +176,19 @@ class OpenVexReaderTest :
             test("key order and formatting do not count as a change") {
                 val file = fileWith(listOf("1.0.0"))
                 val reordered =
-                    """{"statements": [{"status": "under_investigation", """ +
-                        """"products": [{"@id": "pkg:maven/com.acme/app@1.0.0"}], """ +
-                        """"vulnerability": {"name": "CVE-2026-1111"}}], "version": 1, """ +
-                        """"timestamp": "2026-04-25T00:00:00Z", "author": "author", """ +
+                    """{"statements": [{"supplier": "org", "status": "under_investigation", """ +
+                        """"products": [{"identifiers": {"purl": "pkg:maven/com.acme/app@1.0.0"}, """ +
+                        """"@id": "pkg:maven/com.acme/app@1.0.0"}], """ +
+                        """"vulnerability": {"name": "CVE-2026-1111", """ +
+                        """"@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-1111"}}], "version": 1, """ +
+                        """"timestamp": "2026-04-25T00:00:00Z", "role": "Document Creator", "author": "author", """ +
                         """"@id": "$DOCUMENT_ID", "@context": "https://openvex.dev/ns/v0.2.0"}"""
-                val baseline = OpenVexBaseline(DOCUMENT_ID, ISSUED_AT, version = 1, content = reordered)
+                val baseline = OpenVexBaseline(DOCUMENT_ID, version = 1, content = reordered)
 
                 val unchanged =
                     OpenVexReader.isUnchanged(
                         baseline,
-                        buildOpenVexDocument(file, nextOpenVexIdentity(baseline, UPDATED_AT)),
+                        documentOf(file, nextOpenVexIdentity(baseline, UPDATED_AT)),
                     )
 
                 unchanged shouldBe true
@@ -187,18 +196,18 @@ class OpenVexReaderTest :
 
             test("a field this writer does not emit is a change") {
                 val file = fileWith(listOf("1.0.0"))
-                val first = buildOpenVexDocument(file, freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
+                val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
                 val foreign =
                     OpenVexWriter
                         .write(
                             first,
                         ).replaceFirst("\"version\": 1,", "\"version\": 1,\n  \"tooling\": \"vexctl\",")
-                val baseline = OpenVexBaseline(DOCUMENT_ID, ISSUED_AT, version = 1, content = foreign)
+                val baseline = OpenVexBaseline(DOCUMENT_ID, version = 1, content = foreign)
 
                 val unchanged =
                     OpenVexReader.isUnchanged(
                         baseline,
-                        buildOpenVexDocument(file, nextOpenVexIdentity(baseline, UPDATED_AT)),
+                        documentOf(file, nextOpenVexIdentity(baseline, UPDATED_AT)),
                     )
 
                 unchanged shouldBe false

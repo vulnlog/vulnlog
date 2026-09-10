@@ -17,22 +17,22 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.shell.FilterValidationException
-import dev.vulnlog.lib.shell.resolveReleaseFilter
+import dev.vulnlog.lib.shell.resolveReleaseSelection
 import dev.vulnlog.lib.shell.resolveTagsFilter
 
 /**
- * Resolves the scope of an OpenVEX document. [asOf] expands to the release window up to and including that release,
- * the same as everywhere else in the CLI; [tags] narrows the release purls that become products.
+ * Resolves the scope of an OpenVEX document. [release] narrows it to one release; [tags] narrows the release purls
+ * that become products.
  */
 fun CliktCommand.resolveOpenVexScope(
-    asOf: String?,
+    release: String?,
     tags: Set<String>,
     vulnlogFile: VulnlogFile,
 ): OpenVexScope =
     try {
         val scope =
             OpenVexScope(
-                releases = resolveReleaseFilter(asOf?.let(::Release), vulnlogFile),
+                releases = resolveReleaseSelection(release?.let(::Release), vulnlogFile),
                 tags = resolveTagsFilter(tags.map(::Tag).toSet(), vulnlogFile),
             )
         renderOpenVexScope(scope).forEach { diagnosticSink().verbose(it) }

@@ -64,27 +64,37 @@ class OpenVexCommandTest :
             }
         }
 
-        context("--as-of") {
+        context("--release") {
 
-            test("covers the named release and every earlier one") {
-                val document = documentOf(openVexScopedDocument(), "--as-of 1.1.0")
+            test("covers only the named release") {
+                val document = documentOf(openVexScopedDocument(), "--release 1.0.0")
 
                 document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.0.0\""
-                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.1.0\""
-                document shouldContain "\"status\": \"fixed\""
-            }
-
-            test("a later release drops out, and its fix still names the action") {
-                val document = documentOf(openVexScopedDocument(), "--as-of 1.0.0")
-
+                document shouldNotContain "pkg:docker/acme/web-app@1.0.5"
                 document shouldNotContain "pkg:docker/acme/web-app@1.1.0"
                 document shouldNotContain "\"status\": \"fixed\""
                 document shouldContain "\"action_statement\": \"Update to release 1.1.0."
             }
 
+            test("a release the entries do not list is still covered by their range") {
+                val document = documentOf(openVexScopedDocument(), "--release 1.0.5")
+
+                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.0.5\""
+                document shouldContain "\"status\": \"not_affected\""
+                document shouldContain "\"action_statement\": \"Update to release 1.1.0."
+            }
+
+            test("the fix release and the ones after it are reported as fixed") {
+                val document = documentOf(openVexScopedDocument(), "--release 1.1.0")
+
+                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.1.0\""
+                document shouldContain "\"status\": \"fixed\""
+                document shouldNotContain "\"status\": \"affected\""
+            }
+
             test("an unknown release is rejected") {
                 withTempFile(content = openVexScopedDocument()) { input ->
-                    val result = OpenVexCommand().test("${input.absolutePath} --as-of 9.9.9 -o -")
+                    val result = OpenVexCommand().test("${input.absolutePath} --release 9.9.9 -o -")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
@@ -107,7 +117,7 @@ class OpenVexCommandTest :
 
                     result.statusCode shouldBe 0
                     result.stderr shouldContain
-                        "warning: releases without purls in scope are not part of the document: '1.1.0', '1.2.0'"
+                        "warning: releases without purls in scope are not part of the document: '1.0.5', '1.1.0', '1.2.0'"
                 }
             }
 
@@ -135,7 +145,7 @@ class OpenVexCommandTest :
 
                     document shouldContain "\"@id\": \"$id\""
                     document shouldContain "\"version\": 2"
-                    document shouldContain "\"last_updated\":"
+                    document shouldContain "\"tooling\": \"Vulnlog CLI version "
                     document shouldNotContain "pkg:maven/com.acme/acme-lib@1.0.0"
                 }
             }

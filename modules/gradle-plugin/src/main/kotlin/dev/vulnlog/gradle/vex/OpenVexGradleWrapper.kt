@@ -10,24 +10,24 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.shell.DiagnosticSink
 import dev.vulnlog.lib.shell.FilterValidationException
-import dev.vulnlog.lib.shell.resolveReleaseFilter
+import dev.vulnlog.lib.shell.resolveReleaseSelection
 import dev.vulnlog.lib.shell.resolveTagsFilter
 import org.gradle.api.GradleException
 
 /**
  * Resolves the scope of an OpenVEX document, the Gradle counterpart of the CLI's resolveOpenVexScope.
- * [asOf] expands to the release window up to and including that release; [tags] narrows the release purls.
+ * [release] narrows it to one release; [tags] narrows the release purls.
  */
 fun buildOpenVexScopeOrFail(
     vulnlogFile: VulnlogFile,
-    asOf: Release?,
+    release: Release?,
     tags: Set<Tag>,
     sink: DiagnosticSink = DiagnosticSink.NONE,
 ): OpenVexScope =
     try {
         val scope =
             OpenVexScope(
-                releases = resolveReleaseFilter(asOf, vulnlogFile),
+                releases = resolveReleaseSelection(release, vulnlogFile),
                 tags = resolveTagsFilter(tags, vulnlogFile),
             )
         renderOpenVexScope(scope).forEach(sink::verbose)

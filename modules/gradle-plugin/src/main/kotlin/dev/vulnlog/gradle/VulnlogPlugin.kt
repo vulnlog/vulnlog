@@ -90,7 +90,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.description = "Generate an OpenVEX document."
             task.group = "vulnlog"
             task.files.from(extension.files)
-            task.asOf.convention(extension.vex.openvex.asOf)
+            task.release.convention(extension.vex.openvex.release)
             task.tags.convention(extension.vex.openvex.tags)
             task.baseline.convention(extension.vex.openvex.baseline)
             task.outputFile.convention(

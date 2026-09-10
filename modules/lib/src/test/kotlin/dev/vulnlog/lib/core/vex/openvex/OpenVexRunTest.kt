@@ -16,6 +16,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -36,7 +37,8 @@ private fun generate(
     file: VulnlogFile,
     baseline: OpenVexBaseline? = null,
     now: Instant = ISSUED_AT,
-): OpenVexOutcome.Generated = generateOpenVex(file, OpenVexScope(), baseline, now).shouldBeInstanceOf()
+    tooling: String? = null,
+): OpenVexOutcome.Generated = generateOpenVex(file, OpenVexScope(), baseline, now, tooling).shouldBeInstanceOf()
 
 /** The baseline a later run reads from what an earlier one wrote. */
 private fun baselineOf(generated: OpenVexOutcome.Generated): OpenVexBaseline =
@@ -53,6 +55,15 @@ class OpenVexRunTest :
             generated.document.identity.timestamp shouldBe ISSUED_AT
             generated.unchanged shouldBe false
             generated.content shouldEndWith "}\n"
+        }
+
+        test("names the tooling in the document") {
+            val tooling = "Vulnlog CLI version 0.18.0, https://vulnlog.dev/"
+
+            val generated = generate(fileWith("1.0.0"), tooling = tooling)
+
+            generated.document.tooling shouldBe tooling
+            generated.content shouldContain "\"tooling\": \"$tooling\""
         }
 
         test("the clock is cut to whole seconds") {
@@ -77,15 +88,14 @@ class OpenVexRunTest :
 
             second.unchanged shouldBe false
             second.document.identity.id shouldBe first.document.identity.id
-            second.document.identity.timestamp shouldBe ISSUED_AT
+            second.document.identity.timestamp shouldBe UPDATED_AT
             second.document.identity.version shouldBe 2
-            second.document.identity.lastUpdated shouldBe UPDATED_AT
         }
 
         test("a file without an anchoring release yields no document") {
             val bare = vulnlogFile(releases = listOf(releaseEntry("1.0.0")))
 
-            val outcome = generateOpenVex(bare, OpenVexScope(), baseline = null, now = ISSUED_AT)
+            val outcome = generateOpenVex(bare, OpenVexScope(), baseline = null, now = ISSUED_AT, tooling = null)
 
             outcome.shouldBeInstanceOf<OpenVexOutcome.Empty>()
         }

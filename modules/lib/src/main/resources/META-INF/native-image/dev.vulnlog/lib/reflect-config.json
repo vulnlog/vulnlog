@@ -156,6 +156,18 @@
     "allDeclaredMethods": true
   },
   {
+    "name": "dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexIdentifiersDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexSubcomponentDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
     "name": "dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexBaselineDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,

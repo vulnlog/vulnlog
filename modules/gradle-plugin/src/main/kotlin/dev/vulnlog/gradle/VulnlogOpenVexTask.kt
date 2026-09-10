@@ -11,6 +11,7 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
+import dev.vulnlog.lib.core.vex.openvex.openVexTooling
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -53,7 +54,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
 
     @get:Input
     @get:Optional
-    abstract val asOf: Property<String>
+    abstract val release: Property<String>
 
     @get:Input
     abstract val tags: SetProperty<String>
@@ -72,11 +73,12 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val inputFile = singleVulnlogFileInput(name, files.files)
         val vulnlogFile = validateInputOrFail(inputFile).project.vulnlogProjectFile
         val scope =
-            buildOpenVexScopeOrFail(vulnlogFile, asOf.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
+            buildOpenVexScopeOrFail(vulnlogFile, release.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
         val out = outputFile.get().asFile
         val baselineDocument = readBaseline(out)
 
-        val outcome = generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now())
+        val tooling = openVexTooling("Gradle plugin", BuildInfo.VERSION)
+        val outcome = generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now(), tooling)
         logCollection(outcome.collection, sink)
         val generated =
             when (outcome) {

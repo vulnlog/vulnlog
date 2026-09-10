@@ -4,17 +4,22 @@
 package dev.vulnlog.lib.core.vex.openvex
 
 import dev.vulnlog.lib.fixtures.cve
+import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
+import dev.vulnlog.lib.fixtures.report
 import dev.vulnlog.lib.fixtures.resolution
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Project
+import dev.vulnlog.lib.model.Purl
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
@@ -24,6 +29,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.time.LocalDate
 
 private val affectedInV1 =
     vulnerability(
@@ -141,6 +147,55 @@ class OpenVexTest :
                     listOf(OpenVexSkippedEntry.NoRelease(cve("CVE-2026-1234")))
             }
 
+            test("an intermediate release the entry does not list gets its statement too") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))),
+                                releaseEntry("1.0.5", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.5"))),
+                                releaseEntry("1.0.1", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.1"))),
+                                releaseEntry("1.1.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.1.0"))),
+                            ),
+                        vulnerabilities = listOf(affectedInV1),
+                    )
+
+                val statements = collectOpenVexStatements(file).statements
+
+                val byProduct = statements.associate { it.products.single().value to openVexStatus(it.status) }
+
+                byProduct shouldBe
+                    mapOf(
+                        "pkg:maven/com.acme/app@1.0.0" to "affected",
+                        "pkg:maven/com.acme/app@1.0.5" to "affected",
+                        "pkg:maven/com.acme/app@1.0.1" to "fixed",
+                        "pkg:maven/com.acme/app@1.1.0" to "fixed",
+                    )
+            }
+
+            test("a fixed statement is dated by the resolution date") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))),
+                                releaseEntry("1.0.1", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.1"))),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                affectedInV1.copy(
+                                    analyzedAt = LocalDate.of(2026, 4, 6),
+                                    resolution = resolution(release = "1.0.1", at = LocalDate.of(2026, 4, 20)),
+                                ),
+                            ),
+                    )
+
+                val statements = collectOpenVexStatements(file).statements
+
+                statements.map { it.timestamp } shouldContainExactly
+                    listOf(LocalDate.of(2026, 4, 6), LocalDate.of(2026, 4, 20))
+            }
+
             test("identical statements across releases collapse into one") {
                 val shared = mavenPurlEntry("pkg:maven/com.acme/app")
                 val file =
@@ -183,6 +238,16 @@ class OpenVexTest :
 
                 val status = statements.single().status.shouldBeInstanceOf<VexStatus.Affected>()
                 status.actionStatement shouldBe "Update to release 1.0.1."
+            }
+
+            test("a release the entry does not list is covered by the range") {
+                val scope = OpenVexScope(releases = setOf(release("1.0.1")))
+
+                val statements = collectOpenVexStatements(taggedFile, scope).statements
+
+                statements.single().products.map { it.value } shouldContainExactly
+                    listOf("pkg:maven/com.acme/app@1.0.1")
+                statements.single().status shouldBe VexStatus.Fixed
             }
 
             test("a release outside the scope is not reported as missing purls") {
@@ -249,7 +314,7 @@ class OpenVexTest :
         context("vocabulary") {
 
             test("every status maps to its OpenVEX token") {
-                openVexStatus(VexStatus.UnderInvestigation) shouldBe "under_investigation"
+                openVexStatus(VexStatus.UnderInvestigation()) shouldBe "under_investigation"
                 openVexStatus(VexStatus.Fixed) shouldBe "fixed"
                 openVexStatus(VexStatus.NotAffected(VexJustification.COMPONENT_NOT_PRESENT)) shouldBe "not_affected"
                 openVexStatus(VexStatus.Affected("Update to release 1.0.1.")) shouldBe "affected"
@@ -264,6 +329,115 @@ class OpenVexTest :
                         "vulnerable_code_not_in_execute_path",
                         "vulnerable_code_not_present",
                     )
+            }
+        }
+
+        context("statement fields") {
+
+            val anchored = listOf(releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))))
+
+            fun statementOf(entry: dev.vulnlog.lib.model.VulnerabilityEntry) =
+                collectOpenVexStatements(
+                    vulnlogFile(releases = anchored, vulnerabilities = listOf(entry)),
+                ).statements.single()
+
+            test("carries the entry's aliases, description, packages and analysis, sorted where it matters") {
+                val entry =
+                    vulnerability(
+                        id = cve("CVE-2026-1234"),
+                        releases = listOf(release("1.0.0")),
+                        aliases = listOf(ghsa("GHSA-zzzz-zzzz-zzzz"), ghsa("GHSA-aaaa-aaaa-aaaa")),
+                        description = "Remote code execution",
+                        packages = listOf(Purl.Npm("pkg:npm/zlib@1.0.0"), Purl.Npm("pkg:npm/alib@1.0.0")),
+                        analysis = "not reachable",
+                    )
+
+                val statement = statementOf(entry)
+
+                statement.vulnerability.aliases.map { it.id } shouldContainExactly
+                    listOf("GHSA-aaaa-aaaa-aaaa", "GHSA-zzzz-zzzz-zzzz")
+                statement.vulnerability.description shouldBe "Remote code execution"
+                statement.subcomponents.map { it.value } shouldContainExactly
+                    listOf("pkg:npm/alib@1.0.0", "pkg:npm/zlib@1.0.0")
+                statement.status shouldBe VexStatus.UnderInvestigation("not reachable")
+            }
+
+            test("a verdict is dated by the analysis date") {
+                val entry =
+                    vulnerability(
+                        id = cve("CVE-2026-1234"),
+                        releases = listOf(release("1.0.0")),
+                        reports = listOf(report(ReporterType.TRIVY, at = LocalDate.of(2026, 4, 1))),
+                        analyzedAt = LocalDate.of(2026, 4, 6),
+                        verdict = Verdict.Affected(Severity.HIGH),
+                    )
+
+                statementOf(entry).timestamp shouldBe LocalDate.of(2026, 4, 6)
+            }
+
+            test("falls back to the earliest report date") {
+                val entry =
+                    vulnerability(
+                        id = cve("CVE-2026-1234"),
+                        releases = listOf(release("1.0.0")),
+                        reports =
+                            listOf(
+                                report(ReporterType.TRIVY, at = LocalDate.of(2026, 4, 7)),
+                                report(ReporterType.GRYPE, at = LocalDate.of(2026, 4, 1)),
+                            ),
+                    )
+
+                statementOf(entry).timestamp shouldBe LocalDate.of(2026, 4, 1)
+            }
+
+            test("carries no date and no notes when the entry and its release record none") {
+                val entry =
+                    vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.0.0")), analysis = "  ")
+
+                val statement = statementOf(entry)
+
+                statement.timestamp shouldBe null
+                statement.status shouldBe VexStatus.UnderInvestigation(null)
+            }
+
+            test("falls back to the day the release was published") {
+                val published =
+                    listOf(
+                        releaseEntry(
+                            "1.0.0",
+                            purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0")),
+                            publishedAt = LocalDate.of(2026, 1, 15),
+                        ),
+                    )
+                val entry = vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.0.0")))
+
+                val statement =
+                    collectOpenVexStatements(
+                        vulnlogFile(releases = published, vulnerabilities = listOf(entry)),
+                    ).statements.single()
+
+                statement.timestamp shouldBe LocalDate.of(2026, 1, 15)
+            }
+        }
+
+        context("openVexVulnerabilityUrl") {
+
+            test("points at the authority that issued the id") {
+                openVexVulnerabilityUrl(cve("CVE-2021-44228")) shouldBe
+                    "https://nvd.nist.gov/vuln/detail/CVE-2021-44228"
+                openVexVulnerabilityUrl(ghsa("GHSA-jfh8-c2jp-5v3q")) shouldBe
+                    "https://github.com/advisories/GHSA-jfh8-c2jp-5v3q"
+                openVexVulnerabilityUrl(VulnId.RustSec("RUSTSEC-2021-0001")) shouldBe
+                    "https://rustsec.org/advisories/RUSTSEC-2021-0001"
+                openVexVulnerabilityUrl(VulnId.Snyk("SNYK-JS-LODASH-567746")) shouldBe
+                    "https://security.snyk.io/vuln/SNYK-JS-LODASH-567746"
+            }
+        }
+
+        context("openVexTooling") {
+
+            test("names the Vulnlog surface, its version and the site") {
+                openVexTooling("CLI", "0.18.0") shouldBe "Vulnlog CLI version 0.18.0, https://vulnlog.dev/"
             }
         }
     })

@@ -12,9 +12,9 @@ data class OpenVexDocumentDto(
     @param:JsonProperty("@id")
     val id: String,
     val author: String,
+    val role: String,
     val timestamp: String,
-    @param:JsonProperty("last_updated")
-    val lastUpdated: String? = null,
     val version: Int,
+    val tooling: String? = null,
     val statements: List<OpenVexStatementDto>,
 )

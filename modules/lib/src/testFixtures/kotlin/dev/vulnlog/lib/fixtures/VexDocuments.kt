@@ -33,6 +33,7 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
         packages: [ "pkg:npm/example-lib@2.3.0" ]
         reports:
           - reporter: trivy
+            at: 2026-01-20
         analysis: not reachable
         verdict: not affected
         justification: vulnerable code not in execute path
@@ -41,11 +42,12 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
     """.trimIndent()
 
 /**
- * Builds a Vulnlog YAML with four releases, tagged purls, and one entry per status, so a scoped OpenVEX document has
+ * Builds a Vulnlog YAML with five releases, tagged purls, and one entry per status, so a scoped OpenVEX document has
  * something to narrow.
  *
- * 0.9.0, 1.0.0 and 1.1.0 carry purls and 1.2.0 carries none. No entry references 0.9.0, so scoping to its `legacy`
- * tag leaves the document empty.
+ * 0.9.0, 1.0.0, 1.0.5 and 1.1.0 carry purls and 1.2.0 carries none. No entry lists 1.0.5, so it is covered only by
+ * the range of the entries reported for 1.0.0. No entry references 0.9.0, so scoping to its `legacy` tag leaves the
+ * document empty.
  */
 fun openVexScopedDocument(): String =
     """
@@ -79,6 +81,11 @@ fun openVexScopedDocument(): String =
             tags: [ container ]
           - purl: "pkg:maven/com.acme/acme-lib@1.0.0"
             tags: [ library ]
+      - id: 1.0.5
+        published_at: 2026-02-01
+        purls:
+          - purl: "pkg:docker/acme/web-app@1.0.5"
+            tags: [ container ]
       - id: 1.1.0
         published_at: 2026-02-15
         purls:
@@ -94,6 +101,7 @@ fun openVexScopedDocument(): String =
         packages: [ "pkg:npm/example-lib@2.3.0" ]
         reports:
           - reporter: trivy
+            at: 2026-01-20
         analysis: not reachable
         verdict: not affected
         justification: vulnerable code not in execute path
@@ -104,6 +112,7 @@ fun openVexScopedDocument(): String =
         packages: [ "pkg:npm/example-parser@1.0.0" ]
         reports:
           - reporter: trivy
+            at: 2026-01-25
         analysis: the parser is reachable
         verdict: affected
         severity: high
@@ -118,4 +127,5 @@ fun openVexScopedDocument(): String =
         packages: [ "pkg:npm/example-server@3.0.0" ]
         reports:
           - reporter: trivy
+            at: 2026-02-20
     """.trimIndent()

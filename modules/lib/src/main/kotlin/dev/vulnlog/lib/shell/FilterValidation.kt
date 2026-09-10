@@ -49,6 +49,27 @@ fun resolveReleaseFilter(
     }
 
 /**
+ * Resolves the single release a document is written for. Returns an empty set when [release] is null, so the caller
+ * covers every release.
+ *
+ * @throws FilterValidationException If [release] is not defined in the Vulnlog file.
+ */
+fun resolveReleaseSelection(
+    release: Release?,
+    vulnlogFile: VulnlogFile,
+): Set<Release> {
+    if (release == null) return emptySet()
+    val known = vulnlogFile.releases.map { it.id }
+    if (release !in known) {
+        throw FilterValidationException(
+            "Release not found: ${release.value}",
+            "Known releases: ${known.joinToString(", ") { it.value }}",
+        )
+    }
+    return setOf(release)
+}
+
+/**
  * Resolves and validates the tag filters provided as options against the tags defined in a given Vulnlog file.
  *
  * @param tags The set of tag strings provided as filter options. Empty set if no tags are specified.

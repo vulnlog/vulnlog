@@ -47,6 +47,7 @@ fun vulnerability(
     verdict: Verdict = Verdict.UnderInvestigation,
     name: String? = null,
     description: String? = null,
+    analysis: String? = null,
 ): VulnerabilityEntry =
     VulnerabilityEntry(
         id = id,
@@ -55,6 +56,7 @@ fun vulnerability(
         releases = releases,
         description = description,
         packages = packages,
+        analysis = analysis,
         reports = reports,
         tags = tags,
         analyzedAt = analyzedAt,

@@ -18,7 +18,7 @@ class OpenVexIdentityTest :
 
         context("freshOpenVexIdentity") {
 
-            test("is the first version and was never updated") {
+            test("is the first version, issued now") {
                 val id = "https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79"
 
                 val identity = freshOpenVexIdentity(id, ISSUED_AT)
@@ -26,27 +26,19 @@ class OpenVexIdentityTest :
                 identity.id shouldBe id
                 identity.timestamp shouldBe ISSUED_AT
                 identity.version shouldBe 1
-                identity.lastUpdated shouldBe null
             }
         }
 
         context("nextOpenVexIdentity") {
 
-            test("keeps the baseline identifier and issue time, counts the version up") {
-                val baseline =
-                    OpenVexBaseline(
-                        id = "https://vulnlog.dev/vex/abc",
-                        timestamp = ISSUED_AT,
-                        version = 3,
-                        content = "",
-                    )
+            test("keeps the baseline identifier, counts the version up, and issues the revision now") {
+                val baseline = OpenVexBaseline(id = "https://vulnlog.dev/vex/abc", version = 3, content = "")
 
                 val identity = nextOpenVexIdentity(baseline, UPDATED_AT)
 
                 identity.id shouldBe "https://vulnlog.dev/vex/abc"
-                identity.timestamp shouldBe ISSUED_AT
+                identity.timestamp shouldBe UPDATED_AT
                 identity.version shouldBe 4
-                identity.lastUpdated shouldBe UPDATED_AT
             }
         }
 

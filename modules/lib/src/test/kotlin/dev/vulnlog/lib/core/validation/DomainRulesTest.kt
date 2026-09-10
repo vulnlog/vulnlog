@@ -679,6 +679,71 @@ class DomainRulesTest :
                 findings.shouldBeEmpty()
             }
         }
+
+        context("vulnerabilities without a date") {
+
+            val purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))
+
+            test("a file that declares no purls produces no finding") {
+                val file =
+                    vulnlogFile(
+                        releases = listOf(releaseEntry("1.0.0")),
+                        vulnerabilities =
+                            listOf(vulnerability(cve("CVE-2026-0001"), releases = listOf(release("1.0.0")))),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.VULNERABILITY_WITHOUT_DATE }
+
+                findings.shouldBeEmpty()
+            }
+
+            test("warns for each undated entry once a release declares purls") {
+                val file =
+                    vulnlogFile(
+                        releases = listOf(releaseEntry("1.0.0", purls = purls)),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(cve("CVE-2026-0001"), releases = listOf(release("1.0.0"))),
+                                vulnerability(
+                                    cve("CVE-2026-0002"),
+                                    releases = listOf(release("1.0.0")),
+                                    reports = listOf(report(ReporterType.TRIVY)),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.VULNERABILITY_WITHOUT_DATE }
+
+                findings.map { it.path } shouldContainExactly
+                    listOf("vulnerabilities[CVE-2026-0001]", "vulnerabilities[CVE-2026-0002]")
+                findings.first().severity shouldBe FindingSeverity.WARNING
+                findings.first().message shouldContain "records no date"
+            }
+
+            test("an analysis date or a dated report is enough") {
+                val file =
+                    vulnlogFile(
+                        releases = listOf(releaseEntry("1.0.0", purls = purls)),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(
+                                    cve("CVE-2026-0001"),
+                                    releases = listOf(release("1.0.0")),
+                                    analyzedAt = LocalDate.of(2026, 1, 20),
+                                ),
+                                vulnerability(
+                                    cve("CVE-2026-0002"),
+                                    releases = listOf(release("1.0.0")),
+                                    reports = listOf(report(ReporterType.TRIVY, at = LocalDate.of(2026, 1, 20))),
+                                ),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.VULNERABILITY_WITHOUT_DATE }
+
+                findings.shouldBeEmpty()
+            }
+        }
     })
 
 private fun fileAnalyzedAt(
