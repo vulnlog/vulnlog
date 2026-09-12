@@ -87,7 +87,7 @@ class VulnlogPlugin : Plugin<Project> {
         }
 
         project.tasks.register("vulnlogOpenVex", VulnlogOpenVexTask::class.java) { task ->
-            task.description = "Generate an OpenVEX document."
+            task.description = "Generate an OpenVEX document. (Incubating feature)"
             task.group = "vulnlog"
             task.files.from(extension.files)
             task.release.convention(extension.vex.openvex.release)

@@ -47,7 +47,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.readText
 
 class OpenVexCommand : CliktCommand(name = "openvex") {
-    override fun help(context: Context): String = "Generate OpenVEX files from Vulnlog files."
+    override fun help(context: Context): String = "Generate OpenVEX files from Vulnlog files. (Incubating feature)"
 
     override fun helpEpilog(context: Context): String =
         """

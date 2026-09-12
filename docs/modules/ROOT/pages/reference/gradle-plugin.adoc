@@ -339,10 +339,14 @@ It fails the build only on invalid input, for example an unknown `fixedIn` or in
 ./gradlew vulnlogChangelogReport
 ----
 
+[#_vulnlogopenvex]
 === `vulnlogOpenVex`
 
-Generates an OpenVEX document from a single Vulnlog file.
-See xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`] for the document contents and for which entries it leaves out.
+NOTE: The Vulnlog OpenVEX export feature is currently incubating.
+Its behavior and configuration options may change in the upcoming releases.
+
+Writes an OpenVEX document from a single Vulnlog file, so Trivy and Grype can drop the findings you triaged.
+See xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`] for what the document contains.
 
 Settings live under `vex { openvex { } }`.
 
@@ -352,6 +356,9 @@ vulnlog {
     vex {
         openvex {
             outputFile.set(layout.buildDirectory.file("vulnlog/vex.json"))  // optional
+            release.set("1.2.0")                                            // optional
+            tags.set(setOf("container"))                                    // optional
+            baseline.set(layout.projectDirectory.file(".vex/app.openvex.json"))  // optional
         }
     }
 }
@@ -364,13 +371,48 @@ vulnlog {
 | `outputFile`
 | `build/vulnlog/vex.json`
 | File where the document is written.
+
+| `release`
+| _(none)_
+| Write the document for this release only. Without it the document covers every release that declares `purls`.
+
+| `tags`
+| _(empty)_
+| Keep only the release purls carrying one of these tags.
+
+| `baseline`
+| _(none)_
+| A document you published before. Its identifier is kept and its version counts up.
 |===
 
-Only one input file is supported, since a document is anchored on the purls of one project.
-The task fails when `files` holds more than one entry.
+The task reads one Vulnlog file, because a document describes the artifacts of one project.
+It fails when `files` holds more than one entry.
 
-It also fails when no statement applies, either because no release declares purls or because no vulnerability entry references a release that does.
-Releases without purls are left out of the document and named in a `warning:` line.
+It also fails when no statement applies, either because no release declares `purls` or because no vulnerability entry references a release that does.
+Releases without `purls` are left out of the document and named in a `warning:` line.
+
+`release` and `tags` scope the document exactly as the CLI flags do; see xref:reference/cli-vex-openvex.adoc#scoping[One document per release and artifact].
+
+`baseline` must not be the `outputFile`: Gradle cannot read and write one file in a single task, and the build fails when both point at the same path.
+To update a committed document in place, point `baseline` at the committed file and copy the task output over it, or run `vulnlog vex openvex --baseline <file> -o <file>` from the CLI.
+
+The registered task writes one document.
+A VEX document describes one product at one release, so register a `VulnlogOpenVexTask` for each artifact and release you publish:
+
+[source,kotlin]
+----
+import dev.vulnlog.gradle.VulnlogOpenVexTask
+
+tasks.register<VulnlogOpenVexTask>("vulnlogOpenVexContainer") {
+    group = "vulnlog"
+    description = "Write the OpenVEX document for the container image of release 1.2.0."
+    files.from("vulnlog.yaml")
+    release.set("1.2.0")
+    tags.set(setOf("container"))
+    baseline.set(layout.projectDirectory.file("vex/1.2.0-container.json"))
+    outputFile.set(layout.buildDirectory.file("vulnlog/1.2.0-container.json"))
+}
+----
 
 .Example
 [source,shell]
