@@ -12,6 +12,8 @@ tags:
     description: The CLI release artifact
   - id: gradle plugin
     description: The Gradle plugin release artifact
+  - id: container
+    description: The container image release artifact
   - id: dev dependency
     description: Indicates that the vulnerability is related to development dependencies
 
@@ -35,6 +37,114 @@ releases:
   - id: 0.18.0
 
 vulnerabilities:
+
+  - id: CVE-2026-53612
+    description: Time-of-check-time-of-use flaw in util-linux `mount(8)` when it applies post-mount ownership or mode changes.
+    releases: [0.17.0]
+    packages:
+      - "pkg:deb/debian/util-linux@2.41-5"
+      - "pkg:deb/debian/mount@2.41-5"
+      - "pkg:deb/debian/bsdutils@2.41-5"
+      - "pkg:deb/debian/login@4.16.0-2+really2.41-5"
+      - "pkg:deb/debian/libblkid1@2.41-5"
+      - "pkg:deb/debian/liblastlog2-2@2.41-5"
+      - "pkg:deb/debian/libmount1@2.41-5"
+      - "pkg:deb/debian/libsmartcols1@2.41-5"
+      - "pkg:deb/debian/libuuid1@2.41-5"
+    reports:
+      - reporter: trivy
+        at: 2026-09-12
+    tags: [container]
+    analysis: >-
+      util-linux enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just
+      libc and libz and never invokes `mount(8)`. The attack needs an `/etc/fstab` entry combining `user` with `X-mount.owner`,
+      `X-mount.group` or `X-mount.mode`, and the image ships an unconfigured fstab with no entries at all.
+    analyzed_at: 2026-09-12
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no util-linux; BusyBox provides mount instead.
+
+  - id: CVE-2026-53613
+    description: Time-of-check-time-of-use flaw in util-linux `mount(8)` allowing an ancestor directory swap on the target path.
+    releases: [0.17.0]
+    packages:
+      - "pkg:deb/debian/util-linux@2.41-5"
+      - "pkg:deb/debian/mount@2.41-5"
+      - "pkg:deb/debian/bsdutils@2.41-5"
+      - "pkg:deb/debian/login@4.16.0-2+really2.41-5"
+      - "pkg:deb/debian/libblkid1@2.41-5"
+      - "pkg:deb/debian/liblastlog2-2@2.41-5"
+      - "pkg:deb/debian/libmount1@2.41-5"
+      - "pkg:deb/debian/libsmartcols1@2.41-5"
+      - "pkg:deb/debian/libuuid1@2.41-5"
+    reports:
+      - reporter: trivy
+        at: 2026-09-12
+    tags: [container]
+    analysis: >-
+      util-linux enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just
+      libc and libz and never invokes `mount(8)`. Reaching the race requires an `/etc/fstab` entry with the `user` or `users`
+      option, and the image ships an unconfigured fstab with no entries at all.
+    analyzed_at: 2026-09-12
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no util-linux; BusyBox provides mount instead.
+
+  - id: CVE-2026-53614
+    description: SUID `mount(8)` of util-linux trusts `LIBMOUNT_FORCE_MOUNT2`, which permits a `nosuid`/`noexec` bypass.
+    releases: [0.17.0]
+    packages:
+      - "pkg:deb/debian/util-linux@2.41-5"
+      - "pkg:deb/debian/mount@2.41-5"
+      - "pkg:deb/debian/bsdutils@2.41-5"
+      - "pkg:deb/debian/login@4.16.0-2+really2.41-5"
+      - "pkg:deb/debian/libblkid1@2.41-5"
+      - "pkg:deb/debian/liblastlog2-2@2.41-5"
+      - "pkg:deb/debian/libmount1@2.41-5"
+      - "pkg:deb/debian/libsmartcols1@2.41-5"
+      - "pkg:deb/debian/libuuid1@2.41-5"
+    reports:
+      - reporter: trivy
+        at: 2026-09-12
+    tags: [container]
+    analysis: >-
+      util-linux enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just
+      libc and libz and never invokes `mount(8)`. An unprivileged user reaches the SUID binary only through an `/etc/fstab`
+      entry, which the image does not have, and a default container holds no `CAP_SYS_ADMIN` to mount with either.
+    analyzed_at: 2026-09-12
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no util-linux; BusyBox provides mount instead.
+
+  - id: CVE-2026-14456
+    description: Unbounded memory growth in the OpenSSL QUIC server listener enables a remote denial of service.
+    releases: [0.17.0]
+    packages:
+      - "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2"
+      - "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2"
+    reports:
+      - reporter: trivy
+        at: 2026-09-12
+    tags: [container]
+    analysis: >-
+      OpenSSL sits in the image as a Debian base package; the Vulnlog binary links only libc and libz, so libssl is never
+      loaded. Vulnlog is an offline CLI that reads and writes local files, opens no sockets, and therefore runs no QUIC
+      listener that an attacker could flood with Initial packets.
+    analyzed_at: 2026-09-12
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: >-
+      Fixed in OpenSSL 3.5.7. The Alpine base image of 0.18.0 still ships OpenSSL as libssl3/libcrypto3 and remains flagged
+      until the pinned base image digest is bumped.
 
   - id: SNYK-JAVA-CHQOSLOGBACK-17675449
     description: Deserialization of untrusted data vulnerability in `HardenedObjectInputStream` of `logback-core`.
