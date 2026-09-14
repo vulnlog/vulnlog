@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("vulnlog.common-convention")
     `java-gradle-plugin`
-    id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.gradle.plugin-publish") version "2.2.0"
     id("com.gradleup.shadow") version "9.6.1"
 }
 
