@@ -81,7 +81,8 @@ class InitCommandTest :
                         )
 
                     result.statusCode shouldBe 1
-                    result.stderr shouldContain "The file ${output.toPath()} already exists. Pass --force to replace it."
+                    result.stderr shouldContain
+                        "The file ${output.toPath()} already exists. Pass --force to replace it."
                     output.readText() shouldBe "existing content"
                 }
             }
