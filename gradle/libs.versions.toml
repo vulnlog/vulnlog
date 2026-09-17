@@ -4,7 +4,7 @@
 cliktVersion = "5.1.0"
 graalvmNativeBuildToolsVersion = "1.1.12"
 jacksonVersion = "3.2.2"
-kotestVersion = "6.2.4"
+kotestVersion = "6.2.5"
 kotlinVersion = "2.4.20"
 ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
