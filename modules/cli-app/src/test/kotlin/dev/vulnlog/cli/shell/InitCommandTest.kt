@@ -42,7 +42,68 @@ class InitCommandTest :
 
             test("writes YAML to a file when -o path is specified") {
                 withTempFile(prefix = "vulnlog-init", suffix = ".yaml") { output ->
-                    val result = InitCommand().test("$REQUIRED_OPTIONS -o ${output.absolutePath}")
+                    output.delete()
+                    val result =
+                        InitCommand().test(
+                            listOf(
+                                "--organization",
+                                "acme",
+                                "--name",
+                                "widget",
+                                "--author",
+                                "alice",
+                                "-o",
+                                output.absolutePath,
+                            ),
+                        )
+
+                    result.statusCode shouldBe 0
+                    result.stderr shouldContain "Created: "
+                    output.readText() shouldContain "acme"
+                }
+            }
+
+            test("refuses to overwrite existing file without --force") {
+                withTempFile(prefix = "vulnlog-init", suffix = ".yaml") { output ->
+                    output.writeText("existing content")
+                    val result =
+                        InitCommand().test(
+                            listOf(
+                                "--organization",
+                                "acme",
+                                "--name",
+                                "widget",
+                                "--author",
+                                "alice",
+                                "-o",
+                                output.absolutePath,
+                            ),
+                        )
+
+                    result.statusCode shouldBe 1
+                    result.stderr shouldContain
+                        "The file ${output.toPath()} already exists. Pass --force to replace it."
+                    output.readText() shouldBe "existing content"
+                }
+            }
+
+            test("overwrites existing file when --force is passed") {
+                withTempFile(prefix = "vulnlog-init", suffix = ".yaml") { output ->
+                    output.writeText("existing content")
+                    val result =
+                        InitCommand().test(
+                            listOf(
+                                "--organization",
+                                "acme",
+                                "--name",
+                                "widget",
+                                "--author",
+                                "alice",
+                                "-o",
+                                output.absolutePath,
+                                "--force",
+                            ),
+                        )
 
                     result.statusCode shouldBe 0
                     result.stderr shouldContain "Created: "

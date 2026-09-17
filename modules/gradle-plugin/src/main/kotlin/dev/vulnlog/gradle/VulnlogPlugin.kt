@@ -21,6 +21,9 @@ class VulnlogPlugin : Plugin<Project> {
             task.outputFile.convention(
                 project.propertyOrNull("vulnlog.output")?.let { project.layout.projectDirectory.file(it) },
             )
+            task.force.convention(
+                project.propertyOrNull("vulnlog.force")?.toBoolean() ?: false,
+            )
         }
 
         project.tasks.register("vulnlogValidate", VulnlogValidateTask::class.java) { task ->
