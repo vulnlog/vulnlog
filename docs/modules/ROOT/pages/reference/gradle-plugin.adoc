@@ -382,7 +382,7 @@ vulnlog {
 
 | `baseline`
 | _(none)_
-| A document you published before. Its identifier is kept and its version counts up.
+| The committed document to continue. Its identifier is kept and its version counts up when the content changed. The file may not exist yet; the first run then issues a new document. `vulnlogOpenVexUpdate` writes to this file.
 |===
 
 The task reads one Vulnlog file, because a document describes the artifacts of one project.
@@ -393,8 +393,9 @@ Releases without `purls` are left out of the document and named in a `warning:` 
 
 `release` and `tags` scope the document exactly as the CLI flags do; see xref:reference/cli-vex-openvex.adoc#scoping[One document per release and artifact].
 
-`baseline` must not be the `outputFile`: Gradle cannot read and write one file in a single task, and the build fails when both point at the same path.
-To update a committed document in place, point `baseline` at the committed file and copy the task output over it, or run `vulnlog vex openvex --baseline <file> -o <file>` from the CLI.
+`vulnlogOpenVex` writes only to `outputFile`, so it can be up to date and taken from the build cache.
+`baseline` must not be the `outputFile`, and the build fails when both point at the same path: a task that reads and writes one file is never up to date, and a build cache hit would overwrite your committed document.
+Run <<_vulnlogopenvexupdate,`vulnlogOpenVexUpdate`>> to copy the generated document over the `baseline`.
 
 The registered task writes one document.
 A VEX document describes one product at one release, so register a `VulnlogOpenVexTask` for each artifact and release you publish:
@@ -418,6 +419,51 @@ tasks.register<VulnlogOpenVexTask>("vulnlogOpenVexContainer") {
 [source,shell]
 ----
 ./gradlew vulnlogOpenVex
+----
+
+[#_vulnlogopenvexupdate]
+=== `vulnlogOpenVexUpdate`
+
+NOTE: The Vulnlog OpenVEX export feature is currently incubating.
+Its behavior and configuration options may change in the upcoming releases.
+
+Copies the document `vulnlogOpenVex` generated over its `baseline`, so the committed document follows the Vulnlog file.
+It runs `vulnlogOpenVex` first and fails when no `baseline` is configured.
+
+[source,kotlin]
+----
+vulnlog {
+    vex {
+        openvex {
+            baseline.set(layout.projectDirectory.file(".vex/app.openvex.json"))
+        }
+    }
+}
+----
+
+The first run creates the `baseline` with a new identifier and `version` `1`.
+Later runs keep the file as it is while nothing but the timestamp would change, and count the version up otherwise.
+Commit the file after each run that wrote it.
+
+For a task you registered yourself, register a `VulnlogOpenVexUpdateTask` next to it:
+
+[source,kotlin]
+----
+import dev.vulnlog.gradle.VulnlogOpenVexTask
+import dev.vulnlog.gradle.VulnlogOpenVexUpdateTask
+
+tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVexContainerUpdate") {
+    group = "vulnlog"
+    description = "Update the committed OpenVEX document for the container image of release 1.2.0."
+    generatedFile.set(tasks.named<VulnlogOpenVexTask>("vulnlogOpenVexContainer").flatMap { it.outputFile })
+    baseline.set(layout.projectDirectory.file("vex/1.2.0-container.json"))
+}
+----
+
+.Example
+[source,shell]
+----
+./gradlew vulnlogOpenVexUpdate
 ----
 
 === `VulnlogCopyTask`

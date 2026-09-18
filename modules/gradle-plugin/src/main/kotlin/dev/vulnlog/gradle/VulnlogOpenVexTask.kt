@@ -36,7 +36,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
@@ -59,7 +58,11 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     @get:Input
     abstract val tags: SetProperty<String>
 
-    @get:InputFile
+    /**
+     * The committed document this run continues. Declared with [InputFiles] rather than `@InputFile`, because the
+     * file does not exist before the first `vulnlogOpenVexUpdate` creates it.
+     */
+    @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val baseline: RegularFileProperty
@@ -75,7 +78,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val scope =
             buildOpenVexScopeOrFail(vulnlogFile, release.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
         val out = outputFile.get().asFile
-        val baselineDocument = readBaseline(out)
+        val baselineDocument = readBaseline(out, sink)
 
         val tooling = openVexTooling("Gradle plugin", BuildInfo.VERSION)
         val outcome = generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now(), tooling)
@@ -105,17 +108,25 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     }
 
     /**
-     * Reads the configured baseline. Gradle forbids one file being both an input and the output of a task, so
-     * continuing a document in place stays a CLI workflow and is rejected here with a message that says so.
+     * Reads the configured baseline, or null when it is not configured or not created yet. A task that reads and
+     * writes one file is never up to date and a build cache hit would overwrite the committed document, so the
+     * output stays under the build directory and `vulnlogOpenVexUpdate` copies it over the baseline.
      */
-    private fun readBaseline(out: File): OpenVexBaseline? {
+    private fun readBaseline(
+        out: File,
+        sink: DiagnosticSink,
+    ): OpenVexBaseline? {
         val file = baseline.orNull?.asFile ?: return null
         if (file.canonicalFile == out.canonicalFile) {
             throw GradleException(
                 "baseline and outputFile are the same file (${file.path}). " +
-                    "Gradle cannot read and write one file in a single task. " +
-                    "Point baseline at a committed document, or continue in place with 'vulnlog vex openvex --baseline'.",
+                    "Keep outputFile under the build directory and run 'vulnlogOpenVexUpdate' " +
+                    "to copy the document over the baseline.",
             )
+        }
+        if (!file.exists()) {
+            sink.verbose("baseline '${file.path}' does not exist yet, issuing a new document")
+            return null
         }
         return OpenVexReader.readBaseline(file.readText()) ?: run {
             logger.warn(

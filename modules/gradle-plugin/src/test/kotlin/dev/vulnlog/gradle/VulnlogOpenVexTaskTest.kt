@@ -219,6 +219,20 @@ class VulnlogOpenVexTaskTest :
                 dir.resolve("build/vulnlog/vex.json").readText() shouldBe previous.readText()
             }
 
+            test("issues a new document when the baseline does not exist yet") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("vex.json")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVex").build()
+
+                result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vex.json").readText() shouldContain "\"version\": 1"
+                dir.resolve("vex.json").exists() shouldBe false
+            }
+
             test("fails when the baseline is the output file") {
                 val dir =
                     gradleProject(
@@ -234,7 +248,76 @@ class VulnlogOpenVexTaskTest :
 
                 val result = runner(dir, "vulnlogOpenVex").buildAndFail()
 
-                result.output shouldContain "Gradle cannot read and write one file in a single task"
+                result.output shouldContain "Keep outputFile under the build directory and run 'vulnlogOpenVexUpdate'"
+            }
+        }
+
+        context("update") {
+
+            test("creates the baseline from the generated document") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("vex/app.json")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVexUpdate").build()
+
+                result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                result.task(":vulnlogOpenVexUpdate")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("vex/app.json").readText() shouldBe dir.resolve("build/vulnlog/vex.json").readText()
+            }
+
+            test("settles after one update because an unchanged document keeps the baseline bytes") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("vex.json")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+                runner(dir, "vulnlogOpenVexUpdate", "--configuration-cache").build()
+                val committed = dir.resolve("vex.json").readText()
+
+                val second = runner(dir, "vulnlogOpenVexUpdate", "--configuration-cache").build()
+                val third = runner(dir, "vulnlogOpenVexUpdate", "--configuration-cache").build()
+
+                second.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
+                second.output shouldContain "Unchanged: "
+                second.task(":vulnlogOpenVexUpdate")?.outcome shouldBe TaskOutcome.UP_TO_DATE
+                third.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.UP_TO_DATE
+                third.task(":vulnlogOpenVexUpdate")?.outcome shouldBe TaskOutcome.UP_TO_DATE
+                dir.resolve("vex.json").readText() shouldBe committed
+            }
+
+            test("counts the version up when the Vulnlog file changed") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("vex.json")"""),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+                runner(dir, "vulnlogOpenVexUpdate").build()
+                dir
+                    .resolve("build.gradle.kts")
+                    .writeText(
+                        openVexBuildFile(
+                            """
+                            baseline = layout.projectDirectory.file("vex.json")
+                            tags = setOf("container")
+                            """.trimIndent(),
+                        ),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVexUpdate").build()
+
+                result.task(":vulnlogOpenVexUpdate")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("vex.json").readText() shouldContain "\"version\": 2"
+            }
+
+            test("fails when no baseline is configured") {
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to openVexDocument())
+
+                val result = runner(dir, "vulnlogOpenVexUpdate").buildAndFail()
+
+                result.output shouldContain "property 'baseline' doesn't have a configured value"
             }
         }
 

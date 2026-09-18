@@ -86,17 +86,25 @@ class VulnlogPlugin : Plugin<Project> {
             )
         }
 
-        project.tasks.register("vulnlogOpenVex", VulnlogOpenVexTask::class.java) { task ->
-            task.description = "Generate an OpenVEX document. (Incubating feature)"
+        val openVex =
+            project.tasks.register("vulnlogOpenVex", VulnlogOpenVexTask::class.java) { task ->
+                task.description = "Generate an OpenVEX document. (Incubating feature)"
+                task.group = "vulnlog"
+                task.files.from(extension.files)
+                task.release.convention(extension.vex.openvex.release)
+                task.tags.convention(extension.vex.openvex.tags)
+                task.baseline.convention(extension.vex.openvex.baseline)
+                task.outputFile.convention(
+                    extension.vex.openvex.outputFile
+                        .orElse(project.layout.buildDirectory.file("vulnlog/vex.json")),
+                )
+            }
+
+        project.tasks.register("vulnlogOpenVexUpdate", VulnlogOpenVexUpdateTask::class.java) { task ->
+            task.description = "Copy the generated OpenVEX document over the baseline. (Incubating feature)"
             task.group = "vulnlog"
-            task.files.from(extension.files)
-            task.release.convention(extension.vex.openvex.release)
-            task.tags.convention(extension.vex.openvex.tags)
+            task.generatedFile.convention(openVex.flatMap { it.outputFile })
             task.baseline.convention(extension.vex.openvex.baseline)
-            task.outputFile.convention(
-                extension.vex.openvex.outputFile
-                    .orElse(project.layout.buildDirectory.file("vulnlog/vex.json")),
-            )
         }
     }
 }
