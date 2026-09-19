@@ -16,6 +16,7 @@ import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.ReleaseStatus
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.openvex.OpenVexAuthor
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
@@ -48,7 +49,7 @@ fun buildOpenVexDocument(
 ): OpenVexDocument =
     OpenVexDocument(
         identity = identity,
-        author = openVexAuthor(project),
+        author = OpenVexAuthor(project),
         supplier = project.organization,
         tooling = tooling,
         statements = statements,
@@ -118,10 +119,6 @@ fun collectOpenVexStatements(
             },
     )
 }
-
-/** The author line of the document: the project author, with the contact in parentheses when one is recorded. */
-fun openVexAuthor(project: Project): String =
-    project.contact?.let { contact -> "${project.author} ($contact)" } ?: project.author
 
 /** The OpenVEX token for a [VexStatus]. */
 fun openVexStatus(status: VexStatus): String =

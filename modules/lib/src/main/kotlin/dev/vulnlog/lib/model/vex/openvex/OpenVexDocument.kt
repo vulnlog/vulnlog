@@ -12,7 +12,7 @@ data class OpenVexDocument(
     /**
      * Author of the document, taken from the project metadata.
      */
-    val author: String,
+    val author: OpenVexAuthor,
     /**
      * The organization supplying the products, written on every statement.
      */

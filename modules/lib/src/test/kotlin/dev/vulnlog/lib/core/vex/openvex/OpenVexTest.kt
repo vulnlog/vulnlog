@@ -13,7 +13,6 @@ import dev.vulnlog.lib.fixtures.resolution
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
-import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
@@ -293,21 +292,6 @@ class OpenVexTest :
                 val statements = collectOpenVexStatements(taggedFile, scope).statements
 
                 statements.shouldBeEmpty()
-            }
-        }
-
-        context("openVexAuthor") {
-
-            test("appends the contact in parentheses") {
-                val project = Project("Acme Corp", "Acme Web App", "Acme Security Team", "security@acme.example")
-
-                openVexAuthor(project) shouldBe "Acme Security Team (security@acme.example)"
-            }
-
-            test("is the author alone without a contact") {
-                val project = Project("Acme Corp", "Acme Web App", "Acme Security Team")
-
-                openVexAuthor(project) shouldBe "Acme Security Team"
             }
         }
 

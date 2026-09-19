@@ -100,8 +100,8 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         metavar = "<path>",
         help =
             """
-            Existing OpenVEX document whose identity is continued.
-            Its '@id' and 'timestamp' are kept and 'version' counts up. Without it every run issues a new document.
+            Existing previous OpenVEX document whose identity is continued.
+            Its '@id' is kept but 'timestamp' and 'version' are updated, when the file changes. Without a baseline every run issues a new document.
             """.trimIndent(),
     ).path(canBeDir = false)
 

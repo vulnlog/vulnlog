@@ -30,7 +30,7 @@ object OpenVexMapper {
         return OpenVexDocumentDto(
             context = OPEN_VEX_CONTEXT,
             id = identity.id,
-            author = document.author,
+            author = document.author.name,
             role = OPEN_VEX_ROLE,
             // Formatted here rather than left to Jackson, whose date handling is version dependent.
             timestamp = format(identity.timestamp),
