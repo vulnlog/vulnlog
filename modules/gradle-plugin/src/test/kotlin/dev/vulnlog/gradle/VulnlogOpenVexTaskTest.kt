@@ -233,6 +233,29 @@ class VulnlogOpenVexTaskTest :
                 dir.resolve("vex.json").exists() shouldBe false
             }
 
+            test("fails when the baseline is in another OpenVEX format version") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("previous.json")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+                dir.resolve("previous.json").writeText(
+                    """
+                    {
+                      "@context": "https://openvex.dev/ns/v0.1.0",
+                      "@id": "https://vulnlog.dev/vex/written-in-an-older-format",
+                      "timestamp": "2026-04-25T00:00:00Z",
+                      "version": 7
+                    }
+                    """.trimIndent(),
+                )
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "is an OpenVEX 0.1.0 document, but this run writes OpenVEX 0.2.0"
+                result.output shouldContain "Unset 'baseline' to issue a new document."
+            }
+
             test("fails when the baseline is the output file") {
                 val dir =
                     gradleProject(

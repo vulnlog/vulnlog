@@ -11,6 +11,8 @@ import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -43,7 +45,10 @@ private fun generate(
 
 /** The baseline a later run reads from what an earlier one wrote. */
 private fun baselineOf(generated: OpenVexOutcome.Generated): OpenVexBaseline =
-    OpenVexReader.readBaseline(generated.content) ?: error("the writer produced no readable baseline")
+    OpenVexReader
+        .readBaseline(generated.content, OpenVexFormatVersion.LATEST)
+        .shouldBeInstanceOf<OpenVexBaselineOutcome.Read>()
+        .baseline
 
 class OpenVexRunTest :
     FunSpec({

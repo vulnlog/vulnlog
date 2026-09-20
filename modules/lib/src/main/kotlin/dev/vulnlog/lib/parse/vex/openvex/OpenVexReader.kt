@@ -4,7 +4,9 @@
 package dev.vulnlog.lib.parse.vex.openvex
 
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexBaselineDto
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
@@ -13,9 +15,6 @@ import tools.jackson.databind.node.ObjectNode
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
-
-/** Any OpenVEX namespace is accepted, so a v0.1.0 document can still be continued. */
-private const val OPEN_VEX_NAMESPACE = "https://openvex.dev/ns"
 
 /** Every revision carries its own, so they are removed before two documents are compared. */
 private val VOLATILE_FIELDS = listOf("timestamp", "version")
@@ -28,23 +27,34 @@ private const val FIRST_VERSION = 1
 
 object OpenVexReader {
     /**
-     * Reads the identity of an OpenVEX document from [content].
+     * Reads the identity of an OpenVEX document from [content], required to be in [requiredFormatVersion].
      *
-     * Returns null when [content] is not one, so the caller starts a fresh identity rather than failing: garbage in,
-     * new identity out. The timestamp must parse for the document to count, but it is not carried over, because every
-     * revision is issued anew.
+     * A file that is no OpenVEX document at all reads as [OpenVexBaselineOutcome.NotADocument], so the caller starts
+     * a fresh identity rather than failing: garbage in, new identity out. A document in another format version reads
+     * as [OpenVexBaselineOutcome.OtherFormatVersion] and is the caller's to reject, because continuing it would
+     * write one version's identity into another version's bytes. The timestamp must parse for the file to count as
+     * a document, but it is not carried over: every revision is issued anew.
      */
-    fun readBaseline(content: String): OpenVexBaseline? {
+    fun readBaseline(
+        content: String,
+        requiredFormatVersion: OpenVexFormatVersion,
+    ): OpenVexBaselineOutcome {
         val dto =
             try {
                 openVexJson.readValue(content, OpenVexBaselineDto::class.java)
             } catch (_: JacksonException) {
-                return null
+                return OpenVexBaselineOutcome.NotADocument
             }
-        if (dto.context?.startsWith(OPEN_VEX_NAMESPACE) != true) return null
-        val id = dto.id?.takeIf(String::isNotBlank) ?: return null
-        if (dto.timestamp?.let(::parseTimestamp) == null) return null
-        return OpenVexBaseline(id = id, version = dto.version ?: FIRST_VERSION, content = content)
+        val declared =
+            dto.context?.let(OpenVexFormatVersion::declaredVersion)
+                ?: return OpenVexBaselineOutcome.NotADocument
+        if (declared != requiredFormatVersion.version) {
+            return OpenVexBaselineOutcome.OtherFormatVersion(declared, requiredFormatVersion)
+        }
+        // The identity fields are read as the required version places them. A version that moves one binds here.
+        return when (requiredFormatVersion) {
+            OpenVexFormatVersion.VERSION_0_2_0 -> baselineOf(dto, content, requiredFormatVersion)
+        }
     }
 
     /**
@@ -57,6 +67,10 @@ object OpenVexReader {
         baseline: OpenVexBaseline,
         document: OpenVexDocument,
     ): Boolean {
+        require(baseline.formatVersion == document.formatVersion) {
+            "cannot compare an OpenVEX ${baseline.formatVersion.version} baseline " +
+                "with an OpenVEX ${document.formatVersion.version} document"
+        }
         val baselineTree =
             try {
                 openVexJson.readTree(baseline.content)
@@ -70,6 +84,24 @@ object OpenVexReader {
         stripVolatile(documentTree)
         return baselineTree == documentTree
     }
+}
+
+/** The baseline [dto] describes, or [OpenVexBaselineOutcome.NotADocument] when it carries no identity to continue. */
+private fun baselineOf(
+    dto: OpenVexBaselineDto,
+    content: String,
+    formatVersion: OpenVexFormatVersion,
+): OpenVexBaselineOutcome {
+    val id = dto.id?.takeIf(String::isNotBlank) ?: return OpenVexBaselineOutcome.NotADocument
+    if (dto.timestamp?.let(::parseTimestamp) == null) return OpenVexBaselineOutcome.NotADocument
+    return OpenVexBaselineOutcome.Read(
+        OpenVexBaseline(
+            formatVersion = formatVersion,
+            id = id,
+            version = dto.version ?: FIRST_VERSION,
+            content = content,
+        ),
+    )
 }
 
 /**

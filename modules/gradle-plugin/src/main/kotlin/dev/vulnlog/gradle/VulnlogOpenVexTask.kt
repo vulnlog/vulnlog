@@ -12,6 +12,7 @@ import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedReleases
@@ -22,7 +23,9 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -44,6 +47,9 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.time.Instant
+
+/** The OpenVEX version this task reads and writes. The single place a task property would feed one day. */
+private val FORMAT_VERSION = OpenVexFormatVersion.LATEST
 
 @CacheableTask
 abstract class VulnlogOpenVexTask : DefaultTask() {
@@ -81,7 +87,8 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val baselineDocument = readBaseline(out, sink)
 
         val tooling = OpenVexTooling("Gradle plugin", BuildInfo.VERSION)
-        val outcome = generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now(), tooling)
+        val outcome =
+            generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now(), tooling, FORMAT_VERSION)
         logCollection(outcome.collection, sink)
         val generated =
             when (outcome) {
@@ -108,9 +115,11 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     }
 
     /**
-     * Reads the configured baseline, or null when it is not configured or not created yet. A task that reads and
-     * writes one file is never up to date and a build cache hit would overwrite the committed document, so the
-     * output stays under the build directory and `vulnlogOpenVexUpdate` copies it over the baseline.
+     * Reads the configured baseline, or null when it is not configured, not created yet, or no OpenVEX document. A
+     * task that reads and writes one file is never up to date and a build cache hit would overwrite the committed
+     * document, so the output stays under the build directory and `vulnlogOpenVexUpdate` copies it over the
+     * baseline. A document in another format version fails the task: the run would write its identity into bytes of
+     * a version it never had.
      */
     private fun readBaseline(
         out: File,
@@ -128,14 +137,24 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
             sink.verbose("baseline '${file.path}' does not exist yet, issuing a new document")
             return null
         }
-        return OpenVexReader.readBaseline(file.readText()) ?: run {
-            logger.warn(
-                formatMessage(
-                    FindingSeverity.WARNING,
-                    "baseline '${file.path}' is not an OpenVEX document, issuing a new one",
-                ),
-            )
-            null
+        return when (val outcome = OpenVexReader.readBaseline(file.readText(), FORMAT_VERSION)) {
+            is OpenVexBaselineOutcome.Read -> outcome.baseline
+
+            OpenVexBaselineOutcome.NotADocument -> {
+                logger.warn(
+                    formatMessage(
+                        FindingSeverity.WARNING,
+                        "baseline '${file.path}' is not an OpenVEX document, issuing a new one",
+                    ),
+                )
+                null
+            }
+
+            is OpenVexBaselineOutcome.OtherFormatVersion ->
+                throw GradleException(
+                    renderOpenVexOtherFormatVersion(file.path, outcome).replaceFirstChar(Char::uppercase) +
+                        ". Unset 'baseline' to issue a new document.",
+                )
         }
     }
 

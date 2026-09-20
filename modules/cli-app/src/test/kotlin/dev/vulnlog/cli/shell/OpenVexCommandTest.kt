@@ -205,6 +205,27 @@ class OpenVexCommandTest :
                     result.stdout shouldContain "\"version\": 1"
                 }
             }
+
+            test("a baseline in another OpenVEX format version is rejected") {
+                withTempDir(prefix = "openvex-baseline") { dir ->
+                    val older = dir.resolve("vex-0.1.0.json")
+                    older.toFile().writeText(
+                        """{"@context": "https://openvex.dev/ns/v0.1.0", "@id": "https://vulnlog.dev/vex/abc", """ +
+                            """"timestamp": "2026-04-25T00:00:00Z", "version": 1}""",
+                    )
+
+                    val result =
+                        withTempFile(content = openVexScopedDocument()) { input ->
+                            OpenVexCommand().test("${input.absolutePath} --baseline ${older.toAbsolutePath()} -o -")
+                        }
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain
+                        "error: baseline '${older.toAbsolutePath()}' is an OpenVEX 0.1.0 document, " +
+                        "but this run writes OpenVEX 0.2.0"
+                    result.stderr shouldContain "hint: omit --baseline to issue a new document"
+                }
+            }
         }
 
         context("nothing to write") {

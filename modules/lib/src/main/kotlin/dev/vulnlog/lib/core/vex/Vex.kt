@@ -36,7 +36,7 @@ fun releaseStatuses(
             .filter { index -> index >= 0 }
             .minOrNull() ?: return emptyList()
     val fix = vulnEntry.resolution?.let { resolution -> order.indexOf(resolution.release) }?.takeIf { it >= 0 }
-    val fixedOn = fix?.let { vulnEntry.resolution?.at ?: declared[it].publicationDate }
+    val fixedOn = fix?.let { vulnEntry.resolution.at ?: declared[it].publicationDate }
     val unresolved = unresolvedStatus(vulnEntry)
     val unresolvedOn = unresolvedOn(vulnEntry)
     return declared.mapIndexedNotNull { index, entry ->

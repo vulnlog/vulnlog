@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.parse.vex.openvex
 
-import dev.vulnlog.lib.core.vex.openvex.OPEN_VEX_CONTEXT
 import dev.vulnlog.lib.core.vex.openvex.OPEN_VEX_ROLE
 import dev.vulnlog.lib.core.vex.openvex.openVexJustification
 import dev.vulnlog.lib.core.vex.openvex.openVexStatus
@@ -11,6 +10,7 @@ import dev.vulnlog.lib.core.vex.openvex.openVexVulnerabilityUrl
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexDocumentDto
@@ -25,10 +25,16 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 object OpenVexMapper {
-    fun toDto(document: OpenVexDocument): OpenVexDocumentDto {
+    /** Maps [document] to the shape its format version is written in. One branch, and one mapper, per version. */
+    fun toDto(document: OpenVexDocument): OpenVexDocumentDto =
+        when (document.formatVersion) {
+            OpenVexFormatVersion.VERSION_0_2_0 -> toDocumentDtoV020(document)
+        }
+
+    private fun toDocumentDtoV020(document: OpenVexDocument): OpenVexDocumentDto {
         val identity = document.identity
         return OpenVexDocumentDto(
-            context = OPEN_VEX_CONTEXT,
+            context = document.formatVersion.context,
             id = identity.id,
             author = document.author.name,
             role = OPEN_VEX_ROLE,

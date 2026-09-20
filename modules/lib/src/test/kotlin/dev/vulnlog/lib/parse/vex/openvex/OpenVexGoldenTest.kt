@@ -25,6 +25,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
@@ -128,7 +129,13 @@ class OpenVexGoldenTest :
         }
 
         test("a continued OpenVEX document matches golden bytes") {
-            val baseline = OpenVexBaseline(id = DOCUMENT_ID, version = 1, content = "")
+            val baseline =
+                OpenVexBaseline(
+                    formatVersion = OpenVexFormatVersion.LATEST,
+                    id = DOCUMENT_ID,
+                    version = 1,
+                    content = "",
+                )
 
             val document = documentOf(nextOpenVexIdentity(baseline, UPDATED_AT))
 

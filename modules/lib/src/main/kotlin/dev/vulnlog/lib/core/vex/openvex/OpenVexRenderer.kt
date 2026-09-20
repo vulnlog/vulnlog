@@ -5,6 +5,7 @@ package dev.vulnlog.lib.core.vex.openvex
 
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
@@ -45,6 +46,17 @@ fun renderOpenVexSkippedReleases(collection: OpenVexCollection): String? {
     val subject = if (collection.scope.tags.isEmpty()) "releases without purls" else "releases without purls in scope"
     return "$subject are not part of the document: $names"
 }
+
+/**
+ * Renders the error naming the format version the baseline at [target] declares against the one the run writes.
+ * Shared by the CLI and the Gradle plugin, so both reject a baseline of another version in the same words.
+ */
+fun renderOpenVexOtherFormatVersion(
+    target: String,
+    outcome: OpenVexBaselineOutcome.OtherFormatVersion,
+): String =
+    "baseline '$target' is an OpenVEX ${outcome.declared} document, " +
+        "but this run writes OpenVEX ${outcome.required.version}"
 
 /** Renders one diagnostic line stating how many statements the document holds, broken down by status. */
 fun renderOpenVexStatementCounts(document: OpenVexDocument): String {

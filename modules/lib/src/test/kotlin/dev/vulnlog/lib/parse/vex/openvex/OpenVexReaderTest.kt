@@ -15,10 +15,11 @@ import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion.VERSION_0_2_0
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import java.time.Instant
 
@@ -43,6 +44,15 @@ private fun document(
     return "{${fields.joinToString(", ")}}"
 }
 
+/** Every test reads for the version this build writes. */
+private fun read(content: String): OpenVexBaselineOutcome = OpenVexReader.readBaseline(content, VERSION_0_2_0)
+
+private fun baselineOf(
+    content: String,
+    version: Int = 1,
+): OpenVexBaseline =
+    OpenVexBaseline(formatVersion = VERSION_0_2_0, id = DOCUMENT_ID, version = version, content = content)
+
 /** One entry affecting every release given, so each release contributes a statement. */
 private fun fileWith(releases: List<String>): VulnlogFile =
     vulnlogFile(
@@ -63,70 +73,84 @@ class OpenVexReaderTest :
 
         context("readBaseline") {
 
-            test("reads the identity of an OpenVEX document") {
+            test("reads the identity of a document in the required format version") {
                 val content = document(version = 3)
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline?.id shouldBe DOCUMENT_ID
-                baseline?.version shouldBe 3
-                baseline?.content shouldBe content
+                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content, version = 3))
             }
 
             test("a document without a version is the first revision") {
                 val content = document(version = null)
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline?.version shouldBe 1
-            }
-
-            test("an older OpenVEX namespace is still continued") {
-                val content = document(context = "https://openvex.dev/ns/v0.1.0")
-
-                val baseline = OpenVexReader.readBaseline(content)
-
-                baseline?.id shouldBe DOCUMENT_ID
+                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content, version = 1))
             }
 
             test("a timestamp with an offset still counts as a document") {
                 val content = document(timestamp = "2026-04-25T02:00:00+02:00")
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline?.id shouldBe DOCUMENT_ID
+                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content))
             }
 
-            test("a foreign context is not a baseline") {
+            test("an older OpenVEX format version is not continued") {
+                val content = document(context = "https://openvex.dev/ns/v0.1.0")
+
+                val outcome = read(content)
+
+                outcome shouldBe OpenVexBaselineOutcome.OtherFormatVersion("0.1.0", VERSION_0_2_0)
+            }
+
+            test("an OpenVEX format version this build does not know is not continued") {
+                val content = document(context = "https://openvex.dev/ns/v9.9.9")
+
+                val outcome = read(content)
+
+                outcome shouldBe OpenVexBaselineOutcome.OtherFormatVersion("9.9.9", VERSION_0_2_0)
+            }
+
+            test("a foreign context is not a document") {
                 val content = document(context = "https://cyclonedx.org/schema")
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline.shouldBeNull()
+                outcome shouldBe OpenVexBaselineOutcome.NotADocument
             }
 
-            test("a document without an identifier is not a baseline") {
+            test("a context without a version is not a document") {
+                val content = document(context = "https://openvex.dev/ns/v")
+
+                val outcome = read(content)
+
+                outcome shouldBe OpenVexBaselineOutcome.NotADocument
+            }
+
+            test("a document without an identifier is not a document to continue") {
                 val content = document(id = null)
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline.shouldBeNull()
+                outcome shouldBe OpenVexBaselineOutcome.NotADocument
             }
 
-            test("a document with an unparsable timestamp is not a baseline") {
+            test("a document with an unparsable timestamp is not a document to continue") {
                 val content = document(timestamp = "yesterday")
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline.shouldBeNull()
+                outcome shouldBe OpenVexBaselineOutcome.NotADocument
             }
 
-            test("malformed JSON is not a baseline") {
+            test("malformed JSON is not a document") {
                 val content = "{ not json"
 
-                val baseline = OpenVexReader.readBaseline(content)
+                val outcome = read(content)
 
-                baseline.shouldBeNull()
+                outcome shouldBe OpenVexBaselineOutcome.NotADocument
             }
         }
 
@@ -135,8 +159,7 @@ class OpenVexReaderTest :
             test("a rerun over the same file changes nothing but the version and the clock") {
                 val file = fileWith(listOf("1.0.0"))
                 val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
-                val baseline =
-                    OpenVexBaseline(DOCUMENT_ID, version = 1, content = OpenVexWriter.write(first))
+                val baseline = baselineOf(OpenVexWriter.write(first))
 
                 val unchanged =
                     OpenVexReader.isUnchanged(
@@ -150,8 +173,7 @@ class OpenVexReaderTest :
             test("an added statement is a change") {
                 val first =
                     documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
-                val baseline =
-                    OpenVexBaseline(DOCUMENT_ID, version = 1, content = OpenVexWriter.write(first))
+                val baseline = baselineOf(OpenVexWriter.write(first))
                 val grown = fileWith(listOf("1.0.0", "1.1.0"))
 
                 val unchanged =
@@ -164,7 +186,7 @@ class OpenVexReaderTest :
             }
 
             test("a baseline that cannot be parsed is a change") {
-                val baseline = OpenVexBaseline(DOCUMENT_ID, version = 1, content = "{ not json")
+                val baseline = baselineOf("{ not json")
                 val document =
                     documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
 
@@ -183,7 +205,7 @@ class OpenVexReaderTest :
                         """"@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-1111"}}], "version": 1, """ +
                         """"timestamp": "2026-04-25T00:00:00Z", "role": "Document Creator", "author": "author", """ +
                         """"@id": "$DOCUMENT_ID", "@context": "https://openvex.dev/ns/v0.2.0"}"""
-                val baseline = OpenVexBaseline(DOCUMENT_ID, version = 1, content = reordered)
+                val baseline = baselineOf(reordered)
 
                 val unchanged =
                     OpenVexReader.isUnchanged(
@@ -202,7 +224,7 @@ class OpenVexReaderTest :
                         .write(
                             first,
                         ).replaceFirst("\"version\": 1,", "\"version\": 1,\n  \"tooling\": \"vexctl\",")
-                val baseline = OpenVexBaseline(DOCUMENT_ID, version = 1, content = foreign)
+                val baseline = baselineOf(foreign)
 
                 val unchanged =
                     OpenVexReader.isUnchanged(

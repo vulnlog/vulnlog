@@ -6,6 +6,10 @@ package dev.vulnlog.lib.model.vex.openvex
 /** An existing OpenVEX document a run continues: the identity it carries, and the bytes it was read from. */
 data class OpenVexBaseline(
     /**
+     * The format version the document declares. A revision is only ever written in the same one.
+     */
+    val formatVersion: OpenVexFormatVersion,
+    /**
      * The `@id` of the document, taken over unchanged.
      */
     val id: String,

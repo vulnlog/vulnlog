@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.core.vex.openvex
 
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -32,7 +33,13 @@ class OpenVexIdentityTest :
         context("nextOpenVexIdentity") {
 
             test("keeps the baseline identifier, counts the version up, and issues the revision now") {
-                val baseline = OpenVexBaseline(id = "https://vulnlog.dev/vex/abc", version = 3, content = "")
+                val baseline =
+                    OpenVexBaseline(
+                        formatVersion = OpenVexFormatVersion.LATEST,
+                        id = "https://vulnlog.dev/vex/abc",
+                        version = 3,
+                        content = "",
+                    )
 
                 val identity = nextOpenVexIdentity(baseline, UPDATED_AT)
 

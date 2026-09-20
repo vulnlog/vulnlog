@@ -25,6 +25,7 @@ import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedReleases
@@ -33,7 +34,9 @@ import dev.vulnlog.lib.core.vex.openvex.renderOpenVexWritten
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -113,13 +116,23 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     ).convert(conversion = OptionCallTransformContext::toOutputFileOption)
         .default(FileOutputOption.File(Path.of("vex.json")))
 
+    /** The OpenVEX version this command reads and writes. The single place an option would feed one day. */
+    private val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST
+
     override fun run() {
         val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
         val scope = resolveOpenVexScope(releaseRequest, tagsRequest, vulnlogFile)
         val baseline = baselineRequest?.let(::readBaselineOrFail)
 
         val outcome =
-            generateOpenVex(vulnlogFile, scope, baseline, Instant.now(), OpenVexTooling("CLI", BuildInfo.VERSION))
+            generateOpenVex(
+                vulnlogFile,
+                scope,
+                baseline,
+                Instant.now(),
+                OpenVexTooling("CLI", BuildInfo.VERSION),
+                formatVersion,
+            )
         echoCollection(outcome.collection)
         val generated =
             when (outcome) {
@@ -161,7 +174,8 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
 
     /**
      * Reads the baseline at [path]. A missing file is an error, because the caller asked to continue a document that
-     * is not there. A file that is not an OpenVEX document only warns: garbage in, new identity out.
+     * is not there. A file that is not an OpenVEX document only warns: garbage in, new identity out. A document in
+     * another format version is an error: the run would write its identity into bytes of a version it never had.
      */
     private fun readBaselineOrFail(path: Path): OpenVexBaseline? {
         if (!path.isRegularFile()) {
@@ -176,14 +190,26 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
                 throw ProgramResult(ExitCode.GENERAL_ERROR.code)
             }
-        return OpenVexReader.readBaseline(content) ?: run {
-            echoMessage(
-                formatMessage(
-                    FindingSeverity.WARNING,
-                    "baseline '$path' is not an OpenVEX document, issuing a new one",
-                ),
-            )
-            null
+        return when (val outcome = OpenVexReader.readBaseline(content, formatVersion)) {
+            is OpenVexBaselineOutcome.Read -> outcome.baseline
+
+            OpenVexBaselineOutcome.NotADocument -> {
+                echoMessage(
+                    formatMessage(
+                        FindingSeverity.WARNING,
+                        "baseline '$path' is not an OpenVEX document, issuing a new one",
+                    ),
+                )
+                null
+            }
+
+            is OpenVexBaselineOutcome.OtherFormatVersion -> {
+                echoMessage(
+                    formatMessage(FindingSeverity.ERROR, renderOpenVexOtherFormatVersion(path.toString(), outcome)),
+                )
+                echoMessage(formatHint("omit --baseline to issue a new document"))
+                throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
+            }
         }
     }
 

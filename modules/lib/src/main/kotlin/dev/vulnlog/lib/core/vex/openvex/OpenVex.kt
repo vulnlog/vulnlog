@@ -20,6 +20,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexAuthor
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
@@ -31,23 +32,25 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-/** The OpenVEX specification this writer emits. */
-const val OPEN_VEX_CONTEXT: String = "https://openvex.dev/ns/v0.2.0"
-
 /** The namespace of the document identifiers this writer mints. */
 const val OPEN_VEX_ID_PREFIX: String = "https://vulnlog.dev/vex/"
 
 /** The role this writer plays in the life of a document. */
 const val OPEN_VEX_ROLE: String = "Document Creator"
 
-/** Assembles the document: [project] supplies author and supplier, the run supplies [identity] and [tooling]. */
+/**
+ * Assembles the document: [project] supplies author and supplier, the run supplies [identity] and [tooling].
+ * [formatVersion] is the OpenVEX version its bytes are written in.
+ */
 fun buildOpenVexDocument(
     project: Project,
     identity: OpenVexIdentity,
     statements: List<OpenVexStatement>,
     tooling: OpenVexTooling? = null,
+    formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST,
 ): OpenVexDocument =
     OpenVexDocument(
+        formatVersion = formatVersion,
         identity = identity,
         author = OpenVexAuthor(project),
         supplier = OpenVexSupplier(project.organization),

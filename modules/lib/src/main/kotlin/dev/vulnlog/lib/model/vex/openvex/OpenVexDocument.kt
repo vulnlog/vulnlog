@@ -6,6 +6,10 @@ package dev.vulnlog.lib.model.vex.openvex
 /** An OpenVEX document: its identity, who issued it, and what it states. */
 data class OpenVexDocument(
     /**
+     * The format version the document is written in. It picks the shape the writer emits.
+     */
+    val formatVersion: OpenVexFormatVersion,
+    /**
      * The identity the document carries: identifier, issue time and revision.
      */
     val identity: OpenVexIdentity,
