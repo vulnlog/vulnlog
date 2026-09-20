@@ -24,7 +24,6 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
-import dev.vulnlog.lib.core.vex.openvex.openVexTooling
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -37,6 +36,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
@@ -119,7 +119,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         val baseline = baselineRequest?.let(::readBaselineOrFail)
 
         val outcome =
-            generateOpenVex(vulnlogFile, scope, baseline, Instant.now(), openVexTooling("CLI", BuildInfo.VERSION))
+            generateOpenVex(vulnlogFile, scope, baseline, Instant.now(), OpenVexTooling("CLI", BuildInfo.VERSION))
         echoCollection(outcome.collection)
         val generated =
             when (outcome) {

@@ -24,6 +24,8 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexSupplier
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -38,28 +40,20 @@ const val OPEN_VEX_ID_PREFIX: String = "https://vulnlog.dev/vex/"
 /** The role this writer plays in the life of a document. */
 const val OPEN_VEX_ROLE: String = "Document Creator"
 
-private const val VULNLOG_SITE = "https://vulnlog.dev/"
-
 /** Assembles the document: [project] supplies author and supplier, the run supplies [identity] and [tooling]. */
 fun buildOpenVexDocument(
     project: Project,
     identity: OpenVexIdentity,
     statements: List<OpenVexStatement>,
-    tooling: String? = null,
+    tooling: OpenVexTooling? = null,
 ): OpenVexDocument =
     OpenVexDocument(
         identity = identity,
         author = OpenVexAuthor(project),
-        supplier = project.organization,
+        supplier = OpenVexSupplier(project.organization),
         tooling = tooling,
         statements = statements,
     )
-
-/** The `tooling` line naming the Vulnlog [surface] that wrote the document, for example `CLI` or `Gradle plugin`. */
-fun openVexTooling(
-    surface: String,
-    version: String,
-): String = "Vulnlog $surface version $version, $VULNLOG_SITE"
 
 /** A document identifier under the Vulnlog namespace. The only impure step of the writer path. */
 fun newOpenVexDocumentId(): String = OPEN_VEX_ID_PREFIX + UUID.randomUUID()

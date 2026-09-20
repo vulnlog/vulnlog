@@ -13,6 +13,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -37,7 +38,7 @@ private fun generate(
     file: VulnlogFile,
     baseline: OpenVexBaseline? = null,
     now: Instant = ISSUED_AT,
-    tooling: String? = null,
+    tooling: OpenVexTooling? = null,
 ): OpenVexOutcome.Generated = generateOpenVex(file, OpenVexScope(), baseline, now, tooling).shouldBeInstanceOf()
 
 /** The baseline a later run reads from what an earlier one wrote. */
@@ -58,12 +59,12 @@ class OpenVexRunTest :
         }
 
         test("names the tooling in the document") {
-            val tooling = "Vulnlog CLI version 0.18.0, https://vulnlog.dev/"
+            val tooling = OpenVexTooling("CLI", "0.18.0")
 
             val generated = generate(fileWith("1.0.0"), tooling = tooling)
 
             generated.document.tooling shouldBe tooling
-            generated.content shouldContain "\"tooling\": \"$tooling\""
+            generated.content shouldContain "\"tooling\": \"${tooling.value}\""
         }
 
         test("the clock is cut to whole seconds") {

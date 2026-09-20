@@ -16,11 +16,11 @@ data class OpenVexDocument(
     /**
      * The organization supplying the products, written on every statement.
      */
-    val supplier: String,
+    val supplier: OpenVexSupplier,
     /**
      * The tool and version that wrote the document, when the writer states it.
      */
-    val tooling: String?,
+    val tooling: OpenVexTooling?,
     /**
      * The statements the document makes. The specification requires at least one.
      */

@@ -419,9 +419,5 @@ class OpenVexTest :
         }
 
         context("openVexTooling") {
-
-            test("names the Vulnlog surface, its version and the site") {
-                openVexTooling("CLI", "0.18.0") shouldBe "Vulnlog CLI version 0.18.0, https://vulnlog.dev/"
-            }
         }
     })

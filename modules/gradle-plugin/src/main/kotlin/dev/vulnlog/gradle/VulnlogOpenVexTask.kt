@@ -11,7 +11,6 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
-import dev.vulnlog.lib.core.vex.openvex.openVexTooling
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -26,6 +25,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
@@ -80,7 +80,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val out = outputFile.get().asFile
         val baselineDocument = readBaseline(out, sink)
 
-        val tooling = openVexTooling("Gradle plugin", BuildInfo.VERSION)
+        val tooling = OpenVexTooling("Gradle plugin", BuildInfo.VERSION)
         val outcome = generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now(), tooling)
         logCollection(outcome.collection, sink)
         val generated =

@@ -35,7 +35,7 @@ object OpenVexMapper {
             // Formatted here rather than left to Jackson, whose date handling is version dependent.
             timestamp = format(identity.timestamp),
             version = identity.version,
-            tooling = document.tooling,
+            tooling = document.tooling?.value,
             statements = document.statements.map { statement -> toStatementDto(statement, document) },
         )
     }
@@ -60,7 +60,7 @@ object OpenVexMapper {
             actionStatement = actionStatement,
             actionStatementTimestamp = actionStatement?.let { timestamp },
             statusNotes = statusNotesOf(statement.status),
-            supplier = document.supplier,
+            supplier = document.supplier.organization,
         )
     }
 

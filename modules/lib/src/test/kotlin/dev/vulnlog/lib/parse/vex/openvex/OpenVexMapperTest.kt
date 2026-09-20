@@ -11,6 +11,7 @@ import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexStatementDto
 import io.kotest.core.spec.style.FunSpec
@@ -106,13 +107,13 @@ class OpenVexMapperTest :
         context("document") {
 
             test("names the role, the supplier and the tooling") {
-                val tooling = "Vulnlog CLI version 0.18.0, https://vulnlog.dev/"
+                val tooling = OpenVexTooling("CLI", "0.18.0")
                 val document = buildOpenVexDocument(project, identity, listOf(statement(VexStatus.Fixed)), tooling)
 
                 val dto = OpenVexMapper.toDto(document)
 
                 dto.role shouldBe "Document Creator"
-                dto.tooling shouldBe tooling
+                dto.tooling shouldBe tooling.value
                 dto.statements.single().supplier shouldBe "Acme Corp"
             }
 

@@ -26,6 +26,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.nio.file.Files
@@ -107,7 +108,7 @@ private fun documentOf(identity: OpenVexIdentity): OpenVexDocument =
         file.project,
         identity,
         collectOpenVexStatements(file).statements,
-        tooling = "Vulnlog CLI version 0.18.0, https://vulnlog.dev/",
+        tooling = OpenVexTooling("CLI", "0.18.0"),
     )
 
 /**

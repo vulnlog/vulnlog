@@ -7,6 +7,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexWriter
 import java.time.Instant
@@ -21,7 +22,7 @@ fun generateOpenVex(
     scope: OpenVexScope,
     baseline: OpenVexBaseline?,
     now: Instant,
-    tooling: String?,
+    tooling: OpenVexTooling?,
 ): OpenVexOutcome {
     val collection = collectOpenVexStatements(vulnlogFile, scope)
     if (collection.statements.isEmpty()) return OpenVexOutcome.Empty(collection)
