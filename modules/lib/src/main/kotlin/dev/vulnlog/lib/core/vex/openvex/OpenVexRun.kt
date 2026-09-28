@@ -3,13 +3,13 @@
 
 package dev.vulnlog.lib.core.vex.openvex
 
+import dev.vulnlog.lib.codec.openvex.OpenVexEncoder
+import dev.vulnlog.lib.codec.openvex.sameOpenVexContent
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexEncoder
-import dev.vulnlog.lib.parse.vex.openvex.sameOpenVexContent
 import java.time.Instant
 
 /**

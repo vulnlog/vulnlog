@@ -1,8 +1,9 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.parse.vex.openvex
+package dev.vulnlog.lib.codec.openvex
 
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexStatementDto
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
 import dev.vulnlog.lib.fixtures.cve
@@ -17,7 +18,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexStatementDto
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe

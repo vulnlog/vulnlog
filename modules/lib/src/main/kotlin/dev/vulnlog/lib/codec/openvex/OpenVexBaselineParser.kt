@@ -1,10 +1,11 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.parse.vex.openvex
+package dev.vulnlog.lib.codec.openvex
 
 import com.github.packageurl.MalformedPackageURLException
 import com.github.packageurl.PackageURL
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexBaselineDto
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.core.vex.openvex.openVexJustification
@@ -21,7 +22,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexBaselineDto
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
 import java.time.Instant
