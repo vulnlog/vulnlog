@@ -29,12 +29,12 @@ object OpenVexReader {
     /**
      * Reads the identity of an OpenVEX document from [content], required to be in [requiredFormatVersion].
      *
-     * A file that is no OpenVEX document at all reads as [OpenVexBaselineOutcome.NotADocument], so the caller starts
-     * a fresh identity rather than failing: garbage in, new identity out. A document in another format version reads
-     * as [OpenVexBaselineOutcome.OtherFormatVersion] and is the caller's to reject, because continuing it would
-     * write one version's identity into another version's bytes. A document whose identity cannot be continued reads
-     * as [OpenVexBaselineOutcome.InvalidIdentity], also the caller's to reject. The timestamp must parse, but it is
-     * not carried over: every revision is issued anew.
+     * Every outcome but [OpenVexBaselineOutcome.Read] is the caller's to reject. A file that is no OpenVEX document
+     * at all reads as [OpenVexBaselineOutcome.NotADocument]. A document in another format version reads as
+     * [OpenVexBaselineOutcome.OtherFormatVersion], because continuing it would write one version's identity into
+     * another version's bytes. A document whose identity cannot be continued reads as
+     * [OpenVexBaselineOutcome.InvalidIdentity]. The timestamp must parse, but it is not carried over: every revision
+     * is issued anew.
      */
     fun readBaseline(
         content: String,

@@ -190,7 +190,7 @@ class OpenVexCommandTest :
                 }
             }
 
-            test("a baseline that is not an OpenVEX document issues a new one") {
+            test("a baseline that is not an OpenVEX document is rejected") {
                 withTempDir(prefix = "openvex-baseline") { dir ->
                     val foreign = dir.resolve("other.json")
                     foreign.toFile().writeText("""{"bomFormat": "CycloneDX"}""")
@@ -200,9 +200,11 @@ class OpenVexCommandTest :
                             OpenVexCommand().test("${input.absolutePath} --baseline ${foreign.toAbsolutePath()} -o -")
                         }
 
-                    result.statusCode shouldBe 0
-                    result.stderr shouldContain "is not an OpenVEX document, issuing a new one"
-                    result.stdout shouldContain "\"version\": 1"
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain
+                        "error: baseline '${foreign.toAbsolutePath()}' is not an OpenVEX document"
+                    result.stderr shouldContain "hint: omit --baseline to issue a new document"
+                    result.stdout shouldBe ""
                 }
             }
 

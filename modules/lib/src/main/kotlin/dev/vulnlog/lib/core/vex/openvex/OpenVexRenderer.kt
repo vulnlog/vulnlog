@@ -59,6 +59,9 @@ fun renderOpenVexOtherFormatVersion(
     "baseline '$target' is an OpenVEX ${outcome.declared} document, " +
         "but this run writes OpenVEX ${outcome.required.version}"
 
+/** Renders the error for a baseline at [target] that is no OpenVEX document at all. */
+fun renderOpenVexNotADocument(target: String): String = "baseline '$target' is not an OpenVEX document"
+
 /**
  * Renders the error naming the identity field of the baseline at [target] that cannot be continued, and what it has to
  * be. Shared by the CLI and the Gradle plugin.

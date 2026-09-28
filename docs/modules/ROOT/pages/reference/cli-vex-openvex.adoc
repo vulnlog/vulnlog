@@ -293,8 +293,8 @@ With `--baseline <path>` the new document continues the one you published:
 |===
 
 A missing baseline file is an error and exits `5`.
-So is a baseline that cannot be continued: one in another OpenVEX version, or one whose `@id` is no absolute IRI, whose `timestamp` does not parse, or whose `version` is below `1` or cannot be counted up.
-A file that is not an OpenVEX document only warns, and the run issues a new identity.
+So is a file that is not an OpenVEX document, and a baseline that cannot be continued: one in another OpenVEX version, or one whose `@id` is no absolute IRI, whose `timestamp` does not parse, or whose `version` is below `1` or cannot be counted up.
+The run never issues a new identity in place of a baseline it cannot continue, because consumers that follow the `@id` would lose track of your document.
 
 .Update a committed document in place
 [source]
@@ -487,7 +487,7 @@ verbose: wrote vex.json: openvex format, version 1, 6 statements
 
 * The Vulnlog file fails validation: the command reports the findings and exits `2`.
 * No statement applies, because no release declares `purls`, no entry references a release that does, or the scope left nothing: the command exits `2` and writes no file, since OpenVEX requires at least one statement.
-* `--release` names an unknown release, `--tag` an unknown tag, or `--baseline` a file that does not exist or cannot be continued: the command exits `5`.
+* `--release` names an unknown release, `--tag` an unknown tag, or `--baseline` a file that does not exist, is no OpenVEX document or cannot be continued: the command exits `5`.
 
 See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
 
