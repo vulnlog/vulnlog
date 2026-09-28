@@ -134,7 +134,7 @@
         }
       ],
       "status": "affected",
-      "action_statement": "Update to release 1.0.1. Bumped example-parser to 1.1.0.",
+      "action_statement": "Update to release 1.0.1.",
       "action_statement_timestamp": "2026-04-07T00:00:00Z",
       "status_notes": "The parser is reachable from the upload endpoint.",
       "supplier": "Acme Corp"

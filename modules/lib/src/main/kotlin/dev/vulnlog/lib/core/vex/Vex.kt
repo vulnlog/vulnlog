@@ -7,7 +7,6 @@ import dev.vulnlog.lib.core.findDisposition
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReportEntry
-import dev.vulnlog.lib.model.Resolution
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
@@ -53,15 +52,15 @@ fun releaseStatuses(
 /**
  * Derives what a consumer of an affected product should do.
  *
- * The remediation follows from the disposition and the fix release, never from the analysis. The resolution note
- * only ever comes with an update, so a note can never soften an accepted risk.
+ * The remediation follows from the disposition and the fix release, never from the analysis, and never from the
+ * resolution note, which records for the team how the vulnerability was resolved.
  */
 fun remediationOf(vulnEntry: VulnerabilityEntry): Remediation {
-    val resolution = vulnEntry.resolution
+    val fixRelease = vulnEntry.resolution?.release
     return when (findDisposition(vulnEntry.verdict)) {
-        Disposition.WONT_FIX -> Remediation.RiskAccepted(resolution?.release)
-        Disposition.WILL_FIX -> resolution?.let(::updateTo) ?: Remediation.FixPlanned
-        null -> resolution?.let(::updateTo) ?: Remediation.NoneAvailable
+        Disposition.WONT_FIX -> Remediation.RiskAccepted(fixRelease)
+        Disposition.WILL_FIX -> fixRelease?.let(Remediation::UpdateTo) ?: Remediation.FixPlanned
+        null -> fixRelease?.let(Remediation::UpdateTo) ?: Remediation.NoneAvailable
     }
 }
 
@@ -83,8 +82,3 @@ private fun unresolvedOn(vulnEntry: VulnerabilityEntry): LocalDate? {
         is Verdict.NotAffected, is Verdict.Affected -> vulnEntry.analyzedAt ?: firstReport
     }
 }
-
-// TODO the resolution.note field is primarily for internal use and describes: "Brief description of how the vulnerability was resolved"
-// This is not relevant for consumers of the VEX document. Re-think this approach but leave it for now.
-private fun updateTo(resolution: Resolution): Remediation.UpdateTo =
-    Remediation.UpdateTo(resolution.release, resolution.note?.takeIf(String::isNotBlank))
