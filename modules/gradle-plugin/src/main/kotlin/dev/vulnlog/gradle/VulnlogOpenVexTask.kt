@@ -6,7 +6,7 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.validation.validateInputOrFail
-import dev.vulnlog.gradle.vex.buildOpenVexScopeOrFail
+import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
@@ -14,8 +14,6 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
-import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
@@ -26,6 +24,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.render.renderOpenVexEmptyHint
 import dev.vulnlog.lib.render.renderOpenVexProducts
+import dev.vulnlog.lib.render.renderOpenVexScope
 import dev.vulnlog.lib.render.renderOpenVexSkippedEntries
 import dev.vulnlog.lib.render.renderOpenVexSkippedReleases
 import dev.vulnlog.lib.render.renderOpenVexStatementCounts
@@ -82,12 +81,11 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val sink = diagnosticSink()
         val inputFile = singleVulnlogFileInput(name, files.files)
         val vulnlogFile = validateInputOrFail(inputFile).project.vulnlogProjectFile
-        val scope =
-            buildOpenVexScopeOrFail(vulnlogFile, release.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
         val out = outputFile.get().asFile
         val request =
             OpenVexRequest(
-                scope = scope,
+                release = release.orNull,
+                tags = tags.get(),
                 baseline = readBaseline(out, sink),
                 documentId = openVexDocumentId(UUID.randomUUID()),
                 timestamp = Instant.now(),
@@ -96,12 +94,16 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
             )
 
         when (val outcome = generateOpenVex(vulnlogFile, request)) {
+            is FilterRejected -> throw GradleException(
+                outcome.problems.joinToString(" ") { "${it.message}. ${it.hint}" },
+            )
+
             is OpenVexOutcome.BaselineRejected ->
                 failOnBaseline(renderOpenVexBaselineProblem(baseline.get().asFile.path, outcome.problem))
 
             is OpenVexOutcome.NoStatementApplies -> {
                 logCollection(outcome.collection, sink)
-                failOnEmptyDocument(vulnlogFile, scope)
+                failOnEmptyDocument(vulnlogFile, outcome.collection.scope)
             }
 
             is OpenVexOutcome.Revised ->
@@ -134,6 +136,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         collection: OpenVexCollection,
         sink: DiagnosticSink,
     ) {
+        renderOpenVexScope(collection.scope).forEach(sink::verbose)
         renderOpenVexSkippedReleases(collection)?.let { logger.warn(formatMessage(FindingSeverity.WARNING, it)) }
         renderOpenVexProducts(collection)?.let(sink::verbose)
         renderOpenVexSkippedEntries(collection).forEach(sink::debug)

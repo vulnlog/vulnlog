@@ -18,11 +18,12 @@ import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
-import dev.vulnlog.cli.shell.vex.resolveOpenVexScope
+import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.core.StatusVerb
+import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
@@ -37,6 +38,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.render.renderOpenVexEmptyHint
 import dev.vulnlog.lib.render.renderOpenVexProducts
+import dev.vulnlog.lib.render.renderOpenVexScope
 import dev.vulnlog.lib.render.renderOpenVexSkippedEntries
 import dev.vulnlog.lib.render.renderOpenVexSkippedReleases
 import dev.vulnlog.lib.render.renderOpenVexStatementCounts
@@ -122,10 +124,10 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
 
     override fun run() {
         val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
-        val scope = resolveOpenVexScope(releaseRequest, tagsRequest, vulnlogFile)
         val request =
             OpenVexRequest(
-                scope = scope,
+                release = releaseRequest,
+                tags = tagsRequest,
                 baseline = baselineRequest?.let(::readBaselineOrFail),
                 documentId = openVexDocumentId(UUID.randomUUID()),
                 timestamp = Instant.now(),
@@ -134,12 +136,14 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
             )
 
         when (val outcome = generateOpenVex(vulnlogFile, request)) {
+            is FilterRejected -> failOnScope(outcome.problems)
+
             is OpenVexOutcome.BaselineRejected ->
                 failOnBaseline(renderOpenVexBaselineProblem(baselineRequest.toString(), outcome.problem))
 
             is OpenVexOutcome.NoStatementApplies -> {
                 echoCollection(outcome.collection)
-                failOnEmptyDocument(vulnlogFile, scope)
+                failOnEmptyDocument(vulnlogFile, outcome.collection.scope)
             }
 
             is OpenVexOutcome.Revised -> write(outcome.collection, outcome.document, outcome.content, unchanged = false)
@@ -155,6 +159,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
 
     /** The warning and the diagnostics that say what the collection holds and what it left out. */
     private fun echoCollection(collection: OpenVexCollection) {
+        renderOpenVexScope(collection.scope).forEach { diagnosticSink().verbose(it) }
         renderOpenVexSkippedReleases(collection)?.let { echoMessage(formatMessage(FindingSeverity.WARNING, it)) }
         renderOpenVexProducts(collection)?.let { diagnosticSink().verbose(it) }
         renderOpenVexSkippedEntries(collection).forEach { diagnosticSink().debug(it) }
@@ -206,6 +211,14 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
             echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
+    }
+
+    private fun failOnScope(problems: List<FilterProblem>): Nothing {
+        problems.forEach { problem ->
+            echoMessage(formatMessage(FindingSeverity.ERROR, problem.message))
+            echoMessage(formatHint(problem.hint))
+        }
+        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 
     private fun failOnBaseline(message: String): Nothing {
