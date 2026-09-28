@@ -10,8 +10,20 @@ sealed interface OpenVexBaselineOutcome {
         val baseline: OpenVexBaseline,
     ) : OpenVexBaselineOutcome
 
-    /** No OpenVEX document at all: unreadable, foreign, or missing the identity a revision continues. */
+    /** No OpenVEX document at all: unreadable or foreign. */
     data object NotADocument : OpenVexBaselineOutcome
+
+    /** An OpenVEX document in the required format version whose identity cannot be continued. */
+    data class InvalidIdentity(
+        /**
+         * The identity field that is missing or invalid.
+         */
+        val field: OpenVexIdentityField,
+        /**
+         * The value as the file states it, or null when the field is missing.
+         */
+        val value: String?,
+    ) : OpenVexBaselineOutcome
 
     /** An OpenVEX document, but not in the format version the run writes. The two are never mixed. */
     data class OtherFormatVersion(
@@ -24,4 +36,11 @@ sealed interface OpenVexBaselineOutcome {
          */
         val required: OpenVexFormatVersion,
     ) : OpenVexBaselineOutcome
+}
+
+/** The fields that make up the identity a revision continues. */
+enum class OpenVexIdentityField {
+    ID,
+    TIMESTAMP,
+    VERSION,
 }

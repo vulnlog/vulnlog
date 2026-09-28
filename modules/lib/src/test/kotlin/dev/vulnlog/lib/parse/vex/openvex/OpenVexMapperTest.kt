@@ -10,6 +10,7 @@ import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
@@ -21,7 +22,7 @@ import java.time.Instant
 import java.time.LocalDate
 
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
-private val identity = freshOpenVexIdentity("https://vulnlog.dev/vex/abc", ISSUED_AT)
+private val identity = freshOpenVexIdentity(OpenVexDocumentId("https://vulnlog.dev/vex/abc"), ISSUED_AT)
 private val project = Project("Acme Corp", "Acme Web App", "Acme Security Team")
 private val products = listOf(Purl.Maven("pkg:maven/com.acme/app@1.0.0"))
 

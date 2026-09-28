@@ -8,6 +8,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 
@@ -58,6 +59,24 @@ fun renderOpenVexOtherFormatVersion(
     "baseline '$target' is an OpenVEX ${outcome.declared} document, " +
         "but this run writes OpenVEX ${outcome.required.version}"
 
+/**
+ * Renders the error naming the identity field of the baseline at [target] that cannot be continued, and what it has to
+ * be. Shared by the CLI and the Gradle plugin.
+ */
+fun renderOpenVexInvalidIdentity(
+    target: String,
+    outcome: OpenVexBaselineOutcome.InvalidIdentity,
+): String {
+    val (field, expected) =
+        when (outcome.field) {
+            OpenVexIdentityField.ID -> "@id" to "an absolute IRI"
+            OpenVexIdentityField.TIMESTAMP -> "timestamp" to "an RFC 3339 timestamp"
+            OpenVexIdentityField.VERSION -> "version" to "a whole number from 1 to ${Int.MAX_VALUE - 1}"
+        }
+    val found = outcome.value?.let { value -> "an invalid '$field' '$value'" } ?: "no '$field'"
+    return "baseline '$target' has $found, expected $expected"
+}
+
 /** Renders one diagnostic line stating how many statements the document holds, broken down by status. */
 fun renderOpenVexStatementCounts(document: OpenVexDocument): String {
     val byStatus =
@@ -94,7 +113,7 @@ fun renderOpenVexWritten(
     target: String,
     document: OpenVexDocument,
 ): String =
-    "wrote $target: openvex format, version ${document.identity.version}, " +
+    "wrote $target: openvex format, version ${document.identity.version.value}, " +
         pluralize(document.statements.size, "statement")
 
 private fun renderSkippedEntry(entry: OpenVexSkippedEntry): String =

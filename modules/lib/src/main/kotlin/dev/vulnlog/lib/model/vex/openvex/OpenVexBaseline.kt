@@ -12,11 +12,11 @@ data class OpenVexBaseline(
     /**
      * The `@id` of the document, taken over unchanged.
      */
-    val id: String,
+    val id: OpenVexDocumentId,
     /**
      * The `version` of the document. A document without one counts as 1.
      */
-    val version: Int,
+    val version: OpenVexDocumentVersion,
     /**
      * The bytes the document was read from, written back verbatim when nothing changed.
      */

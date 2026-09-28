@@ -12,6 +12,7 @@ import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -119,7 +120,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
      * task that reads and writes one file is never up to date and a build cache hit would overwrite the committed
      * document, so the output stays under the build directory and `vulnlogOpenVexUpdate` copies it over the
      * baseline. A document in another format version fails the task: the run would write its identity into bytes of
-     * a version it never had.
+     * a version it never had. So does a document whose identity cannot be continued.
      */
     private fun readBaseline(
         out: File,
@@ -151,12 +152,15 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
             }
 
             is OpenVexBaselineOutcome.OtherFormatVersion ->
-                throw GradleException(
-                    renderOpenVexOtherFormatVersion(file.path, outcome).replaceFirstChar(Char::uppercase) +
-                        ". Unset 'baseline' to issue a new document.",
-                )
+                failOnBaseline(renderOpenVexOtherFormatVersion(file.path, outcome))
+
+            is OpenVexBaselineOutcome.InvalidIdentity ->
+                failOnBaseline(renderOpenVexInvalidIdentity(file.path, outcome))
         }
     }
+
+    private fun failOnBaseline(message: String): Nothing =
+        throw GradleException(message.replaceFirstChar(Char::uppercase) + ". Unset 'baseline' to issue a new document.")
 
     private fun failOnEmptyDocument(
         vulnlogFile: VulnlogFile,

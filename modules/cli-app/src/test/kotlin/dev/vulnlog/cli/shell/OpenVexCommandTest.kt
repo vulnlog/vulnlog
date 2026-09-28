@@ -226,6 +226,27 @@ class OpenVexCommandTest :
                     result.stderr shouldContain "hint: omit --baseline to issue a new document"
                 }
             }
+
+            test("a baseline whose identity cannot be continued is rejected") {
+                withTempDir(prefix = "openvex-baseline") { dir ->
+                    val invalid = dir.resolve("vex.json")
+                    invalid.toFile().writeText(
+                        """{"@context": "https://openvex.dev/ns/v0.2.0", "@id": "https://vulnlog.dev/vex/abc", """ +
+                            """"timestamp": "2026-04-25T00:00:00Z", "version": 2147483647}""",
+                    )
+
+                    val result =
+                        withTempFile(content = openVexScopedDocument()) { input ->
+                            OpenVexCommand().test("${input.absolutePath} --baseline ${invalid.toAbsolutePath()} -o -")
+                        }
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain
+                        "error: baseline '${invalid.toAbsolutePath()}' has an invalid 'version' '2147483647'"
+                    result.stderr shouldContain "hint: omit --baseline to issue a new document"
+                    result.stdout shouldBe ""
+                }
+            }
         }
 
         context("nothing to write") {

@@ -20,6 +20,8 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexAuthor
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
@@ -59,7 +61,7 @@ fun buildOpenVexDocument(
     )
 
 /** A document identifier under the Vulnlog namespace. The only impure step of the writer path. */
-fun newOpenVexDocumentId(): String = OPEN_VEX_ID_PREFIX + UUID.randomUUID()
+fun newOpenVexDocumentId(): OpenVexDocumentId = OpenVexDocumentId(OPEN_VEX_ID_PREFIX + UUID.randomUUID())
 
 /** The identity of this run: the [baseline]'s continued, or a fresh one. [now] is cut to whole seconds. */
 fun resolveOpenVexIdentity(
@@ -72,15 +74,15 @@ fun resolveOpenVexIdentity(
 
 /** A fresh identity: the given [id], version 1, issued [now]. */
 fun freshOpenVexIdentity(
-    id: String,
+    id: OpenVexDocumentId,
     now: Instant,
-): OpenVexIdentity = OpenVexIdentity(id = id, timestamp = now, version = 1)
+): OpenVexIdentity = OpenVexIdentity(id = id, timestamp = now, version = OpenVexDocumentVersion.FIRST)
 
 /** The identity continuing [baseline]: its id, the next version, issued [now]. */
 fun nextOpenVexIdentity(
     baseline: OpenVexBaseline,
     now: Instant,
-): OpenVexIdentity = OpenVexIdentity(id = baseline.id, timestamp = now, version = baseline.version + 1)
+): OpenVexIdentity = OpenVexIdentity(id = baseline.id, timestamp = now, version = baseline.version.next())
 
 /**
  * Collects one statement per vulnerability entry and release it applies to in [scope], anchored to that release's

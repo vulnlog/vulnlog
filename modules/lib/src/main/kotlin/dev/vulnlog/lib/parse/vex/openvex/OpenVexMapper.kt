@@ -35,12 +35,12 @@ object OpenVexMapper {
         val identity = document.identity
         return OpenVexDocumentDto(
             context = document.formatVersion.context,
-            id = identity.id,
+            id = identity.id.value,
             author = document.author.name,
             role = OPEN_VEX_ROLE,
             // Formatted here rather than left to Jackson, whose date handling is version dependent.
             timestamp = format(identity.timestamp),
-            version = identity.version,
+            version = identity.version.value,
             tooling = document.tooling?.value,
             statements = document.statements.map { statement -> toStatementDto(statement, document) },
         )

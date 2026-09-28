@@ -6,6 +6,11 @@ package dev.vulnlog.lib.model.vex.openvex
 /** What every OpenVEX `@context` starts with, whatever version follows it. */
 private const val CONTEXT_PREFIX = "https://openvex.dev/ns/v"
 
+/** The `@context` without a version, which the specification reads as [UNVERSIONED_VERSION]. */
+private const val UNVERSIONED_CONTEXT = "https://openvex.dev/ns"
+
+private const val UNVERSIONED_VERSION = "0.0.1"
+
 /**
  * A version of the OpenVEX specification this build knows, one entry per version, declared oldest first.
  *
@@ -31,9 +36,13 @@ enum class OpenVexFormatVersion(
          * The version [context] declares, written as it stands, or null when [context] is no OpenVEX context.
          *
          * A version this build does not know still comes back, so a caller can tell a document of another version
-         * from a document of another format entirely.
+         * from a document of another format entirely. A context without a version declares 0.0.1.
          */
         fun declaredVersion(context: String): String? =
-            context.takeIf { it.startsWith(CONTEXT_PREFIX) }?.removePrefix(CONTEXT_PREFIX)?.takeIf(String::isNotBlank)
+            when {
+                context == UNVERSIONED_CONTEXT -> UNVERSIONED_VERSION
+                context.startsWith(CONTEXT_PREFIX) -> context.removePrefix(CONTEXT_PREFIX).takeIf(String::isNotBlank)
+                else -> null
+            }
     }
 }

@@ -6,7 +6,10 @@ package dev.vulnlog.lib.parse.vex.openvex
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
+import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexBaselineDto
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
@@ -22,9 +25,6 @@ private val VOLATILE_FIELDS = listOf("timestamp", "version")
 /** A statement the file leaves undated is dated by the document, so these move with every revision as well. */
 private val INHERITED_STATEMENT_FIELDS = listOf("timestamp", "action_statement_timestamp")
 
-/** A document without a `version` is the first revision. */
-private const val FIRST_VERSION = 1
-
 object OpenVexReader {
     /**
      * Reads the identity of an OpenVEX document from [content], required to be in [requiredFormatVersion].
@@ -32,8 +32,9 @@ object OpenVexReader {
      * A file that is no OpenVEX document at all reads as [OpenVexBaselineOutcome.NotADocument], so the caller starts
      * a fresh identity rather than failing: garbage in, new identity out. A document in another format version reads
      * as [OpenVexBaselineOutcome.OtherFormatVersion] and is the caller's to reject, because continuing it would
-     * write one version's identity into another version's bytes. The timestamp must parse for the file to count as
-     * a document, but it is not carried over: every revision is issued anew.
+     * write one version's identity into another version's bytes. A document whose identity cannot be continued reads
+     * as [OpenVexBaselineOutcome.InvalidIdentity], also the caller's to reject. The timestamp must parse, but it is
+     * not carried over: every revision is issued anew.
      */
     fun readBaseline(
         content: String,
@@ -86,19 +87,32 @@ object OpenVexReader {
     }
 }
 
-/** The baseline [dto] describes, or [OpenVexBaselineOutcome.NotADocument] when it carries no identity to continue. */
+/**
+ * The baseline [dto] describes, or [OpenVexBaselineOutcome.InvalidIdentity] naming the first identity field that
+ * cannot be continued: an `@id` that is no absolute IRI, a missing or unparsable `timestamp`, or a `version` without a
+ * successor.
+ */
 private fun baselineOf(
     dto: OpenVexBaselineDto,
     content: String,
     formatVersion: OpenVexFormatVersion,
 ): OpenVexBaselineOutcome {
-    val id = dto.id?.takeIf(String::isNotBlank) ?: return OpenVexBaselineOutcome.NotADocument
-    if (dto.timestamp?.let(::parseTimestamp) == null) return OpenVexBaselineOutcome.NotADocument
+    val id =
+        dto.id?.let(OpenVexDocumentId::parse)
+            ?: return OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.ID, dto.id)
+    if (dto.timestamp?.let(::parseTimestamp) == null) {
+        return OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, dto.timestamp)
+    }
+    val version =
+        dto.version?.let { value ->
+            OpenVexDocumentVersion.parse(value)
+                ?: return OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.VERSION, value.toString())
+        } ?: OpenVexDocumentVersion.FIRST
     return OpenVexBaselineOutcome.Read(
         OpenVexBaseline(
             formatVersion = formatVersion,
             id = id,
-            version = dto.version ?: FIRST_VERSION,
+            version = version,
             content = content,
         ),
     )
