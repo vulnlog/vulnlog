@@ -19,83 +19,60 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import java.time.Instant
 
-/**
- * What `vex openvex` and `vulnlogOpenVex` ask for. Everything the run depends on arrives as data: the driver reads the
- * baseline, draws the identifier of a new document and reads the clock.
- */
+/** The driver reads the baseline, draws the document id and reads the clock, so the run itself stays pure. */
 data class OpenVexRequest(
-    /**
-     * The single release the document covers, or null for every release that declares purls.
-     */
     val release: String?,
-    /**
-     * The tags a release purl must carry to become a product. Empty keeps every purl.
-     */
     val tags: Set<String>,
-    /**
-     * The text of the document to continue, or null to issue a new one.
-     */
+    /** The text of the document to continue, or null to issue a new one. */
     val baseline: String?,
-    /**
-     * The identifier of a new document. Unused when a baseline is continued.
-     */
+    /** Only used when no baseline is continued. */
     val documentId: OpenVexDocumentId,
-    /**
-     * When the revision is issued.
-     */
     val timestamp: Instant,
-    /**
-     * The Vulnlog that writes the document.
-     */
     val tooling: OpenVexTooling,
-    /**
-     * The OpenVEX version the document is written in. A baseline must be in the same one.
-     */
     val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST,
 )
 
-/**
- * What a run did. Every case after the scope and the baseline carries the collection, so drivers can say what it held.
- * A rejected scope is the shared [FilterRejected].
- */
 sealed interface OpenVexOutcome {
-    /** The baseline cannot be continued, so nothing was collected. */
     data class BaselineRejected(
         val problem: OpenVexBaselineProblem,
     ) : OpenVexOutcome
 
-    /** Nothing to write: OpenVEX requires at least one statement. [reason] says what to change. */
+    /** OpenVEX requires at least one statement, so there is nothing to write. */
     data class NoStatementApplies(
         val collection: OpenVexCollection,
         val reason: OpenVexEmptyReason,
     ) : OpenVexOutcome
 
-    /** A new revision, and the bytes it is written in. */
-    data class Revised(
-        val collection: OpenVexCollection,
-        val document: OpenVexDocument,
-        val content: String,
-    ) : OpenVexOutcome
+    /** A document to write: [content] carries [version]. */
+    sealed interface Generated : OpenVexOutcome {
+        val collection: OpenVexCollection
+        val version: OpenVexDocumentVersion
+        val content: String
+    }
 
-    /** Only the clock moved: the baseline's bytes stand, and [document] is the revision that is not issued. */
-    data class Unchanged(
-        val collection: OpenVexCollection,
+    data class Revised(
+        override val collection: OpenVexCollection,
         val document: OpenVexDocument,
-        val content: String,
-    ) : OpenVexOutcome
+        override val content: String,
+    ) : Generated {
+        override val version: OpenVexDocumentVersion get() = document.identity.version
+    }
+
+    /** Only the clock moved, so the baseline's bytes and version stand and no revision is issued. */
+    data class Unchanged(
+        override val collection: OpenVexCollection,
+        override val version: OpenVexDocumentVersion,
+        override val content: String,
+    ) : Generated
 }
 
-/**
- * Runs `vex openvex` over [vulnlogFile]: resolves the scope, continues the baseline or starts a new document, collects
- * the statements, carries the baseline's time over to the undated ones it already made, builds the revision, and keeps
- * the baseline's bytes when nothing but the clock changed. Shared by the CLI and the Gradle plugin.
- */
 fun generateOpenVex(
     vulnlogFile: VulnlogFile,
     request: OpenVexRequest,
@@ -105,25 +82,19 @@ fun generateOpenVex(
             is OpenVexScopeResult.Resolved -> result.scope
             is OpenVexScopeResult.Rejected -> return FilterRejected(result.problems)
         }
-    val revision =
-        when (val baseline = request.baseline) {
-            null -> OpenVexRevision.First(request.documentId, request.formatVersion)
-            else ->
-                when (val result = parseOpenVexBaseline(baseline, request.formatVersion)) {
-                    is OpenVexBaselineResult.Parsed -> OpenVexRevision.Next(result.baseline)
-                    is OpenVexBaselineResult.Rejected -> return OpenVexOutcome.BaselineRejected(result.problem)
-                }
+    val baseline =
+        request.baseline?.let { content ->
+            when (val result = parseOpenVexBaseline(content, request.formatVersion)) {
+                is OpenVexBaselineResult.Parsed -> result.baseline
+                is OpenVexBaselineResult.Rejected -> return OpenVexOutcome.BaselineRejected(result.problem)
+            }
         }
     val collection = collectOpenVexStatements(vulnlogFile, scope)
     if (collection.statements.isEmpty()) {
         return OpenVexOutcome.NoStatementApplies(collection, openVexEmptyReason(vulnlogFile, scope))
     }
-
-    val baseline =
-        when (revision) {
-            is OpenVexRevision.First -> null
-            is OpenVexRevision.Next -> revision.baseline
-        }
+    val revision =
+        baseline?.let(OpenVexRevision::Next) ?: OpenVexRevision.First(request.documentId, request.formatVersion)
     val document =
         buildOpenVexDocument(
             project = vulnlogFile.project,
@@ -133,8 +104,8 @@ fun generateOpenVex(
             formatVersion = revision.formatVersion,
         )
     val baselineContent = request.baseline
-    return if (baselineContent != null && sameOpenVexContent(baselineContent, document)) {
-        OpenVexOutcome.Unchanged(collection, document, baselineContent)
+    return if (baseline != null && sameOpenVexContent(baselineContent, document)) {
+        OpenVexOutcome.Unchanged(collection, baseline.version, baselineContent)
     } else {
         OpenVexOutcome.Revised(collection, document, OpenVexEncoder.encode(document))
     }

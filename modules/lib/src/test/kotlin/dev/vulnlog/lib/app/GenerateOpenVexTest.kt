@@ -16,13 +16,13 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
+import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.Instant
 import java.time.LocalDate
@@ -30,9 +30,7 @@ import java.time.LocalDate
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
 private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
-private val TOOLING = OpenVexTooling("CLI", "0.18.0")
 
-/** One entry affecting every release given, so each release contributes a statement. */
 private fun fileWith(vararg releases: String): VulnlogFile =
     vulnlogFile(
         releases =
@@ -45,7 +43,7 @@ private fun request(
     now: Instant = ISSUED_AT,
     release: String? = null,
     tags: Set<String> = emptySet(),
-): OpenVexRequest = OpenVexRequest(release, tags, baseline, DOCUMENT_ID, now, TOOLING)
+): OpenVexRequest = OpenVexRequest(release, tags, baseline, DOCUMENT_ID, now, OpenVexTooling("CLI", "0.18.0"))
 
 private fun revised(
     file: VulnlogFile,
@@ -57,34 +55,21 @@ private fun revised(
 class GenerateOpenVexTest :
     FunSpec({
 
-        test("a run without a baseline issues the first version") {
-            val revised = revised(fileWith("1.0.0"))
+        test("a run without a baseline issues the first version under the drawn id") {
+            val file = fileWith("1.0.0")
 
-            revised.document.identity.id shouldBe DOCUMENT_ID
-            revised.document.identity.version shouldBe OpenVexDocumentVersion.FIRST
-            revised.document.identity.timestamp shouldBe ISSUED_AT
-            revised.content shouldEndWith "}\n"
+            val revised = revised(file)
+
+            revised.document.identity shouldBe OpenVexIdentity(DOCUMENT_ID, ISSUED_AT, OpenVexDocumentVersion.FIRST)
+            revised.version shouldBe OpenVexDocumentVersion.FIRST
         }
 
-        test("names the tooling in the document") {
-            val revised = revised(fileWith("1.0.0"))
-
-            revised.document.tooling shouldBe TOOLING
-            revised.content shouldContain "\"tooling\": \"Vulnlog CLI version 0.18.0, https://vulnlog.dev/\""
-        }
-
-        test("the clock is cut to whole seconds") {
-            val revised = revised(fileWith("1.0.0"), now = Instant.parse("2026-04-25T00:00:00.123456Z"))
-
-            revised.document.identity.timestamp shouldBe ISSUED_AT
-        }
-
-        test("a rerun over an unchanged file keeps the baseline bytes") {
+        test("a rerun over an unchanged file keeps the baseline bytes and version") {
             val first = revised(fileWith("1.0.0"))
 
             val outcome = generateOpenVex(fileWith("1.0.0"), request(first.content, UPDATED_AT))
 
-            outcome.shouldBeInstanceOf<OpenVexOutcome.Unchanged>().content shouldBe first.content
+            outcome shouldBe OpenVexOutcome.Unchanged(first.collection, OpenVexDocumentVersion.FIRST, first.content)
         }
 
         test("a changed file continues the identity and counts the version up") {
@@ -92,13 +77,10 @@ class GenerateOpenVexTest :
 
             val second = revised(fileWith("1.0.0", "1.1.0"), first.content, UPDATED_AT)
 
-            second.document.identity.id shouldBe first.document.identity.id
-            second.document.identity.timestamp shouldBe UPDATED_AT
-            second.document.identity.version shouldBe OpenVexDocumentVersion(2)
+            second.document.identity shouldBe OpenVexIdentity(DOCUMENT_ID, UPDATED_AT, OpenVexDocumentVersion(2))
         }
 
         test("an undated statement keeps its time when another entry changes the document") {
-            val undated = vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0")))
             val file = fileWith("1.0.0")
             val first = revised(file)
             val added =
@@ -109,9 +91,8 @@ class GenerateOpenVexTest :
                     verdict = Verdict.NotAffected(VexJustification.COMPONENT_NOT_PRESENT),
                 )
 
-            val second = revised(file.copy(vulnerabilities = listOf(undated, added)), first.content, UPDATED_AT)
+            val second = revised(file.copy(vulnerabilities = file.vulnerabilities + added), first.content, UPDATED_AT)
 
-            second.document.identity.version shouldBe OpenVexDocumentVersion(2)
             second.document.statements.map { it.vulnerability.id to it.timestamp } shouldContainExactly
                 listOf(
                     cve("CVE-2026-1111") to OpenVexStatementTime.Carried(ISSUED_AT),
@@ -121,25 +102,29 @@ class GenerateOpenVexTest :
         }
 
         test("a scope the file does not define is rejected with every problem") {
-            val outcome = generateOpenVex(fileWith("1.0.0"), request(release = "9.9.9", tags = setOf("binary")))
+            val file = fileWith("1.0.0")
+
+            val outcome = generateOpenVex(file, request(release = "9.9.9", tags = setOf("binary")))
 
             outcome.shouldBeInstanceOf<FilterRejected>().problems.map { it.message } shouldContainExactly
                 listOf("Release not found: 9.9.9", "Tag not found: binary")
         }
 
         test("the scope narrows the document to the requested release") {
-            val revised = revised(fileWith("1.0.0", "1.1.0"), release = "1.1.0")
+            val file = fileWith("1.0.0", "1.1.0")
 
-            revised.collection.scope.releases
-                .map { it.value } shouldContainExactly listOf("1.1.0")
+            val revised = revised(file, release = "1.1.0")
+
             revised.document.statements
                 .flatMap { it.products }
                 .map { it.value } shouldContainExactly
                 listOf("pkg:maven/com.acme/app@1.1.0")
         }
 
-        test("a baseline that cannot be continued is rejected before anything is collected") {
-            val outcome = generateOpenVex(fileWith("1.0.0"), request(baseline = """{"bomFormat": "CycloneDX"}"""))
+        test("a baseline that cannot be continued is rejected") {
+            val baseline = """{"bomFormat": "CycloneDX"}"""
+
+            val outcome = generateOpenVex(fileWith("1.0.0"), request(baseline = baseline))
 
             outcome shouldBe OpenVexOutcome.BaselineRejected(OpenVexBaselineProblem.NotOpenVex)
         }

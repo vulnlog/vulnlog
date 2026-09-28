@@ -17,14 +17,9 @@ import dev.vulnlog.lib.model.vex.VexStatusKind
 import java.time.LocalDate
 
 /**
- * Resolves the [VexStatus] of [vulnEntry] for every release of [vulnlogFile] it applies to, in declaration order.
- *
- * An entry is present from the earliest release it lists through every later release, until the release named by
- * its resolution; from that release on it is fixed, whatever the verdict says.
- *
- * Each status carries the day it became true: the first report for an open investigation, the analysis date for a
- * verdict, the resolution date for a fix. An entry that records none of those falls back to the day the release was
- * published, so a statement is dated from the file rather than from the clock.
+ * An entry applies from the earliest release it lists through every later release, and from its resolution release
+ * on it is fixed, whatever the verdict says. A status is dated from the file only, falling back to the release's
+ * publication date, so that the document does not change with the clock.
  */
 fun releaseStatuses(
     vulnEntry: VulnerabilityEntry,
@@ -50,12 +45,7 @@ fun releaseStatuses(
     }
 }
 
-/**
- * Derives what a consumer of an affected product should do.
- *
- * The remediation follows from the disposition and the fix release, never from the analysis, and never from the
- * resolution note, which records for the team how the vulnerability was resolved.
- */
+/** Never derived from the analysis or the resolution note: both are written for the team, not for consumers. */
 fun remediationOf(vulnEntry: VulnerabilityEntry): Remediation {
     val fixRelease = vulnEntry.resolution?.release
     return when (findDisposition(vulnEntry.verdict)) {
@@ -65,7 +55,6 @@ fun remediationOf(vulnEntry: VulnerabilityEntry): Remediation {
     }
 }
 
-/** The kind of [status], without the text it carries: what statements are sorted and counted by. */
 fun vexStatusKind(status: VexStatus): VexStatusKind =
     when (status) {
         is VexStatus.Affected -> VexStatusKind.AFFECTED
@@ -74,7 +63,6 @@ fun vexStatusKind(status: VexStatus): VexStatusKind =
         is VexStatus.UnderInvestigation -> VexStatusKind.UNDER_INVESTIGATION
     }
 
-/** The status a release carries before the fix, with the entry's analysis routed to the field that status owns. */
 private fun unresolvedStatus(vulnEntry: VulnerabilityEntry): VexStatus {
     val analysis = vulnEntry.analysis?.takeIf(String::isNotBlank)
     return when (val verdict = vulnEntry.verdict) {
@@ -84,7 +72,7 @@ private fun unresolvedStatus(vulnEntry: VulnerabilityEntry): VexStatus {
     }
 }
 
-/** The day a verdict was made, else the day the entry was first reported. An open investigation has no verdict. */
+/** An open investigation has no verdict to date, so only its first report counts. */
 private fun unresolvedOn(vulnEntry: VulnerabilityEntry): LocalDate? {
     val firstReport = vulnEntry.reports.mapNotNull(ReportEntry::at).minOrNull()
     return when (vulnEntry.verdict) {

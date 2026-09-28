@@ -5,43 +5,21 @@ package dev.vulnlog.lib.core.vex.openvex
 
 import dev.vulnlog.lib.core.filter.resolveRelease
 import dev.vulnlog.lib.core.filter.resolveTags
-import dev.vulnlog.lib.core.vex.releaseStatuses
-import dev.vulnlog.lib.core.vex.vexStatusKind
 import dev.vulnlog.lib.model.Project
-import dev.vulnlog.lib.model.Purl
-import dev.vulnlog.lib.model.PurlEntry
-import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.ReleaseEntry
-import dev.vulnlog.lib.model.Tag
-import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.vex.ReleaseStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexAuthor
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
-import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSupplier
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import java.time.Instant
-import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-/**
- * Assembles the document: [project] supplies author and supplier, the run supplies [identity] and [tooling].
- * [formatVersion] is the OpenVEX version its bytes are written in.
- */
 fun buildOpenVexDocument(
     project: Project,
     identity: OpenVexIdentity,
@@ -58,34 +36,19 @@ fun buildOpenVexDocument(
         statements = statements,
     )
 
-/** The identity [revision] is issued with. [now] is cut to whole seconds. */
+/** Cut to whole seconds, so a rerun within the same second writes the same bytes. */
 fun resolveOpenVexIdentity(
     revision: OpenVexRevision,
     now: Instant,
 ): OpenVexIdentity {
     val at = now.truncatedTo(ChronoUnit.SECONDS)
     return when (revision) {
-        is OpenVexRevision.First -> freshOpenVexIdentity(revision.id, at)
-        is OpenVexRevision.Next -> nextOpenVexIdentity(revision.baseline, at)
+        is OpenVexRevision.First -> OpenVexIdentity(revision.id, at, OpenVexDocumentVersion.FIRST)
+        is OpenVexRevision.Next -> OpenVexIdentity(revision.baseline.id, at, revision.baseline.version.next())
     }
 }
 
-/** A fresh identity: the given [id], version 1, issued [now]. */
-fun freshOpenVexIdentity(
-    id: OpenVexDocumentId,
-    now: Instant,
-): OpenVexIdentity = OpenVexIdentity(id = id, timestamp = now, version = OpenVexDocumentVersion.FIRST)
-
-/** The identity continuing [baseline]: its id, the next version, issued [now]. */
-fun nextOpenVexIdentity(
-    baseline: OpenVexBaseline,
-    now: Instant,
-): OpenVexIdentity = OpenVexIdentity(id = baseline.id, timestamp = now, version = baseline.version.next())
-
-/**
- * Resolves the scope a document is written for against [vulnlogFile]: the single [release] it covers, or every release
- * when null, and the [tags] a release purl must carry. Every one the file does not define is a problem.
- */
+/** Unlike the report filters, [release] selects one release and not the window up to it. */
 fun resolveOpenVexScope(
     release: String?,
     tags: Set<String>,
@@ -98,150 +61,3 @@ fun resolveOpenVexScope(
     if (problems.isNotEmpty()) return OpenVexScopeResult.Rejected(problems)
     return OpenVexScopeResult.Resolved(OpenVexScope(releases = setOfNotNull(releases.value), tags = scopeTags.value))
 }
-
-/**
- * Collects one statement per vulnerability entry and release it applies to in [scope], anchored to that release's
- * purls, and records what was left out. A release without purls carries no product and anchors nothing. Identical
- * statements collapse, and the result is ordered so the same input always writes the same bytes.
- */
-fun collectOpenVexStatements(
-    vulnlogFile: VulnlogFile,
-    scope: OpenVexScope = OpenVexScope(),
-): OpenVexCollection {
-    val anchors = anchorsOf(vulnlogFile, scope)
-    val statuses = vulnlogFile.vulnerabilities.associateWith { vulnEntry -> releaseStatuses(vulnEntry, vulnlogFile) }
-    val statements =
-        statuses
-            .flatMap { (vulnEntry, releaseStatuses) -> statementsOf(vulnEntry, releaseStatuses, anchors) }
-            .distinct()
-            .sortedWith(
-                compareBy(
-                    { it.vulnerability.id.id },
-                    { it.products.joinToString(",", transform = Purl::value) },
-                    { it.timestamp.statedDate() },
-                    { vexStatusKind(it.status) },
-                ),
-            )
-    return OpenVexCollection(
-        scope = scope,
-        statements = statements,
-        anchors = anchors,
-        skippedReleases = skippedReleases(vulnlogFile, scope, statuses.values.flatten(), anchors.keys),
-        skippedEntries =
-            statuses.mapNotNull { (vulnEntry, releaseStatuses) ->
-                skippedEntry(vulnEntry, releaseStatuses, anchors.keys)
-            },
-    )
-}
-
-/** The most likely reason a run over [vulnlogFile] in [scope] collected no statement. */
-fun openVexEmptyReason(
-    vulnlogFile: VulnlogFile,
-    scope: OpenVexScope,
-): OpenVexEmptyReason =
-    when {
-        vulnlogFile.releases.none { it.purls.isNotEmpty() } -> OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
-        scope.tags.isNotEmpty() -> OpenVexEmptyReason.NO_PURL_CARRIES_TAG
-        scope.releases.isNotEmpty() -> OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE
-        else -> OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE
-    }
-
-/**
- * Dates every undated statement as [baseline] dates an equal one, so a revision never re-dates a statement it does not
- * touch. A statement the file dates keeps that date, and one the baseline does not make stays issued by the revision.
- */
-fun carryOverOpenVexTimestamps(
-    statements: List<OpenVexStatement>,
-    baseline: OpenVexBaseline?,
-): List<OpenVexStatement> {
-    if (baseline == null) return statements
-    // Keyed by the statement as this revision would issue it, so only an undated statement finds its time.
-    val carried =
-        baseline.statements
-            .mapNotNull { statement ->
-                (statement.timestamp as? OpenVexStatementTime.Carried)?.let { time ->
-                    statement.copy(timestamp = OpenVexStatementTime.Issued) to time
-                }
-            }.groupBy({ it.first }, { it.second })
-            .mapValues { (_, times) -> times.minBy(OpenVexStatementTime.Carried::at) }
-    return statements.map { statement ->
-        carried[statement]?.let { time -> statement.copy(timestamp = time) }
-            ?: statement
-    }
-}
-
-/** The day the file states for a statement, the key statements are ordered by. */
-private fun OpenVexStatementTime.statedDate(): LocalDate? =
-    when (this) {
-        is OpenVexStatementTime.Stated -> date
-        is OpenVexStatementTime.Carried, OpenVexStatementTime.Issued -> null
-    }
-
-/** True when [release] may anchor a statement. An empty release scope covers every release. */
-private fun OpenVexScope.covers(release: Release): Boolean = releases.isEmpty() || release in releases
-
-/** The purls each release in scope contributes, keyed by release. A release the tag scope strips bare is dropped. */
-private fun anchorsOf(
-    vulnlogFile: VulnlogFile,
-    scope: OpenVexScope,
-): Map<Release, List<Purl>> =
-    vulnlogFile.releases
-        .filter { entry -> scope.covers(entry.id) }
-        .associateBy(ReleaseEntry::id) { entry -> scopedPurls(entry, scope.tags) }
-        .filterValues { purls -> purls.isNotEmpty() }
-
-/** The purls of [entry] the tag scope keeps. Without tags every purl is kept. */
-private fun scopedPurls(
-    entry: ReleaseEntry,
-    tags: Set<Tag>,
-): List<Purl> =
-    entry.purls
-        .filter { purlEntry -> tags.isEmpty() || purlEntry.tags.any { tag -> tag in tags } }
-        .map(PurlEntry::purl)
-        .sortedBy(Purl::value)
-
-private fun statementsOf(
-    vulnEntry: VulnerabilityEntry,
-    releaseStatuses: List<ReleaseStatus>,
-    anchors: Map<Release, List<Purl>>,
-): List<OpenVexStatement> =
-    releaseStatuses.mapNotNull { releaseStatus ->
-        anchors[releaseStatus.release]?.let { products ->
-            OpenVexStatement(
-                vulnerability =
-                    OpenVexVulnerability(
-                        id = vulnEntry.id,
-                        aliases = vulnEntry.aliases.sortedBy(VulnId::id),
-                        description = vulnEntry.description,
-                    ),
-                timestamp = releaseStatus.since?.let(OpenVexStatementTime::Stated) ?: OpenVexStatementTime.Issued,
-                products = products,
-                subcomponents = vulnEntry.packages.sortedBy(Purl::value),
-                status = releaseStatus.status,
-            )
-        }
-    }
-
-/** The releases in scope an entry applies to that anchor nothing, in the order the file declares them. */
-private fun skippedReleases(
-    vulnlogFile: VulnlogFile,
-    scope: OpenVexScope,
-    releaseStatuses: List<ReleaseStatus>,
-    anchoring: Set<Release>,
-): List<Release> {
-    val covered = releaseStatuses.map(ReleaseStatus::release).toSet()
-    return vulnlogFile.releases
-        .map(ReleaseEntry::id)
-        .filter { release -> release in covered && scope.covers(release) && release !in anchoring }
-}
-
-private fun skippedEntry(
-    vulnEntry: VulnerabilityEntry,
-    releaseStatuses: List<ReleaseStatus>,
-    anchoring: Set<Release>,
-): OpenVexSkippedEntry? =
-    when {
-        releaseStatuses.isEmpty() -> OpenVexSkippedEntry.NoRelease(vulnEntry.id)
-        releaseStatuses.none { it.release in anchoring } -> OpenVexSkippedEntry.NoAnchoredRelease(vulnEntry.id)
-        else -> null
-    }

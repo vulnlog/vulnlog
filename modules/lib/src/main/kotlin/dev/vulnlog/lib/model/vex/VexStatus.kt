@@ -3,46 +3,63 @@
 
 package dev.vulnlog.lib.model.vex
 
+import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.VexJustification
+import java.time.LocalDate
 
 /**
- * The status of one vulnerability in one product, shared by every VEX format.
- * Each variant carries the fields its status requires, so a statement missing a mandatory field cannot be built, and
- * the free text each status may carry, so no consumer has to guess which text belongs to which status.
+ * The status of one vulnerability in one product, shared by every VEX format. Each variant carries exactly the fields
+ * its status requires, so a statement missing a mandatory field cannot be built.
  */
 sealed interface VexStatus {
-    /** Not yet triaged. */
     data class UnderInvestigation(
-        /**
-         * What is known so far, when the entry records an analysis.
-         */
         val statusNotes: String? = null,
     ) : VexStatus
 
-    /** The vulnerability was remediated in this product. Carries no analysis text: the fix speaks for itself. */
+    /** Carries no analysis: it would describe the state before the fix. */
     data object Fixed : VexStatus
 
-    /** The vulnerable component is present but the product is not impacted. */
     data class NotAffected(
-        /**
-         * The machine-readable reason. Consumers act on this label.
-         */
         val justification: VexJustification,
-        /**
-         * The analysis behind the label, for people reading the document.
-         */
         val impactStatement: String? = null,
     ) : VexStatus
 
-    /** The vulnerability impacts this product. */
     data class Affected(
-        /**
-         * What a consumer of the product should do. Each format words it in its own vocabulary.
-         */
         val remediation: Remediation,
-        /**
-         * How the status was determined, when the entry records an analysis.
-         */
         val statusNotes: String? = null,
     ) : VexStatus
 }
+
+/** Declared in the order statements are sorted by. */
+enum class VexStatusKind {
+    AFFECTED,
+    FIXED,
+    NOT_AFFECTED,
+    UNDER_INVESTIGATION,
+}
+
+/**
+ * What a consumer of an affected product should do, as data rather than text: CSAF and CycloneDX name these
+ * categories in their own vocabularies.
+ */
+sealed interface Remediation {
+    /** [fixIn] is the release a fix ships with despite the accepted risk, if any. */
+    data class RiskAccepted(
+        val fixIn: Release?,
+    ) : Remediation
+
+    data object FixPlanned : Remediation
+
+    data class UpdateTo(
+        val release: Release,
+    ) : Remediation
+
+    data object NoneAvailable : Remediation
+}
+
+/** [since] is null when neither the entry nor the release records a date for the status. */
+data class ReleaseStatus(
+    val release: Release,
+    val status: VexStatus,
+    val since: LocalDate?,
+)

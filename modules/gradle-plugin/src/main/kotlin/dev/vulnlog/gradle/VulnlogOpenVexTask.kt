@@ -15,7 +15,6 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -44,7 +43,7 @@ import java.io.File
 import java.time.Instant
 import java.util.UUID
 
-/** The OpenVEX version this task reads and writes. The single place a task property would feed one day. */
+/** The single place a `formatVersion` property would feed once a second OpenVEX version is supported. */
 private val FORMAT_VERSION = OpenVexFormatVersion.LATEST
 
 @CacheableTask
@@ -99,8 +98,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
                 failOnBaseline(renderOpenVexBaselineProblem(baseline.get().asFile.path, outcome.problem))
 
             is OpenVexOutcome.NoStatementApplies -> failOnEmptyDocument(outcome.reason)
-            is OpenVexOutcome.Revised -> write(out, outcome.document, outcome.content, StatusVerb.WROTE, sink)
-            is OpenVexOutcome.Unchanged -> write(out, outcome.document, outcome.content, StatusVerb.UNCHANGED, sink)
+            is OpenVexOutcome.Generated -> write(out, outcome, sink)
         }
     }
 
@@ -113,25 +111,22 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         is OpenVexLine.Debug -> sink.debug(line.text)
     }
 
-    /** Writes [content] to [out] and reports it with [verb]. The output always lives under the build directory. */
+    /** Always writes, since [out] lives under the build directory; `vulnlogOpenVexUpdate` decides about the baseline. */
     private fun write(
         out: File,
-        document: OpenVexDocument,
-        content: String,
-        verb: StatusVerb,
+        outcome: OpenVexOutcome.Generated,
         sink: DiagnosticSink,
     ) {
         out.parentFile?.mkdirs()
-        out.writeText(content)
-        sink.verbose(renderOpenVexWritten(out.path, document))
+        out.writeText(outcome.content)
+        sink.verbose(renderOpenVexWritten(out.path, outcome))
+        val verb = if (outcome is OpenVexOutcome.Unchanged) StatusVerb.UNCHANGED else StatusVerb.WROTE
         logger.lifecycle(formatStatus(verb, out.absolutePath))
     }
 
     /**
-     * Reads the text of the configured baseline, or null when it is not configured or not created yet. Whether the
-     * text can be continued is the run's to decide. A task that reads and writes one file is never up to date and a
-     * build cache hit would overwrite the committed document, so the output stays under the build directory and
-     * `vulnlogOpenVexUpdate` copies it over the baseline.
+     * The baseline must not be the output: a task reading and writing one file is never up to date, and a build cache
+     * hit would overwrite the committed document.
      */
     private fun readBaseline(
         out: File,

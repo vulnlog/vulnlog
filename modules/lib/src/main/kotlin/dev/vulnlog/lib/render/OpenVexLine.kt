@@ -3,21 +3,18 @@
 
 package dev.vulnlog.lib.render
 
-/** One line a driver prints about an OpenVEX run, at the level it is printed at. Drivers keep the order. */
+/** The level decides where a driver prints the line: always, with `-v`, or with `-vv`. */
 sealed interface OpenVexLine {
     val text: String
 
-    /** Printed on every run: something the document leaves out. */
     data class Warning(
         override val text: String,
     ) : OpenVexLine
 
-    /** Printed with `-v`. */
     data class Verbose(
         override val text: String,
     ) : OpenVexLine
 
-    /** Printed with `-vv`. */
     data class Debug(
         override val text: String,
     ) : OpenVexLine

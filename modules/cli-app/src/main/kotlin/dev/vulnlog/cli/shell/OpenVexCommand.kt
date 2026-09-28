@@ -29,7 +29,6 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -101,8 +100,8 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         metavar = "<path>",
         help =
             """
-            Existing previous OpenVEX document whose identity is continued.
-            Its '@id' is kept but 'timestamp' and 'version' are updated, when the file changes. Without a baseline every run issues a new document.
+            Previous OpenVEX document to continue. Its '@id' stays; 'timestamp' and 'version' move on only when the content changed.
+            Without a baseline every run issues a new document.
             """.trimIndent(),
     ).path(canBeDir = false)
 
@@ -114,7 +113,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     ).convert(conversion = OptionCallTransformContext::toOutputFileOption)
         .default(FileOutputOption.File(Path.of("vex.json")))
 
-    /** The OpenVEX version this command reads and writes. The single place an option would feed one day. */
+    /** The single place a `--format-version` option would feed once a second OpenVEX version is supported. */
     private val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST
 
     override fun run() {
@@ -139,8 +138,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 failOnBaseline(renderOpenVexBaselineProblem(baselineRequest.toString(), outcome.problem))
 
             is OpenVexOutcome.NoStatementApplies -> failOnEmptyDocument(outcome.reason)
-            is OpenVexOutcome.Revised -> write(outcome.document, outcome.content, unchanged = false)
-            is OpenVexOutcome.Unchanged -> write(outcome.document, outcome.content, unchanged = true)
+            is OpenVexOutcome.Generated -> write(outcome)
         }
     }
 
@@ -151,37 +149,28 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
             is OpenVexLine.Debug -> diagnosticSink().debug(line.text)
         }
 
-    /** Writes [content] to the output. Bytes that stand unchanged are not written back over the baseline. */
-    private fun write(
-        document: OpenVexDocument,
-        content: String,
-        unchanged: Boolean,
-    ) {
+    private fun write(outcome: OpenVexOutcome.Generated) {
         when (val target = output) {
             is FileOutputOption.File -> {
-                if (unchanged && isBaselinePath(target.path)) {
+                if (outcome is OpenVexOutcome.Unchanged && isBaselinePath(target.path)) {
                     echoStatus(formatStatus(StatusVerb.UNCHANGED, target.path.toString()))
                     return
                 }
-                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, content)
-                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), document))
+                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, outcome.content)
+                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), outcome))
             }
 
             FileOutputOption.Stdout -> {
-                echo(content, trailingNewline = false)
-                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", document))
+                echo(outcome.content, trailingNewline = false)
+                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", outcome))
             }
         }
     }
 
-    /** True when [target] is the file the baseline was read from, so writing it back would only bump the version. */
     private fun isBaselinePath(target: Path): Boolean =
         baselineRequest?.toAbsolutePath()?.normalize() == target.toAbsolutePath().normalize()
 
-    /**
-     * Reads the text of the baseline at [path]. A missing file is an error, because the caller asked to continue a
-     * document that is not there. Whether the text can be continued is the run's to decide.
-     */
+    /** A missing file is an error: the user asked to continue a document, and a new one would fork its identity. */
     private fun readBaselineOrFail(path: Path): String {
         if (!path.isRegularFile()) {
             echoMessage(formatMessage(FindingSeverity.ERROR, "baseline '$path' does not exist"))
