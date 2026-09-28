@@ -141,6 +141,23 @@ class OpenVexMapperTest :
                     "Acme Security Team (security@acme.example)"
             }
 
+            test("a subcomponent names its purl in @id and in identifiers, like the product") {
+                val withPackage =
+                    statement(
+                        VexStatus.Fixed,
+                    ).copy(subcomponents = listOf(Purl.Npm("pkg:npm/example-lib@2.3.0")))
+
+                val subcomponent =
+                    dtoOf(withPackage)
+                        .products
+                        .single()
+                        .subcomponents!!
+                        .single()
+
+                subcomponent.id shouldBe "pkg:npm/example-lib@2.3.0"
+                subcomponent.identifiers.purl shouldBe "pkg:npm/example-lib@2.3.0"
+            }
+
             test("empty aliases and subcomponents are left out") {
                 val dto = dtoOf(statement(VexStatus.Fixed))
 

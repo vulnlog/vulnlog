@@ -13,13 +13,14 @@ data class OpenVexProductDto(
     val subcomponents: List<OpenVexSubcomponentDto>? = null,
 )
 
-/** The identifiers of a product. Only the Package URL is written. */
+/** The identifiers of a product or a subcomponent. Only the Package URL is written. */
 data class OpenVexIdentifiersDto(
     val purl: String,
 )
 
-/** A vulnerable package inside a product, identified by its Package URL. */
+/** A vulnerable package inside a product, identified by its Package URL in both places, as the product is. */
 data class OpenVexSubcomponentDto(
     @param:JsonProperty("@id")
     val id: String,
+    val identifiers: OpenVexIdentifiersDto,
 )

@@ -25,7 +25,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-lib@2.3.0"
+              "@id": "pkg:npm/example-lib@2.3.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-lib@2.3.0"
+              }
             }
           ]
         },
@@ -36,7 +39,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-lib@2.3.0"
+              "@id": "pkg:npm/example-lib@2.3.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-lib@2.3.0"
+              }
             }
           ]
         }
@@ -64,7 +70,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-lib@2.3.0"
+              "@id": "pkg:npm/example-lib@2.3.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-lib@2.3.0"
+              }
             }
           ]
         }
@@ -92,7 +101,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-lib@2.3.0"
+              "@id": "pkg:npm/example-lib@2.3.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-lib@2.3.0"
+              }
             }
           ]
         }
@@ -117,7 +129,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-parser@1.0.0"
+              "@id": "pkg:npm/example-parser@1.0.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-parser@1.0.0"
+              }
             }
           ]
         },
@@ -128,7 +143,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-parser@1.0.0"
+              "@id": "pkg:npm/example-parser@1.0.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-parser@1.0.0"
+              }
             }
           ]
         }
@@ -154,7 +172,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-parser@1.0.0"
+              "@id": "pkg:npm/example-parser@1.0.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-parser@1.0.0"
+              }
             }
           ]
         }
@@ -177,7 +198,10 @@
           },
           "subcomponents": [
             {
-              "@id": "pkg:npm/example-parser@1.0.0"
+              "@id": "pkg:npm/example-parser@1.0.0",
+              "identifiers": {
+                "purl": "pkg:npm/example-parser@1.0.0"
+              }
             }
           ]
         }
