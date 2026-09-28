@@ -28,7 +28,7 @@ private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val identity = freshOpenVexIdentity(OpenVexDocumentId("https://vulnlog.dev/vex/abc"), ISSUED_AT)
 private val project = Project("Acme Corp", "Acme Web App", "Acme Security Team")
 private val products = listOf(Purl.Maven("pkg:maven/com.acme/app@1.0.0"))
-private val UPDATE_TO_1_0_1 = Remediation.UpdateTo(Release("1.0.1"), note = null)
+private val UPDATE_TO_1_0_1 = Remediation.UpdateTo(Release("1.0.1"))
 
 private fun statement(
     status: VexStatus,

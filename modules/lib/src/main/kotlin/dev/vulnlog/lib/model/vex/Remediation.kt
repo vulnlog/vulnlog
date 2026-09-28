@@ -18,10 +18,9 @@ sealed interface Remediation {
     /** A fix is intended, but no release ships it yet. */
     data object FixPlanned : Remediation
 
-    /** Update to [release], which ships the fix. [note] describes how the vulnerability was resolved, when recorded. */
+    /** Update to [release], which ships the fix. */
     data class UpdateTo(
         val release: Release,
-        val note: String?,
     ) : Remediation
 
     /** Neither an intent nor a fix is recorded. */

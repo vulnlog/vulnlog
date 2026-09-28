@@ -234,21 +234,21 @@ class VexTest :
 
         context("remediationOf") {
 
-            test("points at the fix release and carries the resolution note") {
+            test("points at the fix release and leaves the resolution note to the team") {
                 val entry = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.0.1", note = "Bumped log4j to 2.17.1.")
 
                 val remediation = remediationOf(entry)
 
-                remediation shouldBe Remediation.UpdateTo(release("1.0.1"), "Bumped log4j to 2.17.1.")
+                remediation shouldBe Remediation.UpdateTo(release("1.0.1"))
             }
 
-            test("points at the fix release alone when no note is recorded") {
+            test("points at the fix release for 'will fix' with a resolution") {
                 val entry =
                     affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WILL_FIX, fixedIn = "1.0.1")
 
                 val remediation = remediationOf(entry)
 
-                remediation shouldBe Remediation.UpdateTo(release("1.0.1"), note = null)
+                remediation shouldBe Remediation.UpdateTo(release("1.0.1"))
             }
 
             test("has no remediation when neither intent nor fix is recorded") {
@@ -275,7 +275,7 @@ class VexTest :
                 remediation shouldBe Remediation.RiskAccepted(fixIn = null)
             }
 
-            test("keeps the accepted risk and drops the note when 'wont fix' has a resolution") {
+            test("keeps the accepted risk when 'wont fix' has a resolution") {
                 val entry =
                     affectedIn(
                         releases = listOf("1.0.0"),

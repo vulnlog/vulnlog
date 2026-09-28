@@ -248,7 +248,7 @@ class OpenVexTest :
                 val statements = collectOpenVexStatements(taggedFile, scope).statements
 
                 val status = statements.single().status.shouldBeInstanceOf<VexStatus.Affected>()
-                status.remediation shouldBe Remediation.UpdateTo(release("1.0.1"), note = null)
+                status.remediation shouldBe Remediation.UpdateTo(release("1.0.1"))
             }
 
             test("a release the entry does not list is covered by the range") {
@@ -313,7 +313,7 @@ class OpenVexTest :
                 openVexStatus(VexStatus.UnderInvestigation()) shouldBe "under_investigation"
                 openVexStatus(VexStatus.Fixed) shouldBe "fixed"
                 openVexStatus(VexStatus.NotAffected(VexJustification.COMPONENT_NOT_PRESENT)) shouldBe "not_affected"
-                openVexStatus(VexStatus.Affected(Remediation.UpdateTo(release("1.0.1"), note = null))) shouldBe
+                openVexStatus(VexStatus.Affected(Remediation.UpdateTo(release("1.0.1")))) shouldBe
                     "affected"
             }
 

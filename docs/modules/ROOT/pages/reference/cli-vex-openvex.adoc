@@ -205,7 +205,7 @@ The text is derived from `disposition` and the fix release, never copied from `a
 
 | _(absent)_
 | set
-| `Update to release <id>.` followed by the resolution `note`
+| `Update to release <id>.`
 
 | _(absent)_
 | absent
@@ -213,7 +213,7 @@ The text is derived from `disposition` and the fix release, never copied from `a
 
 | `will fix`
 | set
-| `Update to release <id>.` followed by the resolution `note`
+| `Update to release <id>.`
 
 | `will fix`
 | absent
@@ -228,7 +228,7 @@ The text is derived from `disposition` and the fix release, never copied from `a
 | `The risk is accepted. No fix is planned.`
 |===
 
-The resolution note only ever extends an update action, so a note can never soften an accepted risk.
+The resolution `note` is for your team and never appears in the document: it records how the fix was done, which is not what a user of the release needs to know.
 
 [[scoping]]
 == One document per release and artifact
@@ -446,7 +446,7 @@ vulnlog vex openvex full-example.vl.yaml --release 8.1.1 --tag container -o -
         }
       ],
       "status": "affected",
-      "action_statement": "Update to release 8.1.2. Updated Log4J from 2.14.1 to 2.17.1",
+      "action_statement": "Update to release 8.1.2.",
       "action_statement_timestamp": "2021-12-10T00:00:00Z",
       "status_notes": "Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.",
       "supplier": "Demo Project Inc"
