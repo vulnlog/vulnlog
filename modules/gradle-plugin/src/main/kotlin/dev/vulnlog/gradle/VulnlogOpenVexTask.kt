@@ -14,24 +14,19 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
-import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
+import dev.vulnlog.lib.render.OpenVexLine
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.render.renderOpenVexEmptyHint
-import dev.vulnlog.lib.render.renderOpenVexProducts
-import dev.vulnlog.lib.render.renderOpenVexScope
-import dev.vulnlog.lib.render.renderOpenVexSkippedEntries
-import dev.vulnlog.lib.render.renderOpenVexSkippedReleases
-import dev.vulnlog.lib.render.renderOpenVexStatementCounts
+import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -44,6 +39,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.VerificationException
 import java.io.File
 import java.time.Instant
 import java.util.UUID
@@ -93,53 +89,42 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
                 formatVersion = FORMAT_VERSION,
             )
 
-        when (val outcome = generateOpenVex(vulnlogFile, request)) {
-            is FilterRejected -> throw GradleException(
-                outcome.problems.joinToString(" ") { "${it.message}. ${it.hint}" },
-            )
+        val outcome = generateOpenVex(vulnlogFile, request)
+        renderOpenVexReport(outcome).forEach { line -> log(line, sink) }
+        when (outcome) {
+            is FilterRejected ->
+                throw InvalidUserDataException(outcome.problems.joinToString(" ") { "${it.message}. ${it.hint}" })
 
             is OpenVexOutcome.BaselineRejected ->
                 failOnBaseline(renderOpenVexBaselineProblem(baseline.get().asFile.path, outcome.problem))
 
-            is OpenVexOutcome.NoStatementApplies -> {
-                logCollection(outcome.collection, sink)
-                failOnEmptyDocument(vulnlogFile, outcome.collection.scope)
-            }
-
-            is OpenVexOutcome.Revised ->
-                write(out, outcome.collection, outcome.document, outcome.content, StatusVerb.WROTE, sink)
-
-            is OpenVexOutcome.Unchanged ->
-                write(out, outcome.collection, outcome.document, outcome.content, StatusVerb.UNCHANGED, sink)
+            is OpenVexOutcome.NoStatementApplies -> failOnEmptyDocument(outcome.reason)
+            is OpenVexOutcome.Revised -> write(out, outcome.document, outcome.content, StatusVerb.WROTE, sink)
+            is OpenVexOutcome.Unchanged -> write(out, outcome.document, outcome.content, StatusVerb.UNCHANGED, sink)
         }
+    }
+
+    private fun log(
+        line: OpenVexLine,
+        sink: DiagnosticSink,
+    ) = when (line) {
+        is OpenVexLine.Warning -> logger.warn(formatMessage(FindingSeverity.WARNING, line.text))
+        is OpenVexLine.Verbose -> sink.verbose(line.text)
+        is OpenVexLine.Debug -> sink.debug(line.text)
     }
 
     /** Writes [content] to [out] and reports it with [verb]. The output always lives under the build directory. */
     private fun write(
         out: File,
-        collection: OpenVexCollection,
         document: OpenVexDocument,
         content: String,
         verb: StatusVerb,
         sink: DiagnosticSink,
     ) {
-        logCollection(collection, sink)
-        sink.verbose(renderOpenVexStatementCounts(document))
         out.parentFile?.mkdirs()
         out.writeText(content)
         sink.verbose(renderOpenVexWritten(out.path, document))
         logger.lifecycle(formatStatus(verb, out.absolutePath))
-    }
-
-    /** The warning and the diagnostics that say what the collection holds and what it left out. */
-    private fun logCollection(
-        collection: OpenVexCollection,
-        sink: DiagnosticSink,
-    ) {
-        renderOpenVexScope(collection.scope).forEach(sink::verbose)
-        renderOpenVexSkippedReleases(collection)?.let { logger.warn(formatMessage(FindingSeverity.WARNING, it)) }
-        renderOpenVexProducts(collection)?.let(sink::verbose)
-        renderOpenVexSkippedEntries(collection).forEach(sink::debug)
     }
 
     /**
@@ -154,7 +139,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     ): String? {
         val file = baseline.orNull?.asFile ?: return null
         if (file.canonicalFile == out.canonicalFile) {
-            throw GradleException(
+            throw InvalidUserDataException(
                 "baseline and outputFile are the same file (${file.path}). " +
                     "Keep outputFile under the build directory and run 'vulnlogOpenVexUpdate' " +
                     "to copy the document over the baseline.",
@@ -167,14 +152,15 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         return file.readText()
     }
 
+    /** A baseline that cannot be continued is task configuration to fix. */
     private fun failOnBaseline(message: String): Nothing =
-        throw GradleException(message.replaceFirstChar(Char::uppercase) + ". Unset 'baseline' to issue a new document.")
+        throw InvalidUserDataException(
+            message.replaceFirstChar(Char::uppercase) + ". Unset 'baseline' to issue a new document.",
+        )
 
-    private fun failOnEmptyDocument(
-        vulnlogFile: VulnlogFile,
-        scope: OpenVexScope,
-    ): Nothing {
-        val hint = renderOpenVexEmptyHint(vulnlogFile, scope).replaceFirstChar(Char::uppercase)
-        throw GradleException("No statement applies. $hint.")
+    /** An empty document is a verdict on the Vulnlog file, so it works with `--continue`. */
+    private fun failOnEmptyDocument(reason: OpenVexEmptyReason): Nothing {
+        val hint = renderOpenVexEmptyHint(reason).replaceFirstChar(Char::uppercase)
+        throw VerificationException("No statement applies. $hint.")
     }
 }

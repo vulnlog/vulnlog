@@ -11,6 +11,7 @@ import dev.vulnlog.lib.core.vex.openvex.OpenVexScopeResult
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.carryOverOpenVexTimestamps
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
+import dev.vulnlog.lib.core.vex.openvex.openVexEmptyReason
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexIdentity
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexScope
 import dev.vulnlog.lib.model.VulnlogFile
@@ -18,6 +19,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -68,9 +70,10 @@ sealed interface OpenVexOutcome {
         val problem: OpenVexBaselineProblem,
     ) : OpenVexOutcome
 
-    /** Nothing to write: OpenVEX requires at least one statement. */
+    /** Nothing to write: OpenVEX requires at least one statement. [reason] says what to change. */
     data class NoStatementApplies(
         val collection: OpenVexCollection,
+        val reason: OpenVexEmptyReason,
     ) : OpenVexOutcome
 
     /** A new revision, and the bytes it is written in. */
@@ -112,7 +115,9 @@ fun generateOpenVex(
                 }
         }
     val collection = collectOpenVexStatements(vulnlogFile, scope)
-    if (collection.statements.isEmpty()) return OpenVexOutcome.NoStatementApplies(collection)
+    if (collection.statements.isEmpty()) {
+        return OpenVexOutcome.NoStatementApplies(collection, openVexEmptyReason(vulnlogFile, scope))
+    }
 
     val baseline =
         when (revision) {

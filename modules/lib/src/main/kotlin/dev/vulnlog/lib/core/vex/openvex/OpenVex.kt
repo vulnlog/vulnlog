@@ -24,6 +24,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
@@ -143,6 +144,18 @@ fun collectOpenVexStatements(
             },
     )
 }
+
+/** The most likely reason a run over [vulnlogFile] in [scope] collected no statement. */
+fun openVexEmptyReason(
+    vulnlogFile: VulnlogFile,
+    scope: OpenVexScope,
+): OpenVexEmptyReason =
+    when {
+        vulnlogFile.releases.none { it.purls.isNotEmpty() } -> OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
+        scope.tags.isNotEmpty() -> OpenVexEmptyReason.NO_PURL_CARRIES_TAG
+        scope.releases.isNotEmpty() -> OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE
+        else -> OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE
+    }
 
 /**
  * Dates every undated statement as [baseline] dates an equal one, so a revision never re-dates a statement it does not
