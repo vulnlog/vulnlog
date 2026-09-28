@@ -11,22 +11,26 @@ import java.io.File
  * Enforces the package layers of the target architecture by scanning the imports of lib's main sources, and keeps the
  * pure layers free of the clock, randomness, the environment and the file system. No extra dependency.
  *
- * [REPORT_ONLY] prints the violations instead of failing while the migration is in progress. A package that no layer
- * names yet, such as `parse` or `shell`, is not checked.
+ * Packages in [strictPackages] already follow the rules and fail the build on a violation. Every other package is only
+ * reported while the migration is in progress. A package that no layer names yet, such as `parse` or `shell`, is not
+ * checked.
  */
 class ArchitectureTest :
     FunSpec({
         test("lib packages only import the layers they may use") {
-            report(sources().flatMap(::layerViolations))
+            check(sources(), ::layerViolations)
         }
 
         test("pure layers reach no clock, randomness, environment or file system") {
-            report(sources().flatMap(::impurityViolations))
+            check(sources(), ::impurityViolations)
         }
     })
 
-private const val REPORT_ONLY = true
 private const val LIB = "dev.vulnlog.lib"
+
+/** Packages migrated to the target layout: VEX, and the layers that so far hold VEX only. */
+private val strictPackages =
+    listOf("$LIB.model.vex", "$LIB.core.vex", "$LIB.codec", "$LIB.render", "$LIB.app")
 
 /** Layer → the dev.vulnlog.lib packages it may import (itself included). */
 private val allowed: Map<String, List<String>> =
@@ -105,7 +109,7 @@ private fun impurityViolations(source: Source): List<String> {
         .map { call -> "${source.name}: ${source.pkg} calls $call" }
 }
 
-private fun layerOf(pkg: String): String? = allowed.keys.firstOrNull { pkg == it || pkg.startsWith("$it.") }
+private fun layerOf(pkg: String): String? = allowed.keys.firstOrNull { isWithin(pkg, it) }
 
 private fun isAllowed(
     layer: String,
@@ -123,10 +127,17 @@ private fun withoutComments(text: String): String =
         .replace(Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL), "")
         .replace(Regex("//[^\\n]*"), "")
 
-private fun report(violations: List<String>) {
-    if (REPORT_ONLY) {
-        violations.forEach(::println)
-    } else {
-        violations.shouldBeEmpty()
-    }
+/** Fails on a violation in a strict package and prints the others. */
+private fun check(
+    sources: List<Source>,
+    violationsOf: (Source) -> List<String>,
+) {
+    val (strict, reported) = sources.partition { source -> strictPackages.any { isWithin(source.pkg, it) } }
+    reported.flatMap(violationsOf).forEach(::println)
+    strict.flatMap(violationsOf).shouldBeEmpty()
 }
+
+private fun isWithin(
+    pkg: String,
+    root: String,
+): Boolean = pkg == root || pkg.startsWith("$root.")
