@@ -20,14 +20,22 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
+import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.time.Instant
 import java.time.LocalDate
 
 private val affectedInV1 =
@@ -192,7 +200,10 @@ class OpenVexTest :
                 val statements = collectOpenVexStatements(file).statements
 
                 statements.map { it.timestamp } shouldContainExactly
-                    listOf(LocalDate.of(2026, 4, 6), LocalDate.of(2026, 4, 20))
+                    listOf(
+                        OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 6)),
+                        OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 20)),
+                    )
             }
 
             test("identical statements across releases collapse into one") {
@@ -356,7 +367,7 @@ class OpenVexTest :
                         verdict = Verdict.Affected(Severity.HIGH),
                     )
 
-                statementOf(entry).timestamp shouldBe LocalDate.of(2026, 4, 6)
+                statementOf(entry).timestamp shouldBe OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 6))
             }
 
             test("falls back to the earliest report date") {
@@ -371,7 +382,7 @@ class OpenVexTest :
                             ),
                     )
 
-                statementOf(entry).timestamp shouldBe LocalDate.of(2026, 4, 1)
+                statementOf(entry).timestamp shouldBe OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 1))
             }
 
             test("carries no date and no notes when the entry and its release record none") {
@@ -380,7 +391,7 @@ class OpenVexTest :
 
                 val statement = statementOf(entry)
 
-                statement.timestamp shouldBe null
+                statement.timestamp shouldBe OpenVexStatementTime.Issued
                 statement.status shouldBe VexStatus.UnderInvestigation(null)
             }
 
@@ -400,7 +411,71 @@ class OpenVexTest :
                         vulnlogFile(releases = published, vulnerabilities = listOf(entry)),
                     ).statements.single()
 
-                statement.timestamp shouldBe LocalDate.of(2026, 1, 15)
+                statement.timestamp shouldBe OpenVexStatementTime.Stated(LocalDate.of(2026, 1, 15))
+            }
+        }
+
+        context("carryOverOpenVexTimestamps") {
+            val undated =
+                OpenVexStatement(
+                    vulnerability =
+                        OpenVexVulnerability(
+                            cve("CVE-2026-1234"),
+                            aliases = emptyList(),
+                            description = null,
+                        ),
+                    timestamp = OpenVexStatementTime.Issued,
+                    products = listOf(Purl.Maven("pkg:maven/com.acme/app@1.0.0")),
+                    subcomponents = emptyList(),
+                    status = VexStatus.UnderInvestigation(),
+                )
+            val carried = OpenVexStatementTime.Carried(Instant.parse("2026-04-20T08:30:00Z"))
+
+            fun baselineWith(vararg statements: OpenVexStatement): OpenVexBaseline =
+                OpenVexBaseline(
+                    formatVersion = OpenVexFormatVersion.LATEST,
+                    id = OpenVexDocumentId("https://vulnlog.dev/vex/abc"),
+                    version = OpenVexDocumentVersion.FIRST,
+                    content = "",
+                    statements = statements.toList(),
+                )
+
+            test("an undated statement keeps the time the baseline carries for it") {
+                val statements =
+                    carryOverOpenVexTimestamps(listOf(undated), baselineWith(undated.copy(timestamp = carried)))
+
+                statements shouldContainExactly listOf(undated.copy(timestamp = carried))
+            }
+
+            test("a changed statement is issued by the revision") {
+                val changed = undated.copy(status = VexStatus.UnderInvestigation("Reachable after all."))
+
+                val statements =
+                    carryOverOpenVexTimestamps(listOf(changed), baselineWith(undated.copy(timestamp = carried)))
+
+                statements shouldContainExactly listOf(changed)
+            }
+
+            test("a date the file states wins over the baseline") {
+                val stated = undated.copy(timestamp = OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 6)))
+
+                val statements =
+                    carryOverOpenVexTimestamps(listOf(stated), baselineWith(undated.copy(timestamp = carried)))
+
+                statements shouldContainExactly listOf(stated)
+            }
+
+            test("of equal statements in the baseline the earliest time is carried") {
+                val later = OpenVexStatementTime.Carried(Instant.parse("2026-04-22T00:00:00Z"))
+                val baseline = baselineWith(undated.copy(timestamp = later), undated.copy(timestamp = carried))
+
+                val statements = carryOverOpenVexTimestamps(listOf(undated), baseline)
+
+                statements shouldContainExactly listOf(undated.copy(timestamp = carried))
+            }
+
+            test("without a baseline nothing is carried") {
+                carryOverOpenVexTimestamps(listOf(undated), baseline = null) shouldContainExactly listOf(undated)
             }
         }
 

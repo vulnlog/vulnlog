@@ -9,6 +9,8 @@ import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.Verdict
+import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
@@ -16,15 +18,18 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.Instant
+import java.time.LocalDate
 
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
@@ -97,6 +102,35 @@ class OpenVexRunTest :
             second.document.identity.id shouldBe first.document.identity.id
             second.document.identity.timestamp shouldBe UPDATED_AT
             second.document.identity.version shouldBe OpenVexDocumentVersion(2)
+        }
+
+        test("an undated statement keeps its time when another entry changes the document") {
+            val undated = vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0")))
+            val file = fileWith("1.0.0")
+            val first = generate(file)
+            val added =
+                vulnerability(
+                    id = cve("CVE-2026-2222"),
+                    releases = listOf(release("1.0.0")),
+                    analyzedAt = LocalDate.of(2026, 4, 30),
+                    verdict = Verdict.NotAffected(VexJustification.COMPONENT_NOT_PRESENT),
+                )
+
+            val second =
+                generate(
+                    file.copy(vulnerabilities = listOf(undated, added)),
+                    baseline = baselineOf(first),
+                    now = UPDATED_AT,
+                )
+
+            second.unchanged shouldBe false
+            second.document.identity.version shouldBe OpenVexDocumentVersion(2)
+            second.document.statements.map { it.vulnerability.id to it.timestamp } shouldContainExactly
+                listOf(
+                    cve("CVE-2026-1111") to OpenVexStatementTime.Carried(ISSUED_AT),
+                    cve("CVE-2026-2222") to OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 30)),
+                )
+            second.content shouldContain "\"timestamp\": \"2026-04-25T00:00:00Z\""
         }
 
         test("a file without an anchoring release yields no document") {

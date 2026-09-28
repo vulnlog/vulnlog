@@ -27,10 +27,12 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSupplier
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import java.time.Instant
+import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -103,7 +105,7 @@ fun collectOpenVexStatements(
                 compareBy(
                     { it.vulnerability.id.id },
                     { it.products.joinToString(",", transform = Purl::value) },
-                    { it.timestamp },
+                    { it.timestamp.statedDate() },
                     { openVexStatus(it.status) },
                 ),
             )
@@ -117,6 +119,30 @@ fun collectOpenVexStatements(
                 skippedEntry(vulnEntry, releaseStatuses, anchors.keys)
             },
     )
+}
+
+/**
+ * Dates every undated statement as [baseline] dates an equal one, so a revision never re-dates a statement it does not
+ * touch. A statement the file dates keeps that date, and one the baseline does not make stays issued by the revision.
+ */
+fun carryOverOpenVexTimestamps(
+    statements: List<OpenVexStatement>,
+    baseline: OpenVexBaseline?,
+): List<OpenVexStatement> {
+    if (baseline == null) return statements
+    // Keyed by the statement as this revision would issue it, so only an undated statement finds its time.
+    val carried =
+        baseline.statements
+            .mapNotNull { statement ->
+                (statement.timestamp as? OpenVexStatementTime.Carried)?.let { time ->
+                    statement.copy(timestamp = OpenVexStatementTime.Issued) to time
+                }
+            }.groupBy({ it.first }, { it.second })
+            .mapValues { (_, times) -> times.minBy(OpenVexStatementTime.Carried::at) }
+    return statements.map { statement ->
+        carried[statement]?.let { time -> statement.copy(timestamp = time) }
+            ?: statement
+    }
 }
 
 /** The OpenVEX token for a [VexStatus]. */
@@ -147,6 +173,13 @@ fun openVexJustification(justification: VexJustification): String =
 
         VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH -> "vulnerable_code_not_in_execute_path"
         VexJustification.VULNERABLE_CODE_NOT_PRESENT -> "vulnerable_code_not_present"
+    }
+
+/** The day the file states for a statement, the key statements are ordered by. */
+private fun OpenVexStatementTime.statedDate(): LocalDate? =
+    when (this) {
+        is OpenVexStatementTime.Stated -> date
+        is OpenVexStatementTime.Carried, OpenVexStatementTime.Issued -> null
     }
 
 /** True when [release] may anchor a statement. An empty release scope covers every release. */
@@ -186,7 +219,7 @@ private fun statementsOf(
                         aliases = vulnEntry.aliases.sortedBy(VulnId::id),
                         description = vulnEntry.description,
                     ),
-                timestamp = releaseStatus.since,
+                timestamp = releaseStatus.since?.let(OpenVexStatementTime::Stated) ?: OpenVexStatementTime.Issued,
                 products = products,
                 subcomponents = vulnEntry.packages.sortedBy(Purl::value),
                 status = releaseStatus.status,

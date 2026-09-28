@@ -113,7 +113,7 @@ Nothing is invented and nothing is copied from the scanner.
 
 | `timestamp`
 | The day the status became true: the earliest `reports[].at` for `under_investigation`, `analyzed_at` (else the earliest report date) for a verdict, `resolution.at` for `fixed`.
-An entry that records none of those falls back to the release's `published_at`, and a release without one to the time of the run.
+An entry that records none of those falls back to the release's `published_at`, and a release without one to the time of the run that first issues the statement; a later version continued with `--baseline` keeps that time as long as the statement does not change.
 Dates count from midnight UTC.
 Every statement is written with its own timestamp; none is left to inherit from the document.
 
@@ -191,7 +191,7 @@ Vulnlog writes the current assessment only: a new version of the document record
 
 Because every statement carries its own timestamp, the meaning of a statement never shifts when a new version of the document is issued.
 The specification requires exactly that: a statement whose timestamp came from the document would silently re-date every time the document is reissued.
-This is also why `vulnlog validate` asks you to record a date on every entry once your file declares `purls`; without one the writer has to fall back to the time of the run, and the document then changes on every run.
+This is also why `vulnlog validate` asks you to record a date on every entry once your file declares `purls`; without one the statement is dated by the run that first issues it, and only a `--baseline` keeps that date from one version to the next.
 
 [[action]]
 === Action statement

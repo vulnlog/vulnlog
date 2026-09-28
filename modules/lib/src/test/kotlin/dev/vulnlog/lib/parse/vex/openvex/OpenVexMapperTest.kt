@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexStatementDto
@@ -28,7 +29,7 @@ private val products = listOf(Purl.Maven("pkg:maven/com.acme/app@1.0.0"))
 
 private fun statement(
     status: VexStatus,
-    timestamp: LocalDate? = null,
+    timestamp: OpenVexStatementTime = OpenVexStatementTime.Issued,
 ): OpenVexStatement =
     OpenVexStatement(
         vulnerability = OpenVexVulnerability(cve("CVE-2026-1111"), aliases = emptyList(), description = null),
@@ -61,7 +62,7 @@ class OpenVexMapperTest :
             test("affected carries the analysis as status notes and dates the action") {
                 val affected = VexStatus.Affected("Update to release 1.0.1.", "the parser is reachable")
 
-                val dto = dtoOf(statement(affected, timestamp = LocalDate.of(2026, 4, 7)))
+                val dto = dtoOf(statement(affected, timestamp = OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 7))))
 
                 dto.statusNotes shouldBe "the parser is reachable"
                 dto.impactStatement.shouldBeNull()
@@ -92,12 +93,22 @@ class OpenVexMapperTest :
         context("timestamps") {
 
             test("a YAML date is widened to midnight UTC") {
-                val dto = dtoOf(statement(VexStatus.Fixed, timestamp = LocalDate.of(2026, 4, 6)))
+                val dto =
+                    dtoOf(statement(VexStatus.Fixed, timestamp = OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 6))))
 
                 dto.timestamp shouldBe "2026-04-06T00:00:00Z"
             }
 
-            test("a statement without a date is written with the document's, never left to inherit") {
+            test("a carried time is written as the baseline carries it") {
+                val carried = OpenVexStatementTime.Carried(Instant.parse("2026-04-20T08:30:00Z"))
+
+                val dto = dtoOf(statement(VexStatus.Affected("Update to release 1.0.1."), timestamp = carried))
+
+                dto.timestamp shouldBe "2026-04-20T08:30:00Z"
+                dto.actionStatementTimestamp shouldBe "2026-04-20T08:30:00Z"
+            }
+
+            test("a statement this revision issues is written with the document's time, never left to inherit") {
                 val dto = dtoOf(statement(VexStatus.Affected("Update to release 1.0.1.")))
 
                 dto.timestamp shouldBe "2026-04-25T00:00:00Z"

@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexDocumentDto
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexIdentifiersDto
@@ -47,14 +48,22 @@ object OpenVexMapper {
     }
 
     /**
-     * A YAML date is widened to midnight UTC. An entry that records none is dated by the document, written out rather
-     * than inherited: the document timestamp moves with every version, and an inherited statement would move with it.
+     * A YAML date is widened to midnight UTC, and a carried time is written as the baseline carries it. A statement
+     * issued by this revision is dated by the document, written out rather than inherited: the document timestamp
+     * moves with every version, and an inherited statement would move with it.
      */
     private fun toStatementDto(
         statement: OpenVexStatement,
         document: OpenVexDocument,
     ): OpenVexStatementDto {
-        val timestamp = format(statement.timestamp?.let(::midnightUtc) ?: document.identity.timestamp)
+        val timestamp =
+            format(
+                when (val time = statement.timestamp) {
+                    is OpenVexStatementTime.Stated -> midnightUtc(time.date)
+                    is OpenVexStatementTime.Carried -> time.at
+                    OpenVexStatementTime.Issued -> document.identity.timestamp
+                },
+            )
         val actionStatement = actionStatementOf(statement.status)
         return OpenVexStatementDto(
             vulnerability = toVulnerabilityDto(statement.vulnerability),
