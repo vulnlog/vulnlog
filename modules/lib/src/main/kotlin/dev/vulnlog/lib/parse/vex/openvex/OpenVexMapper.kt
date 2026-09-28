@@ -9,10 +9,12 @@ import dev.vulnlog.lib.core.vex.openvex.openVexStatus
 import dev.vulnlog.lib.core.vex.openvex.openVexVulnerabilityUrl
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.openvex.OpenVexAuthor
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
+import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexDocumentDto
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexIdentifiersDto
@@ -25,6 +27,9 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/** Where the tooling line points readers to. */
+private const val VULNLOG_SITE = "https://vulnlog.dev/"
+
 object OpenVexMapper {
     /** Maps [document] to the shape its format version is written in. One branch, and one mapper, per version. */
     fun toDto(document: OpenVexDocument): OpenVexDocumentDto =
@@ -35,14 +40,14 @@ object OpenVexMapper {
     private fun toDocumentDtoV020(document: OpenVexDocument): OpenVexDocumentDto {
         val identity = document.identity
         return OpenVexDocumentDto(
-            context = document.formatVersion.context,
+            context = openVexContext(document.formatVersion),
             id = identity.id.value,
-            author = document.author.name,
+            author = authorLine(document.author),
             role = OPEN_VEX_ROLE,
             // Formatted here rather than left to Jackson, whose date handling is version dependent.
             timestamp = format(identity.timestamp),
             version = identity.version.value,
-            tooling = document.tooling?.value,
+            tooling = document.tooling?.let(::toolingLine),
             statements = document.statements.map { statement -> toStatementDto(statement, document) },
         )
     }
@@ -129,6 +134,13 @@ object OpenVexMapper {
             is VexStatus.UnderInvestigation -> status.statusNotes
             is VexStatus.NotAffected, VexStatus.Fixed -> null
         }
+
+    /** The author, with the contact in parentheses when one is recorded. */
+    private fun authorLine(author: OpenVexAuthor): String =
+        author.contact?.let { contact -> "${author.name} ($contact)" } ?: author.name
+
+    private fun toolingLine(tooling: OpenVexTooling): String =
+        "Vulnlog ${tooling.platform} version ${tooling.version}, $VULNLOG_SITE"
 
     private fun format(instant: Instant): String = DateTimeFormatter.ISO_INSTANT.format(instant)
 

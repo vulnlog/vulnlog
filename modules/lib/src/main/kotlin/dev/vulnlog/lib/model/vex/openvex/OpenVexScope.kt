@@ -13,11 +13,11 @@ import dev.vulnlog.lib.model.Tag
  */
 data class OpenVexScope(
     /**
-     * The releases that may anchor a statement. `--release` narrows it to one; empty covers every release.
+     * The releases that may anchor a statement. Empty covers every release.
      */
     val releases: Set<Release> = emptySet(),
     /**
-     * The tags a release purl must carry to become a product. Set by `--tag`, matched as a union.
+     * The tags a release purl must carry to become a product, matched as a union. Empty keeps every purl.
      */
     val tags: Set<Tag> = emptySet(),
 )

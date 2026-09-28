@@ -3,14 +3,13 @@
 
 package dev.vulnlog.lib.model.vex.openvex
 
-private const val VULNLOG_SITE = "https://vulnlog.dev/"
-
-@JvmInline
-value class OpenVexTooling private constructor(
-    val value: String,
+/** The Vulnlog that writes the document: the [platform] it runs on and its [version]. */
+data class OpenVexTooling(
+    val platform: String,
+    val version: String,
 ) {
-    constructor(platform: String, version: String) : this("Vulnlog $platform version $version, $VULNLOG_SITE") {
-        require(platform.isNotBlank())
-        require(version.isNotBlank())
+    init {
+        require(platform.isNotBlank()) { "VEX tooling platform must not be blank" }
+        require(version.isNotBlank()) { "VEX tooling version must not be blank" }
     }
 }

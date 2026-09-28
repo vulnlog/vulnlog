@@ -56,7 +56,7 @@ object OpenVexReader {
                 return OpenVexBaselineOutcome.NotADocument
             }
         val declared =
-            dto.context?.let(OpenVexFormatVersion::declaredVersion)
+            dto.context?.let(::declaredOpenVexVersion)
                 ?: return OpenVexBaselineOutcome.NotADocument
         if (declared != requiredFormatVersion.version) {
             return OpenVexBaselineOutcome.OtherFormatVersion(declared, requiredFormatVersion)
