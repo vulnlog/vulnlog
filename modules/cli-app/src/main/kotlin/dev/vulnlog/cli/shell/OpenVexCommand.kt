@@ -25,10 +25,8 @@ import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexNotADocument
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedReleases
@@ -37,14 +35,14 @@ import dev.vulnlog.lib.core.vex.openvex.renderOpenVexWritten
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
+import dev.vulnlog.lib.parse.vex.openvex.OpenVexBaselineResult
+import dev.vulnlog.lib.parse.vex.openvex.parseOpenVexBaseline
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import java.io.IOException
@@ -190,16 +188,12 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
                 throw ProgramResult(ExitCode.GENERAL_ERROR.code)
             }
-        return when (val outcome = OpenVexReader.readBaseline(content, formatVersion)) {
-            is OpenVexBaselineOutcome.Read -> outcome.baseline
-
-            OpenVexBaselineOutcome.NotADocument -> failOnBaseline(renderOpenVexNotADocument(path.toString()))
-
-            is OpenVexBaselineOutcome.OtherFormatVersion ->
-                failOnBaseline(renderOpenVexOtherFormatVersion(path.toString(), outcome))
-
-            is OpenVexBaselineOutcome.InvalidIdentity ->
-                failOnBaseline(renderOpenVexInvalidIdentity(path.toString(), outcome))
+        return when (val result = parseOpenVexBaseline(content, formatVersion)) {
+            is OpenVexBaselineResult.Parsed -> result.baseline
+            is OpenVexBaselineResult.Rejected ->
+                failOnBaseline(
+                    renderOpenVexBaselineProblem(path.toString(), result.problem),
+                )
         }
     }
 

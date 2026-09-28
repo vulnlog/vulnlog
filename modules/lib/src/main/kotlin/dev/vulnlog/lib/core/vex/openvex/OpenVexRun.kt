@@ -8,8 +8,8 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexWriter
+import dev.vulnlog.lib.parse.vex.openvex.OpenVexEncoder
+import dev.vulnlog.lib.parse.vex.openvex.sameOpenVexContent
 import java.time.Instant
 
 /**
@@ -43,11 +43,11 @@ fun generateOpenVex(
             tooling = tooling,
             formatVersion = revision.formatVersion,
         )
-    val unchanged = baseline != null && OpenVexReader.isUnchanged(baseline, document)
+    val unchanged = baseline != null && sameOpenVexContent(baseline.content, document)
     return OpenVexOutcome.Generated(
         collection = collection,
         document = document,
-        content = if (unchanged) baseline.content else OpenVexWriter.write(document),
+        content = if (unchanged) baseline.content else OpenVexEncoder.encode(document),
         unchanged = unchanged,
     )
 }

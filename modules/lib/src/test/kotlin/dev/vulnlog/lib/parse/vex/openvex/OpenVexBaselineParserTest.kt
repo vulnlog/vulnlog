@@ -27,7 +27,7 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
@@ -65,7 +65,7 @@ private fun document(
 }
 
 /** Every test reads for the version this build writes. */
-private fun read(content: String): OpenVexBaselineOutcome = OpenVexReader.readBaseline(content, VERSION_0_2_0)
+private fun read(content: String): OpenVexBaselineResult = parseOpenVexBaseline(content, VERSION_0_2_0)
 
 private fun baselineOf(
     content: String,
@@ -95,7 +95,7 @@ private fun documentOf(
 
 /** The baseline a later run reads back from [content]. */
 private fun readBack(content: String): OpenVexBaseline =
-    read(content).shouldBeInstanceOf<OpenVexBaselineOutcome.Read>().baseline
+    read(content).shouldBeInstanceOf<OpenVexBaselineResult.Parsed>().baseline
 
 /** The revision continuing [baseline] over [file], with the times the baseline carries for untouched statements. */
 private fun revisionOf(
@@ -108,17 +108,17 @@ private fun revisionOf(
         carryOverOpenVexTimestamps(collectOpenVexStatements(file).statements, baseline),
     )
 
-class OpenVexReaderTest :
+class OpenVexBaselineParserTest :
     FunSpec({
 
-        context("readBaseline") {
+        context("parseOpenVexBaseline") {
 
             test("reads the identity of a document in the required format version") {
                 val content = document(version = 3)
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content, version = 3))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content, version = 3))
             }
 
             test("a document without a version is the first revision") {
@@ -126,7 +126,7 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content, version = 1))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content, version = 1))
             }
 
             test("a timestamp with an offset still counts as a document") {
@@ -134,7 +134,7 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content))
             }
 
             test("an older OpenVEX format version is not continued") {
@@ -142,7 +142,8 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.OtherFormatVersion("0.1.0", VERSION_0_2_0)
+                outcome shouldBe
+                    OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.OtherFormatVersion("0.1.0", VERSION_0_2_0))
             }
 
             test("an OpenVEX format version this build does not know is not continued") {
@@ -150,7 +151,8 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.OtherFormatVersion("9.9.9", VERSION_0_2_0)
+                outcome shouldBe
+                    OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.OtherFormatVersion("9.9.9", VERSION_0_2_0))
             }
 
             test("a foreign context is not a document") {
@@ -158,7 +160,7 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.NotADocument
+                outcome shouldBe OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.NotOpenVex)
             }
 
             test("a context with an empty version is not a document") {
@@ -166,7 +168,7 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.NotADocument
+                outcome shouldBe OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.NotOpenVex)
             }
 
             test("a context without a version is an OpenVEX 0.0.1 document, which is not continued") {
@@ -174,7 +176,8 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.OtherFormatVersion("0.0.1", VERSION_0_2_0)
+                outcome shouldBe
+                    OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.OtherFormatVersion("0.0.1", VERSION_0_2_0))
             }
 
             test("a document without an identifier cannot be continued") {
@@ -182,14 +185,20 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.ID, null)
+                outcome shouldBe
+                    OpenVexBaselineResult.Rejected(
+                        OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, null),
+                    )
             }
 
             test("an identifier that is no absolute IRI cannot be continued") {
                 listOf("vex-1", " https://vulnlog.dev/vex/abc", "https://vulnlog.dev/vex/a b").forEach { id ->
                     val outcome = read(document(id = id))
 
-                    outcome shouldBe OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.ID, id)
+                    outcome shouldBe
+                        OpenVexBaselineResult.Rejected(
+                            OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, id),
+                        )
                 }
             }
 
@@ -198,7 +207,10 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null)
+                outcome shouldBe
+                    OpenVexBaselineResult.Rejected(
+                        OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null),
+                    )
             }
 
             test("a document with an unparsable timestamp cannot be continued") {
@@ -206,7 +218,10 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, "yesterday")
+                outcome shouldBe
+                    OpenVexBaselineResult.Rejected(
+                        OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, "yesterday"),
+                    )
             }
 
             test("a version below 1 cannot be continued") {
@@ -214,7 +229,9 @@ class OpenVexReaderTest :
                     val outcome = read(document(version = version))
 
                     outcome shouldBe
-                        OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.VERSION, version.toString())
+                        OpenVexBaselineResult.Rejected(
+                            OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, version.toString()),
+                        )
                 }
             }
 
@@ -223,7 +240,9 @@ class OpenVexReaderTest :
                     val outcome = read(document(version = version))
 
                     outcome shouldBe
-                        OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.VERSION, version.toString())
+                        OpenVexBaselineResult.Rejected(
+                            OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, version.toString()),
+                        )
                 }
             }
 
@@ -232,7 +251,7 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.Read(baselineOf(content, version = Int.MAX_VALUE - 1))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content, version = Int.MAX_VALUE - 1))
             }
 
             test("malformed JSON is not a document") {
@@ -240,18 +259,18 @@ class OpenVexReaderTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineOutcome.NotADocument
+                outcome shouldBe OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.NotOpenVex)
             }
         }
 
-        context("isUnchanged") {
+        context("sameOpenVexContent") {
 
             test("a rerun over the same file changes nothing but the version and the clock") {
                 val file = fileWith(listOf("1.0.0"))
                 val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
-                val baseline = readBack(OpenVexWriter.write(first))
+                val baseline = readBack(OpenVexEncoder.encode(first))
 
-                val unchanged = OpenVexReader.isUnchanged(baseline, revisionOf(file, baseline))
+                val unchanged = sameOpenVexContent(baseline.content, revisionOf(file, baseline))
 
                 unchanged shouldBe true
             }
@@ -259,10 +278,10 @@ class OpenVexReaderTest :
             test("an added statement is a change") {
                 val first =
                     documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
-                val baseline = readBack(OpenVexWriter.write(first))
+                val baseline = readBack(OpenVexEncoder.encode(first))
                 val grown = fileWith(listOf("1.0.0", "1.1.0"))
 
-                val unchanged = OpenVexReader.isUnchanged(baseline, revisionOf(grown, baseline))
+                val unchanged = sameOpenVexContent(baseline.content, revisionOf(grown, baseline))
 
                 unchanged shouldBe false
             }
@@ -272,7 +291,7 @@ class OpenVexReaderTest :
                 val document =
                     documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
 
-                val unchanged = OpenVexReader.isUnchanged(baseline, document)
+                val unchanged = sameOpenVexContent(baseline.content, document)
 
                 unchanged shouldBe false
             }
@@ -290,7 +309,7 @@ class OpenVexReaderTest :
                         """"@id": "$DOCUMENT_ID", "@context": "https://openvex.dev/ns/v0.2.0"}"""
                 val baseline = readBack(reordered)
 
-                val unchanged = OpenVexReader.isUnchanged(baseline, revisionOf(file, baseline))
+                val unchanged = sameOpenVexContent(baseline.content, revisionOf(file, baseline))
 
                 unchanged shouldBe true
             }
@@ -299,13 +318,13 @@ class OpenVexReaderTest :
                 val file = fileWith(listOf("1.0.0"))
                 val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
                 val foreign =
-                    OpenVexWriter
-                        .write(
+                    OpenVexEncoder
+                        .encode(
                             first,
                         ).replaceFirst("\"version\": 1,", "\"version\": 1,\n  \"tooling\": \"vexctl\",")
                 val baseline = readBack(foreign)
 
-                val unchanged = OpenVexReader.isUnchanged(baseline, revisionOf(file, baseline))
+                val unchanged = sameOpenVexContent(baseline.content, revisionOf(file, baseline))
 
                 unchanged shouldBe false
             }
@@ -316,7 +335,7 @@ class OpenVexReaderTest :
             test("reads back every statement this writer wrote, each with the time it carries") {
                 val document = documentOf(everyStatusFile(), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
 
-                val baseline = readBack(OpenVexWriter.write(document))
+                val baseline = readBack(OpenVexEncoder.encode(document))
 
                 baseline.statements shouldBe
                     document.statements.map { statement ->

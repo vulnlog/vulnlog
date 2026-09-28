@@ -10,8 +10,9 @@ import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import io.kotest.core.spec.style.FunSpec
@@ -169,26 +170,38 @@ class OpenVexRendererTest :
             }
         }
 
-        context("renderOpenVexInvalidIdentity") {
+        context("renderOpenVexBaselineProblem") {
+
+            test("names a file that is no OpenVEX document") {
+                renderOpenVexBaselineProblem("vex.json", OpenVexBaselineProblem.NotOpenVex) shouldBe
+                    "baseline 'vex.json' is not an OpenVEX document"
+            }
+
+            test("names the version the baseline declares against the one the run writes") {
+                val problem = OpenVexBaselineProblem.OtherFormatVersion("0.1.0", OpenVexFormatVersion.VERSION_0_2_0)
+
+                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
+                    "baseline 'vex.json' is an OpenVEX 0.1.0 document, but this run writes OpenVEX 0.2.0"
+            }
 
             test("names the invalid value and what it has to be") {
-                val outcome = OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.ID, "vex-1")
+                val problem = OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, "vex-1")
 
-                renderOpenVexInvalidIdentity("vex.json", outcome) shouldBe
+                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
                     "baseline 'vex.json' has an invalid '@id' 'vex-1', expected an absolute IRI"
             }
 
             test("names a missing field") {
-                val outcome = OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null)
+                val problem = OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null)
 
-                renderOpenVexInvalidIdentity("vex.json", outcome) shouldBe
+                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
                     "baseline 'vex.json' has no 'timestamp', expected an RFC 3339 timestamp"
             }
 
             test("names the range a version has to be in") {
-                val outcome = OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.VERSION, "0")
+                val problem = OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, "0")
 
-                renderOpenVexInvalidIdentity("vex.json", outcome) shouldBe
+                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
                     "baseline 'vex.json' has an invalid 'version' '0', expected a whole number from 1 to 2147483646"
             }
         }

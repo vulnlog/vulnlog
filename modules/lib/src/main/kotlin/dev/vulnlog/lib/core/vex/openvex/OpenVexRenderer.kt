@@ -5,7 +5,7 @@ package dev.vulnlog.lib.core.vex.openvex
 
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
@@ -49,36 +49,22 @@ fun renderOpenVexSkippedReleases(collection: OpenVexCollection): String? {
 }
 
 /**
- * Renders the error naming the format version the baseline at [target] declares against the one the run writes.
- * Shared by the CLI and the Gradle plugin, so both reject a baseline of another version in the same words.
+ * Renders the error naming why the baseline at [target] cannot be continued. Shared by the CLI and the Gradle plugin,
+ * so both reject a baseline in the same words.
  */
-fun renderOpenVexOtherFormatVersion(
+fun renderOpenVexBaselineProblem(
     target: String,
-    outcome: OpenVexBaselineOutcome.OtherFormatVersion,
+    problem: OpenVexBaselineProblem,
 ): String =
-    "baseline '$target' is an OpenVEX ${outcome.declared} document, " +
-        "but this run writes OpenVEX ${outcome.required.version}"
+    when (problem) {
+        OpenVexBaselineProblem.NotOpenVex -> "baseline '$target' is not an OpenVEX document"
 
-/** Renders the error for a baseline at [target] that is no OpenVEX document at all. */
-fun renderOpenVexNotADocument(target: String): String = "baseline '$target' is not an OpenVEX document"
+        is OpenVexBaselineProblem.OtherFormatVersion ->
+            "baseline '$target' is an OpenVEX ${problem.declared} document, " +
+                "but this run writes OpenVEX ${problem.required.version}"
 
-/**
- * Renders the error naming the identity field of the baseline at [target] that cannot be continued, and what it has to
- * be. Shared by the CLI and the Gradle plugin.
- */
-fun renderOpenVexInvalidIdentity(
-    target: String,
-    outcome: OpenVexBaselineOutcome.InvalidIdentity,
-): String {
-    val (field, expected) =
-        when (outcome.field) {
-            OpenVexIdentityField.ID -> "@id" to "an absolute IRI"
-            OpenVexIdentityField.TIMESTAMP -> "timestamp" to "an RFC 3339 timestamp"
-            OpenVexIdentityField.VERSION -> "version" to "a whole number from 1 to ${Int.MAX_VALUE - 1}"
-        }
-    val found = outcome.value?.let { value -> "an invalid '$field' '$value'" } ?: "no '$field'"
-    return "baseline '$target' has $found, expected $expected"
-}
+        is OpenVexBaselineProblem.InvalidIdentity -> renderInvalidIdentity(target, problem)
+    }
 
 /** Renders one diagnostic line stating how many statements the document holds, broken down by status. */
 fun renderOpenVexStatementCounts(document: OpenVexDocument): String {
@@ -118,6 +104,20 @@ fun renderOpenVexWritten(
 ): String =
     "wrote $target: openvex format, version ${document.identity.version.value}, " +
         pluralize(document.statements.size, "statement")
+
+private fun renderInvalidIdentity(
+    target: String,
+    problem: OpenVexBaselineProblem.InvalidIdentity,
+): String {
+    val (field, expected) =
+        when (problem.field) {
+            OpenVexIdentityField.ID -> "@id" to "an absolute IRI"
+            OpenVexIdentityField.TIMESTAMP -> "timestamp" to "an RFC 3339 timestamp"
+            OpenVexIdentityField.VERSION -> "version" to "a whole number from 1 to ${Int.MAX_VALUE - 1}"
+        }
+    val found = problem.value?.let { value -> "an invalid '$field' '$value'" } ?: "no '$field'"
+    return "baseline '$target' has $found, expected $expected"
+}
 
 private fun renderSkippedEntry(entry: OpenVexSkippedEntry): String =
     when (entry) {

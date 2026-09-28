@@ -22,9 +22,9 @@ private val prettyPrinter =
         .withSeparators(Separators.createDefaultInstance().withObjectNameValueSpacing(Separators.Spacing.AFTER))
 
 /**
- * Binds the OpenVEX DTOs and parses baseline documents to a tree. Shared by [OpenVexWriter] and [OpenVexReader] so a
- * document this binary wrote and one it reads back go through the same configuration. An absent optional field is
- * left out rather than written as null.
+ * Binds the OpenVEX DTOs and parses baseline documents to a tree. Shared by [OpenVexEncoder] and
+ * [parseOpenVexBaseline], so a document this binary wrote and one it reads back go through the same configuration. An
+ * absent optional field is left out rather than written as null.
  */
 internal val openVexJson: ObjectMapper by lazy {
     JsonMapper
