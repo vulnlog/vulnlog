@@ -4,9 +4,8 @@
 package dev.vulnlog.lib.core.vex.openvex
 
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
@@ -14,36 +13,35 @@ import dev.vulnlog.lib.parse.vex.openvex.OpenVexWriter
 import java.time.Instant
 
 /**
- * Runs the writer path over [vulnlogFile]: collects the statements, carries the [baseline]'s time over to the undated
- * ones it already made, resolves the identity, builds the document and decides whether the [baseline]'s bytes stand
- * because nothing but the clock changed. Shared by the CLI and the Gradle plugin. [now] becomes the document
- * `timestamp`; [tooling] names the writer in the document.
+ * Runs the writer path over [vulnlogFile]: collects the statements, carries the baseline's time over to the undated
+ * ones it already made, resolves the identity, builds the document and decides whether the baseline's bytes stand
+ * because nothing but the clock changed. Shared by the CLI and the Gradle plugin.
  *
- * [formatVersion] is the OpenVEX version the document is written in. A [baseline] read in another one is rejected:
- * its identity belongs to that version's bytes, and continuing it would silently rewrite the document's format.
+ * [revision] is the first revision of a new document or the next one of a baseline, and names the OpenVEX version the
+ * document is written in. [now] becomes the document `timestamp`; [tooling] names the writer in the document.
  */
 fun generateOpenVex(
     vulnlogFile: VulnlogFile,
     scope: OpenVexScope,
-    baseline: OpenVexBaseline?,
+    revision: OpenVexRevision,
     now: Instant,
     tooling: OpenVexTooling?,
-    formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST,
 ): OpenVexOutcome {
-    require(baseline == null || baseline.formatVersion == formatVersion) {
-        "cannot continue an OpenVEX ${baseline?.formatVersion?.version} baseline " +
-            "in an OpenVEX ${formatVersion.version} document"
-    }
     val collection = collectOpenVexStatements(vulnlogFile, scope)
     if (collection.statements.isEmpty()) return OpenVexOutcome.Empty(collection)
 
+    val baseline =
+        when (revision) {
+            is OpenVexRevision.First -> null
+            is OpenVexRevision.Next -> revision.baseline
+        }
     val document =
         buildOpenVexDocument(
             project = vulnlogFile.project,
-            identity = resolveOpenVexIdentity(baseline, now),
+            identity = resolveOpenVexIdentity(revision, now),
             statements = carryOverOpenVexTimestamps(collection.statements, baseline),
             tooling = tooling,
-            formatVersion = formatVersion,
+            formatVersion = revision.formatVersion,
         )
     val unchanged = baseline != null && OpenVexReader.isUnchanged(baseline, document)
     return OpenVexOutcome.Generated(

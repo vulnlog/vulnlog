@@ -11,6 +11,7 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
+import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexNotADocument
@@ -29,6 +30,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
@@ -49,6 +51,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.time.Instant
+import java.util.UUID
 
 /** The OpenVEX version this task reads and writes. The single place a task property would feed one day. */
 private val FORMAT_VERSION = OpenVexFormatVersion.LATEST
@@ -86,11 +89,12 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val scope =
             buildOpenVexScopeOrFail(vulnlogFile, release.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
         val out = outputFile.get().asFile
-        val baselineDocument = readBaseline(out, sink)
+        val revision =
+            readBaseline(out, sink)?.let(OpenVexRevision::Next)
+                ?: OpenVexRevision.First(openVexDocumentId(UUID.randomUUID()), FORMAT_VERSION)
 
         val tooling = OpenVexTooling("Gradle plugin", BuildInfo.VERSION)
-        val outcome =
-            generateOpenVex(vulnlogFile, scope, baselineDocument, Instant.now(), tooling, FORMAT_VERSION)
+        val outcome = generateOpenVex(vulnlogFile, scope, revision, Instant.now(), tooling)
         logCollection(outcome.collection, sink)
         val generated =
             when (outcome) {
