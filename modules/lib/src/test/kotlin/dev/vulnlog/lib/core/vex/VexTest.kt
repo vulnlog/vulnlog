@@ -15,6 +15,7 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -231,50 +232,50 @@ class VexTest :
             }
         }
 
-        context("vexActionStatement") {
+        context("remediationOf") {
 
-            test("points at the fix release and appends the resolution note") {
+            test("points at the fix release and carries the resolution note") {
                 val entry = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.0.1", note = "Bumped log4j to 2.17.1.")
 
-                val action = vexActionStatement(entry)
+                val remediation = remediationOf(entry)
 
-                action shouldBe "Update to release 1.0.1. Bumped log4j to 2.17.1."
+                remediation shouldBe Remediation.UpdateTo(release("1.0.1"), "Bumped log4j to 2.17.1.")
             }
 
             test("points at the fix release alone when no note is recorded") {
                 val entry =
                     affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WILL_FIX, fixedIn = "1.0.1")
 
-                val action = vexActionStatement(entry)
+                val remediation = remediationOf(entry)
 
-                action shouldBe "Update to release 1.0.1."
+                remediation shouldBe Remediation.UpdateTo(release("1.0.1"), note = null)
             }
 
-            test("states that no remediation exists when neither intent nor fix is recorded") {
+            test("has no remediation when neither intent nor fix is recorded") {
                 val entry = vulnerability(id = cve("CVE-2026-1234"), verdict = affected)
 
-                val action = vexActionStatement(entry)
+                val remediation = remediationOf(entry)
 
-                action shouldBe "No remediation is available yet."
+                remediation shouldBe Remediation.NoneAvailable
             }
 
-            test("states that a fix is planned for 'will fix' without a resolution") {
+            test("plans a fix for 'will fix' without a resolution") {
                 val entry = affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WILL_FIX)
 
-                val action = vexActionStatement(entry)
+                val remediation = remediationOf(entry)
 
-                action shouldBe "A fix is planned but not yet available."
+                remediation shouldBe Remediation.FixPlanned
             }
 
-            test("states the accepted risk for 'wont fix' without a resolution") {
+            test("accepts the risk for 'wont fix' without a resolution") {
                 val entry = affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WONT_FIX)
 
-                val action = vexActionStatement(entry)
+                val remediation = remediationOf(entry)
 
-                action shouldBe "The risk is accepted. No fix is planned."
+                remediation shouldBe Remediation.RiskAccepted(fixIn = null)
             }
 
-            test("keeps the accepted risk and never appends the note when 'wont fix' has a resolution") {
+            test("keeps the accepted risk and drops the note when 'wont fix' has a resolution") {
                 val entry =
                     affectedIn(
                         releases = listOf("1.0.0"),
@@ -283,9 +284,9 @@ class VexTest :
                         note = "Bumped log4j to 2.17.1.",
                     )
 
-                val action = vexActionStatement(entry)
+                val remediation = remediationOf(entry)
 
-                action shouldBe "The risk is accepted for this release. A fix ships with release 1.0.1."
+                remediation shouldBe Remediation.RiskAccepted(fixIn = release("1.0.1"))
             }
         }
     })

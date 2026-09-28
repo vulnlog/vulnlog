@@ -37,9 +37,9 @@ sealed interface VexStatus {
     /** The vulnerability impacts this product. */
     data class Affected(
         /**
-         * What a consumer of the product should do.
+         * What a consumer of the product should do. Each format words it in its own vocabulary.
          */
-        val actionStatement: String,
+        val remediation: Remediation,
         /**
          * How the status was determined, when the entry records an analysis.
          */
