@@ -190,7 +190,8 @@ private fun statusOf(node: JsonNode): VexStatus? {
             VexStatus.NotAffected(justification, node.get("impact_statement")?.textOrNull())
         }
 
-        "affected" -> VexStatus.Affected(node.get("action_statement")?.textOrNull() ?: return null, notes)
+        "affected" ->
+            VexStatus.Affected(node.get("action_statement")?.textOrNull()?.let(::remediationOf) ?: return null, notes)
         else -> null
     }
 }

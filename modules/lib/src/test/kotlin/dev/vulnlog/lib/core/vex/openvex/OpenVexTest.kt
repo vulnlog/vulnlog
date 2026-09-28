@@ -19,6 +19,7 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
@@ -241,13 +242,13 @@ class OpenVexTest :
                     listOf("pkg:maven/com.acme/app@1.0.0", "pkg:maven/com.acme/lib@1.0.0")
             }
 
-            test("a fix outside the scope still drives the action statement") {
+            test("a fix outside the scope still drives the remediation") {
                 val scope = OpenVexScope(releases = setOf(release("1.0.0")))
 
                 val statements = collectOpenVexStatements(taggedFile, scope).statements
 
                 val status = statements.single().status.shouldBeInstanceOf<VexStatus.Affected>()
-                status.actionStatement shouldBe "Update to release 1.0.1."
+                status.remediation shouldBe Remediation.UpdateTo(release("1.0.1"), note = null)
             }
 
             test("a release the entry does not list is covered by the range") {
@@ -312,7 +313,8 @@ class OpenVexTest :
                 openVexStatus(VexStatus.UnderInvestigation()) shouldBe "under_investigation"
                 openVexStatus(VexStatus.Fixed) shouldBe "fixed"
                 openVexStatus(VexStatus.NotAffected(VexJustification.COMPONENT_NOT_PRESENT)) shouldBe "not_affected"
-                openVexStatus(VexStatus.Affected("Update to release 1.0.1.")) shouldBe "affected"
+                openVexStatus(VexStatus.Affected(Remediation.UpdateTo(release("1.0.1"), note = null))) shouldBe
+                    "affected"
             }
 
             test("every justification maps to its OpenVEX token") {

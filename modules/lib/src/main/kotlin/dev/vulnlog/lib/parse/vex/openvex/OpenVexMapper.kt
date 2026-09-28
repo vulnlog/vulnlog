@@ -111,7 +111,7 @@ object OpenVexMapper {
     /** Required for `affected`, absent everywhere else. */
     private fun actionStatementOf(status: VexStatus): String? =
         when (status) {
-            is VexStatus.Affected -> status.actionStatement
+            is VexStatus.Affected -> actionStatementOf(status.remediation)
             is VexStatus.NotAffected, VexStatus.Fixed, is VexStatus.UnderInvestigation -> null
         }
 
