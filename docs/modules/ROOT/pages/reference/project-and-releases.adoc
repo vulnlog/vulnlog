@@ -31,6 +31,8 @@ Used in report generation.
 | Contact email for the security team.
 |===
 
+Validation reports a blank project field as an error: VEX documents name their author and supplier from it.
+
 == `releases`
 
 Defines the releases tracked in this Vulnlog file.

@@ -250,4 +250,19 @@ class OpenVexCommandTest :
                 }
             }
         }
+
+        context("invalid input") {
+
+            test("a blank project author is rejected as a finding") {
+                val yaml = openVexDocument().replace("author: Acme Corp Security Team", "author: \" \"")
+
+                withTempFile(content = yaml) { input ->
+                    val result = OpenVexCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
+                    result.stderr shouldContain "Project 'author' must not be blank."
+                    result.stdout shouldBe ""
+                }
+            }
+        }
     })
