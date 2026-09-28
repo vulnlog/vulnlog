@@ -13,6 +13,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexNotADocument
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -116,11 +117,11 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     }
 
     /**
-     * Reads the configured baseline, or null when it is not configured, not created yet, or no OpenVEX document. A
-     * task that reads and writes one file is never up to date and a build cache hit would overwrite the committed
-     * document, so the output stays under the build directory and `vulnlogOpenVexUpdate` copies it over the
-     * baseline. A document in another format version fails the task: the run would write its identity into bytes of
-     * a version it never had. So does a document whose identity cannot be continued.
+     * Reads the configured baseline, or null when it is not configured or not created yet. A task that reads and
+     * writes one file is never up to date and a build cache hit would overwrite the committed document, so the output
+     * stays under the build directory and `vulnlogOpenVexUpdate` copies it over the baseline. A file that is no
+     * OpenVEX document, a document in another format version, and a document whose identity cannot be continued fail
+     * the task: issuing a new identity instead would fork the committed document.
      */
     private fun readBaseline(
         out: File,
@@ -141,15 +142,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         return when (val outcome = OpenVexReader.readBaseline(file.readText(), FORMAT_VERSION)) {
             is OpenVexBaselineOutcome.Read -> outcome.baseline
 
-            OpenVexBaselineOutcome.NotADocument -> {
-                logger.warn(
-                    formatMessage(
-                        FindingSeverity.WARNING,
-                        "baseline '${file.path}' is not an OpenVEX document, issuing a new one",
-                    ),
-                )
-                null
-            }
+            OpenVexBaselineOutcome.NotADocument -> failOnBaseline(renderOpenVexNotADocument(file.path))
 
             is OpenVexBaselineOutcome.OtherFormatVersion ->
                 failOnBaseline(renderOpenVexOtherFormatVersion(file.path, outcome))

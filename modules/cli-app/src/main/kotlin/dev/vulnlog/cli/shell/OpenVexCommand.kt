@@ -26,6 +26,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexNotADocument
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -174,12 +175,11 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         baselineRequest?.toAbsolutePath()?.normalize() == target.toAbsolutePath().normalize()
 
     /**
-     * Reads the baseline at [path]. A missing file is an error, because the caller asked to continue a document that
-     * is not there. A file that is not an OpenVEX document only warns: garbage in, new identity out. A document in
-     * another format version is an error: the run would write its identity into bytes of a version it never had. So is
-     * a document whose identity cannot be continued.
+     * Reads the baseline at [path]. Every baseline that cannot be continued is an error, because the caller asked to
+     * continue it: a missing file, a file that is no OpenVEX document, a document in another format version, and a
+     * document whose identity cannot be continued. Issuing a new identity instead would fork the published document.
      */
-    private fun readBaselineOrFail(path: Path): OpenVexBaseline? {
+    private fun readBaselineOrFail(path: Path): OpenVexBaseline {
         if (!path.isRegularFile()) {
             echoMessage(formatMessage(FindingSeverity.ERROR, "baseline '$path' does not exist"))
             echoMessage(formatHint("omit --baseline to issue a new document"))
@@ -195,15 +195,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         return when (val outcome = OpenVexReader.readBaseline(content, formatVersion)) {
             is OpenVexBaselineOutcome.Read -> outcome.baseline
 
-            OpenVexBaselineOutcome.NotADocument -> {
-                echoMessage(
-                    formatMessage(
-                        FindingSeverity.WARNING,
-                        "baseline '$path' is not an OpenVEX document, issuing a new one",
-                    ),
-                )
-                null
-            }
+            OpenVexBaselineOutcome.NotADocument -> failOnBaseline(renderOpenVexNotADocument(path.toString()))
 
             is OpenVexBaselineOutcome.OtherFormatVersion ->
                 failOnBaseline(renderOpenVexOtherFormatVersion(path.toString(), outcome))

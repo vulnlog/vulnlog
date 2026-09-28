@@ -256,6 +256,20 @@ class VulnlogOpenVexTaskTest :
                 result.output shouldContain "Unset 'baseline' to issue a new document."
             }
 
+            test("fails when the baseline is not an OpenVEX document") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("previous.json")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+                dir.resolve("previous.json").writeText("""{"bomFormat": "CycloneDX"}""")
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "previous.json' is not an OpenVEX document"
+                result.output shouldContain "Unset 'baseline' to issue a new document."
+            }
+
             test("fails when the baseline identity cannot be continued") {
                 val dir =
                     gradleProject(

@@ -382,7 +382,7 @@ vulnlog {
 
 | `baseline`
 | _(none)_
-| The committed document to continue. Its identifier is kept and its version counts up when the content changed. The file may not exist yet; the first run then issues a new document. A baseline that cannot be continued fails the build, see xref:reference/cli-vex-openvex.adoc#identity[Keep a published document stable]. `vulnlogOpenVexUpdate` writes to this file.
+| The committed document to continue. Its identifier is kept and its version counts up when the content changed. The file may not exist yet; the first run then issues a new document. A file that is no OpenVEX document, or a baseline that cannot be continued, fails the build, see xref:reference/cli-vex-openvex.adoc#identity[Keep a published document stable]. `vulnlogOpenVexUpdate` writes to this file.
 |===
 
 The task reads one Vulnlog file, because a document describes the artifacts of one project.
