@@ -16,6 +16,7 @@ import dev.vulnlog.lib.model.finding.ValidationFinding
 
 val v1DomainRules =
     listOf(
+        ::validateProjectFieldsAreNotBlank,
         ::validateEveryReleaseIsReferenced,
         ::validateEveryTagIsReferenced,
         ::validateUniqueReleases,
@@ -33,6 +34,23 @@ val v1DomainRules =
         ::validateReleasesDeclarePurls,
         ::validateVulnerabilitiesAreDated,
     )
+
+/** A blank project field names nobody, and VEX documents take their author and supplier from these fields. */
+private fun validateProjectFieldsAreNotBlank(file: VulnlogFile): List<ValidationFinding> =
+    listOf(
+        "organization" to file.project.organization,
+        "name" to file.project.name,
+        "author" to file.project.author,
+        "contact" to file.project.contact,
+    ).filter { (_, value) -> value != null && value.isBlank() }
+        .map { (field, _) ->
+            ValidationFinding(
+                severity = FindingSeverity.ERROR,
+                rule = Rule.BLANK_PROJECT_FIELD,
+                path = "project.$field",
+                message = "Project '$field' must not be blank.",
+            )
+        }
 
 private fun validateEveryReleaseIsReferenced(file: VulnlogFile): List<ValidationFinding> {
     val usedReleases = file.vulnerabilities.flatMap { vulnerability -> vulnerability.releases }.toSet()

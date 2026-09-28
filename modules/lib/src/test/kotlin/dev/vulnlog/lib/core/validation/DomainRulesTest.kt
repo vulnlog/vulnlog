@@ -15,6 +15,7 @@ import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
@@ -41,6 +42,36 @@ class DomainRulesTest :
             val findings = applyV1Rules(file)
 
             findings.shouldBeEmpty()
+        }
+
+        context("blank project fields") {
+
+            test("filled project fields produce no finding") {
+                val file = vulnlogFile(project = Project("org", "project", "author", "security@example.com"))
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.BLANK_PROJECT_FIELD }
+
+                findings.shouldBeEmpty()
+            }
+
+            test("a blank or whitespace-only field is an error") {
+                val file = vulnlogFile(project = Project(organization = " ", name = "project", author = ""))
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.BLANK_PROJECT_FIELD }
+
+                findings.map { it.path } shouldContainExactly listOf("project.organization", "project.author")
+                findings.first().severity shouldBe FindingSeverity.ERROR
+                findings.first().message shouldBe "Project 'organization' must not be blank."
+            }
+
+            test("a contact is optional but must not be blank when given") {
+                val absent = vulnlogFile(project = Project("org", "project", "author", contact = null))
+                val blank = vulnlogFile(project = Project("org", "project", "author", contact = "  "))
+
+                applyV1Rules(absent).filter { it.rule == Rule.BLANK_PROJECT_FIELD }.shouldBeEmpty()
+                applyV1Rules(blank).filter { it.rule == Rule.BLANK_PROJECT_FIELD }.map { it.path } shouldContainExactly
+                    listOf("project.contact")
+            }
         }
 
         context("duplicate release IDs") {
