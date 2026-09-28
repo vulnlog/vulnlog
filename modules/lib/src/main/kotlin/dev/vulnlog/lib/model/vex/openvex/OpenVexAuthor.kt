@@ -3,20 +3,13 @@
 
 package dev.vulnlog.lib.model.vex.openvex
 
-import dev.vulnlog.lib.model.Project
-
-/** The author line of the VEX document */
-@JvmInline
-value class OpenVexAuthor private constructor(
+/** Who issues the document: the responsible team or person, and how to reach them when recorded. */
+data class OpenVexAuthor(
     val name: String,
+    val contact: String? = null,
 ) {
-    constructor(project: Project) : this(authorLine(project.author, project.contact))
-}
-
-private fun authorLine(
-    author: String,
-    contact: String?,
-): String {
-    require(author.isNotBlank()) { "VEX author is required" }
-    return contact?.let { "$author ($contact)" } ?: author
+    init {
+        require(name.isNotBlank()) { "VEX author is required" }
+        require(contact == null || contact.isNotBlank()) { "VEX author contact must not be blank" }
+    }
 }

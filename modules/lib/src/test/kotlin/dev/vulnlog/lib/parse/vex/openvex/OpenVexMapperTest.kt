@@ -128,8 +128,17 @@ class OpenVexMapperTest :
                 val dto = OpenVexMapper.toDto(document)
 
                 dto.role shouldBe "Document Creator"
-                dto.tooling shouldBe tooling.value
+                dto.tooling shouldBe "Vulnlog CLI version 0.18.0, https://vulnlog.dev/"
                 dto.statements.single().supplier shouldBe "Acme Corp"
+            }
+
+            test("names the author, with the contact in parentheses when one is recorded") {
+                val withContact = project.copy(contact = "security@acme.example")
+
+                OpenVexMapper.toDto(buildOpenVexDocument(project, identity, emptyList())).author shouldBe
+                    "Acme Security Team"
+                OpenVexMapper.toDto(buildOpenVexDocument(withContact, identity, emptyList())).author shouldBe
+                    "Acme Security Team (security@acme.example)"
             }
 
             test("empty aliases and subcomponents are left out") {

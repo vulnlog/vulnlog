@@ -82,7 +82,7 @@ class OpenVexRunTest :
             val generated = generate(fileWith("1.0.0"), tooling = tooling)
 
             generated.document.tooling shouldBe tooling
-            generated.content shouldContain "\"tooling\": \"${tooling.value}\""
+            generated.content shouldContain "\"tooling\": \"Vulnlog CLI version 0.18.0, https://vulnlog.dev/\""
         }
 
         test("the clock is cut to whole seconds") {

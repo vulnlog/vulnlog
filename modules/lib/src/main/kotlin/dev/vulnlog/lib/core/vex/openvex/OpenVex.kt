@@ -57,7 +57,7 @@ fun buildOpenVexDocument(
     OpenVexDocument(
         formatVersion = formatVersion,
         identity = identity,
-        author = OpenVexAuthor(project),
+        author = OpenVexAuthor(project.author, project.contact),
         supplier = OpenVexSupplier(project.organization),
         tooling = tooling,
         statements = statements,
