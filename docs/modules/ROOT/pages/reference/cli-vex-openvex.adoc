@@ -121,7 +121,7 @@ Every statement is written with its own timestamp; none is left to inherit from 
 | The release `purls`, one product per purl. See <<products>>.
 
 | `products[].subcomponents`
-| `packages`: the vulnerable dependencies inside the product.
+| `packages`: the vulnerable dependencies inside the product, each identified by its purl as `@id` and `identifiers.purl`, as the product is.
 
 | `status`
 | Derived from the verdict and the resolution. See <<status>>.
@@ -412,7 +412,10 @@ vulnlog vex openvex full-example.vl.yaml --release 8.1.1 --tag container -o -
           },
           "subcomponents": [
             {
-              "@id": "pkg:maven/example.org/some-dependency@1.1.2"
+              "@id": "pkg:maven/example.org/some-dependency@1.1.2",
+              "identifiers": {
+                "purl": "pkg:maven/example.org/some-dependency@1.1.2"
+              }
             }
           ]
         }
@@ -440,7 +443,10 @@ vulnlog vex openvex full-example.vl.yaml --release 8.1.1 --tag container -o -
           },
           "subcomponents": [
             {
-              "@id": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+              "@id": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+              "identifiers": {
+                "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+              }
             }
           ]
         }

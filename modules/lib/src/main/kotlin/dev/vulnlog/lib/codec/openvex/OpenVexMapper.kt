@@ -98,7 +98,7 @@ object OpenVexMapper {
             subcomponents =
                 subcomponents
                     .map { component ->
-                        OpenVexSubcomponentDto(component.value)
+                        OpenVexSubcomponentDto(component.value, OpenVexIdentifiersDto(component.value))
                     }.takeIf { it.isNotEmpty() },
         )
 
