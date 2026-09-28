@@ -11,6 +11,7 @@ import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.report
 import dev.vulnlog.lib.fixtures.resolution
 import dev.vulnlog.lib.fixtures.tag
+import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Purl
@@ -414,6 +415,43 @@ class OpenVexTest :
                     ).statements.single()
 
                 statement.timestamp shouldBe OpenVexStatementTime.Stated(LocalDate.of(2026, 1, 15))
+            }
+        }
+
+        context("resolveOpenVexScope") {
+
+            test("resolves the release and the tags the file defines") {
+                val file = taggedFile.copy(tags = listOf(tagEntry("container"), tagEntry("library")))
+
+                val result = resolveOpenVexScope("1.0.1", setOf("container"), file)
+
+                result shouldBe
+                    OpenVexScopeResult.Resolved(
+                        OpenVexScope(releases = setOf(release("1.0.1")), tags = setOf(tag("container"))),
+                    )
+            }
+
+            test("covers every release and purl without a release or tags") {
+                resolveOpenVexScope(null, emptySet(), taggedFile) shouldBe OpenVexScopeResult.Resolved(OpenVexScope())
+            }
+
+            test("rejects a blank or unknown release and an unknown tag, each with a hint") {
+                val blank = resolveOpenVexScope(" ", emptySet(), taggedFile)
+                val unknown = resolveOpenVexScope("9.9.9", setOf("binary"), taggedFile)
+
+                blank
+                    .shouldBeInstanceOf<OpenVexScopeResult.Rejected>()
+                    .problems
+                    .single()
+                    .message shouldBe
+                    "Release must not be blank"
+                unknown.shouldBeInstanceOf<OpenVexScopeResult.Rejected>().problems.map {
+                    it.message to it.hint
+                } shouldContainExactly
+                    listOf(
+                        "Release not found: 9.9.9" to "Known releases: 1.0.0, 1.0.1",
+                        "Tag not found: binary" to "The input declares no tags.",
+                    )
             }
         }
 

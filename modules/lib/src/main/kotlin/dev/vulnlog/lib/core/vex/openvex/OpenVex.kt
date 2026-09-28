@@ -3,6 +3,8 @@
 
 package dev.vulnlog.lib.core.vex.openvex
 
+import dev.vulnlog.lib.core.filter.resolveRelease
+import dev.vulnlog.lib.core.filter.resolveTags
 import dev.vulnlog.lib.core.vex.releaseStatuses
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
@@ -89,6 +91,23 @@ fun nextOpenVexIdentity(
     baseline: OpenVexBaseline,
     now: Instant,
 ): OpenVexIdentity = OpenVexIdentity(id = baseline.id, timestamp = now, version = baseline.version.next())
+
+/**
+ * Resolves the scope a document is written for against [vulnlogFile]: the single [release] it covers, or every release
+ * when null, and the [tags] a release purl must carry. Every one the file does not define is a problem.
+ */
+fun resolveOpenVexScope(
+    release: String?,
+    tags: Set<String>,
+    vulnlogFile: VulnlogFile,
+): OpenVexScopeResult {
+    val files = listOf(vulnlogFile)
+    val releases = resolveRelease(release, files)
+    val scopeTags = resolveTags(tags, files)
+    val problems = releases.problems + scopeTags.problems
+    if (problems.isNotEmpty()) return OpenVexScopeResult.Rejected(problems)
+    return OpenVexScopeResult.Resolved(OpenVexScope(releases = setOfNotNull(releases.value), tags = scopeTags.value))
+}
 
 /**
  * Collects one statement per vulnerability entry and release it applies to in [scope], anchored to that release's

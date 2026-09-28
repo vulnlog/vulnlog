@@ -30,7 +30,7 @@ fun resolveFilter(
     val states = resolveStates(request.states)
     val verdicts = resolveVerdicts(request.verdicts)
     val dispositions = resolveDispositions(request.dispositions)
-    val fixedIn = resolveFixedIn(request.fixedIn, files)
+    val fixedIn = resolveRelease(request.fixedIn, files)
     val problems =
         reporter.problems + releases.problems + tags.problems + states.problems + verdicts.problems +
             dispositions.problems + fixedIn.problems
@@ -78,7 +78,7 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
     )
 
 /** One resolved dimension: the value to filter with, or the problems that stopped it resolving. */
-private data class Dimension<T>(
+internal data class Dimension<T>(
     val value: T,
     val problems: List<FilterProblem> = emptyList(),
 )
@@ -188,8 +188,8 @@ private fun resolveDispositions(values: Set<String>): Dimension<Set<Disposition>
     return Dimension(values.mapNotNull { byToken[it] }.toSet())
 }
 
-/** Resolves the single release a fix must have shipped in. */
-private fun resolveFixedIn(
+/** Resolves a single release the files declare, such as the one a fix must have shipped in. */
+internal fun resolveRelease(
     releaseId: String?,
     files: List<VulnlogFile>,
 ): Dimension<Release?> {
@@ -204,7 +204,7 @@ private fun resolveFixedIn(
     return Dimension(release)
 }
 
-private fun resolveTags(
+internal fun resolveTags(
     values: Set<String>,
     files: List<VulnlogFile>,
 ): Dimension<Set<Tag>> {

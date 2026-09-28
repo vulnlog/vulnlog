@@ -15,7 +15,6 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
@@ -43,13 +42,16 @@ private fun fileWith(vararg releases: String): VulnlogFile =
 private fun request(
     baseline: String? = null,
     now: Instant = ISSUED_AT,
-): OpenVexRequest = OpenVexRequest(OpenVexScope(), baseline, DOCUMENT_ID, now, TOOLING)
+    release: String? = null,
+    tags: Set<String> = emptySet(),
+): OpenVexRequest = OpenVexRequest(release, tags, baseline, DOCUMENT_ID, now, TOOLING)
 
 private fun revised(
     file: VulnlogFile,
     baseline: String? = null,
     now: Instant = ISSUED_AT,
-): OpenVexOutcome.Revised = generateOpenVex(file, request(baseline, now)).shouldBeInstanceOf()
+    release: String? = null,
+): OpenVexOutcome.Revised = generateOpenVex(file, request(baseline, now, release)).shouldBeInstanceOf()
 
 class GenerateOpenVexTest :
     FunSpec({
@@ -115,6 +117,24 @@ class GenerateOpenVexTest :
                     cve("CVE-2026-2222") to OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 30)),
                 )
             second.content shouldContain "\"timestamp\": \"2026-04-25T00:00:00Z\""
+        }
+
+        test("a scope the file does not define is rejected with every problem") {
+            val outcome = generateOpenVex(fileWith("1.0.0"), request(release = "9.9.9", tags = setOf("binary")))
+
+            outcome.shouldBeInstanceOf<FilterRejected>().problems.map { it.message } shouldContainExactly
+                listOf("Release not found: 9.9.9", "Tag not found: binary")
+        }
+
+        test("the scope narrows the document to the requested release") {
+            val revised = revised(fileWith("1.0.0", "1.1.0"), release = "1.1.0")
+
+            revised.collection.scope.releases
+                .map { it.value } shouldContainExactly listOf("1.1.0")
+            revised.document.statements
+                .flatMap { it.products }
+                .map { it.value } shouldContainExactly
+                listOf("pkg:maven/com.acme/app@1.1.0")
         }
 
         test("a baseline that cannot be continued is rejected before anything is collected") {

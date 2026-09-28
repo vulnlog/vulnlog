@@ -164,6 +164,18 @@ class VulnlogOpenVexTaskTest :
 
                 result.output shouldContain "Tag not found: binary"
             }
+
+            test("fails on a blank release") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""release = """""),
+                        "test.vl.yaml" to openVexScopedDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "Release must not be blank. Known releases: "
+            }
         }
 
         context("baseline") {

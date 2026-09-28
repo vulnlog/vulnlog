@@ -7,10 +7,12 @@ import dev.vulnlog.lib.codec.openvex.OpenVexBaselineResult
 import dev.vulnlog.lib.codec.openvex.OpenVexEncoder
 import dev.vulnlog.lib.codec.openvex.parseOpenVexBaseline
 import dev.vulnlog.lib.codec.openvex.sameOpenVexContent
+import dev.vulnlog.lib.core.vex.openvex.OpenVexScopeResult
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.carryOverOpenVexTimestamps
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexIdentity
+import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexScope
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
@@ -18,7 +20,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
-import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import java.time.Instant
 
@@ -28,9 +29,13 @@ import java.time.Instant
  */
 data class OpenVexRequest(
     /**
-     * What the document covers.
+     * The single release the document covers, or null for every release that declares purls.
      */
-    val scope: OpenVexScope,
+    val release: String?,
+    /**
+     * The tags a release purl must carry to become a product. Empty keeps every purl.
+     */
+    val tags: Set<String>,
     /**
      * The text of the document to continue, or null to issue a new one.
      */
@@ -53,7 +58,10 @@ data class OpenVexRequest(
     val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST,
 )
 
-/** What a run did. Every case after the baseline carries the collection, so drivers can say what it held. */
+/**
+ * What a run did. Every case after the scope and the baseline carries the collection, so drivers can say what it held.
+ * A rejected scope is the shared [FilterRejected].
+ */
 sealed interface OpenVexOutcome {
     /** The baseline cannot be continued, so nothing was collected. */
     data class BaselineRejected(
@@ -81,14 +89,19 @@ sealed interface OpenVexOutcome {
 }
 
 /**
- * Runs `vex openvex` over [vulnlogFile]: continues the baseline or starts a new document, collects the statements,
- * carries the baseline's time over to the undated ones it already made, builds the revision, and keeps the baseline's
- * bytes when nothing but the clock changed. Shared by the CLI and the Gradle plugin.
+ * Runs `vex openvex` over [vulnlogFile]: resolves the scope, continues the baseline or starts a new document, collects
+ * the statements, carries the baseline's time over to the undated ones it already made, builds the revision, and keeps
+ * the baseline's bytes when nothing but the clock changed. Shared by the CLI and the Gradle plugin.
  */
 fun generateOpenVex(
     vulnlogFile: VulnlogFile,
     request: OpenVexRequest,
 ): OpenVexOutcome {
+    val scope =
+        when (val result = resolveOpenVexScope(request.release, request.tags, vulnlogFile)) {
+            is OpenVexScopeResult.Resolved -> result.scope
+            is OpenVexScopeResult.Rejected -> return FilterRejected(result.problems)
+        }
     val revision =
         when (val baseline = request.baseline) {
             null -> OpenVexRevision.First(request.documentId, request.formatVersion)
@@ -98,7 +111,7 @@ fun generateOpenVex(
                     is OpenVexBaselineResult.Rejected -> return OpenVexOutcome.BaselineRejected(result.problem)
                 }
         }
-    val collection = collectOpenVexStatements(vulnlogFile, request.scope)
+    val collection = collectOpenVexStatements(vulnlogFile, scope)
     if (collection.statements.isEmpty()) return OpenVexOutcome.NoStatementApplies(collection)
 
     val baseline =
