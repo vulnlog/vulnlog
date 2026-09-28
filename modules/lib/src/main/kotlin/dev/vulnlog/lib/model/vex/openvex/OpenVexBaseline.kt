@@ -21,4 +21,9 @@ data class OpenVexBaseline(
      * The bytes the document was read from, written back verbatim when nothing changed.
      */
     val content: String,
+    /**
+     * The statements this writer can read back from the document, each with the time it carries. An undated statement
+     * equal to one of them keeps that time.
+     */
+    val statements: List<OpenVexStatement> = emptyList(),
 )

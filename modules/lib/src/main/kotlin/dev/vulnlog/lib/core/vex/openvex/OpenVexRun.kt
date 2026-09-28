@@ -14,9 +14,10 @@ import dev.vulnlog.lib.parse.vex.openvex.OpenVexWriter
 import java.time.Instant
 
 /**
- * Runs the writer path over [vulnlogFile]: collects the statements, resolves the identity, builds the document and
- * decides whether the [baseline]'s bytes stand because nothing but the clock changed. Shared by the CLI and the
- * Gradle plugin. [now] becomes the document `timestamp`; [tooling] names the writer in the document.
+ * Runs the writer path over [vulnlogFile]: collects the statements, carries the [baseline]'s time over to the undated
+ * ones it already made, resolves the identity, builds the document and decides whether the [baseline]'s bytes stand
+ * because nothing but the clock changed. Shared by the CLI and the Gradle plugin. [now] becomes the document
+ * `timestamp`; [tooling] names the writer in the document.
  *
  * [formatVersion] is the OpenVEX version the document is written in. A [baseline] read in another one is rejected:
  * its identity belongs to that version's bytes, and continuing it would silently rewrite the document's format.
@@ -40,7 +41,7 @@ fun generateOpenVex(
         buildOpenVexDocument(
             project = vulnlogFile.project,
             identity = resolveOpenVexIdentity(baseline, now),
-            statements = collection.statements,
+            statements = carryOverOpenVexTimestamps(collection.statements, baseline),
             tooling = tooling,
             formatVersion = formatVersion,
         )

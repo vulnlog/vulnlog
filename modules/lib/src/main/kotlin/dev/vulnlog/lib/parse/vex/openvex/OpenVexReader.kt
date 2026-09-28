@@ -3,6 +3,15 @@
 
 package dev.vulnlog.lib.parse.vex.openvex
 
+import com.github.packageurl.MalformedPackageURLException
+import com.github.packageurl.PackageURL
+import dev.vulnlog.lib.core.parsePurl
+import dev.vulnlog.lib.core.parseVulnId
+import dev.vulnlog.lib.core.vex.openvex.openVexJustification
+import dev.vulnlog.lib.model.Purl
+import dev.vulnlog.lib.model.VexJustification
+import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
@@ -10,10 +19,12 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
+import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
+import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexBaselineDto
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
-import tools.jackson.databind.node.ArrayNode
 import tools.jackson.databind.node.ObjectNode
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -21,9 +32,6 @@ import java.time.format.DateTimeParseException
 
 /** Every revision carries its own, so they are removed before two documents are compared. */
 private val VOLATILE_FIELDS = listOf("timestamp", "version")
-
-/** A statement the file leaves undated is dated by the document, so these move with every revision as well. */
-private val INHERITED_STATEMENT_FIELDS = listOf("timestamp", "action_statement_timestamp")
 
 object OpenVexReader {
     /**
@@ -34,7 +42,8 @@ object OpenVexReader {
      * [OpenVexBaselineOutcome.OtherFormatVersion], because continuing it would write one version's identity into
      * another version's bytes. A document whose identity cannot be continued reads as
      * [OpenVexBaselineOutcome.InvalidIdentity]. The timestamp must parse, but it is not carried over: every revision
-     * is issued anew.
+     * is issued anew. The statements this writer can read back come with the baseline, so an untouched statement
+     * keeps its time.
      */
     fun readBaseline(
         content: String,
@@ -59,7 +68,8 @@ object OpenVexReader {
     }
 
     /**
-     * True when [document] differs from [baseline] only in `version` and the timestamps every revision writes anew.
+     * True when [document] differs from [baseline] only in the `version` and the `timestamp` every revision writes
+     * anew. Statement times count: an untouched statement carries the baseline's, so only a change moves one.
      *
      * Both sides are compared as trees, so key order and formatting do not matter. A baseline another tool wrote
      * carries fields this writer does not emit and therefore always compares as changed.
@@ -100,9 +110,9 @@ private fun baselineOf(
     val id =
         dto.id?.let(OpenVexDocumentId::parse)
             ?: return OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.ID, dto.id)
-    if (dto.timestamp?.let(::parseTimestamp) == null) {
-        return OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, dto.timestamp)
-    }
+    val issuedAt =
+        dto.timestamp?.let(::parseTimestamp)
+            ?: return OpenVexBaselineOutcome.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, dto.timestamp)
     val version =
         dto.version?.let { value ->
             OpenVexDocumentVersion.parse(value)
@@ -114,26 +124,99 @@ private fun baselineOf(
             id = id,
             version = version,
             content = content,
+            statements = statementsOf(dto.statements, issuedAt),
         ),
     )
 }
 
 /**
- * Removes from [tree] what a revision writes anew: the document `timestamp` and `version`, and the statement dates
- * that were inherited from that timestamp rather than stated by the file. A date the file states is left in place, so
- * moving it still counts as a change.
+ * The statements of [node] this writer can read back, each carrying its own time, or [issuedAt] when it inherits the
+ * document's. A statement this writer would not write is skipped: nothing is matched against it.
  */
-private fun stripVolatile(tree: ObjectNode) {
-    val issuedAt = tree.get("timestamp")?.asString()
-    tree.remove(VOLATILE_FIELDS)
-    // Nothing was inherited when the document carries no timestamp of its own.
-    if (issuedAt == null) return
-    val statements = tree.get("statements") as? ArrayNode ?: return
-    statements.filterIsInstance<ObjectNode>().forEach { statement ->
-        INHERITED_STATEMENT_FIELDS
-            .filter { field -> statement.get(field)?.asString() == issuedAt }
-            .forEach { field -> statement.remove(field) }
+private fun statementsOf(
+    node: JsonNode?,
+    issuedAt: Instant,
+): List<OpenVexStatement> =
+    node
+        ?.takeIf(JsonNode::isArray)
+        ?.values()
+        .orEmpty()
+        .mapNotNull { statement -> statementOf(statement, issuedAt) }
+
+private fun statementOf(
+    node: JsonNode,
+    issuedAt: Instant,
+): OpenVexStatement? {
+    val at = node.get("timestamp")?.let { timestamp -> timestamp.textOrNull()?.let(::parseTimestamp) ?: return null }
+    val vulnerability = node.get("vulnerability")?.let(::vulnerabilityOf) ?: return null
+    val products =
+        node
+            .get("products")
+            ?.takeIf(JsonNode::isArray)
+            ?.values()
+            ?.takeIf { it.isNotEmpty() } ?: return null
+    val purls = products.map { product -> product.get("@id")?.textOrNull()?.let(::purlOf) ?: return null }
+    // This writer lists the same subcomponents on every product of a statement.
+    val subcomponents =
+        products.map { product -> subcomponentsOf(product) ?: return null }.distinct().singleOrNull() ?: return null
+    val status = statusOf(node) ?: return null
+    return OpenVexStatement(vulnerability, OpenVexStatementTime.Carried(at ?: issuedAt), purls, subcomponents, status)
+}
+
+private fun vulnerabilityOf(node: JsonNode): OpenVexVulnerability? {
+    val id = node.get("name")?.textOrNull()?.let(::vulnIdOf) ?: return null
+    val aliases = node.get("aliases")?.let { aliases -> textsOf(aliases) ?: return null }.orEmpty()
+    val description = node.get("description")?.let { description -> description.textOrNull() ?: return null }
+    return OpenVexVulnerability(id, aliases.map { alias -> vulnIdOf(alias) ?: return null }, description)
+}
+
+/** The subcomponents of [product], none when it lists none, or null when one of them cannot be read. */
+private fun subcomponentsOf(product: JsonNode): List<Purl>? {
+    val subcomponents = product.get("subcomponents") ?: return emptyList()
+    if (!subcomponents.isArray) return null
+    return subcomponents.values().map { component -> component.get("@id")?.textOrNull()?.let(::purlOf) ?: return null }
+}
+
+/** The status a statement states, with the text the status carries. The reverse of [OpenVexMapper]'s tokens. */
+private fun statusOf(node: JsonNode): VexStatus? {
+    val notes = node.get("status_notes")?.textOrNull()
+    return when (node.get("status")?.textOrNull()) {
+        "under_investigation" -> VexStatus.UnderInvestigation(notes)
+        "fixed" -> VexStatus.Fixed
+        "not_affected" -> {
+            val token = node.get("justification")?.textOrNull()
+            val justification =
+                VexJustification.entries.firstOrNull { openVexJustification(it) == token } ?: return null
+            VexStatus.NotAffected(justification, node.get("impact_statement")?.textOrNull())
+        }
+
+        "affected" -> VexStatus.Affected(node.get("action_statement")?.textOrNull() ?: return null, notes)
+        else -> null
     }
+}
+
+private fun textsOf(node: JsonNode): List<String>? =
+    node.takeIf(JsonNode::isArray)?.values()?.map { value -> value.textOrNull() ?: return null }
+
+private fun JsonNode.textOrNull(): String? = takeIf(JsonNode::isString)?.stringValue()
+
+private fun vulnIdOf(value: String): VulnId? =
+    try {
+        parseVulnId(value)
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
+private fun purlOf(value: String): Purl? =
+    try {
+        parsePurl(PackageURL(value))
+    } catch (_: MalformedPackageURLException) {
+        null
+    }
+
+/** Removes from [tree] what every revision writes anew: the document `timestamp` and `version`. */
+private fun stripVolatile(tree: ObjectNode) {
+    tree.remove(VOLATILE_FIELDS)
 }
 
 /** Accepts any RFC 3339 offset, so a document written elsewhere still counts as one. */

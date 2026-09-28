@@ -328,8 +328,8 @@ private fun validateReleasesDeclarePurls(file: VulnlogFile): List<ValidationFind
 }
 
 /**
- * Meaningful only once the file uses purls: an undated entry cannot date its VEX statements from the file, so the
- * writer falls back to the time of the run and the document changes on every run.
+ * Meaningful only once the file uses purls: an undated entry cannot date its VEX statements from the file, so they are
+ * dated by the run that first issues them, and only a baseline keeps that time from one revision to the next.
  */
 private fun validateVulnerabilitiesAreDated(file: VulnlogFile): List<ValidationFinding> {
     if (file.releases.none { release -> release.purls.isNotEmpty() }) return emptyList()
