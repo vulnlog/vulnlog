@@ -12,6 +12,7 @@ import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
@@ -56,8 +57,8 @@ class OpenVexRunTest :
         test("a run without a baseline issues the first version") {
             val generated = generate(fileWith("1.0.0"))
 
-            generated.document.identity.id shouldStartWith OPEN_VEX_ID_PREFIX
-            generated.document.identity.version shouldBe 1
+            generated.document.identity.id.value shouldStartWith OPEN_VEX_ID_PREFIX
+            generated.document.identity.version shouldBe OpenVexDocumentVersion.FIRST
             generated.document.identity.timestamp shouldBe ISSUED_AT
             generated.unchanged shouldBe false
             generated.content shouldEndWith "}\n"
@@ -95,7 +96,7 @@ class OpenVexRunTest :
             second.unchanged shouldBe false
             second.document.identity.id shouldBe first.document.identity.id
             second.document.identity.timestamp shouldBe UPDATED_AT
-            second.document.identity.version shouldBe 2
+            second.document.identity.version shouldBe OpenVexDocumentVersion(2)
         }
 
         test("a file without an anchoring release yields no document") {

@@ -10,7 +10,7 @@ data class OpenVexIdentity(
     /**
      * Unique identifier of the document. Kept across every revision.
      */
-    val id: String,
+    val id: OpenVexDocumentId,
     /**
      * Time this revision was issued. Every revision carries its own.
      */
@@ -18,5 +18,5 @@ data class OpenVexIdentity(
     /**
      * Revision of the document. 1 for a fresh identity, the baseline's plus 1 for a continued one.
      */
-    val version: Int,
+    val version: OpenVexDocumentVersion,
 )

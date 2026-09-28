@@ -25,6 +25,8 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -37,7 +39,7 @@ import java.time.LocalDate
 
 private val GOLDEN_SOURCE_DIR: Path = Path.of("src/test/resources/vex")
 
-private const val DOCUMENT_ID = "https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79"
+private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
 
@@ -133,7 +135,7 @@ class OpenVexGoldenTest :
                 OpenVexBaseline(
                     formatVersion = OpenVexFormatVersion.LATEST,
                     id = DOCUMENT_ID,
-                    version = 1,
+                    version = OpenVexDocumentVersion.FIRST,
                     content = "",
                 )
 

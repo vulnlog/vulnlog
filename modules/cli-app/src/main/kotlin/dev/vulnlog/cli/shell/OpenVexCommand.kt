@@ -25,6 +25,7 @@ import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
@@ -175,7 +176,8 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     /**
      * Reads the baseline at [path]. A missing file is an error, because the caller asked to continue a document that
      * is not there. A file that is not an OpenVEX document only warns: garbage in, new identity out. A document in
-     * another format version is an error: the run would write its identity into bytes of a version it never had.
+     * another format version is an error: the run would write its identity into bytes of a version it never had. So is
+     * a document whose identity cannot be continued.
      */
     private fun readBaselineOrFail(path: Path): OpenVexBaseline? {
         if (!path.isRegularFile()) {
@@ -203,14 +205,18 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 null
             }
 
-            is OpenVexBaselineOutcome.OtherFormatVersion -> {
-                echoMessage(
-                    formatMessage(FindingSeverity.ERROR, renderOpenVexOtherFormatVersion(path.toString(), outcome)),
-                )
-                echoMessage(formatHint("omit --baseline to issue a new document"))
-                throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
-            }
+            is OpenVexBaselineOutcome.OtherFormatVersion ->
+                failOnBaseline(renderOpenVexOtherFormatVersion(path.toString(), outcome))
+
+            is OpenVexBaselineOutcome.InvalidIdentity ->
+                failOnBaseline(renderOpenVexInvalidIdentity(path.toString(), outcome))
         }
+    }
+
+    private fun failOnBaseline(message: String): Nothing {
+        echoMessage(formatMessage(FindingSeverity.ERROR, message))
+        echoMessage(formatHint("omit --baseline to issue a new document"))
+        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 
     private fun failOnEmptyDocument(

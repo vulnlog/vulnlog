@@ -256,6 +256,29 @@ class VulnlogOpenVexTaskTest :
                 result.output shouldContain "Unset 'baseline' to issue a new document."
             }
 
+            test("fails when the baseline identity cannot be continued") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("previous.json")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+                dir.resolve("previous.json").writeText(
+                    """
+                    {
+                      "@context": "https://openvex.dev/ns/v0.2.0",
+                      "@id": "not-an-iri",
+                      "timestamp": "2026-04-25T00:00:00Z",
+                      "version": 7
+                    }
+                    """.trimIndent(),
+                )
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "has an invalid '@id' 'not-an-iri', expected an absolute IRI"
+                result.output shouldContain "Unset 'baseline' to issue a new document."
+            }
+
             test("fails when the baseline is the output file") {
                 val dir =
                     gradleProject(

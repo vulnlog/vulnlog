@@ -71,12 +71,20 @@ class OpenVexFormatVersionTest :
                 declared.shouldBeNull()
             }
 
-            test("returns null for an OpenVEX context that names no version") {
+            test("returns null for an OpenVEX context with an empty version") {
                 val context = "https://openvex.dev/ns/v"
 
                 val declared = OpenVexFormatVersion.declaredVersion(context)
 
                 declared.shouldBeNull()
+            }
+
+            test("reads the OpenVEX context without a version as 0.0.1, as the specification defines") {
+                val context = "https://openvex.dev/ns"
+
+                val declared = OpenVexFormatVersion.declaredVersion(context)
+
+                declared shouldBe "0.0.1"
             }
         }
     })

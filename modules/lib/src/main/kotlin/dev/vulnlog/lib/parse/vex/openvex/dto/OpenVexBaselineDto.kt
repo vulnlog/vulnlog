@@ -20,5 +20,5 @@ data class OpenVexBaselineDto(
     @param:JsonProperty("@id")
     val id: String? = null,
     val timestamp: String? = null,
-    val version: Int? = null,
+    val version: Long? = null,
 )
