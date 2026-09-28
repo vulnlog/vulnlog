@@ -13,7 +13,6 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
@@ -22,7 +21,8 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
+import dev.vulnlog.lib.parse.vex.openvex.OpenVexBaselineResult
+import dev.vulnlog.lib.parse.vex.openvex.parseOpenVexBaseline
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -58,9 +58,8 @@ private fun revisionOf(baseline: OpenVexBaseline?): OpenVexRevision =
 
 /** The baseline a later run reads from what an earlier one wrote. */
 private fun baselineOf(generated: OpenVexOutcome.Generated): OpenVexBaseline =
-    OpenVexReader
-        .readBaseline(generated.content, OpenVexFormatVersion.LATEST)
-        .shouldBeInstanceOf<OpenVexBaselineOutcome.Read>()
+    parseOpenVexBaseline(generated.content, OpenVexFormatVersion.LATEST)
+        .shouldBeInstanceOf<OpenVexBaselineResult.Parsed>()
         .baseline
 
 class OpenVexRunTest :

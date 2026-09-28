@@ -12,10 +12,8 @@ import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
+import dev.vulnlog.lib.core.vex.openvex.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexNotADocument
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexOtherFormatVersion
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexProducts
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedEntries
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexSkippedReleases
@@ -26,14 +24,14 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
+import dev.vulnlog.lib.parse.vex.openvex.OpenVexBaselineResult
+import dev.vulnlog.lib.parse.vex.openvex.parseOpenVexBaseline
 import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -143,16 +141,9 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
             sink.verbose("baseline '${file.path}' does not exist yet, issuing a new document")
             return null
         }
-        return when (val outcome = OpenVexReader.readBaseline(file.readText(), FORMAT_VERSION)) {
-            is OpenVexBaselineOutcome.Read -> outcome.baseline
-
-            OpenVexBaselineOutcome.NotADocument -> failOnBaseline(renderOpenVexNotADocument(file.path))
-
-            is OpenVexBaselineOutcome.OtherFormatVersion ->
-                failOnBaseline(renderOpenVexOtherFormatVersion(file.path, outcome))
-
-            is OpenVexBaselineOutcome.InvalidIdentity ->
-                failOnBaseline(renderOpenVexInvalidIdentity(file.path, outcome))
+        return when (val result = parseOpenVexBaseline(file.readText(), FORMAT_VERSION)) {
+            is OpenVexBaselineResult.Parsed -> result.baseline
+            is OpenVexBaselineResult.Rejected -> failOnBaseline(renderOpenVexBaselineProblem(file.path, result.problem))
         }
     }
 

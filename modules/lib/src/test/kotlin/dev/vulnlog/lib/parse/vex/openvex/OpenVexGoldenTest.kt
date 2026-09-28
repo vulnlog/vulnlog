@@ -125,7 +125,7 @@ class OpenVexGoldenTest :
         test("a fresh OpenVEX document matches golden bytes") {
             val document = documentOf(freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
 
-            val actual = OpenVexWriter.write(document)
+            val actual = OpenVexEncoder.encode(document)
 
             actual shouldBe golden("golden-openvex.json", actual)
         }
@@ -141,7 +141,7 @@ class OpenVexGoldenTest :
 
             val document = documentOf(nextOpenVexIdentity(baseline, UPDATED_AT))
 
-            val actual = OpenVexWriter.write(document)
+            val actual = OpenVexEncoder.encode(document)
 
             actual shouldBe golden("golden-openvex-continued.json", actual)
         }
