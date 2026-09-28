@@ -7,22 +7,20 @@ import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.gradle.vex.buildOpenVexScopeOrFail
-import dev.vulnlog.lib.codec.openvex.OpenVexBaselineResult
-import dev.vulnlog.lib.codec.openvex.parseOpenVexBaseline
+import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.app.OpenVexRequest
+import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
-import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
@@ -87,24 +85,47 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val scope =
             buildOpenVexScopeOrFail(vulnlogFile, release.orNull?.let(::Release), tags.get().map(::Tag).toSet(), sink)
         val out = outputFile.get().asFile
-        val revision =
-            readBaseline(out, sink)?.let(OpenVexRevision::Next)
-                ?: OpenVexRevision.First(openVexDocumentId(UUID.randomUUID()), FORMAT_VERSION)
+        val request =
+            OpenVexRequest(
+                scope = scope,
+                baseline = readBaseline(out, sink),
+                documentId = openVexDocumentId(UUID.randomUUID()),
+                timestamp = Instant.now(),
+                tooling = OpenVexTooling("Gradle plugin", BuildInfo.VERSION),
+                formatVersion = FORMAT_VERSION,
+            )
 
-        val tooling = OpenVexTooling("Gradle plugin", BuildInfo.VERSION)
-        val outcome = generateOpenVex(vulnlogFile, scope, revision, Instant.now(), tooling)
-        logCollection(outcome.collection, sink)
-        val generated =
-            when (outcome) {
-                is OpenVexOutcome.Empty -> failOnEmptyDocument(vulnlogFile, scope)
-                is OpenVexOutcome.Generated -> outcome
+        when (val outcome = generateOpenVex(vulnlogFile, request)) {
+            is OpenVexOutcome.BaselineRejected ->
+                failOnBaseline(renderOpenVexBaselineProblem(baseline.get().asFile.path, outcome.problem))
+
+            is OpenVexOutcome.NoStatementApplies -> {
+                logCollection(outcome.collection, sink)
+                failOnEmptyDocument(vulnlogFile, scope)
             }
-        sink.verbose(renderOpenVexStatementCounts(generated.document))
 
+            is OpenVexOutcome.Revised ->
+                write(out, outcome.collection, outcome.document, outcome.content, StatusVerb.WROTE, sink)
+
+            is OpenVexOutcome.Unchanged ->
+                write(out, outcome.collection, outcome.document, outcome.content, StatusVerb.UNCHANGED, sink)
+        }
+    }
+
+    /** Writes [content] to [out] and reports it with [verb]. The output always lives under the build directory. */
+    private fun write(
+        out: File,
+        collection: OpenVexCollection,
+        document: OpenVexDocument,
+        content: String,
+        verb: StatusVerb,
+        sink: DiagnosticSink,
+    ) {
+        logCollection(collection, sink)
+        sink.verbose(renderOpenVexStatementCounts(document))
         out.parentFile?.mkdirs()
-        out.writeText(generated.content)
-        sink.verbose(renderOpenVexWritten(out.path, generated.document))
-        val verb = if (generated.unchanged) StatusVerb.UNCHANGED else StatusVerb.WROTE
+        out.writeText(content)
+        sink.verbose(renderOpenVexWritten(out.path, document))
         logger.lifecycle(formatStatus(verb, out.absolutePath))
     }
 
@@ -119,16 +140,15 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     }
 
     /**
-     * Reads the configured baseline, or null when it is not configured or not created yet. A task that reads and
-     * writes one file is never up to date and a build cache hit would overwrite the committed document, so the output
-     * stays under the build directory and `vulnlogOpenVexUpdate` copies it over the baseline. A file that is no
-     * OpenVEX document, a document in another format version, and a document whose identity cannot be continued fail
-     * the task: issuing a new identity instead would fork the committed document.
+     * Reads the text of the configured baseline, or null when it is not configured or not created yet. Whether the
+     * text can be continued is the run's to decide. A task that reads and writes one file is never up to date and a
+     * build cache hit would overwrite the committed document, so the output stays under the build directory and
+     * `vulnlogOpenVexUpdate` copies it over the baseline.
      */
     private fun readBaseline(
         out: File,
         sink: DiagnosticSink,
-    ): OpenVexBaseline? {
+    ): String? {
         val file = baseline.orNull?.asFile ?: return null
         if (file.canonicalFile == out.canonicalFile) {
             throw GradleException(
@@ -141,10 +161,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
             sink.verbose("baseline '${file.path}' does not exist yet, issuing a new document")
             return null
         }
-        return when (val result = parseOpenVexBaseline(file.readText(), FORMAT_VERSION)) {
-            is OpenVexBaselineResult.Parsed -> result.baseline
-            is OpenVexBaselineResult.Rejected -> failOnBaseline(renderOpenVexBaselineProblem(file.path, result.problem))
-        }
+        return file.readText()
     }
 
     private fun failOnBaseline(message: String): Nothing =

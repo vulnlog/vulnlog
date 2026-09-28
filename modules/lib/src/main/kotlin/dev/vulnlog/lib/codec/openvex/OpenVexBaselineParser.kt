@@ -54,7 +54,7 @@ fun parseOpenVexBaseline(
     }
     // The identity fields are read as the required version places them. A version that moves one binds here.
     return when (requiredFormatVersion) {
-        OpenVexFormatVersion.VERSION_0_2_0 -> baselineOf(dto, content, requiredFormatVersion)
+        OpenVexFormatVersion.VERSION_0_2_0 -> baselineOf(dto, requiredFormatVersion)
     }
 }
 
@@ -67,7 +67,6 @@ private fun rejected(problem: OpenVexBaselineProblem): OpenVexBaselineResult = O
  */
 private fun baselineOf(
     dto: OpenVexBaselineDto,
-    content: String,
     formatVersion: OpenVexFormatVersion,
 ): OpenVexBaselineResult {
     val id =
@@ -86,7 +85,6 @@ private fun baselineOf(
             formatVersion = formatVersion,
             id = id,
             version = version,
-            content = content,
             statements = statementsOf(dto.statements, issuedAt),
         ),
     )

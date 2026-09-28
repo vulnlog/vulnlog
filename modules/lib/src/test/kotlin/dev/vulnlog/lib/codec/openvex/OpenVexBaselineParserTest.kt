@@ -67,16 +67,8 @@ private fun document(
 /** Every test reads for the version this build writes. */
 private fun read(content: String): OpenVexBaselineResult = parseOpenVexBaseline(content, VERSION_0_2_0)
 
-private fun baselineOf(
-    content: String,
-    version: Int = 1,
-): OpenVexBaseline =
-    OpenVexBaseline(
-        formatVersion = VERSION_0_2_0,
-        id = DOCUMENT_IRI,
-        version = OpenVexDocumentVersion(version),
-        content = content,
-    )
+private fun baselineOf(version: Int = 1): OpenVexBaseline =
+    OpenVexBaseline(formatVersion = VERSION_0_2_0, id = DOCUMENT_IRI, version = OpenVexDocumentVersion(version))
 
 /** One entry affecting every release given, so each release contributes a statement. */
 private fun fileWith(releases: List<String>): VulnlogFile =
@@ -118,7 +110,7 @@ class OpenVexBaselineParserTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content, version = 3))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(version = 3))
             }
 
             test("a document without a version is the first revision") {
@@ -126,7 +118,7 @@ class OpenVexBaselineParserTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content, version = 1))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(version = 1))
             }
 
             test("a timestamp with an offset still counts as a document") {
@@ -134,7 +126,7 @@ class OpenVexBaselineParserTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf())
             }
 
             test("an older OpenVEX format version is not continued") {
@@ -251,7 +243,7 @@ class OpenVexBaselineParserTest :
 
                 val outcome = read(content)
 
-                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(content, version = Int.MAX_VALUE - 1))
+                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(version = Int.MAX_VALUE - 1))
             }
 
             test("malformed JSON is not a document") {
@@ -268,9 +260,9 @@ class OpenVexBaselineParserTest :
             test("a rerun over the same file changes nothing but the version and the clock") {
                 val file = fileWith(listOf("1.0.0"))
                 val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
-                val baseline = readBack(OpenVexEncoder.encode(first))
+                val content = OpenVexEncoder.encode(first)
 
-                val unchanged = sameOpenVexContent(baseline.content, revisionOf(file, baseline))
+                val unchanged = sameOpenVexContent(content, revisionOf(file, readBack(content)))
 
                 unchanged shouldBe true
             }
@@ -278,20 +270,19 @@ class OpenVexBaselineParserTest :
             test("an added statement is a change") {
                 val first =
                     documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
-                val baseline = readBack(OpenVexEncoder.encode(first))
+                val content = OpenVexEncoder.encode(first)
                 val grown = fileWith(listOf("1.0.0", "1.1.0"))
 
-                val unchanged = sameOpenVexContent(baseline.content, revisionOf(grown, baseline))
+                val unchanged = sameOpenVexContent(content, revisionOf(grown, readBack(content)))
 
                 unchanged shouldBe false
             }
 
             test("a baseline that cannot be parsed is a change") {
-                val baseline = baselineOf("{ not json")
                 val document =
                     documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
 
-                val unchanged = sameOpenVexContent(baseline.content, document)
+                val unchanged = sameOpenVexContent("{ not json", document)
 
                 unchanged shouldBe false
             }
@@ -307,9 +298,7 @@ class OpenVexBaselineParserTest :
                         """"@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-1111"}}], "version": 1, """ +
                         """"timestamp": "2026-04-25T00:00:00Z", "role": "Document Creator", "author": "author", """ +
                         """"@id": "$DOCUMENT_ID", "@context": "https://openvex.dev/ns/v0.2.0"}"""
-                val baseline = readBack(reordered)
-
-                val unchanged = sameOpenVexContent(baseline.content, revisionOf(file, baseline))
+                val unchanged = sameOpenVexContent(reordered, revisionOf(file, readBack(reordered)))
 
                 unchanged shouldBe true
             }
@@ -322,9 +311,7 @@ class OpenVexBaselineParserTest :
                         .encode(
                             first,
                         ).replaceFirst("\"version\": 1,", "\"version\": 1,\n  \"tooling\": \"vexctl\",")
-                val baseline = readBack(foreign)
-
-                val unchanged = sameOpenVexContent(baseline.content, revisionOf(file, baseline))
+                val unchanged = sameOpenVexContent(foreign, revisionOf(file, readBack(foreign)))
 
                 unchanged shouldBe false
             }

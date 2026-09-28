@@ -438,7 +438,6 @@ class OpenVexTest :
                     formatVersion = OpenVexFormatVersion.LATEST,
                     id = OpenVexDocumentId("https://vulnlog.dev/vex/abc"),
                     version = OpenVexDocumentVersion.FIRST,
-                    content = "",
                     statements = statements.toList(),
                 )
 
