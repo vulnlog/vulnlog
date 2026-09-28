@@ -9,11 +9,12 @@ import dev.vulnlog.lib.codec.openvex.dto.OpenVexBaselineDto
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.model.Purl
-import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.VexStatusKind
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
@@ -23,19 +24,17 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.node.ObjectNode
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
 
+/** Every revision writes these anew, so they never count as a change. */
+private val VOLATILE_FIELDS = listOf("timestamp", "version")
+
 /**
- * Parses the identity of an OpenVEX document from [content], required to be in [requiredFormatVersion].
- *
- * A file that is no OpenVEX document at all is rejected as [OpenVexBaselineProblem.NotOpenVex]. A document in another
- * format version is rejected as [OpenVexBaselineProblem.OtherFormatVersion], because continuing it would write one
- * version's identity into another version's bytes. A document whose identity cannot be continued is rejected as
- * [OpenVexBaselineProblem.InvalidIdentity]. The timestamp must parse, but it is not carried over: every revision is
- * issued anew. The statements this writer can read back come with the baseline, so an untouched statement keeps its
- * time.
+ * The timestamp must parse, but a revision is issued anew and does not take it over. A baseline statement this writer
+ * cannot read is skipped rather than failing the baseline: it only loses its carried time.
  */
 fun parseOpenVexBaseline(
     content: String,
@@ -51,63 +50,61 @@ fun parseOpenVexBaseline(
     if (declared != requiredFormatVersion.version) {
         return rejected(OpenVexBaselineProblem.OtherFormatVersion(declared, requiredFormatVersion))
     }
-    // The identity fields are read as the required version places them. A version that moves one binds here.
     return when (requiredFormatVersion) {
         OpenVexFormatVersion.VERSION_0_2_0 -> baselineOf(dto, requiredFormatVersion)
     }
 }
 
-private fun rejected(problem: OpenVexBaselineProblem): OpenVexBaselineResult = OpenVexBaselineResult.Rejected(problem)
-
 /**
- * The baseline [dto] describes, or [OpenVexBaselineProblem.InvalidIdentity] naming the first identity field that
- * cannot be continued: an `@id` that is no absolute IRI, a missing or unparsable `timestamp`, or a `version` without a
- * successor.
+ * Compared as trees, so key order and formatting do not count. A baseline written by another tool carries fields this
+ * writer does not emit and therefore always counts as changed.
  */
+fun sameOpenVexContent(
+    baselineContent: String,
+    document: OpenVexDocument,
+): Boolean {
+    val baselineTree =
+        try {
+            openVexJson.readTree(baselineContent)
+        } catch (_: JacksonException) {
+            return false
+        }
+    val documentTree = openVexJson.valueToTree<JsonNode>(OpenVexEncoder.toDto(document))
+    if (baselineTree !is ObjectNode || documentTree !is ObjectNode) return false
+    baselineTree.remove(VOLATILE_FIELDS)
+    documentTree.remove(VOLATILE_FIELDS)
+    return baselineTree == documentTree
+}
+
 private fun baselineOf(
     dto: OpenVexBaselineDto,
     formatVersion: OpenVexFormatVersion,
 ): OpenVexBaselineResult {
-    val id =
-        dto.id?.let(OpenVexDocumentId::parse)
-            ?: return invalid(OpenVexIdentityField.ID, dto.id)
+    val id = dto.id?.let(OpenVexDocumentId::parse) ?: return invalid(OpenVexIdentityField.ID, dto.id)
     val issuedAt =
-        dto.timestamp?.let(::parseTimestamp)
-            ?: return invalid(OpenVexIdentityField.TIMESTAMP, dto.timestamp)
+        dto.timestamp?.let(::parseTimestamp) ?: return invalid(OpenVexIdentityField.TIMESTAMP, dto.timestamp)
     val version =
         dto.version?.let { value ->
-            OpenVexDocumentVersion.parse(value)
-                ?: return invalid(OpenVexIdentityField.VERSION, value.toString())
+            OpenVexDocumentVersion.parse(value) ?: return invalid(OpenVexIdentityField.VERSION, value.toString())
         } ?: OpenVexDocumentVersion.FIRST
-    return OpenVexBaselineResult.Parsed(
-        OpenVexBaseline(
-            formatVersion = formatVersion,
-            id = id,
-            version = version,
-            statements = statementsOf(dto.statements, issuedAt),
-        ),
-    )
+    val statements =
+        dto.statements
+            ?.takeIf(
+                JsonNode::isArray,
+            )?.values()
+            .orEmpty()
+            .mapNotNull { statementOf(it, issuedAt) }
+    return OpenVexBaselineResult.Parsed(OpenVexBaseline(formatVersion, id, version, statements))
 }
+
+private fun rejected(problem: OpenVexBaselineProblem): OpenVexBaselineResult = OpenVexBaselineResult.Rejected(problem)
 
 private fun invalid(
     field: OpenVexIdentityField,
     value: String?,
 ): OpenVexBaselineResult = rejected(OpenVexBaselineProblem.InvalidIdentity(field, value))
 
-/**
- * The statements of [node] this writer can read back, each carrying its own time, or [issuedAt] when it inherits the
- * document's. A statement this writer would not write is skipped: nothing is matched against it.
- */
-private fun statementsOf(
-    node: JsonNode?,
-    issuedAt: Instant,
-): List<OpenVexStatement> =
-    node
-        ?.takeIf(JsonNode::isArray)
-        ?.values()
-        .orEmpty()
-        .mapNotNull { statement -> statementOf(statement, issuedAt) }
-
+/** A statement without its own timestamp inherits the document's, as the specification defines. */
 private fun statementOf(
     node: JsonNode,
     issuedAt: Instant,
@@ -135,29 +132,26 @@ private fun vulnerabilityOf(node: JsonNode): OpenVexVulnerability? {
     return OpenVexVulnerability(id, aliases.map { alias -> vulnIdOf(alias) ?: return null }, description)
 }
 
-/** The subcomponents of [product], none when it lists none, or null when one of them cannot be read. */
 private fun subcomponentsOf(product: JsonNode): List<Purl>? {
     val subcomponents = product.get("subcomponents") ?: return emptyList()
     if (!subcomponents.isArray) return null
     return subcomponents.values().map { component -> component.get("@id")?.textOrNull()?.let(::purlOf) ?: return null }
 }
 
-/** The status a statement states, with the text the status carries. The reverse of [OpenVexMapper]'s tokens. */
 private fun statusOf(node: JsonNode): VexStatus? {
     val notes = node.get("status_notes")?.textOrNull()
-    return when (node.get("status")?.textOrNull()) {
-        "under_investigation" -> VexStatus.UnderInvestigation(notes)
-        "fixed" -> VexStatus.Fixed
-        "not_affected" -> {
-            val token = node.get("justification")?.textOrNull()
-            val justification =
-                VexJustification.entries.firstOrNull { openVexJustification(it) == token } ?: return null
+    return when (node.get("status")?.textOrNull()?.let(::openVexStatusKind) ?: return null) {
+        VexStatusKind.UNDER_INVESTIGATION -> VexStatus.UnderInvestigation(notes)
+        VexStatusKind.FIXED -> VexStatus.Fixed
+        VexStatusKind.NOT_AFFECTED -> {
+            val justification = node.get("justification")?.textOrNull()?.let(::openVexJustificationOf) ?: return null
             VexStatus.NotAffected(justification, node.get("impact_statement")?.textOrNull())
         }
 
-        "affected" ->
-            VexStatus.Affected(node.get("action_statement")?.textOrNull()?.let(::remediationOf) ?: return null, notes)
-        else -> null
+        VexStatusKind.AFFECTED -> {
+            val remediation = node.get("action_statement")?.textOrNull()?.let(::openVexRemediation) ?: return null
+            VexStatus.Affected(remediation, notes)
+        }
     }
 }
 
@@ -180,7 +174,7 @@ private fun purlOf(value: String): Purl? =
         null
     }
 
-/** Accepts any RFC 3339 offset, so a document written elsewhere still counts as one. */
+/** Any RFC 3339 offset, so a document written by another tool still counts. */
 private fun parseTimestamp(value: String): Instant? =
     try {
         OffsetDateTime.parse(value).toInstant()

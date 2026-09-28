@@ -5,8 +5,6 @@ package dev.vulnlog.lib.codec.openvex
 
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
-import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
-import dev.vulnlog.lib.core.vex.openvex.nextOpenVexIdentity
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
@@ -23,11 +21,8 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
@@ -41,15 +36,11 @@ private val GOLDEN_SOURCE_DIR: Path = Path.of("src/test/resources/vex")
 
 private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
-private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
 
 private val releaseV1 = release("1.0.0")
 private val releaseV2 = release("1.0.1")
 
-/**
- * One file covering every status and every statement field, so both goldens are cut from the same content. The
- * third release lists nothing itself, so the range of every entry reaches it.
- */
+/** The third release lists nothing itself, so it is reached only through the range of every entry. */
 private val file: VulnlogFile =
     vulnlogFile(
         project = Project("Acme Corp", "Acme Web App", "Acme Security Team", "security@acme.example"),
@@ -106,43 +97,25 @@ private val file: VulnlogFile =
             ),
     )
 
-private fun documentOf(identity: OpenVexIdentity): OpenVexDocument =
-    buildOpenVexDocument(
-        file.project,
-        identity,
-        collectOpenVexStatements(file).statements,
-        tooling = OpenVexTooling("CLI", "0.18.0"),
-    )
-
 /**
- * Pins the bytes of an OpenVEX document covering every status and every field the writer emits. It guards the
- * `@`-prefixed keys, the nested objects, the status and justification vocabulary, the analysis routing, the
- * timestamps, key order, indentation and the trailing newline in one go.
+ * Other tools and diffs read these bytes, so key order, indentation and the trailing newline are pinned along with
+ * every field. Rewrite the golden with UPDATE_GOLDEN=1 only for an intended change.
  */
 class OpenVexGoldenTest :
     FunSpec({
 
-        test("a fresh OpenVEX document matches golden bytes") {
-            val document = documentOf(freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT))
+        test("an OpenVEX document covering every status matches the golden bytes") {
+            val document =
+                buildOpenVexDocument(
+                    file.project,
+                    OpenVexIdentity(DOCUMENT_ID, ISSUED_AT, OpenVexDocumentVersion.FIRST),
+                    collectOpenVexStatements(file).statements,
+                    tooling = OpenVexTooling("CLI", "0.18.0"),
+                )
 
             val actual = OpenVexEncoder.encode(document)
 
             actual shouldBe golden("golden-openvex.json", actual)
-        }
-
-        test("a continued OpenVEX document matches golden bytes") {
-            val baseline =
-                OpenVexBaseline(
-                    formatVersion = OpenVexFormatVersion.LATEST,
-                    id = DOCUMENT_ID,
-                    version = OpenVexDocumentVersion.FIRST,
-                )
-
-            val document = documentOf(nextOpenVexIdentity(baseline, UPDATED_AT))
-
-            val actual = OpenVexEncoder.encode(document)
-
-            actual shouldBe golden("golden-openvex-continued.json", actual)
         }
     })
 

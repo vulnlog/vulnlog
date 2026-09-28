@@ -14,12 +14,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
-/**
- * Copies the document a [VulnlogOpenVexTask] generated over its committed [baseline].
- *
- * Generating and updating are two tasks, so the generating task only writes under the build directory and stays
- * cacheable, while this one is the single place that writes into the source tree.
- */
+/** The only task writing into the source tree, so that [VulnlogOpenVexTask] stays cacheable. */
 @DisableCachingByDefault(because = "Copies one file into the source tree")
 abstract class VulnlogOpenVexUpdateTask : DefaultTask() {
     @get:InputFile

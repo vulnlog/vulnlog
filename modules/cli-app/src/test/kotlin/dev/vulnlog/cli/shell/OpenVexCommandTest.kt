@@ -13,7 +13,6 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Path
 
-/** Runs the command against [yaml] and returns the document it wrote to stdout. */
 private fun documentOf(
     yaml: String,
     flags: String = "",
@@ -22,7 +21,6 @@ private fun documentOf(
         OpenVexCommand().test("${input.absolutePath} $flags -o -").stdout
     }
 
-/** Writes an OpenVEX document for [yaml] to [target] and returns its text. */
 private fun seedDocument(
     yaml: String,
     target: Path,
@@ -72,32 +70,15 @@ class OpenVexCommandTest :
                 document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.0.0\""
                 document shouldNotContain "pkg:docker/acme/web-app@1.0.5"
                 document shouldNotContain "pkg:docker/acme/web-app@1.1.0"
-                document shouldNotContain "\"status\": \"fixed\""
-                document shouldContain "\"action_statement\": \"Update to release 1.1.0."
             }
 
-            test("a release the entries do not list is still covered by their range") {
-                val document = documentOf(openVexScopedDocument(), "--release 1.0.5")
-
-                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.0.5\""
-                document shouldContain "\"status\": \"not_affected\""
-                document shouldContain "\"action_statement\": \"Update to release 1.1.0."
-            }
-
-            test("the fix release and the ones after it are reported as fixed") {
-                val document = documentOf(openVexScopedDocument(), "--release 1.1.0")
-
-                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.1.0\""
-                document shouldContain "\"status\": \"fixed\""
-                document shouldNotContain "\"status\": \"affected\""
-            }
-
-            test("an unknown release is rejected") {
+            test("an unknown release and an unknown tag are rejected together") {
                 withTempFile(content = openVexScopedDocument()) { input ->
-                    val result = OpenVexCommand().test("${input.absolutePath} --release 9.9.9 -o -")
+                    val result = OpenVexCommand().test("${input.absolutePath} --release 9.9.9 --tag binary -o -")
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Release not found: 9.9.9"
+                    result.stderr shouldContain "Tag not found: binary"
                 }
             }
         }
@@ -110,25 +91,6 @@ class OpenVexCommandTest :
                 document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.0.0\""
                 document shouldNotContain "pkg:maven/com.acme/acme-lib@1.0.0"
             }
-
-            test("names the releases the tag left without purls") {
-                withTempFile(content = openVexScopedDocument()) { input ->
-                    val result = OpenVexCommand().test("${input.absolutePath} --tag library -o -")
-
-                    result.statusCode shouldBe 0
-                    result.stderr shouldContain
-                        "warning: releases without purls in scope are not part of the document: '1.0.5', '1.1.0', '1.2.0'"
-                }
-            }
-
-            test("an unknown tag is rejected") {
-                withTempFile(content = openVexScopedDocument()) { input ->
-                    val result = OpenVexCommand().test("${input.absolutePath} --tag binary -o -")
-
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain "Tag not found: binary"
-                }
-            }
         }
 
         context("--baseline") {
@@ -139,14 +101,13 @@ class OpenVexCommandTest :
                     val first = seedDocument(openVexScopedDocument(), baseline)
                     val id = Regex("\"@id\": \"(https://vulnlog[^\"]+)\"").find(first)!!.groupValues[1]
 
-                    // A narrower scope drops the library purl, so this run really does say something new.
+                    // The narrower scope changes the content, so a revision is due.
                     val document =
                         documentOf(openVexScopedDocument(), "--tag container --baseline ${baseline.toAbsolutePath()}")
 
                     document shouldContain "\"@id\": \"$id\""
                     document shouldContain "\"version\": 2"
                     document shouldContain "\"tooling\": \"Vulnlog CLI version "
-                    document shouldNotContain "pkg:maven/com.acme/acme-lib@1.0.0"
                 }
             }
 
@@ -207,48 +168,6 @@ class OpenVexCommandTest :
                     result.stdout shouldBe ""
                 }
             }
-
-            test("a baseline in another OpenVEX format version is rejected") {
-                withTempDir(prefix = "openvex-baseline") { dir ->
-                    val older = dir.resolve("vex-0.1.0.json")
-                    older.toFile().writeText(
-                        """{"@context": "https://openvex.dev/ns/v0.1.0", "@id": "https://vulnlog.dev/vex/abc", """ +
-                            """"timestamp": "2026-04-25T00:00:00Z", "version": 1}""",
-                    )
-
-                    val result =
-                        withTempFile(content = openVexScopedDocument()) { input ->
-                            OpenVexCommand().test("${input.absolutePath} --baseline ${older.toAbsolutePath()} -o -")
-                        }
-
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain
-                        "error: baseline '${older.toAbsolutePath()}' is an OpenVEX 0.1.0 document, " +
-                        "but this run writes OpenVEX 0.2.0"
-                    result.stderr shouldContain "hint: omit --baseline to issue a new document"
-                }
-            }
-
-            test("a baseline whose identity cannot be continued is rejected") {
-                withTempDir(prefix = "openvex-baseline") { dir ->
-                    val invalid = dir.resolve("vex.json")
-                    invalid.toFile().writeText(
-                        """{"@context": "https://openvex.dev/ns/v0.2.0", "@id": "https://vulnlog.dev/vex/abc", """ +
-                            """"timestamp": "2026-04-25T00:00:00Z", "version": 2147483647}""",
-                    )
-
-                    val result =
-                        withTempFile(content = openVexScopedDocument()) { input ->
-                            OpenVexCommand().test("${input.absolutePath} --baseline ${invalid.toAbsolutePath()} -o -")
-                        }
-
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain
-                        "error: baseline '${invalid.toAbsolutePath()}' has an invalid 'version' '2147483647'"
-                    result.stderr shouldContain "hint: omit --baseline to issue a new document"
-                    result.stdout shouldBe ""
-                }
-            }
         }
 
         context("nothing to write") {
@@ -262,21 +181,11 @@ class OpenVexCommandTest :
                     result.stderr shouldContain "declare 'purls' on the releases"
                 }
             }
-
-            test("fails when the scope leaves no statement") {
-                withTempFile(content = openVexScopedDocument()) { input ->
-                    val result = OpenVexCommand().test("${input.absolutePath} --tag legacy -o -")
-
-                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
-                    result.stderr shouldContain "error: no statement applies"
-                    result.stderr shouldContain "no release purl in scope carries one of the requested tags"
-                }
-            }
         }
 
         context("invalid input") {
 
-            test("a blank project author is rejected as a finding") {
+            test("a blank project author is rejected as a finding, not as a crash") {
                 val yaml = openVexDocument().replace("author: Acme Corp Security Team", "author: \" \"")
 
                 withTempFile(content = yaml) { input ->

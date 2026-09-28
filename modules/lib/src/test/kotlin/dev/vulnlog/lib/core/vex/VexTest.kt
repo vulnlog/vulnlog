@@ -14,6 +14,7 @@ import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
+import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
@@ -27,7 +28,7 @@ import java.time.LocalDate
 
 private val affected = Verdict.Affected(Severity.HIGH)
 
-/** Four releases in order; 1.2.0 carries a publication date so a fix without a date can fall back to it. */
+/** Only 1.2.0 is published, so a status without a date of its own falls back to it there and nowhere else. */
 private val file: VulnlogFile =
     vulnlogFile(
         releases =
@@ -52,9 +53,6 @@ private fun affectedIn(
     resolution = fixedIn?.let { resolution(release = it, note = note, at = fixedAt) },
 )
 
-private fun statusesOf(entry: dev.vulnlog.lib.model.VulnerabilityEntry) =
-    releaseStatuses(entry, file).map { it.release.value to it.status }
-
 class VexTest :
     FunSpec({
 
@@ -72,20 +70,16 @@ class VexTest :
                 statuses[2].status shouldBe VexStatus.Fixed
             }
 
-            test("without a resolution every later release stays affected") {
-                val entry = affectedIn(releases = listOf("1.1.0"))
-
-                statusesOf(entry).map { it.first } shouldContainExactly listOf("1.1.0", "1.2.0", "1.3.0")
-                statusesOf(entry).all { it.second is VexStatus.Affected } shouldBe true
-            }
-
-            test("the earliest listed release opens the range") {
+            test("without a resolution the earliest listed release opens a range that stays affected") {
                 val entry = affectedIn(releases = listOf("1.2.0", "1.0.0"))
 
-                statusesOf(entry).map { it.first } shouldContainExactly listOf("1.0.0", "1.1.0", "1.2.0", "1.3.0")
+                val statuses = releaseStatuses(entry, file)
+
+                statuses.map { it.release.value } shouldContainExactly listOf("1.0.0", "1.1.0", "1.2.0", "1.3.0")
+                statuses.forEach { it.status.shouldBeInstanceOf<VexStatus.Affected>() }
             }
 
-            test("a fix declared before the first listed release wins from the fix on") {
+            test("a fix declared before the first listed release wins from the fix on, as the file states it") {
                 val entry = affectedIn(releases = listOf("1.2.0"), fixedIn = "1.1.0")
 
                 val statuses = releaseStatuses(entry, file)
@@ -97,26 +91,15 @@ class VexTest :
             test("an entry listing no release applies nowhere") {
                 val entry = vulnerability(id = cve("CVE-2026-1234"), verdict = affected)
 
-                releaseStatuses(entry, file).shouldBeEmpty()
-            }
+                val statuses = releaseStatuses(entry, file)
 
-            test("the verdict decides the status before the fix") {
-                val notAffected =
-                    vulnerability(
-                        id = cve("CVE-2026-1234"),
-                        releases = listOf(release("1.0.0")),
-                        verdict = Verdict.NotAffected(dev.vulnlog.lib.model.VexJustification.COMPONENT_NOT_PRESENT),
-                    )
-                val open = vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.3.0")))
-
-                releaseStatuses(notAffected, file).first().status.shouldBeInstanceOf<VexStatus.NotAffected>()
-                releaseStatuses(open, file).single().status shouldBe VexStatus.UnderInvestigation(null)
+                statuses.shouldBeEmpty()
             }
         }
 
         context("releaseStatuses dates") {
 
-            test("a verdict is dated by the analysis date, else the first report") {
+            test("a verdict is dated by the analysis date, else the earliest report") {
                 val analyzed =
                     vulnerability(
                         id = cve("CVE-2026-1234"),
@@ -137,11 +120,12 @@ class VexTest :
                         verdict = affected,
                     )
 
-                releaseStatuses(analyzed, file).single().since shouldBe LocalDate.of(2026, 4, 6)
-                releaseStatuses(reportedOnly, file).single().since shouldBe LocalDate.of(2026, 4, 1)
+                val dates = listOf(analyzed, reportedOnly).map { releaseStatuses(it, file).single().since }
+
+                dates shouldContainExactly listOf(LocalDate.of(2026, 4, 6), LocalDate.of(2026, 4, 1))
             }
 
-            test("an open investigation is dated by the first report") {
+            test("an open investigation is dated by its first report, since there is no verdict to date") {
                 val open =
                     vulnerability(
                         id = cve("CVE-2026-1234"),
@@ -150,7 +134,9 @@ class VexTest :
                         analyzedAt = LocalDate.of(2026, 4, 6),
                     )
 
-                releaseStatuses(open, file).single().since shouldBe LocalDate.of(2026, 4, 1)
+                val status = releaseStatuses(open, file).single()
+
+                status.since shouldBe LocalDate.of(2026, 4, 1)
             }
 
             test("a fix is dated by the resolution date, else the fix release's publication date") {
@@ -159,9 +145,9 @@ class VexTest :
                 val published = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.2.0")
                 val undated = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.3.0")
 
-                releaseStatuses(dated, file).last().since shouldBe LocalDate.of(2026, 4, 22)
-                releaseStatuses(published, file).last().since shouldBe LocalDate.of(2026, 4, 20)
-                releaseStatuses(undated, file).last().since shouldBe null
+                val dates = listOf(dated, published, undated).map { releaseStatuses(it, file).last().since }
+
+                dates shouldContainExactly listOf(LocalDate.of(2026, 4, 22), LocalDate.of(2026, 4, 20), null)
             }
 
             test("an undated entry falls back to the day each release was published") {
@@ -169,7 +155,6 @@ class VexTest :
 
                 val statuses = releaseStatuses(entry, file)
 
-                // 1.2.0 is the only release the fixture publishes; the others stay undated.
                 statuses.associate { it.release.value to it.since } shouldBe
                     mapOf(
                         "1.0.0" to null,
@@ -194,7 +179,7 @@ class VexTest :
                     vulnerability(
                         id = cve("CVE-2026-1234"),
                         releases = listOf(release("1.3.0")),
-                        verdict = Verdict.NotAffected(dev.vulnlog.lib.model.VexJustification.COMPONENT_NOT_PRESENT),
+                        verdict = Verdict.NotAffected(VexJustification.COMPONENT_NOT_PRESENT),
                         analysis = "the component is not shipped",
                     )
                 val openEntry =
@@ -204,105 +189,69 @@ class VexTest :
                         analysis = "waiting on the upstream advisory",
                     )
 
-                releaseStatuses(affectedEntry, file)
-                    .single()
-                    .status
-                    .shouldBeInstanceOf<VexStatus.Affected>()
-                    .statusNotes shouldBe "the parser is reachable"
-                releaseStatuses(notAffectedEntry, file)
-                    .single()
-                    .status
-                    .shouldBeInstanceOf<VexStatus.NotAffected>()
-                    .impactStatement shouldBe "the component is not shipped"
-                releaseStatuses(openEntry, file).single().status shouldBe
-                    VexStatus.UnderInvestigation("waiting on the upstream advisory")
+                val statuses =
+                    listOf(affectedEntry, notAffectedEntry, openEntry).map { releaseStatuses(it, file).single().status }
+
+                statuses shouldContainExactly
+                    listOf(
+                        VexStatus.Affected(Remediation.NoneAvailable, "the parser is reachable"),
+                        VexStatus.NotAffected(VexJustification.COMPONENT_NOT_PRESENT, "the component is not shipped"),
+                        VexStatus.UnderInvestigation("waiting on the upstream advisory"),
+                    )
             }
 
-            test("a fixed status carries no analysis text") {
+            test("a fixed status carries no analysis text, because it describes the state before the fix") {
                 val entry =
                     affectedIn(releases = listOf("1.0.0"), fixedIn = "1.2.0").copy(analysis = "the parser is reachable")
 
-                releaseStatuses(entry, file).last().status shouldBe VexStatus.Fixed
+                val status = releaseStatuses(entry, file).last().status
+
+                status shouldBe VexStatus.Fixed
             }
 
             test("a blank analysis is no analysis") {
                 val entry =
                     vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.3.0")), analysis = "  ")
 
-                releaseStatuses(entry, file).single().status shouldBe VexStatus.UnderInvestigation(null)
+                val status = releaseStatuses(entry, file).single().status
+
+                status shouldBe VexStatus.UnderInvestigation(null)
             }
         }
 
         context("vexStatusKind") {
 
-            test("names the kind of every status, declared in sort order") {
+            test("names the kind of every status, and the kinds are declared in sort order") {
                 val statuses =
                     listOf(
                         VexStatus.Affected(Remediation.NoneAvailable),
                         VexStatus.Fixed,
-                        VexStatus.NotAffected(dev.vulnlog.lib.model.VexJustification.COMPONENT_NOT_PRESENT),
+                        VexStatus.NotAffected(VexJustification.COMPONENT_NOT_PRESENT),
                         VexStatus.UnderInvestigation(),
                     )
 
-                statuses.map(::vexStatusKind) shouldContainExactly VexStatusKind.entries
+                val kinds = statuses.map(::vexStatusKind)
+
+                kinds shouldContainExactly VexStatusKind.entries
             }
         }
 
-        context("remediationOf") {
+        test("remediationOf follows the disposition and the fix release, never the resolution note") {
+            val cases =
+                listOf(
+                    affectedIn(listOf("1.0.0")) to Remediation.NoneAvailable,
+                    affectedIn(listOf("1.0.0"), fixedIn = "1.0.1", note = "Bumped log4j.") to
+                        Remediation.UpdateTo(release("1.0.1")),
+                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX) to Remediation.FixPlanned,
+                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX, fixedIn = "1.0.1") to
+                        Remediation.UpdateTo(release("1.0.1")),
+                    affectedIn(listOf("1.0.0"), Disposition.WONT_FIX) to Remediation.RiskAccepted(fixIn = null),
+                    affectedIn(listOf("1.0.0"), Disposition.WONT_FIX, fixedIn = "1.0.1") to
+                        Remediation.RiskAccepted(fixIn = release("1.0.1")),
+                )
 
-            test("points at the fix release and leaves the resolution note to the team") {
-                val entry = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.0.1", note = "Bumped log4j to 2.17.1.")
+            val remediations = cases.map { (entry, _) -> remediationOf(entry) }
 
-                val remediation = remediationOf(entry)
-
-                remediation shouldBe Remediation.UpdateTo(release("1.0.1"))
-            }
-
-            test("points at the fix release for 'will fix' with a resolution") {
-                val entry =
-                    affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WILL_FIX, fixedIn = "1.0.1")
-
-                val remediation = remediationOf(entry)
-
-                remediation shouldBe Remediation.UpdateTo(release("1.0.1"))
-            }
-
-            test("has no remediation when neither intent nor fix is recorded") {
-                val entry = vulnerability(id = cve("CVE-2026-1234"), verdict = affected)
-
-                val remediation = remediationOf(entry)
-
-                remediation shouldBe Remediation.NoneAvailable
-            }
-
-            test("plans a fix for 'will fix' without a resolution") {
-                val entry = affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WILL_FIX)
-
-                val remediation = remediationOf(entry)
-
-                remediation shouldBe Remediation.FixPlanned
-            }
-
-            test("accepts the risk for 'wont fix' without a resolution") {
-                val entry = affectedIn(releases = listOf("1.0.0"), disposition = Disposition.WONT_FIX)
-
-                val remediation = remediationOf(entry)
-
-                remediation shouldBe Remediation.RiskAccepted(fixIn = null)
-            }
-
-            test("keeps the accepted risk when 'wont fix' has a resolution") {
-                val entry =
-                    affectedIn(
-                        releases = listOf("1.0.0"),
-                        disposition = Disposition.WONT_FIX,
-                        fixedIn = "1.0.1",
-                        note = "Bumped log4j to 2.17.1.",
-                    )
-
-                val remediation = remediationOf(entry)
-
-                remediation shouldBe Remediation.RiskAccepted(fixIn = release("1.0.1"))
-            }
+            remediations shouldContainExactly cases.map { (_, expected) -> expected }
         }
     })

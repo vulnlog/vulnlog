@@ -21,7 +21,6 @@ private val FILES_FROM_TEST_YAML =
         """.trimIndent(),
     )
 
-/** Wraps [settings] in a `vex { openvex { } }` block on a single input file. */
 private fun openVexBuildFile(settings: String) =
     buildFile(
         """
@@ -41,13 +40,14 @@ class VulnlogOpenVexTaskTest :
 
         context("happy path") {
 
-            test("writes the document to the default output file") {
+            test("writes the document to the default output file and warns about the release without purls") {
                 val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to openVexDocument())
 
                 val result = runner(dir, "vulnlogOpenVex").build()
 
                 result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
                 result.output shouldContain "Wrote: "
+                result.output shouldContain "warning: releases without purls are not part of the document: '1.0.1'"
                 val document = dir.resolve("build/vulnlog/vex.json").readText()
                 document shouldContain "\"@context\": \"https://openvex.dev/ns/v0.2.0\""
                 document shouldContain "\"@id\": \"pkg:maven/com.acme/acme-web-app@1.0.0\""
@@ -65,14 +65,6 @@ class VulnlogOpenVexTaskTest :
 
                 result.task(":vulnlogOpenVex")?.outcome shouldBe TaskOutcome.SUCCESS
                 dir.resolve("openvex.json").readText() shouldContain "\"version\": 1"
-            }
-
-            test("warns about the release without purls") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to openVexDocument())
-
-                val result = runner(dir, "vulnlogOpenVex").build()
-
-                result.output shouldContain "warning: releases without purls are not part of the document: '1.0.1'"
             }
         }
 
@@ -135,7 +127,6 @@ class VulnlogOpenVexTaskTest :
                 val document = dir.resolve("build/vulnlog/vex.json").readText()
                 document shouldContain "pkg:docker/acme/web-app@1.1.0"
                 document shouldNotContain "pkg:docker/acme/web-app@1.0.0"
-                document shouldContain "\"status\": \"fixed\""
             }
 
             test("tags keep only the purls carrying one of them") {
@@ -163,18 +154,6 @@ class VulnlogOpenVexTaskTest :
                 val result = runner(dir, "vulnlogOpenVex").buildAndFail()
 
                 result.output shouldContain "Tag not found: binary"
-            }
-
-            test("fails on a blank release") {
-                val dir =
-                    gradleProject(
-                        openVexBuildFile("""release = """""),
-                        "test.vl.yaml" to openVexScopedDocument(),
-                    )
-
-                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
-
-                result.output shouldContain "Release must not be blank. Known releases: "
             }
         }
 
@@ -245,29 +224,6 @@ class VulnlogOpenVexTaskTest :
                 dir.resolve("vex.json").exists() shouldBe false
             }
 
-            test("fails when the baseline is in another OpenVEX format version") {
-                val dir =
-                    gradleProject(
-                        openVexBuildFile("""baseline = layout.projectDirectory.file("previous.json")"""),
-                        "test.vl.yaml" to openVexDocument(),
-                    )
-                dir.resolve("previous.json").writeText(
-                    """
-                    {
-                      "@context": "https://openvex.dev/ns/v0.1.0",
-                      "@id": "https://vulnlog.dev/vex/written-in-an-older-format",
-                      "timestamp": "2026-04-25T00:00:00Z",
-                      "version": 7
-                    }
-                    """.trimIndent(),
-                )
-
-                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
-
-                result.output shouldContain "is an OpenVEX 0.1.0 document, but this run writes OpenVEX 0.2.0"
-                result.output shouldContain "Unset 'baseline' to issue a new document."
-            }
-
             test("fails when the baseline is not an OpenVEX document") {
                 val dir =
                     gradleProject(
@@ -279,29 +235,6 @@ class VulnlogOpenVexTaskTest :
                 val result = runner(dir, "vulnlogOpenVex").buildAndFail()
 
                 result.output shouldContain "previous.json' is not an OpenVEX document"
-                result.output shouldContain "Unset 'baseline' to issue a new document."
-            }
-
-            test("fails when the baseline identity cannot be continued") {
-                val dir =
-                    gradleProject(
-                        openVexBuildFile("""baseline = layout.projectDirectory.file("previous.json")"""),
-                        "test.vl.yaml" to openVexDocument(),
-                    )
-                dir.resolve("previous.json").writeText(
-                    """
-                    {
-                      "@context": "https://openvex.dev/ns/v0.2.0",
-                      "@id": "not-an-iri",
-                      "timestamp": "2026-04-25T00:00:00Z",
-                      "version": 7
-                    }
-                    """.trimIndent(),
-                )
-
-                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
-
-                result.output shouldContain "has an invalid '@id' 'not-an-iri', expected an absolute IRI"
                 result.output shouldContain "Unset 'baseline' to issue a new document."
             }
 

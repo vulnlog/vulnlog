@@ -5,9 +5,7 @@ package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
-import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
-import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
@@ -16,21 +14,15 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
-import java.time.Instant
 
-private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
-private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
-
-/** One anchoring release, one without purls, and one entry per way of being left out. */
 private val file =
     vulnlogFile(
         releases =
@@ -46,7 +38,6 @@ private val file =
             ),
     )
 
-/** Two releases whose purls carry different tags, so a tag scope strips one release bare. */
 private val taggedFile =
     vulnlogFile(
         releases =
@@ -67,171 +58,111 @@ private val taggedFile =
 class OpenVexMessagesTest :
     FunSpec({
 
-        context("renderOpenVexScope") {
+        context("renderOpenVexReport") {
 
-            test("states what each active dimension resolved to") {
+            test("reports the scope, what is left out, the anchors and the counts, in print order") {
                 val scope = OpenVexScope(releases = setOf(release("1.0.0")), tags = setOf(tag("container")))
+                val collection = collectOpenVexStatements(taggedFile, scope)
+                val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
 
-                renderOpenVexScope(scope) shouldContainExactly
-                    listOf("release scope: 1.0.0", "tag scope matched tags: container")
-            }
-
-            test("is silent without a scope") {
-                renderOpenVexScope(OpenVexScope()) shouldContainExactly emptyList()
-            }
-        }
-
-        context("renderOpenVexProducts") {
-
-            test("names each anchoring release with its purl count") {
-                val line = renderOpenVexProducts(collectOpenVexStatements(file))
-
-                line shouldBe "anchored on 1 release with purls: '1.0.0' (1 purl)"
-            }
-
-            test("is silent when no release anchors") {
-                val line = renderOpenVexProducts(collectOpenVexStatements(vulnlogFile()))
-
-                line.shouldBeNull()
-            }
-        }
-
-        context("renderOpenVexSkippedReleases") {
-
-            test("names the releases without purls") {
-                val line = renderOpenVexSkippedReleases(collectOpenVexStatements(file))
-
-                line shouldBe "releases without purls are not part of the document: '1.0.1'"
-            }
-
-            test("names the scope when a tag stripped the release bare") {
-                val scope = OpenVexScope(tags = setOf(tag("container")))
-
-                val line = renderOpenVexSkippedReleases(collectOpenVexStatements(taggedFile, scope))
-
-                line shouldBe "releases without purls in scope are not part of the document: '1.0.1'"
-            }
-
-            test("is silent when every release anchors") {
-                val line = renderOpenVexSkippedReleases(collectOpenVexStatements(taggedFile))
-
-                line.shouldBeNull()
-            }
-        }
-
-        context("renderOpenVexSkippedEntries") {
-
-            test("states why each entry is missing, sorted by id") {
-                val lines = renderOpenVexSkippedEntries(collectOpenVexStatements(file))
+                val lines = renderOpenVexReport(outcome)
 
                 lines shouldContainExactly
                     listOf(
-                        "skipped CVE-2026-2222: no release it applies to declares purls in scope",
-                        "skipped CVE-2026-3333: it references no release",
-                    )
-            }
-        }
-
-        context("document lines") {
-
-            val document =
-                buildOpenVexDocument(
-                    file.project,
-                    freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT),
-                    collectOpenVexStatements(file).statements,
-                )
-
-            test("renderOpenVexStatementCounts breaks the total down by status") {
-                renderOpenVexStatementCounts(document) shouldBe "collected 1 statement: 1 under_investigation"
-            }
-
-            test("renderOpenVexWritten names the target, the format and the version") {
-                renderOpenVexWritten("vex.json", document) shouldBe
-                    "wrote vex.json: openvex format, version 1, 1 statement"
-            }
-        }
-
-        context("renderOpenVexEmptyHint") {
-
-            test("names what to change for every reason") {
-                OpenVexEmptyReason.entries.map(::renderOpenVexEmptyHint) shouldContainExactly
-                    listOf(
-                        "declare 'purls' on the releases you want the document to cover",
-                        "no release purl in scope carries one of the requested tags",
-                        "no vulnerability entry applies to the release in scope",
-                        "no vulnerability entry references a release that declares purls",
-                    )
-            }
-        }
-
-        context("renderOpenVexReport") {
-
-            val collection = collectOpenVexStatements(taggedFile, OpenVexScope(tags = setOf(tag("container"))))
-            val document =
-                buildOpenVexDocument(
-                    taggedFile.project,
-                    freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT),
-                    collection.statements,
-                )
-
-            test("reports the scope, what is left out, the anchors and the counts, in print order") {
-                val outcome = OpenVexOutcome.Revised(collection, document, content = "")
-
-                renderOpenVexReport(outcome) shouldContainExactly
-                    listOf(
+                        OpenVexLine.Verbose("release scope: 1.0.0"),
                         OpenVexLine.Verbose("tag scope matched tags: container"),
-                        OpenVexLine.Warning("releases without purls in scope are not part of the document: '1.0.1'"),
                         OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
                         OpenVexLine.Verbose("collected 1 statement: 1 under_investigation"),
                     )
             }
 
-            test("reports no counts when no statement applies") {
+            test("warns about releases without purls and states why each entry is left out") {
+                val collection = collectOpenVexStatements(file)
+                val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
+
+                val lines = renderOpenVexReport(outcome)
+
+                lines shouldContainExactly
+                    listOf(
+                        OpenVexLine.Warning("releases without purls are not part of the document: '1.0.1'"),
+                        OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
+                        OpenVexLine.Debug("skipped CVE-2026-2222: no release it applies to declares purls in scope"),
+                        OpenVexLine.Debug("skipped CVE-2026-3333: it references no release"),
+                        OpenVexLine.Verbose("collected 1 statement: 1 under_investigation"),
+                    )
+            }
+
+            test("reports no count when no statement applies, and blames the scope for bare releases") {
+                val collection = collectOpenVexStatements(taggedFile, OpenVexScope(tags = setOf(tag("binary"))))
                 val outcome = OpenVexOutcome.NoStatementApplies(collection, OpenVexEmptyReason.NO_PURL_CARRIES_TAG)
 
-                renderOpenVexReport(outcome).none { it.text.startsWith("collected") } shouldBe true
+                val lines = renderOpenVexReport(outcome)
+
+                lines shouldContainExactly
+                    listOf(
+                        OpenVexLine.Verbose("tag scope matched tags: binary"),
+                        OpenVexLine.Warning(
+                            "releases without purls in scope are not part of the document: '1.0.0', '1.0.1'",
+                        ),
+                        OpenVexLine.Debug("skipped CVE-2026-1111: no release it applies to declares purls in scope"),
+                    )
             }
 
             test("reports nothing for a run rejected before it collected") {
-                renderOpenVexReport(OpenVexOutcome.BaselineRejected(OpenVexBaselineProblem.NotOpenVex)) shouldBe
-                    emptyList()
-                renderOpenVexReport(FilterRejected(emptyList())) shouldBe emptyList()
+                val outcomes =
+                    listOf(
+                        OpenVexOutcome.BaselineRejected(OpenVexBaselineProblem.NotOpenVex),
+                        FilterRejected(emptyList()),
+                    )
+
+                val lines = outcomes.flatMap(::renderOpenVexReport)
+
+                lines shouldBe emptyList()
             }
         }
 
-        context("renderOpenVexBaselineProblem") {
+        test("renderOpenVexWritten names the target, the format, the version and the count") {
+            val collection = collectOpenVexStatements(file)
+            val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion(3), content = "")
 
-            test("names a file that is no OpenVEX document") {
-                renderOpenVexBaselineProblem("vex.json", OpenVexBaselineProblem.NotOpenVex) shouldBe
-                    "baseline 'vex.json' is not an OpenVEX document"
-            }
+            val line = renderOpenVexWritten("vex.json", outcome)
 
-            test("names the version the baseline declares against the one the run writes") {
-                val problem = OpenVexBaselineProblem.OtherFormatVersion("0.1.0", OpenVexFormatVersion.VERSION_0_2_0)
+            line shouldBe "wrote vex.json: openvex format, version 3, 1 statement"
+        }
 
-                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
-                    "baseline 'vex.json' is an OpenVEX 0.1.0 document, but this run writes OpenVEX 0.2.0"
-            }
+        test("renderOpenVexEmptyHint names what to change for every reason") {
+            val reasons = OpenVexEmptyReason.entries
 
-            test("names the invalid value and what it has to be") {
-                val problem = OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, "vex-1")
+            val hints = reasons.map(::renderOpenVexEmptyHint)
 
-                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
-                    "baseline 'vex.json' has an invalid '@id' 'vex-1', expected an absolute IRI"
-            }
+            hints shouldContainExactly
+                listOf(
+                    "declare 'purls' on the releases you want the document to cover",
+                    "no release purl in scope carries one of the requested tags",
+                    "no vulnerability entry applies to the release in scope",
+                    "no vulnerability entry references a release that declares purls",
+                )
+        }
 
-            test("names a missing field") {
-                val problem = OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null)
+        test("renderOpenVexBaselineProblem names the problem and what the field has to be") {
+            val problems =
+                listOf(
+                    OpenVexBaselineProblem.NotOpenVex,
+                    OpenVexBaselineProblem.OtherFormatVersion("0.1.0", OpenVexFormatVersion.VERSION_0_2_0),
+                    OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, "vex-1"),
+                    OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null),
+                    OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, "0"),
+                )
 
-                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
-                    "baseline 'vex.json' has no 'timestamp', expected an RFC 3339 timestamp"
-            }
+            val messages = problems.map { renderOpenVexBaselineProblem("vex.json", it) }
 
-            test("names the range a version has to be in") {
-                val problem = OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, "0")
-
-                renderOpenVexBaselineProblem("vex.json", problem) shouldBe
-                    "baseline 'vex.json' has an invalid 'version' '0', expected a whole number from 1 to 2147483646"
-            }
+            messages shouldContainExactly
+                listOf(
+                    "baseline 'vex.json' is not an OpenVEX document",
+                    "baseline 'vex.json' is an OpenVEX 0.1.0 document, but this run writes OpenVEX 0.2.0",
+                    "baseline 'vex.json' has an invalid '@id' 'vex-1', expected an absolute IRI",
+                    "baseline 'vex.json' has no 'timestamp', expected an RFC 3339 timestamp",
+                    "baseline 'vex.json' has an invalid 'version' '0', expected a whole number from 1 to 2147483646",
+                )
         }
     })

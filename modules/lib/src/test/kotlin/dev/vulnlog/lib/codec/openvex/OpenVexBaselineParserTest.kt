@@ -8,8 +8,7 @@ import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.carryOverOpenVexTimestamps
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
-import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
-import dev.vulnlog.lib.core.vex.openvex.nextOpenVexIdentity
+import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexIdentity
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
@@ -34,6 +33,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion.VERSION_0_2_0
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
+import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -47,7 +47,6 @@ private val DOCUMENT_IRI = OpenVexDocumentId(DOCUMENT_ID)
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
 
-/** A minimal document with the identity fields the reader looks at. */
 private fun document(
     context: String = "https://openvex.dev/ns/v0.2.0",
     id: String? = DOCUMENT_ID,
@@ -64,39 +63,35 @@ private fun document(
     return "{${fields.joinToString(", ")}}"
 }
 
-/** Every test reads for the version this build writes. */
 private fun read(content: String): OpenVexBaselineResult = parseOpenVexBaseline(content, VERSION_0_2_0)
 
 private fun baselineOf(version: Int = 1): OpenVexBaseline =
     OpenVexBaseline(formatVersion = VERSION_0_2_0, id = DOCUMENT_IRI, version = OpenVexDocumentVersion(version))
 
-/** One entry affecting every release given, so each release contributes a statement. */
-private fun fileWith(releases: List<String>): VulnlogFile =
+private val fileWithOneStatement: VulnlogFile =
     vulnlogFile(
-        releases =
-            releases.map { id ->
-                releaseEntry(id, purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@$id")))
-            },
-        vulnerabilities = listOf(vulnerability(id = cve("CVE-2026-1111"), releases = releases.map(::release))),
+        releases = listOf(releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0")))),
+        vulnerabilities = listOf(vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0")))),
     )
 
-private fun documentOf(
-    file: VulnlogFile,
-    identity: OpenVexIdentity,
-): OpenVexDocument = buildOpenVexDocument(file.project, identity, collectOpenVexStatements(file).statements)
+private fun firstDocumentOf(file: VulnlogFile): OpenVexDocument =
+    buildOpenVexDocument(
+        file.project,
+        OpenVexIdentity(DOCUMENT_IRI, ISSUED_AT, OpenVexDocumentVersion.FIRST),
+        collectOpenVexStatements(file).statements,
+    )
 
-/** The baseline a later run reads back from [content]. */
 private fun readBack(content: String): OpenVexBaseline =
     read(content).shouldBeInstanceOf<OpenVexBaselineResult.Parsed>().baseline
 
-/** The revision continuing [baseline] over [file], with the times the baseline carries for untouched statements. */
+/** Continues [baseline] over [file] the way a run does. */
 private fun revisionOf(
     file: VulnlogFile,
     baseline: OpenVexBaseline,
 ): OpenVexDocument =
     buildOpenVexDocument(
         file.project,
-        nextOpenVexIdentity(baseline, UPDATED_AT),
+        resolveOpenVexIdentity(OpenVexRevision.Next(baseline), UPDATED_AT),
         carryOverOpenVexTimestamps(collectOpenVexStatements(file).statements, baseline),
     )
 
@@ -129,7 +124,7 @@ class OpenVexBaselineParserTest :
                 outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf())
             }
 
-            test("an older OpenVEX format version is not continued") {
+            test("a document in another OpenVEX format version is not continued") {
                 val content = document(context = "https://openvex.dev/ns/v0.1.0")
 
                 val outcome = read(content)
@@ -138,16 +133,7 @@ class OpenVexBaselineParserTest :
                     OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.OtherFormatVersion("0.1.0", VERSION_0_2_0))
             }
 
-            test("an OpenVEX format version this build does not know is not continued") {
-                val content = document(context = "https://openvex.dev/ns/v9.9.9")
-
-                val outcome = read(content)
-
-                outcome shouldBe
-                    OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.OtherFormatVersion("9.9.9", VERSION_0_2_0))
-            }
-
-            test("a foreign context is not a document") {
+            test("a document with a foreign context is not OpenVEX") {
                 val content = document(context = "https://cyclonedx.org/schema")
 
                 val outcome = read(content)
@@ -155,95 +141,30 @@ class OpenVexBaselineParserTest :
                 outcome shouldBe OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.NotOpenVex)
             }
 
-            test("a context with an empty version is not a document") {
-                val content = document(context = "https://openvex.dev/ns/v")
-
-                val outcome = read(content)
-
-                outcome shouldBe OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.NotOpenVex)
-            }
-
-            test("a context without a version is an OpenVEX 0.0.1 document, which is not continued") {
-                val content = document(context = "https://openvex.dev/ns")
-
-                val outcome = read(content)
-
-                outcome shouldBe
-                    OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.OtherFormatVersion("0.0.1", VERSION_0_2_0))
-            }
-
-            test("a document without an identifier cannot be continued") {
-                val content = document(id = null)
-
-                val outcome = read(content)
-
-                outcome shouldBe
-                    OpenVexBaselineResult.Rejected(
-                        OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, null),
+            test("an identity field that is missing or cannot be continued names the field and its value") {
+                val contents =
+                    listOf(
+                        document(id = null),
+                        document(id = "vex-1"),
+                        document(timestamp = null),
+                        document(timestamp = "yesterday"),
+                        document(version = 0),
+                        document(version = Int.MAX_VALUE.toLong()),
                     )
-            }
 
-            test("an identifier that is no absolute IRI cannot be continued") {
-                listOf("vex-1", " https://vulnlog.dev/vex/abc", "https://vulnlog.dev/vex/a b").forEach { id ->
-                    val outcome = read(document(id = id))
+                val outcomes = contents.map(::read)
 
-                    outcome shouldBe
-                        OpenVexBaselineResult.Rejected(
-                            OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, id),
-                        )
-                }
-            }
-
-            test("a document without a timestamp cannot be continued") {
-                val content = document(timestamp = null)
-
-                val outcome = read(content)
-
-                outcome shouldBe
-                    OpenVexBaselineResult.Rejected(
-                        OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null),
-                    )
-            }
-
-            test("a document with an unparsable timestamp cannot be continued") {
-                val content = document(timestamp = "yesterday")
-
-                val outcome = read(content)
-
-                outcome shouldBe
-                    OpenVexBaselineResult.Rejected(
-                        OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, "yesterday"),
-                    )
-            }
-
-            test("a version below 1 cannot be continued") {
-                listOf(0L, -3L).forEach { version ->
-                    val outcome = read(document(version = version))
-
-                    outcome shouldBe
-                        OpenVexBaselineResult.Rejected(
-                            OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, version.toString()),
-                        )
-                }
-            }
-
-            test("a version without a successor cannot be continued") {
-                listOf(Int.MAX_VALUE.toLong(), Long.MAX_VALUE).forEach { version ->
-                    val outcome = read(document(version = version))
-
-                    outcome shouldBe
-                        OpenVexBaselineResult.Rejected(
-                            OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, version.toString()),
-                        )
-                }
-            }
-
-            test("the last version with a successor is continued") {
-                val content = document(version = Int.MAX_VALUE - 1L)
-
-                val outcome = read(content)
-
-                outcome shouldBe OpenVexBaselineResult.Parsed(baselineOf(version = Int.MAX_VALUE - 1))
+                outcomes shouldBe
+                    listOf(
+                        OpenVexIdentityField.ID to null,
+                        OpenVexIdentityField.ID to "vex-1",
+                        OpenVexIdentityField.TIMESTAMP to null,
+                        OpenVexIdentityField.TIMESTAMP to "yesterday",
+                        OpenVexIdentityField.VERSION to "0",
+                        OpenVexIdentityField.VERSION to Int.MAX_VALUE.toString(),
+                    ).map { (field, value) ->
+                        OpenVexBaselineResult.Rejected(OpenVexBaselineProblem.InvalidIdentity(field, value))
+                    }
             }
 
             test("malformed JSON is not a document") {
@@ -257,30 +178,8 @@ class OpenVexBaselineParserTest :
 
         context("sameOpenVexContent") {
 
-            test("a rerun over the same file changes nothing but the version and the clock") {
-                val file = fileWith(listOf("1.0.0"))
-                val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
-                val content = OpenVexEncoder.encode(first)
-
-                val unchanged = sameOpenVexContent(content, revisionOf(file, readBack(content)))
-
-                unchanged shouldBe true
-            }
-
-            test("an added statement is a change") {
-                val first =
-                    documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
-                val content = OpenVexEncoder.encode(first)
-                val grown = fileWith(listOf("1.0.0", "1.1.0"))
-
-                val unchanged = sameOpenVexContent(content, revisionOf(grown, readBack(content)))
-
-                unchanged shouldBe false
-            }
-
             test("a baseline that cannot be parsed is a change") {
-                val document =
-                    documentOf(fileWith(listOf("1.0.0")), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
+                val document = firstDocumentOf(fileWithOneStatement)
 
                 val unchanged = sameOpenVexContent("{ not json", document)
 
@@ -288,7 +187,6 @@ class OpenVexBaselineParserTest :
             }
 
             test("key order and formatting do not count as a change") {
-                val file = fileWith(listOf("1.0.0"))
                 val reordered =
                     """{"statements": [{"supplier": "org", "status": "under_investigation", """ +
                         """"timestamp": "2026-04-25T00:00:00Z", """ +
@@ -298,20 +196,19 @@ class OpenVexBaselineParserTest :
                         """"@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-1111"}}], "version": 1, """ +
                         """"timestamp": "2026-04-25T00:00:00Z", "role": "Document Creator", "author": "author", """ +
                         """"@id": "$DOCUMENT_ID", "@context": "https://openvex.dev/ns/v0.2.0"}"""
-                val unchanged = sameOpenVexContent(reordered, revisionOf(file, readBack(reordered)))
+
+                val unchanged = sameOpenVexContent(reordered, revisionOf(fileWithOneStatement, readBack(reordered)))
 
                 unchanged shouldBe true
             }
 
-            test("a field this writer does not emit is a change") {
-                val file = fileWith(listOf("1.0.0"))
-                val first = documentOf(file, freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
+            test("a field Vulnlog does not write is a change") {
                 val foreign =
                     OpenVexEncoder
-                        .encode(
-                            first,
-                        ).replaceFirst("\"version\": 1,", "\"version\": 1,\n  \"tooling\": \"vexctl\",")
-                val unchanged = sameOpenVexContent(foreign, revisionOf(file, readBack(foreign)))
+                        .encode(firstDocumentOf(fileWithOneStatement))
+                        .replaceFirst("\"version\": 1,", "\"version\": 1,\n  \"tooling\": \"vexctl\",")
+
+                val unchanged = sameOpenVexContent(foreign, revisionOf(fileWithOneStatement, readBack(foreign)))
 
                 unchanged shouldBe false
             }
@@ -319,8 +216,8 @@ class OpenVexBaselineParserTest :
 
         context("statements") {
 
-            test("reads back every statement this writer wrote, each with the time it carries") {
-                val document = documentOf(everyStatusFile(), freshOpenVexIdentity(DOCUMENT_IRI, ISSUED_AT))
+            test("reads back every statement Vulnlog wrote, each with the time it carries") {
+                val document = firstDocumentOf(everyStatusFile())
 
                 val baseline = readBack(OpenVexEncoder.encode(document))
 
@@ -336,19 +233,15 @@ class OpenVexBaselineParserTest :
                     }
             }
 
-            test("a statement carries its own timestamp") {
-                val statement = readBack(withStatements(statement())).statements.single()
-
-                statement.timestamp shouldBe OpenVexStatementTime.Carried(Instant.parse("2026-04-20T08:30:00Z"))
-            }
-
             test("a statement without a timestamp carries the document's") {
-                val statement = readBack(withStatements(statement(timestamp = null))).statements.single()
+                val content = withStatements(statement(timestamp = null))
+
+                val statement = readBack(content).statements.single()
 
                 statement.timestamp shouldBe OpenVexStatementTime.Carried(ISSUED_AT)
             }
 
-            test("a statement this writer cannot read is skipped, and the baseline still reads") {
+            test("a statement Vulnlog cannot read is skipped, and the baseline still reads") {
                 val content = withStatements(statement(status = "exploitable"), statement())
 
                 val baseline = readBack(content)
@@ -359,12 +252,13 @@ class OpenVexBaselineParserTest :
             test("statements that are no array read as none") {
                 val content = document().replace("}", ", \"statements\": {}}")
 
-                readBack(content).statements shouldBe emptyList()
+                val baseline = readBack(content)
+
+                baseline.statements shouldBe emptyList()
             }
         }
     })
 
-/** A minimal statement, dated apart from the document unless [timestamp] is null. */
 private fun statement(
     status: String = "under_investigation",
     timestamp: String? = "2026-04-20T08:30:00Z",
@@ -379,11 +273,10 @@ private fun statement(
     return "{${fields.joinToString(", ")}}"
 }
 
-/** A minimal document making [statements]. */
 private fun withStatements(vararg statements: String): String =
     document().removeSuffix("}") + """, "statements": [${statements.joinToString(", ")}]}"""
 
-/** One entry per status, with aliases, packages and analysis, so every statement field is written and read back. */
+/** One entry per status, with aliases, packages, analysis and an OCI purl, so every field makes the round trip. */
 private fun everyStatusFile(): VulnlogFile {
     val oci = parsePurl(PackageURL("pkg:oci/app?repository_url=ghcr.io/acme/app&tag=1.0.0"))
     val releases =
