@@ -1,9 +1,10 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core.vex.openvex
+package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.vex.openvex.openVexStatus
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection

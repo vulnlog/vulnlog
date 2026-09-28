@@ -1,8 +1,14 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.parse.vex.openvex
+package dev.vulnlog.lib.codec.openvex
 
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexDocumentDto
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexIdentifiersDto
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexProductDto
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexStatementDto
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexSubcomponentDto
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexVulnerabilityDto
 import dev.vulnlog.lib.core.vex.openvex.OPEN_VEX_ROLE
 import dev.vulnlog.lib.core.vex.openvex.openVexJustification
 import dev.vulnlog.lib.core.vex.openvex.openVexStatus
@@ -16,12 +22,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexDocumentDto
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexIdentifiersDto
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexProductDto
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexStatementDto
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexSubcomponentDto
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexVulnerabilityDto
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset

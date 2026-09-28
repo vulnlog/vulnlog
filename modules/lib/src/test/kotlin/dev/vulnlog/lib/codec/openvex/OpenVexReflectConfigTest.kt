@@ -1,9 +1,9 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.parse.vex.openvex
+package dev.vulnlog.lib.codec.openvex
 
-import dev.vulnlog.lib.parse.vex.openvex.dto.OpenVexDocumentDto
+import dev.vulnlog.lib.codec.openvex.dto.OpenVexDocumentDto
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import java.nio.file.Path
@@ -12,7 +12,7 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.nameWithoutExtension
 
-private const val DTO_PACKAGE = "dev.vulnlog.lib.parse.vex.openvex.dto"
+private const val DTO_PACKAGE = "dev.vulnlog.lib.codec.openvex.dto"
 private const val REFLECT_CONFIG = "/META-INF/native-image/dev.vulnlog/lib/reflect-config.json"
 
 /**

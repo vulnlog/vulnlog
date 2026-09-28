@@ -1,8 +1,11 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core.vex.openvex
+package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
+import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
+import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
@@ -58,7 +61,7 @@ private val taggedFile =
             listOf(vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0"), release("1.0.1")))),
     )
 
-class OpenVexRendererTest :
+class OpenVexMessagesTest :
     FunSpec({
 
         context("renderOpenVexScope") {

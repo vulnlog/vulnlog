@@ -10,12 +10,12 @@ import dev.vulnlog.cli.shell.diagnosticSink
 import dev.vulnlog.cli.shell.echoMessage
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.core.vex.openvex.renderOpenVexScope
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
+import dev.vulnlog.lib.render.renderOpenVexScope
 import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.resolveReleaseSelection
 import dev.vulnlog.lib.shell.resolveTagsFilter

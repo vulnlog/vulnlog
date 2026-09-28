@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.parse.vex.openvex
+package dev.vulnlog.lib.codec.openvex
 
 import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.parsePurl
