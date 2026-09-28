@@ -6,7 +6,7 @@ package dev.vulnlog.lib.render
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.vex.openvex.openVexStatus
+import dev.vulnlog.lib.core.vex.vexStatusKind
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
@@ -86,7 +86,7 @@ fun renderOpenVexBaselineProblem(
 fun renderOpenVexStatementCounts(document: OpenVexDocument): String {
     val byStatus =
         document.statements
-            .groupingBy { openVexStatus(it.status) }
+            .groupingBy { vexStatusKind(it.status).name.lowercase() }
             .eachCount()
     val detail = byStatus.entries.sortedBy { it.key }.joinToString(", ") { "${it.value} ${it.key}" }
     return "collected ${pluralize(document.statements.size, "statement")}: $detail"

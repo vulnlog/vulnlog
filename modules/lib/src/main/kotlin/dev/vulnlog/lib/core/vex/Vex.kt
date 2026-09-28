@@ -13,6 +13,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.ReleaseStatus
 import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.VexStatusKind
 import java.time.LocalDate
 
 /**
@@ -63,6 +64,15 @@ fun remediationOf(vulnEntry: VulnerabilityEntry): Remediation {
         null -> fixRelease?.let(Remediation::UpdateTo) ?: Remediation.NoneAvailable
     }
 }
+
+/** The kind of [status], without the text it carries: what statements are sorted and counted by. */
+fun vexStatusKind(status: VexStatus): VexStatusKind =
+    when (status) {
+        is VexStatus.Affected -> VexStatusKind.AFFECTED
+        VexStatus.Fixed -> VexStatusKind.FIXED
+        is VexStatus.NotAffected -> VexStatusKind.NOT_AFFECTED
+        is VexStatus.UnderInvestigation -> VexStatusKind.UNDER_INVESTIGATION
+    }
 
 /** The status a release carries before the fix, with the entry's analysis routed to the field that status owns. */
 private fun unresolvedStatus(vulnEntry: VulnerabilityEntry): VexStatus {

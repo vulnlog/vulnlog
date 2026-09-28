@@ -9,10 +9,6 @@ import dev.vulnlog.lib.codec.openvex.dto.OpenVexProductDto
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexStatementDto
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexSubcomponentDto
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexVulnerabilityDto
-import dev.vulnlog.lib.core.vex.openvex.OPEN_VEX_ROLE
-import dev.vulnlog.lib.core.vex.openvex.openVexJustification
-import dev.vulnlog.lib.core.vex.openvex.openVexStatus
-import dev.vulnlog.lib.core.vex.openvex.openVexVulnerabilityUrl
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexAuthor

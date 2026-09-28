@@ -17,6 +17,7 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.VexStatusKind
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -229,6 +230,21 @@ class VexTest :
                     vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.3.0")), analysis = "  ")
 
                 releaseStatuses(entry, file).single().status shouldBe VexStatus.UnderInvestigation(null)
+            }
+        }
+
+        context("vexStatusKind") {
+
+            test("names the kind of every status, declared in sort order") {
+                val statuses =
+                    listOf(
+                        VexStatus.Affected(Remediation.NoneAvailable),
+                        VexStatus.Fixed,
+                        VexStatus.NotAffected(dev.vulnlog.lib.model.VexJustification.COMPONENT_NOT_PRESENT),
+                        VexStatus.UnderInvestigation(),
+                    )
+
+                statuses.map(::vexStatusKind) shouldContainExactly VexStatusKind.entries
             }
         }
 

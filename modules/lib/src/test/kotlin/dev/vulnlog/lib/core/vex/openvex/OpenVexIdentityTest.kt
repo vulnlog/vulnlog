@@ -12,7 +12,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.time.Instant
-import java.util.UUID
 
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
@@ -77,16 +76,6 @@ class OpenVexIdentityTest :
                 val identity = resolveOpenVexIdentity(first, Instant.parse("2026-04-25T00:00:00.987654Z"))
 
                 identity.timestamp shouldBe ISSUED_AT
-            }
-        }
-
-        context("openVexDocumentId") {
-
-            test("names the given UUID under the Vulnlog namespace") {
-                val uuid = UUID.fromString("3e671687-395b-41f5-a30f-a58921a69b79")
-
-                openVexDocumentId(uuid) shouldBe
-                    OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
             }
         }
     })

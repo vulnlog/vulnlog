@@ -22,12 +22,12 @@ import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
+import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
