@@ -191,7 +191,7 @@ Vulnlog writes the current assessment only: a new version of the document record
 
 Because every statement carries its own timestamp, the meaning of a statement never shifts when a new version of the document is issued.
 The specification requires exactly that: a statement whose timestamp came from the document would silently re-date every time the document is reissued.
-This is also why `vulnlog validate` asks you to record a date on every entry once your file declares `purls`; without one the statement is dated by the run that first issues it, and only a `--baseline` keeps that date from one version to the next.
+This is also why `vulnlog validate` warns about every statement your file leaves undated once it declares `purls`, naming the release; without a date the statement is dated by the run that first issues it, and only a `--baseline` keeps that date from one version to the next.
 
 [[action]]
 === Action statement

@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.core.validation
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.vex.releaseStatuses
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
@@ -328,22 +329,34 @@ private fun validateReleasesDeclarePurls(file: VulnlogFile): List<ValidationFind
 }
 
 /**
- * Meaningful only once the file uses purls: an undated entry cannot date its VEX statements from the file, so they are
- * dated by the run that first issues them, and only a baseline keeps that time from one revision to the next.
+ * Meaningful only once the file uses purls: a VEX statement the file does not date is dated by the run that first
+ * issues it, and only a baseline keeps that time from one revision to the next. Checked for the releases that declare
+ * purls, with the fallback the writer uses: the date the entry records for the status, else the release's
+ * `published_at`.
  */
 private fun validateVulnerabilitiesAreDated(file: VulnlogFile): List<ValidationFinding> {
-    if (file.releases.none { release -> release.purls.isNotEmpty() }) return emptyList()
+    val anchoring =
+        file.releases
+            .filter { release -> release.purls.isNotEmpty() }
+            .map { it.id }
+            .toSet()
+    if (anchoring.isEmpty()) return emptyList()
 
-    return file.vulnerabilities
-        .filter { vuln -> vuln.analyzedAt == null && vuln.reports.none { report -> report.at != null } }
-        .map { vuln ->
-            ValidationFinding(
-                severity = FindingSeverity.WARNING,
-                rule = Rule.VULNERABILITY_WITHOUT_DATE,
-                path = "vulnerabilities[${vuln.id.canonical()}]",
-                message =
-                    "Vulnerability '${vuln.id.canonical()}' records no date. " +
-                        "Set 'analyzed_at' or a report 'at' date, so its VEX statements are dated from the file.",
-            )
-        }
+    return file.vulnerabilities.mapNotNull { vuln ->
+        val undated =
+            releaseStatuses(vuln, file)
+                .filter { status -> status.since == null && status.release in anchoring }
+                .map { status -> "'${status.release.value}'" }
+        if (undated.isEmpty()) return@mapNotNull null
+        val releases = if (undated.size == 1) "release" else "releases"
+        ValidationFinding(
+            severity = FindingSeverity.WARNING,
+            rule = Rule.VULNERABILITY_WITHOUT_DATE,
+            path = "vulnerabilities[${vuln.id.canonical()}]",
+            message =
+                "Vulnerability '${vuln.id.canonical()}' leaves its VEX statement undated on $releases " +
+                    "${undated.joinToString(", ")}. Record when the status became true ('analyzed_at', " +
+                    "a report 'at' or 'resolution.at'), or set 'published_at' on the release.",
+        )
+    }
 }
