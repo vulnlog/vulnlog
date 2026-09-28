@@ -8,7 +8,6 @@ import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexBaselineDto
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseVulnId
-import dev.vulnlog.lib.core.vex.openvex.openVexJustification
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId

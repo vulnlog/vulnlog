@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.vex.openvex
 
+import dev.vulnlog.lib.core.vex.vexStatusKind
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
@@ -18,10 +19,9 @@ import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
-import dev.vulnlog.lib.model.VexJustification
-import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
+import dev.vulnlog.lib.model.vex.VexStatusKind
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
@@ -172,14 +172,14 @@ class OpenVexTest :
 
                 val statements = collectOpenVexStatements(file).statements
 
-                val byProduct = statements.associate { it.products.single().value to openVexStatus(it.status) }
+                val byProduct = statements.associate { it.products.single().value to vexStatusKind(it.status) }
 
                 byProduct shouldBe
                     mapOf(
-                        "pkg:maven/com.acme/app@1.0.0" to "affected",
-                        "pkg:maven/com.acme/app@1.0.5" to "affected",
-                        "pkg:maven/com.acme/app@1.0.1" to "fixed",
-                        "pkg:maven/com.acme/app@1.1.0" to "fixed",
+                        "pkg:maven/com.acme/app@1.0.0" to VexStatusKind.AFFECTED,
+                        "pkg:maven/com.acme/app@1.0.5" to VexStatusKind.AFFECTED,
+                        "pkg:maven/com.acme/app@1.0.1" to VexStatusKind.FIXED,
+                        "pkg:maven/com.acme/app@1.1.0" to VexStatusKind.FIXED,
                     )
             }
 
@@ -306,28 +306,6 @@ class OpenVexTest :
                 val statements = collectOpenVexStatements(taggedFile, scope).statements
 
                 statements.shouldBeEmpty()
-            }
-        }
-
-        context("vocabulary") {
-
-            test("every status maps to its OpenVEX token") {
-                openVexStatus(VexStatus.UnderInvestigation()) shouldBe "under_investigation"
-                openVexStatus(VexStatus.Fixed) shouldBe "fixed"
-                openVexStatus(VexStatus.NotAffected(VexJustification.COMPONENT_NOT_PRESENT)) shouldBe "not_affected"
-                openVexStatus(VexStatus.Affected(Remediation.UpdateTo(release("1.0.1")))) shouldBe
-                    "affected"
-            }
-
-            test("every justification maps to its OpenVEX token") {
-                VexJustification.entries.map(::openVexJustification) shouldContainExactly
-                    listOf(
-                        "component_not_present",
-                        "inline_mitigations_already_exist",
-                        "vulnerable_code_cannot_be_controlled_by_adversary",
-                        "vulnerable_code_not_in_execute_path",
-                        "vulnerable_code_not_present",
-                    )
             }
         }
 
@@ -539,20 +517,6 @@ class OpenVexTest :
 
             test("without a baseline nothing is carried") {
                 carryOverOpenVexTimestamps(listOf(undated), baseline = null) shouldContainExactly listOf(undated)
-            }
-        }
-
-        context("openVexVulnerabilityUrl") {
-
-            test("points at the authority that issued the id") {
-                openVexVulnerabilityUrl(cve("CVE-2021-44228")) shouldBe
-                    "https://nvd.nist.gov/vuln/detail/CVE-2021-44228"
-                openVexVulnerabilityUrl(ghsa("GHSA-jfh8-c2jp-5v3q")) shouldBe
-                    "https://github.com/advisories/GHSA-jfh8-c2jp-5v3q"
-                openVexVulnerabilityUrl(VulnId.RustSec("RUSTSEC-2021-0001")) shouldBe
-                    "https://rustsec.org/advisories/RUSTSEC-2021-0001"
-                openVexVulnerabilityUrl(VulnId.Snyk("SNYK-JS-LODASH-567746")) shouldBe
-                    "https://security.snyk.io/vuln/SNYK-JS-LODASH-567746"
             }
         }
 
