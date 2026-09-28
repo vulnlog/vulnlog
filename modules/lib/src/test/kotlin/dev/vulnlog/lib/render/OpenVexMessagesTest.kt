@@ -3,6 +3,8 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.core.vex.openvex.buildOpenVexDocument
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
 import dev.vulnlog.lib.core.vex.openvex.freshOpenVexIdentity
@@ -15,6 +17,7 @@ import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
@@ -150,26 +153,49 @@ class OpenVexMessagesTest :
 
         context("renderOpenVexEmptyHint") {
 
-            test("asks for purls when no release declares any") {
-                val bare = vulnlogFile(releases = listOf(releaseEntry("1.0.0")))
+            test("names what to change for every reason") {
+                OpenVexEmptyReason.entries.map(::renderOpenVexEmptyHint) shouldContainExactly
+                    listOf(
+                        "declare 'purls' on the releases you want the document to cover",
+                        "no release purl in scope carries one of the requested tags",
+                        "no vulnerability entry applies to the release in scope",
+                        "no vulnerability entry references a release that declares purls",
+                    )
+            }
+        }
 
-                renderOpenVexEmptyHint(bare, OpenVexScope()) shouldBe
-                    "declare 'purls' on the releases you want the document to cover"
+        context("renderOpenVexReport") {
+
+            val collection = collectOpenVexStatements(taggedFile, OpenVexScope(tags = setOf(tag("container"))))
+            val document =
+                buildOpenVexDocument(
+                    taggedFile.project,
+                    freshOpenVexIdentity(DOCUMENT_ID, ISSUED_AT),
+                    collection.statements,
+                )
+
+            test("reports the scope, what is left out, the anchors and the counts, in print order") {
+                val outcome = OpenVexOutcome.Revised(collection, document, content = "")
+
+                renderOpenVexReport(outcome) shouldContainExactly
+                    listOf(
+                        OpenVexLine.Verbose("tag scope matched tags: container"),
+                        OpenVexLine.Warning("releases without purls in scope are not part of the document: '1.0.1'"),
+                        OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
+                        OpenVexLine.Verbose("collected 1 statement: 1 under_investigation"),
+                    )
             }
 
-            test("blames the tag scope when one is active") {
-                renderOpenVexEmptyHint(file, OpenVexScope(tags = setOf(tag("binary")))) shouldBe
-                    "no release purl in scope carries one of the requested tags"
+            test("reports no counts when no statement applies") {
+                val outcome = OpenVexOutcome.NoStatementApplies(collection, OpenVexEmptyReason.NO_PURL_CARRIES_TAG)
+
+                renderOpenVexReport(outcome).none { it.text.startsWith("collected") } shouldBe true
             }
 
-            test("blames the release scope when one is active") {
-                renderOpenVexEmptyHint(file, OpenVexScope(releases = setOf(release("1.0.1")))) shouldBe
-                    "no vulnerability entry applies to the release in scope"
-            }
-
-            test("blames the entries otherwise") {
-                renderOpenVexEmptyHint(file, OpenVexScope()) shouldBe
-                    "no vulnerability entry references a release that declares purls"
+            test("reports nothing for a run rejected before it collected") {
+                renderOpenVexReport(OpenVexOutcome.BaselineRejected(OpenVexBaselineProblem.NotOpenVex)) shouldBe
+                    emptyList()
+                renderOpenVexReport(FilterRejected(emptyList())) shouldBe emptyList()
             }
         }
 

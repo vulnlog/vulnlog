@@ -3,15 +3,30 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.vex.openvex.openVexStatus
-import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
+
+/**
+ * Renders what a run reports before it writes or fails, in the order drivers print it: the scope, the releases the
+ * document leaves out, the anchoring releases, the skipped entries, and the statement counts of a built document. A
+ * run rejected before it collected anything reports nothing. Shared by the CLI and the Gradle plugin.
+ */
+fun renderOpenVexReport(outcome: OpenVexOutcome): List<OpenVexLine> =
+    when (outcome) {
+        is FilterRejected, is OpenVexOutcome.BaselineRejected -> emptyList()
+        is OpenVexOutcome.NoStatementApplies -> collectionLines(outcome.collection)
+        is OpenVexOutcome.Revised -> collectionLines(outcome.collection) + countLine(outcome.document)
+        is OpenVexOutcome.Unchanged -> collectionLines(outcome.collection) + countLine(outcome.document)
+    }
 
 /**
  * Renders one diagnostic line per active scope dimension, stating what it resolved to.
@@ -84,18 +99,14 @@ fun renderOpenVexStatementCounts(document: OpenVexDocument): String {
 fun renderOpenVexSkippedEntries(collection: OpenVexCollection): List<String> =
     collection.skippedEntries.map(::renderSkippedEntry).sorted()
 
-/** Renders the hint that follows "no statement applies", naming the most likely cause. */
-fun renderOpenVexEmptyHint(
-    vulnlogFile: VulnlogFile,
-    scope: OpenVexScope,
-): String =
-    when {
-        vulnlogFile.releases.none { it.purls.isNotEmpty() } ->
-            "declare 'purls' on the releases you want the document to cover"
-
-        scope.tags.isNotEmpty() -> "no release purl in scope carries one of the requested tags"
-        scope.releases.isNotEmpty() -> "no vulnerability entry applies to the release in scope"
-        else -> "no vulnerability entry references a release that declares purls"
+/** Renders the hint that follows "no statement applies", naming what to change. */
+fun renderOpenVexEmptyHint(reason: OpenVexEmptyReason): String =
+    when (reason) {
+        OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS -> "declare 'purls' on the releases you want the document to cover"
+        OpenVexEmptyReason.NO_PURL_CARRIES_TAG -> "no release purl in scope carries one of the requested tags"
+        OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE -> "no vulnerability entry applies to the release in scope"
+        OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE ->
+            "no vulnerability entry references a release that declares purls"
     }
 
 /** Renders one diagnostic line for a written document, the counterpart of the suppression writer's. */
@@ -105,6 +116,17 @@ fun renderOpenVexWritten(
 ): String =
     "wrote $target: openvex format, version ${document.identity.version.value}, " +
         pluralize(document.statements.size, "statement")
+
+private fun collectionLines(collection: OpenVexCollection): List<OpenVexLine> =
+    renderOpenVexScope(collection.scope).map(OpenVexLine::Verbose) +
+        listOfNotNull(
+            renderOpenVexSkippedReleases(collection)?.let(OpenVexLine::Warning),
+            renderOpenVexProducts(collection)?.let(OpenVexLine::Verbose),
+        ) +
+        renderOpenVexSkippedEntries(collection).map(OpenVexLine::Debug)
+
+private fun countLine(document: OpenVexDocument): OpenVexLine =
+    OpenVexLine.Verbose(renderOpenVexStatementCounts(document))
 
 private fun renderInvalidIdentity(
     target: String,

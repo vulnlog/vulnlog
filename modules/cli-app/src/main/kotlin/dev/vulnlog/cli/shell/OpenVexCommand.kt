@@ -28,20 +28,15 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
-import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
+import dev.vulnlog.lib.render.OpenVexLine
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.render.renderOpenVexEmptyHint
-import dev.vulnlog.lib.render.renderOpenVexProducts
-import dev.vulnlog.lib.render.renderOpenVexScope
-import dev.vulnlog.lib.render.renderOpenVexSkippedEntries
-import dev.vulnlog.lib.render.renderOpenVexSkippedReleases
-import dev.vulnlog.lib.render.renderOpenVexStatementCounts
+import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
@@ -135,45 +130,33 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 formatVersion = formatVersion,
             )
 
-        when (val outcome = generateOpenVex(vulnlogFile, request)) {
+        val outcome = generateOpenVex(vulnlogFile, request)
+        renderOpenVexReport(outcome).forEach(::echoLine)
+        when (outcome) {
             is FilterRejected -> failOnScope(outcome.problems)
 
             is OpenVexOutcome.BaselineRejected ->
                 failOnBaseline(renderOpenVexBaselineProblem(baselineRequest.toString(), outcome.problem))
 
-            is OpenVexOutcome.NoStatementApplies -> {
-                echoCollection(outcome.collection)
-                failOnEmptyDocument(vulnlogFile, outcome.collection.scope)
-            }
-
-            is OpenVexOutcome.Revised -> write(outcome.collection, outcome.document, outcome.content, unchanged = false)
-            is OpenVexOutcome.Unchanged ->
-                write(
-                    outcome.collection,
-                    outcome.document,
-                    outcome.content,
-                    unchanged = true,
-                )
+            is OpenVexOutcome.NoStatementApplies -> failOnEmptyDocument(outcome.reason)
+            is OpenVexOutcome.Revised -> write(outcome.document, outcome.content, unchanged = false)
+            is OpenVexOutcome.Unchanged -> write(outcome.document, outcome.content, unchanged = true)
         }
     }
 
-    /** The warning and the diagnostics that say what the collection holds and what it left out. */
-    private fun echoCollection(collection: OpenVexCollection) {
-        renderOpenVexScope(collection.scope).forEach { diagnosticSink().verbose(it) }
-        renderOpenVexSkippedReleases(collection)?.let { echoMessage(formatMessage(FindingSeverity.WARNING, it)) }
-        renderOpenVexProducts(collection)?.let { diagnosticSink().verbose(it) }
-        renderOpenVexSkippedEntries(collection).forEach { diagnosticSink().debug(it) }
-    }
+    private fun echoLine(line: OpenVexLine) =
+        when (line) {
+            is OpenVexLine.Warning -> echoMessage(formatMessage(FindingSeverity.WARNING, line.text))
+            is OpenVexLine.Verbose -> diagnosticSink().verbose(line.text)
+            is OpenVexLine.Debug -> diagnosticSink().debug(line.text)
+        }
 
     /** Writes [content] to the output. Bytes that stand unchanged are not written back over the baseline. */
     private fun write(
-        collection: OpenVexCollection,
         document: OpenVexDocument,
         content: String,
         unchanged: Boolean,
     ) {
-        echoCollection(collection)
-        diagnosticSink().verbose(renderOpenVexStatementCounts(document))
         when (val target = output) {
             is FileOutputOption.File -> {
                 if (unchanged && isBaselinePath(target.path)) {
@@ -227,12 +210,9 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 
-    private fun failOnEmptyDocument(
-        vulnlogFile: VulnlogFile,
-        scope: OpenVexScope,
-    ): Nothing {
+    private fun failOnEmptyDocument(reason: OpenVexEmptyReason): Nothing {
         echoMessage(formatMessage(FindingSeverity.ERROR, "no statement applies"))
-        echoMessage(formatHint(renderOpenVexEmptyHint(vulnlogFile, scope)))
+        echoMessage(formatHint(renderOpenVexEmptyHint(reason)))
         throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
     }
 }

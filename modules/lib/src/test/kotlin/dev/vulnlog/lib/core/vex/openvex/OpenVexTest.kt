@@ -25,6 +25,7 @@ import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
@@ -452,6 +453,29 @@ class OpenVexTest :
                         "Release not found: 9.9.9" to "Known releases: 1.0.0, 1.0.1",
                         "Tag not found: binary" to "The input declares no tags.",
                     )
+            }
+        }
+
+        context("openVexEmptyReason") {
+
+            test("asks for purls when no release declares any") {
+                val bare = vulnlogFile(releases = listOf(releaseEntry("1.0.0")))
+
+                openVexEmptyReason(bare, OpenVexScope()) shouldBe OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
+            }
+
+            test("blames the tag scope when one is active") {
+                openVexEmptyReason(taggedFile, OpenVexScope(tags = setOf(tag("binary")))) shouldBe
+                    OpenVexEmptyReason.NO_PURL_CARRIES_TAG
+            }
+
+            test("blames the release scope when one is active") {
+                openVexEmptyReason(taggedFile, OpenVexScope(releases = setOf(release("1.0.1")))) shouldBe
+                    OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE
+            }
+
+            test("blames the entries otherwise") {
+                openVexEmptyReason(taggedFile, OpenVexScope()) shouldBe OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE
             }
         }
 

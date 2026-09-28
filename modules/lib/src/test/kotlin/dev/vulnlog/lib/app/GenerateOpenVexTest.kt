@@ -15,6 +15,7 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
+import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
@@ -148,6 +149,7 @@ class GenerateOpenVexTest :
 
             val outcome = generateOpenVex(bare, request())
 
-            outcome.shouldBeInstanceOf<OpenVexOutcome.NoStatementApplies>()
+            outcome.shouldBeInstanceOf<OpenVexOutcome.NoStatementApplies>().reason shouldBe
+                OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
         }
     })
