@@ -24,6 +24,7 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
+import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexEmptyHint
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexInvalidIdentity
 import dev.vulnlog.lib.core.vex.openvex.renderOpenVexNotADocument
@@ -40,6 +41,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.parse.vex.openvex.OpenVexReader
@@ -48,6 +50,7 @@ import dev.vulnlog.lib.shell.FileOutputOption
 import java.io.IOException
 import java.nio.file.Path
 import java.time.Instant
+import java.util.UUID
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.readText
 
@@ -124,17 +127,12 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     override fun run() {
         val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
         val scope = resolveOpenVexScope(releaseRequest, tagsRequest, vulnlogFile)
-        val baseline = baselineRequest?.let(::readBaselineOrFail)
+        val revision =
+            baselineRequest?.let(::readBaselineOrFail)?.let(OpenVexRevision::Next)
+                ?: OpenVexRevision.First(openVexDocumentId(UUID.randomUUID()), formatVersion)
 
         val outcome =
-            generateOpenVex(
-                vulnlogFile,
-                scope,
-                baseline,
-                Instant.now(),
-                OpenVexTooling("CLI", BuildInfo.VERSION),
-                formatVersion,
-            )
+            generateOpenVex(vulnlogFile, scope, revision, Instant.now(), OpenVexTooling("CLI", BuildInfo.VERSION))
         echoCollection(outcome.collection)
         val generated =
             when (outcome) {

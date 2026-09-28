@@ -24,6 +24,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
+import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
@@ -62,16 +63,19 @@ fun buildOpenVexDocument(
         statements = statements,
     )
 
-/** A document identifier under the Vulnlog namespace. The only impure step of the writer path. */
-fun newOpenVexDocumentId(): OpenVexDocumentId = OpenVexDocumentId(OPEN_VEX_ID_PREFIX + UUID.randomUUID())
+/** The document identifier under the Vulnlog namespace for [uuid]. The caller draws the UUID, so this stays pure. */
+fun openVexDocumentId(uuid: UUID): OpenVexDocumentId = OpenVexDocumentId(OPEN_VEX_ID_PREFIX + uuid)
 
-/** The identity of this run: the [baseline]'s continued, or a fresh one. [now] is cut to whole seconds. */
+/** The identity [revision] is issued with. [now] is cut to whole seconds. */
 fun resolveOpenVexIdentity(
-    baseline: OpenVexBaseline?,
+    revision: OpenVexRevision,
     now: Instant,
 ): OpenVexIdentity {
     val at = now.truncatedTo(ChronoUnit.SECONDS)
-    return baseline?.let { nextOpenVexIdentity(it, at) } ?: freshOpenVexIdentity(newOpenVexDocumentId(), at)
+    return when (revision) {
+        is OpenVexRevision.First -> freshOpenVexIdentity(revision.id, at)
+        is OpenVexRevision.Next -> nextOpenVexIdentity(revision.baseline, at)
+    }
 }
 
 /** A fresh identity: the given [id], version 1, issued [now]. */

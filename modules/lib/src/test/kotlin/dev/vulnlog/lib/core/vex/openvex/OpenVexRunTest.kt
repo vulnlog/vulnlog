@@ -14,9 +14,11 @@ import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
+import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -26,13 +28,13 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldEndWith
-import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import java.time.Instant
 import java.time.LocalDate
 
 private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
+private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
 
 /** One entry affecting every release given, so each release contributes a statement. */
 private fun fileWith(vararg releases: String): VulnlogFile =
@@ -47,7 +49,12 @@ private fun generate(
     baseline: OpenVexBaseline? = null,
     now: Instant = ISSUED_AT,
     tooling: OpenVexTooling? = null,
-): OpenVexOutcome.Generated = generateOpenVex(file, OpenVexScope(), baseline, now, tooling).shouldBeInstanceOf()
+): OpenVexOutcome.Generated =
+    generateOpenVex(file, OpenVexScope(), revisionOf(baseline), now, tooling).shouldBeInstanceOf()
+
+/** The next revision of [baseline], or the first one of a new document under [DOCUMENT_ID]. */
+private fun revisionOf(baseline: OpenVexBaseline?): OpenVexRevision =
+    baseline?.let(OpenVexRevision::Next) ?: OpenVexRevision.First(DOCUMENT_ID)
 
 /** The baseline a later run reads from what an earlier one wrote. */
 private fun baselineOf(generated: OpenVexOutcome.Generated): OpenVexBaseline =
@@ -62,7 +69,7 @@ class OpenVexRunTest :
         test("a run without a baseline issues the first version") {
             val generated = generate(fileWith("1.0.0"))
 
-            generated.document.identity.id.value shouldStartWith OPEN_VEX_ID_PREFIX
+            generated.document.identity.id shouldBe DOCUMENT_ID
             generated.document.identity.version shouldBe OpenVexDocumentVersion.FIRST
             generated.document.identity.timestamp shouldBe ISSUED_AT
             generated.unchanged shouldBe false
@@ -136,7 +143,7 @@ class OpenVexRunTest :
         test("a file without an anchoring release yields no document") {
             val bare = vulnlogFile(releases = listOf(releaseEntry("1.0.0")))
 
-            val outcome = generateOpenVex(bare, OpenVexScope(), baseline = null, now = ISSUED_AT, tooling = null)
+            val outcome = generateOpenVex(bare, OpenVexScope(), revisionOf(null), now = ISSUED_AT, tooling = null)
 
             outcome.shouldBeInstanceOf<OpenVexOutcome.Empty>()
         }
