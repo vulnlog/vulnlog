@@ -136,7 +136,6 @@ class OpenVexGoldenTest :
                     formatVersion = OpenVexFormatVersion.LATEST,
                     id = DOCUMENT_ID,
                     version = OpenVexDocumentVersion.FIRST,
-                    content = "",
                 )
 
             val document = documentOf(nextOpenVexIdentity(baseline, UPDATED_AT))

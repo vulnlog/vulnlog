@@ -19,21 +19,19 @@ import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.cli.shell.vex.resolveOpenVexScope
-import dev.vulnlog.lib.codec.openvex.OpenVexBaselineResult
-import dev.vulnlog.lib.codec.openvex.parseOpenVexBaseline
+import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.app.OpenVexRequest
+import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.vex.openvex.generateOpenVex
 import dev.vulnlog.lib.core.vex.openvex.openVexDocumentId
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
+import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexOutcome
-import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
@@ -125,20 +123,34 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     override fun run() {
         val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
         val scope = resolveOpenVexScope(releaseRequest, tagsRequest, vulnlogFile)
-        val revision =
-            baselineRequest?.let(::readBaselineOrFail)?.let(OpenVexRevision::Next)
-                ?: OpenVexRevision.First(openVexDocumentId(UUID.randomUUID()), formatVersion)
+        val request =
+            OpenVexRequest(
+                scope = scope,
+                baseline = baselineRequest?.let(::readBaselineOrFail),
+                documentId = openVexDocumentId(UUID.randomUUID()),
+                timestamp = Instant.now(),
+                tooling = OpenVexTooling("CLI", BuildInfo.VERSION),
+                formatVersion = formatVersion,
+            )
 
-        val outcome =
-            generateOpenVex(vulnlogFile, scope, revision, Instant.now(), OpenVexTooling("CLI", BuildInfo.VERSION))
-        echoCollection(outcome.collection)
-        val generated =
-            when (outcome) {
-                is OpenVexOutcome.Empty -> failOnEmptyDocument(vulnlogFile, scope)
-                is OpenVexOutcome.Generated -> outcome
+        when (val outcome = generateOpenVex(vulnlogFile, request)) {
+            is OpenVexOutcome.BaselineRejected ->
+                failOnBaseline(renderOpenVexBaselineProblem(baselineRequest.toString(), outcome.problem))
+
+            is OpenVexOutcome.NoStatementApplies -> {
+                echoCollection(outcome.collection)
+                failOnEmptyDocument(vulnlogFile, scope)
             }
-        diagnosticSink().verbose(renderOpenVexStatementCounts(generated.document))
-        write(generated)
+
+            is OpenVexOutcome.Revised -> write(outcome.collection, outcome.document, outcome.content, unchanged = false)
+            is OpenVexOutcome.Unchanged ->
+                write(
+                    outcome.collection,
+                    outcome.document,
+                    outcome.content,
+                    unchanged = true,
+                )
+        }
     }
 
     /** The warning and the diagnostics that say what the collection holds and what it left out. */
@@ -148,20 +160,28 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         renderOpenVexSkippedEntries(collection).forEach { diagnosticSink().debug(it) }
     }
 
-    private fun write(generated: OpenVexOutcome.Generated) {
+    /** Writes [content] to the output. Bytes that stand unchanged are not written back over the baseline. */
+    private fun write(
+        collection: OpenVexCollection,
+        document: OpenVexDocument,
+        content: String,
+        unchanged: Boolean,
+    ) {
+        echoCollection(collection)
+        diagnosticSink().verbose(renderOpenVexStatementCounts(document))
         when (val target = output) {
             is FileOutputOption.File -> {
-                if (generated.unchanged && isBaselinePath(target.path)) {
+                if (unchanged && isBaselinePath(target.path)) {
                     echoStatus(formatStatus(StatusVerb.UNCHANGED, target.path.toString()))
                     return
                 }
-                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, generated.content)
-                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), generated.document))
+                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, content)
+                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), document))
             }
 
             FileOutputOption.Stdout -> {
-                echo(generated.content, trailingNewline = false)
-                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", generated.document))
+                echo(content, trailingNewline = false)
+                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", document))
             }
         }
     }
@@ -171,29 +191,20 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         baselineRequest?.toAbsolutePath()?.normalize() == target.toAbsolutePath().normalize()
 
     /**
-     * Reads the baseline at [path]. Every baseline that cannot be continued is an error, because the caller asked to
-     * continue it: a missing file, a file that is no OpenVEX document, a document in another format version, and a
-     * document whose identity cannot be continued. Issuing a new identity instead would fork the published document.
+     * Reads the text of the baseline at [path]. A missing file is an error, because the caller asked to continue a
+     * document that is not there. Whether the text can be continued is the run's to decide.
      */
-    private fun readBaselineOrFail(path: Path): OpenVexBaseline {
+    private fun readBaselineOrFail(path: Path): String {
         if (!path.isRegularFile()) {
             echoMessage(formatMessage(FindingSeverity.ERROR, "baseline '$path' does not exist"))
             echoMessage(formatHint("omit --baseline to issue a new document"))
             throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
         }
-        val content =
-            try {
-                path.readText()
-            } catch (e: IOException) {
-                echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
-                throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-            }
-        return when (val result = parseOpenVexBaseline(content, formatVersion)) {
-            is OpenVexBaselineResult.Parsed -> result.baseline
-            is OpenVexBaselineResult.Rejected ->
-                failOnBaseline(
-                    renderOpenVexBaselineProblem(path.toString(), result.problem),
-                )
+        return try {
+            path.readText()
+        } catch (e: IOException) {
+            echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
+            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
     }
 

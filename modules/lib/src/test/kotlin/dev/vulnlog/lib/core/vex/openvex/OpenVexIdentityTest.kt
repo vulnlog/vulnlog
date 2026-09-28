@@ -41,7 +41,6 @@ class OpenVexIdentityTest :
                         formatVersion = OpenVexFormatVersion.LATEST,
                         id = OpenVexDocumentId("https://vulnlog.dev/vex/abc"),
                         version = OpenVexDocumentVersion(3),
-                        content = "",
                     )
 
                 val identity = nextOpenVexIdentity(baseline, UPDATED_AT)
@@ -65,7 +64,7 @@ class OpenVexIdentityTest :
             test("continues the baseline in the next revision") {
                 val id = OpenVexDocumentId("https://vulnlog.dev/vex/abc")
                 val baseline =
-                    OpenVexBaseline(OpenVexFormatVersion.LATEST, id, OpenVexDocumentVersion(3), content = "")
+                    OpenVexBaseline(OpenVexFormatVersion.LATEST, id, OpenVexDocumentVersion(3))
 
                 val identity = resolveOpenVexIdentity(OpenVexRevision.Next(baseline), UPDATED_AT)
 
