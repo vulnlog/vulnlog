@@ -40,7 +40,7 @@ Tags can be assigned in two places:
 
 === On vulnerability entries
 
-Tags on a vulnerability entry categorize the finding and enable CLI filtering.
+Tags on a vulnerability entry categorize the finding, enable CLI filtering, and name the release artifacts a VEX statement covers.
 
 [source,yaml]
 ----
@@ -56,6 +56,7 @@ vulnerabilities:
 === On release PURLs
 
 Tags on release purl entries enable scoped output generation.
+A VEX statement names only the release purls that share a tag with the entry, see xref:reference/cli-vex-openvex.adoc#purls[Declare and tag release purls].
 
 [source,yaml]
 ----
@@ -72,7 +73,7 @@ releases:
 
 Use the `--tag` flag to filter CLI output by tag.
 The flag is repeatable to filter on multiple tags.
-This flag is available on `report` and `suppress` commands.
+This flag is available on the `report`, `suppress` and `vex openvex` commands.
 
 [source,bash]
 ----
@@ -82,4 +83,4 @@ vulnlog report impact my-app.vl.yaml --tag build-dep
 
 == Defaults
 
-Vulnerability entries without tags are included in all unfiltered outputs.
+Vulnerability entries without tags are included in all unfiltered outputs, except VEX documents: an untagged entry names no release artifact.

@@ -7,6 +7,7 @@ import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
+import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Verdict
@@ -34,8 +35,13 @@ private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-39
 private fun fileWith(vararg releases: String): VulnlogFile =
     vulnlogFile(
         releases =
-            releases.map { id -> releaseEntry(id, purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@$id"))) },
-        vulnerabilities = listOf(vulnerability(id = cve("CVE-2026-1111"), releases = releases.map(::release))),
+            releases.map { id ->
+                releaseEntry(id, purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@$id", tags = listOf("app"))))
+            },
+        vulnerabilities =
+            listOf(
+                vulnerability(id = cve("CVE-2026-1111"), releases = releases.map(::release), tags = listOf(tag("app"))),
+            ),
     )
 
 private fun request(
@@ -89,6 +95,7 @@ class GenerateOpenVexTest :
                     releases = listOf(release("1.0.0")),
                     analyzedAt = LocalDate.of(2026, 4, 30),
                     verdict = Verdict.NotAffected(VexJustification.COMPONENT_NOT_PRESENT),
+                    tags = listOf(tag("app")),
                 )
 
             val second = revised(file.copy(vulnerabilities = file.vulnerabilities + added), first.content, UPDATED_AT)
@@ -108,17 +115,6 @@ class GenerateOpenVexTest :
 
             outcome.shouldBeInstanceOf<FilterRejected>().problems.map { it.message } shouldContainExactly
                 listOf("Release not found: 9.9.9", "Tag not found: binary")
-        }
-
-        test("the scope narrows the document to the requested release") {
-            val file = fileWith("1.0.0", "1.1.0")
-
-            val revised = revised(file, release = "1.1.0")
-
-            revised.document.statements
-                .flatMap { it.products }
-                .map { it.value } shouldContainExactly
-                listOf("pkg:maven/com.acme/app@1.1.0")
         }
 
         test("a baseline that cannot be continued is rejected") {

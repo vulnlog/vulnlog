@@ -12,6 +12,7 @@ import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.report
 import dev.vulnlog.lib.fixtures.resolution
+import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Project
@@ -50,14 +51,17 @@ private val file: VulnlogFile =
                     "1.0.0",
                     purls =
                         listOf(
-                            mavenPurlEntry("pkg:maven/com.acme/acme-web-app@1.0.0"),
-                            mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.0.0"),
+                            mavenPurlEntry("pkg:maven/com.acme/acme-web-app@1.0.0", tags = listOf("app")),
+                            mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.0.0", tags = listOf("app")),
                         ),
                 ),
-                releaseEntry("1.0.1", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.0.1"))),
+                releaseEntry(
+                    "1.0.1",
+                    purls = listOf(mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.0.1", tags = listOf("app"))),
+                ),
                 releaseEntry(
                     "1.1.0",
-                    purls = listOf(mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.1.0")),
+                    purls = listOf(mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.1.0", tags = listOf("app"))),
                     publishedAt = LocalDate.of(2026, 5, 1),
                 ),
             ),
@@ -65,6 +69,7 @@ private val file: VulnlogFile =
             listOf(
                 vulnerability(
                     id = cve("CVE-2026-1111"),
+                    tags = listOf(tag("app")),
                     aliases = listOf(ghsa("GHSA-jfh8-c2jp-5v3q")),
                     releases = listOf(releaseV1),
                     description = "Remote code execution in example-lib",
@@ -76,6 +81,7 @@ private val file: VulnlogFile =
                 ),
                 vulnerability(
                     id = cve("CVE-2026-2222"),
+                    tags = listOf(tag("app")),
                     releases = listOf(releaseV1),
                     description = "Denial of service in example-parser",
                     packages = listOf(Purl.Npm("pkg:npm/example-parser@1.0.0")),
@@ -91,6 +97,7 @@ private val file: VulnlogFile =
                 ),
                 vulnerability(
                     id = cve("CVE-2026-3333"),
+                    tags = listOf(tag("app")),
                     releases = listOf(releaseV2),
                     reports = listOf(report(ReporterType.TRIVY, at = LocalDate.of(2026, 4, 18))),
                 ),

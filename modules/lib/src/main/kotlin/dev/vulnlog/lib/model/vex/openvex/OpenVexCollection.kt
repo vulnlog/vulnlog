@@ -14,12 +14,10 @@ data class OpenVexScope(
     val tags: Set<Tag> = emptySet(),
 )
 
-/** The statements of one run, and what was left out, so the drivers can explain a missing statement. */
 data class OpenVexCollection(
     val scope: OpenVexScope,
     /** Sorted, so the same input always writes the same bytes. */
     val statements: List<OpenVexStatement>,
-    /** Only these releases can anchor a statement, in declaration order. */
     val anchors: Map<Release, List<Purl>>,
     val skippedReleases: List<Release>,
     val skippedEntries: List<OpenVexSkippedEntry>,
@@ -35,12 +33,20 @@ sealed interface OpenVexSkippedEntry {
     data class NoAnchoredRelease(
         override val id: VulnId,
     ) : OpenVexSkippedEntry
+
+    data class NoTags(
+        override val id: VulnId,
+    ) : OpenVexSkippedEntry
+
+    data class NoMatchingReleasePurl(
+        override val id: VulnId,
+    ) : OpenVexSkippedEntry
 }
 
-/** The most likely cause of an empty document, so the hint names what to change. */
 enum class OpenVexEmptyReason {
     NO_RELEASE_DECLARES_PURLS,
-    NO_PURL_CARRIES_TAG,
+    NO_ENTRY_MATCHES_RELEASE_PURL_TAGS,
+    NO_ENTRY_IN_TAG_SCOPE,
     NO_ENTRY_IN_RELEASE_SCOPE,
     NO_ENTRY_ON_ANCHORED_RELEASE,
 }

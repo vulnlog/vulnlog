@@ -4,10 +4,12 @@
 package dev.vulnlog.lib.core.vex
 
 import dev.vulnlog.lib.fixtures.cve
+import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.report
 import dev.vulnlog.lib.fixtures.resolution
+import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Disposition
@@ -234,6 +236,39 @@ class VexTest :
 
                 kinds shouldContainExactly VexStatusKind.entries
             }
+        }
+
+        test(
+            "filterReleasePurlsMatchingVulnerabilityEntryTags keeps the release purls sharing a tag, never an untagged one",
+        ) {
+            val release =
+                releaseEntry(
+                    "1.0.0",
+                    purls =
+                        listOf(
+                            mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("sca", "container")),
+                            mavenPurlEntry("pkg:maven/com.acme/kit@1.0.0", tags = listOf("design-kit")),
+                            mavenPurlEntry("pkg:maven/com.acme/untagged@1.0.0"),
+                        ),
+                )
+            val entries =
+                listOf(listOf("container"), listOf("design-kit", "build"), listOf("build"), emptyList())
+                    .map { tags -> affectedIn(listOf("1.0.0")).copy(tags = tags.map(::tag)) }
+
+            val products =
+                entries.map { entry ->
+                    filterReleasePurlsMatchingVulnerabilityEntryTags(release, entry).map {
+                        it.purl.value
+                    }
+                }
+
+            products shouldContainExactly
+                listOf(
+                    listOf("pkg:maven/com.acme/app@1.0.0"),
+                    listOf("pkg:maven/com.acme/kit@1.0.0"),
+                    emptyList(),
+                    emptyList(),
+                )
         }
 
         test("remediationOf follows the disposition and the fix release, never the resolution note") {

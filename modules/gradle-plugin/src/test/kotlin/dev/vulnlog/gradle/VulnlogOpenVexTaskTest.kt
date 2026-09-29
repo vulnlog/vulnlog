@@ -129,7 +129,7 @@ class VulnlogOpenVexTaskTest :
                 document shouldNotContain "pkg:docker/acme/web-app@1.0.0"
             }
 
-            test("tags keep only the purls carrying one of them") {
+            test("tags keep only the vulnerabilities and release purls carrying one of them") {
                 val dir =
                     gradleProject(
                         openVexBuildFile("""tags = setOf("container")"""),

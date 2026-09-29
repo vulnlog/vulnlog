@@ -85,7 +85,7 @@ class OpenVexCommandTest :
 
         context("--tag") {
 
-            test("keeps only the purls carrying the tag") {
+            test("keeps only the vulnerabilities and release purls carrying the tag") {
                 val document = documentOf(openVexScopedDocument(), "--tag container")
 
                 document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.0.0\""

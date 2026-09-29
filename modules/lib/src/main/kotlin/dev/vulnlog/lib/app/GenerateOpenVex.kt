@@ -30,7 +30,6 @@ import java.time.Instant
 data class OpenVexRequest(
     val release: String?,
     val tags: Set<String>,
-    /** The text of the document to continue, or null to issue a new one. */
     val baseline: String?,
     /** Only used when no baseline is continued. */
     val documentId: OpenVexDocumentId,
@@ -50,7 +49,6 @@ sealed interface OpenVexOutcome {
         val reason: OpenVexEmptyReason,
     ) : OpenVexOutcome
 
-    /** A document to write: [content] carries [version]. */
     sealed interface Generated : OpenVexOutcome {
         val collection: OpenVexCollection
         val version: OpenVexDocumentVersion
@@ -91,7 +89,7 @@ fun generateOpenVex(
         }
     val collection = collectOpenVexStatements(vulnlogFile, scope)
     if (collection.statements.isEmpty()) {
-        return OpenVexOutcome.NoStatementApplies(collection, openVexEmptyReason(vulnlogFile, scope))
+        return OpenVexOutcome.NoStatementApplies(collection, openVexEmptyReason(vulnlogFile, collection))
     }
     val revision =
         baseline?.let(OpenVexRevision::Next) ?: OpenVexRevision.First(request.documentId, request.formatVersion)
