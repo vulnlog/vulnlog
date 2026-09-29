@@ -57,6 +57,7 @@ On vulnerability entries, tags categorize the finding and enable filtering:
 ----
 
 On release purl entries, tags scope the release artifacts (see xref:reference/tags.adoc[Tags] for both forms).
+A VEX statement names only the release purls that share a tag with the entry.
 
 == Filter outputs
 
@@ -69,7 +70,7 @@ vulnlog suppress my-app.vl.yaml --reporter trivy --tag build-dep
 ----
 
 `--as-of` includes all releases up to and including the given one; `--tag` is repeatable.
-Entries without tags are included in all unfiltered outputs.
+Entries without tags are included in all unfiltered outputs, except VEX documents.
 
 == Verify
 

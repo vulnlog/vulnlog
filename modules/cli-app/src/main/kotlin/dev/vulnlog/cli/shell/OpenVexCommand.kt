@@ -89,8 +89,8 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         metavar = "<tag>",
         help =
             """
-            Keep only the release purls carrying this tag.
-            Use multiple times to keep the purls carrying any of them.
+            Keep only the vulnerabilities and release purls carrying this tag.
+            Use multiple times to keep those carrying any of them.
             """.trimIndent(),
     ).multiple()
         .unique()

@@ -15,6 +15,7 @@ import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.resolution
+import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Disposition
@@ -68,10 +69,15 @@ private fun read(content: String): OpenVexBaselineResult = parseOpenVexBaseline(
 private fun baselineOf(version: Int = 1): OpenVexBaseline =
     OpenVexBaseline(formatVersion = VERSION_0_2_0, id = DOCUMENT_IRI, version = OpenVexDocumentVersion(version))
 
+private val APP = tag("app")
+
+private fun appPurl(purl: String): PurlEntry = mavenPurlEntry(purl, tags = listOf(APP.value))
+
 private val fileWithOneStatement: VulnlogFile =
     vulnlogFile(
-        releases = listOf(releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0")))),
-        vulnerabilities = listOf(vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0")))),
+        releases = listOf(releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0")))),
+        vulnerabilities =
+            listOf(vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0")), tags = listOf(APP))),
     )
 
 private fun firstDocumentOf(file: VulnlogFile): OpenVexDocument =
@@ -84,7 +90,6 @@ private fun firstDocumentOf(file: VulnlogFile): OpenVexDocument =
 private fun readBack(content: String): OpenVexBaseline =
     read(content).shouldBeInstanceOf<OpenVexBaselineResult.Parsed>().baseline
 
-/** Continues [baseline] over [file] the way a run does. */
 private fun revisionOf(
     file: VulnlogFile,
     baseline: OpenVexBaseline,
@@ -281,8 +286,8 @@ private fun everyStatusFile(): VulnlogFile {
     val oci = parsePurl(PackageURL("pkg:oci/app?repository_url=ghcr.io/acme/app&tag=1.0.0"))
     val releases =
         listOf(
-            releaseEntry("1.0.0", purls = listOf(PurlEntry(oci), mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))),
-            releaseEntry("1.1.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.1.0"))),
+            releaseEntry("1.0.0", purls = listOf(PurlEntry(oci, listOf(APP)), appPurl("pkg:maven/com.acme/app@1.0.0"))),
+            releaseEntry("1.1.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.1.0"))),
         )
     val packages = listOf(Purl.Npm("pkg:npm/example-lib@2.3.0"))
     return vulnlogFile(
@@ -291,6 +296,7 @@ private fun everyStatusFile(): VulnlogFile {
             listOf(
                 vulnerability(
                     id = cve("CVE-2026-1111"),
+                    tags = listOf(APP),
                     releases = listOf(release("1.0.0")),
                     packages = packages,
                     aliases = listOf(ghsa("GHSA-jfh8-c2jp-5v3q")),
@@ -301,13 +307,18 @@ private fun everyStatusFile(): VulnlogFile {
                 ),
                 vulnerability(
                     id = cve("CVE-2026-2222"),
+                    tags = listOf(APP),
                     releases = listOf(release("1.0.0")),
                     packages = packages,
                     verdict = Verdict.Affected(Severity.HIGH, Disposition.WILL_FIX),
                     resolution = resolution("1.1.0", note = "Updated example-lib."),
                     analysis = "Reachable from the upload endpoint.",
                 ),
-                vulnerability(id = ghsa("GHSA-xxxx-yyyy-zzzz"), releases = listOf(release("1.1.0"))),
+                vulnerability(
+                    id = ghsa("GHSA-xxxx-yyyy-zzzz"),
+                    releases = listOf(release("1.1.0")),
+                    tags = listOf(APP),
+                ),
             ),
     )
 }

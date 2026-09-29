@@ -27,14 +27,31 @@ private val file =
     vulnlogFile(
         releases =
             listOf(
-                releaseEntry("1.0.0", purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"))),
+                releaseEntry(
+                    "1.0.0",
+                    purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("app"))),
+                ),
                 releaseEntry("1.0.1"),
             ),
         vulnerabilities =
             listOf(
-                vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0"))),
-                vulnerability(id = cve("CVE-2026-2222"), releases = listOf(release("1.0.1"))),
-                vulnerability(id = cve("CVE-2026-3333")),
+                vulnerability(
+                    id = cve("CVE-2026-1111"),
+                    releases = listOf(release("1.0.0")),
+                    tags = listOf(tag("app")),
+                ),
+                vulnerability(
+                    id = cve("CVE-2026-2222"),
+                    releases = listOf(release("1.0.1")),
+                    tags = listOf(tag("app")),
+                ),
+                vulnerability(id = cve("CVE-2026-3333"), tags = listOf(tag("app"))),
+                vulnerability(id = cve("CVE-2026-4444"), releases = listOf(release("1.0.0"))),
+                vulnerability(
+                    id = cve("CVE-2026-5555"),
+                    releases = listOf(release("1.0.0")),
+                    tags = listOf(tag("build")),
+                ),
             ),
     )
 
@@ -52,7 +69,13 @@ private val taggedFile =
                 ),
             ),
         vulnerabilities =
-            listOf(vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0"), release("1.0.1")))),
+            listOf(
+                vulnerability(
+                    id = cve("CVE-2026-1111"),
+                    releases = listOf(release("1.0.0"), release("1.0.1")),
+                    tags = listOf(tag("container"), tag("library")),
+                ),
+            ),
     )
 
 class OpenVexMessagesTest :
@@ -88,22 +111,30 @@ class OpenVexMessagesTest :
                         OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
                         OpenVexLine.Debug("skipped CVE-2026-2222: no release it applies to declares purls in scope"),
                         OpenVexLine.Debug("skipped CVE-2026-3333: it references no release"),
+                        OpenVexLine.Debug("skipped CVE-2026-4444: it has no tags to match a release purl"),
+                        OpenVexLine.Debug("skipped CVE-2026-5555: no release purl in scope shares one of its tags"),
                         OpenVexLine.Verbose("collected 1 statement: 1 under_investigation"),
                     )
             }
 
             test("reports no count when no statement applies, and blames the scope for bare releases") {
-                val collection = collectOpenVexStatements(taggedFile, OpenVexScope(tags = setOf(tag("binary"))))
-                val outcome = OpenVexOutcome.NoStatementApplies(collection, OpenVexEmptyReason.NO_PURL_CARRIES_TAG)
+                val onlyOnLibraryRelease =
+                    taggedFile.vulnerabilities.map {
+                        it.copy(
+                            releases = listOf(release("1.0.1")),
+                        )
+                    }
+                val file = taggedFile.copy(vulnerabilities = onlyOnLibraryRelease)
+                val collection = collectOpenVexStatements(file, OpenVexScope(tags = setOf(tag("container"))))
+                val outcome = OpenVexOutcome.NoStatementApplies(collection, OpenVexEmptyReason.NO_ENTRY_IN_TAG_SCOPE)
 
                 val lines = renderOpenVexReport(outcome)
 
                 lines shouldContainExactly
                     listOf(
-                        OpenVexLine.Verbose("tag scope matched tags: binary"),
-                        OpenVexLine.Warning(
-                            "releases without purls in scope are not part of the document: '1.0.0', '1.0.1'",
-                        ),
+                        OpenVexLine.Verbose("tag scope matched tags: container"),
+                        OpenVexLine.Warning("releases without purls in scope are not part of the document: '1.0.1'"),
+                        OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
                         OpenVexLine.Debug("skipped CVE-2026-1111: no release it applies to declares purls in scope"),
                     )
             }
@@ -138,7 +169,8 @@ class OpenVexMessagesTest :
             hints shouldContainExactly
                 listOf(
                     "declare 'purls' on the releases you want the document to cover",
-                    "no release purl in scope carries one of the requested tags",
+                    "tag the vulnerability entries with the tags of the release purls they apply to",
+                    "no vulnerability entry and release purl in scope share one of the requested tags",
                     "no vulnerability entry applies to the release in scope",
                     "no vulnerability entry references a release that declares purls",
                 )

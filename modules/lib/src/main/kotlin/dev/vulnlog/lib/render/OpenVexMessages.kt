@@ -13,7 +13,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 
-/** In print order. A run rejected before it collected anything has nothing to report. */
 fun renderOpenVexReport(outcome: OpenVexOutcome): List<OpenVexLine> =
     when (outcome) {
         is FilterRejected, is OpenVexOutcome.BaselineRejected -> emptyList()
@@ -47,7 +46,12 @@ fun renderOpenVexBaselineProblem(
 fun renderOpenVexEmptyHint(reason: OpenVexEmptyReason): String =
     when (reason) {
         OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS -> "declare 'purls' on the releases you want the document to cover"
-        OpenVexEmptyReason.NO_PURL_CARRIES_TAG -> "no release purl in scope carries one of the requested tags"
+        OpenVexEmptyReason.NO_ENTRY_MATCHES_RELEASE_PURL_TAGS ->
+            "tag the vulnerability entries with the tags of the release purls they apply to"
+
+        OpenVexEmptyReason.NO_ENTRY_IN_TAG_SCOPE ->
+            "no vulnerability entry and release purl in scope share one of the requested tags"
+
         OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE -> "no vulnerability entry applies to the release in scope"
         OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE ->
             "no vulnerability entry references a release that declares purls"
@@ -101,6 +105,10 @@ private fun skippedEntryLine(entry: OpenVexSkippedEntry): String =
         is OpenVexSkippedEntry.NoRelease -> "skipped ${entry.id.canonical()}: it references no release"
         is OpenVexSkippedEntry.NoAnchoredRelease ->
             "skipped ${entry.id.canonical()}: no release it applies to declares purls in scope"
+
+        is OpenVexSkippedEntry.NoTags -> "skipped ${entry.id.canonical()}: it has no tags to match a release purl"
+        is OpenVexSkippedEntry.NoMatchingReleasePurl ->
+            "skipped ${entry.id.canonical()}: no release purl in scope shares one of its tags"
     }
 
 private fun countLine(collection: OpenVexCollection): OpenVexLine {

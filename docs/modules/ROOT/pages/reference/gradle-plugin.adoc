@@ -376,7 +376,7 @@ vulnlog {
 
 | `tags`
 | _(empty)_
-| Keep only the release purls carrying one of these tags.
+| Keep only the vulnerabilities and release purls carrying one of these tags.
 
 | `baseline`
 | _(none)_

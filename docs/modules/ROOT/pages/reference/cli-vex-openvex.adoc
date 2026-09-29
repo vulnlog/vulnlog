@@ -20,8 +20,8 @@ Without it the document covers every release that declares `purls`.
 See <<scoping>>.
 
 | `--tag <tag>`
-| Keep only the release purls carrying this tag.
-Repeatable; a purl carrying any of the given tags is kept.
+| Keep only the vulnerabilities and release purls carrying this tag.
+Repeatable; those carrying any of the given tags are kept.
 See <<scoping>>.
 
 | `--baseline <path>`
@@ -38,10 +38,10 @@ Defaults to `vex.json` in the current directory.
 |===
 
 [[purls]]
-== Declare release purls
+== Declare and tag release purls
 
 A statement names the products it applies to, so every release the document should cover needs `purls`: the https://github.com/package-url/purl-spec[Package URLs] of the artifacts you ship.
-Tag them when you ship more than one kind of artifact.
+A statement names only the release purls that share a tag with the vulnerability, so tag both.
 
 [source,yaml]
 ----
@@ -53,7 +53,14 @@ releases:
         tags: [ library ]
       - purl: "pkg:oci/acme-web-app?repository_url=ghcr.io/acme/web-app"
         tags: [ container ]
+
+vulnerabilities:
+  - id: CVE-2026-5678
+    releases: [ 1.2.0 ]
+    tags: [ container ]    # a statement for the image only
 ----
+
+A vulnerability without tags, or whose tags no release purl carries, appears in no document, so it never suppresses a finding in an artifact nobody analysed.
 
 Declare the purl your users' scanner matches:
 
@@ -83,7 +90,7 @@ A release without `purls` is left out of the document and named in a `warning:` 
 [[status]]
 == What a statement says
 
-Vulnlog writes one statement per vulnerability entry and release it applies to.
+Vulnlog writes one statement per vulnerability entry and release it applies to, naming the release purls it shares a tag with.
 An entry applies from the earliest release it lists through every later release in the file.
 From the release named by `resolution.in` on, it is `fixed`, even where `releases` lists it too.
 
@@ -136,7 +143,7 @@ Without any of these the release's own `published_at` is used, and without that 
 `vulnlog validate` warns about undated statements, because only a `--baseline` keeps such a time from one version to the next.
 
 `aliases`, `description` and `packages` are written as well; `packages` become the subcomponents of each product.
-`name`, `severity`, `comment`, `reports` and `tags` have no place in OpenVEX.
+`name`, `severity`, `comment` and `reports` have no place in OpenVEX.
 
 [[scoping]]
 == One document per release and artifact
@@ -144,7 +151,7 @@ Without any of these the release's own `published_at` is used, and without that 
 Without scoping flags the document covers every release that declares `purls`.
 That suits your own CI scan and a VEX hub, where one file serves every release.
 
-To publish next to an artifact, write one document per release and artifact: `--release` picks the release and `--tag` picks its purls.
+To publish next to an artifact, write one document per release and artifact: `--release` picks the release, and `--tag` keeps the vulnerabilities and release purls carrying the tag.
 
 [source]
 ----
@@ -152,7 +159,6 @@ vulnlog vex openvex vulnlog.yaml --release 1.2.0 --tag container -o vex-1.2.0-co
 ----
 
 `--release` does not cut the range: an entry reported for an earlier release still applies, and a fix in a later release is still named in the `action_statement`.
-Unlike on the other commands, `--tag` selects release purls here, not vulnerability entries.
 
 [[identity]]
 == Keep a published document stable
@@ -197,11 +203,12 @@ vulnlog -vv vex openvex full-example.vl.yaml
 verbose: parsed full-example.vl.yaml: schema version 1, releases: 3, tags: 4, vulnerabilities: 7
 warning: releases without purls are not part of the document: '8.1.2'
 verbose: anchored on 2 releases with purls: '8.1.0' (2 purls), '8.1.1' (2 purls)
+debug: skipped CVE-2020-099: no release purl in scope shares one of its tags
 debug: skipped CVE-2022-21449: no release it applies to declares purls in scope
 debug: skipped SNYK-2021-003: no release it applies to declares purls in scope
-verbose: collected 6 statements: 1 affected, 2 not_affected, 3 under_investigation
+verbose: collected 4 statements: 1 affected, 2 not_affected, 1 under_investigation
 Wrote: vex.json
-verbose: wrote vex.json: openvex format, version 1, 6 statements
+verbose: wrote vex.json: openvex format, version 1, 4 statements
 ----
 
 .One statement of a written document
@@ -219,9 +226,9 @@ verbose: wrote vex.json: openvex format, version 1, 6 statements
   "timestamp": "2021-12-10T00:00:00Z",
   "products": [
     {
-      "@id": "pkg:docker/demo-project@8.1.1",
+      "@id": "pkg:generic/demo-project@8.1.1",
       "identifiers": {
-        "purl": "pkg:docker/demo-project@8.1.1"
+        "purl": "pkg:generic/demo-project@8.1.1"
       },
       "subcomponents": [
         {
@@ -244,7 +251,7 @@ verbose: wrote vex.json: openvex format, version 1, 6 statements
 == When the command fails
 
 * The Vulnlog file fails validation: exit `2`.
-* No statement applies, because no release declares `purls`, no entry references one that does, or the scope leaves nothing: exit `2`, no file is written, since OpenVEX requires at least one statement.
+* No statement applies, because no release declares `purls`, no vulnerability shares a tag with the release purls, or the scope leaves nothing: exit `2`, no file is written, since OpenVEX requires at least one statement.
 * An unknown `--release` or `--tag`, or a `--baseline` that cannot be continued: exit `5`.
 
 See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.

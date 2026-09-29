@@ -50,7 +50,7 @@ If a package appears in multiple contexts, the analysis should focus on the high
 | `tags`
 | Array of String
 | No
-| Tags for categorizing and scoping. Must reference tags defined in the `tags` section. Used for CLI filtering.
+| Tags for categorizing and scoping. Must reference tags defined in the `tags` section. Used for CLI filtering and to match the release purls a VEX statement names.
 
 | `analysis`
 | String

@@ -3,10 +3,7 @@
 
 package dev.vulnlog.lib.fixtures
 
-/**
- * Builds a Vulnlog YAML with one release that declares purls and one that does not, so an OpenVEX
- * document has both a product to anchor to and a release it must skip.
- */
+/** One release with a purl and one without, so a document has a product and a release to skip. */
 fun openVexDocument(projectName: String = "Acme Web App"): String =
     """
     ---
@@ -18,11 +15,16 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
       author: Acme Corp Security Team
       contact: security@acme.example
 
+    tags:
+      - id: app
+        description: The web application artifact
+
     releases:
       - id: 1.0.0
         published_at: 2026-01-15
         purls:
           - purl: "pkg:maven/com.acme/acme-web-app@1.0.0"
+            tags: [ app ]
       - id: 1.0.1
 
     vulnerabilities:
@@ -34,6 +36,7 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
         reports:
           - reporter: trivy
             at: 2026-01-20
+        tags: [ app ]
         analysis: not reachable
         verdict: not affected
         justification: vulnerable code not in execute path
@@ -42,12 +45,8 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
     """.trimIndent()
 
 /**
- * Builds a Vulnlog YAML with five releases, tagged purls, and one entry per status, so a scoped OpenVEX document has
- * something to narrow.
- *
- * 0.9.0, 1.0.0, 1.0.5 and 1.1.0 carry purls and 1.2.0 carries none. No entry lists 1.0.5, so it is covered only by
- * the range of the entries reported for 1.0.0. No entry references 0.9.0, so scoping to its `legacy` tag leaves the
- * document empty.
+ * 1.0.5 is reached only through the range of the entries reported for 1.0.0, 1.2.0 has no purls, and no entry reaches
+ * 0.9.0, so its `legacy` tag leaves the document empty.
  */
 fun openVexScopedDocument(): String =
     """
@@ -99,6 +98,7 @@ fun openVexScopedDocument(): String =
         releases: [ 1.0.0 ]
         description: Remote code execution in example-lib
         packages: [ "pkg:npm/example-lib@2.3.0" ]
+        tags: [ container, library ]
         reports:
           - reporter: trivy
             at: 2026-01-20
@@ -110,6 +110,7 @@ fun openVexScopedDocument(): String =
         releases: [ 1.0.0 ]
         description: Denial of service in example-parser
         packages: [ "pkg:npm/example-parser@1.0.0" ]
+        tags: [ container, library ]
         reports:
           - reporter: trivy
             at: 2026-01-25
@@ -125,6 +126,7 @@ fun openVexScopedDocument(): String =
         releases: [ 1.2.0 ]
         description: Path traversal in example-server
         packages: [ "pkg:npm/example-server@3.0.0" ]
+        tags: [ container ]
         reports:
           - reporter: trivy
             at: 2026-02-20

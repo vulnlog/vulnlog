@@ -5,6 +5,7 @@ package dev.vulnlog.lib.core.vex
 
 import dev.vulnlog.lib.core.findDisposition
 import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.model.PurlEntry
 import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.Verdict
@@ -16,11 +17,7 @@ import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.VexStatusKind
 import java.time.LocalDate
 
-/**
- * An entry applies from the earliest release it lists through every later release, and from its resolution release
- * on it is fixed, whatever the verdict says. A status is dated from the file only, falling back to the release's
- * publication date, so that the document does not change with the clock.
- */
+/** Dated from the file only, never from the clock, so a rerun writes the same document. */
 fun releaseStatuses(
     vulnEntry: VulnerabilityEntry,
     vulnlogFile: VulnlogFile,
@@ -44,6 +41,11 @@ fun releaseStatuses(
         }
     }
 }
+
+fun filterReleasePurlsMatchingVulnerabilityEntryTags(
+    release: ReleaseEntry,
+    vulnEntry: VulnerabilityEntry,
+): List<PurlEntry> = release.purls.filter { purlEntry -> purlEntry.tags.any { tag -> tag in vulnEntry.tags } }
 
 /** Never derived from the analysis or the resolution note: both are written for the team, not for consumers. */
 fun remediationOf(vulnEntry: VulnerabilityEntry): Remediation {
