@@ -18,12 +18,14 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
+import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.collectSuppressedVulnerabilities
+import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
@@ -84,7 +86,13 @@ class SuppressCommand : CliktCommand(name = "suppress") {
 
         val vulnlogFile = validated.vulnlogProjectFile
         failOnRenamedFilterFlags(renamedFilterOptions)
-        val filter = resolveFilter(filterOptions, vulnlogFile)
+        val request =
+            FilterRequest(
+                reporter = filterOptions.reporterRequest,
+                asOf = filterOptions.asOfRequest,
+                tags = filterOptions.tagsRequest,
+            )
+        val filter = resolveFilterOrFail(request, listOf(vulnlogFile))
 
         val targetReporters =
             vulnlogFile.vulnerabilities

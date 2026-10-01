@@ -13,25 +13,16 @@ import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.filter.ResolvedFilter
-import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.Tag
-import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
-import dev.vulnlog.lib.shell.FilterValidationException
 import dev.vulnlog.lib.shell.InputSelectionResult
 import dev.vulnlog.lib.shell.InputValidationResult
-import dev.vulnlog.lib.shell.resolveReleaseFilter
-import dev.vulnlog.lib.shell.resolveReporterFilter
-import dev.vulnlog.lib.shell.resolveTagsFilter
 import dev.vulnlog.lib.shell.validateInputPath
 import dev.vulnlog.lib.shell.validateInputSelection
 import java.nio.file.Path
@@ -41,9 +32,7 @@ import kotlin.io.path.writeText
 
 private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
 
-// TODO remove with 1.0.0
-
-/** Fails when a renamed filter flag is used, naming the flag that replaced it. */
+// TODO remove with 1.0.0, together with RenamedFilterOptions
 fun CliktCommand.failOnRenamedFilterFlags(renamedFilterOptions: RenamedFilterOptions) {
     if (renamedFilterOptions.releaseRequest != null) {
         echoMessage(formatMessage(FindingSeverity.ERROR, "Option --release was renamed to --as-of."))
@@ -54,7 +43,6 @@ fun CliktCommand.failOnRenamedFilterFlags(renamedFilterOptions: RenamedFilterOpt
     }
 }
 
-/** Fails with a usage error when a command group is invoked without one of its subcommands. */
 fun CliktCommand.requireSubcommand() {
     if (currentContext.invokedSubcommand == null) {
         throw PrintHelpMessage(currentContext, error = true, statusCode = ExitCode.GENERAL_ERROR.code)
@@ -114,25 +102,6 @@ fun ArgumentTransformContext.toInputFile(input: String): FileInputOption.File {
     }
     return FileInputOption.File(inputPath)
 }
-
-fun CliktCommand.resolveFilter(
-    filterOptions: FilterOptions,
-    vulnlogFile: VulnlogFile,
-): ResolvedFilter =
-    try {
-        val releases = resolveReleaseFilter(filterOptions.asOfRequest?.let(::Release), vulnlogFile)
-        val tags = resolveTagsFilter(filterOptions.tagsRequest.map(::Tag).toSet(), vulnlogFile)
-        val filter = ResolvedFilter(resolveReporterFilter(filterOptions.reporterRequest), releases, tags)
-        renderFilterResolution(filter).forEach { diagnosticSink().verbose(it) }
-        filter
-    } catch (e: FilterValidationException) {
-        echoMessage(formatMessage(FindingSeverity.ERROR, e.message.orEmpty()))
-        echoMessage(formatHint(e.detail))
-        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
-    } catch (e: IllegalArgumentException) {
-        echoMessage(formatMessage(FindingSeverity.ERROR, "Invalid filter value: ${e.message}"))
-        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
-    }
 
 fun writeInit(
     out: (String) -> Unit,

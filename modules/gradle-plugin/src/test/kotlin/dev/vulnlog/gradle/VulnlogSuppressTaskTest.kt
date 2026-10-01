@@ -226,7 +226,7 @@ class VulnlogSuppressTaskTest :
 
         context("filter validation") {
 
-            test("fails on an unknown reporter") {
+            test("names every bad filter value in one failure") {
                 val dir =
                     gradleProject(
                         buildFile(
@@ -235,50 +235,7 @@ class VulnlogSuppressTaskTest :
                                 files.from("test.vl.yaml")
                                 suppress {
                                     reporter = "bogus"
-                                }
-                            }
-                            """.trimIndent(),
-                        ),
-                        "test.vl.yaml" to vulnlogDocument(),
-                    )
-
-                val result = runner(dir, "vulnlogSuppress").buildAndFail()
-
-                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Invalid reporter: bogus"
-            }
-
-            test("fails on an unknown release") {
-                val dir =
-                    gradleProject(
-                        buildFile(
-                            """
-                            vulnlog {
-                                files.from("test.vl.yaml")
-                                suppress {
                                     asOf = "9.9.9"
-                                }
-                            }
-                            """.trimIndent(),
-                        ),
-                        "test.vl.yaml" to vulnlogDocument(),
-                    )
-
-                val result = runner(dir, "vulnlogSuppress").buildAndFail()
-
-                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Release not found: 9.9.9"
-                result.output shouldContain "Known releases: 1.0.0"
-            }
-
-            test("fails on an unknown tag") {
-                val dir =
-                    gradleProject(
-                        buildFile(
-                            """
-                            vulnlog {
-                                files.from("test.vl.yaml")
-                                suppress {
                                     tags = setOf("missing-tag")
                                 }
                             }
@@ -290,7 +247,9 @@ class VulnlogSuppressTaskTest :
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
 
                 result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
-                result.output shouldContain "Tag not found: missing-tag"
+                result.output shouldContain "Invalid reporter: bogus."
+                result.output shouldContain "Release not found: 9.9.9. Known releases: 1.0.0."
+                result.output shouldContain "Tag not found: missing-tag."
             }
         }
     })
