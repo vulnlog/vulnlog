@@ -3,12 +3,12 @@
 
 package dev.vulnlog.lib.codec.suppression.snyk
 
+import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykIgnoreEntryDto
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.model.suppress.SuppressionVuln
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.maps.shouldBeEmpty
-import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 class SnykMapperTest :
     FunSpec({
 
-        test("maps entry to nested ignore structure with wildcard path") {
+        test("maps each entry to a wildcard path under its own id, with or without an expiry") {
             val input =
                 SuppressionOutput.SnykSuppression(
                     entries =
@@ -26,58 +26,29 @@ class SnykMapperTest :
                                 reason = "not exploitable",
                                 expiresAt = LocalDate.of(2026, 12, 31),
                             ),
-                        ),
-                )
-
-            val dto = SnykMapper.toDto(input)
-
-            dto.ignore shouldHaveSize 1
-            val entryList = dto.ignore["SNYK-JAVA-001"]!!
-            entryList.size shouldBe 1
-            val wildcardEntry = entryList.first()["*"]!!
-            wildcardEntry.reason shouldBe "not exploitable"
-            wildcardEntry.expires shouldBe LocalDateTime.of(2026, 12, 31, 0, 0)
-        }
-
-        test("maps multiple entries to separate ignore keys") {
-            val input =
-                SuppressionOutput.SnykSuppression(
-                    entries =
-                        setOf(
-                            SuppressionVuln.SnykSuppressionEntry(id = VulnId.Snyk("SNYK-JAVA-001"), reason = "reason1"),
-                            SuppressionVuln.SnykSuppressionEntry(id = VulnId.Snyk("SNYK-JAVA-002"), reason = "reason2"),
-                        ),
-                )
-
-            val dto = SnykMapper.toDto(input)
-
-            dto.ignore shouldHaveSize 2
-        }
-
-        test("maps empty entries to empty ignore map") {
-            val input = SuppressionOutput.SnykSuppression(entries = emptySet())
-
-            val dto = SnykMapper.toDto(input)
-
-            dto.ignore.shouldBeEmpty()
-        }
-
-        test("maps entry without expiresAt") {
-            val input =
-                SuppressionOutput.SnykSuppression(
-                    entries =
-                        setOf(
                             SuppressionVuln.SnykSuppressionEntry(
-                                id = VulnId.Snyk("SNYK-JAVA-001"),
+                                id = VulnId.Snyk("SNYK-JAVA-002"),
                                 reason = "permanent",
                             ),
                         ),
                 )
 
             val dto = SnykMapper.toDto(input)
-            val wildcardEntry = dto.ignore["SNYK-JAVA-001"]!!.first()["*"]!!
 
-            wildcardEntry.reason shouldBe "permanent"
-            wildcardEntry.expires shouldBe null
+            val expiring = SnykIgnoreEntryDto("not exploitable", LocalDateTime.of(2026, 12, 31, 0, 0))
+            val permanent = SnykIgnoreEntryDto("permanent", null)
+            dto.ignore shouldBe
+                mapOf(
+                    "SNYK-JAVA-001" to listOf(mapOf("*" to expiring)),
+                    "SNYK-JAVA-002" to listOf(mapOf("*" to permanent)),
+                )
+        }
+
+        test("maps no entries to an empty ignore map") {
+            val input = SuppressionOutput.SnykSuppression(entries = emptySet())
+
+            val dto = SnykMapper.toDto(input)
+
+            dto.ignore.shouldBeEmpty()
         }
     })

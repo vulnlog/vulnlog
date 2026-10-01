@@ -6,17 +6,14 @@ package dev.vulnlog.lib.document
 import dev.vulnlog.lib.model.SchemaVersion
 
 sealed interface SchemaVersionParseResult {
-    /** Declared version maps onto a schema version this build supports. */
     data class Recognized(
         val version: SchemaVersion,
     ) : SchemaVersionParseResult
 
-    /** A well-formed version number, but not one this build supports. */
     data class Unsupported(
         val raw: String,
     ) : SchemaVersionParseResult
 
-    /** Not a version number at all (blank or non-numeric major). */
     data object Malformed : SchemaVersionParseResult
 }
 

@@ -6,9 +6,7 @@ package dev.vulnlog.lib.document.validation
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.model.VulnlogFile
 
-/**
- * A [ParsedVulnlogProject] whose domain model also passed the domain rules. Commands that read the vulnerabilities rather than the layout need this stage.
- */
+/** Passed the domain rules too; commands that read the vulnerabilities, not the layout, need this stage. */
 data class ValidVulnlogProject(
     val parsedVulnlogProject: ParsedVulnlogProject,
     val vulnlogProjectFile: VulnlogFile,

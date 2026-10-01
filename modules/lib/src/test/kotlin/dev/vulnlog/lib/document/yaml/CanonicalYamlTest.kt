@@ -12,6 +12,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import org.snakeyaml.engine.v2.common.FlowStyle
 import org.snakeyaml.engine.v2.common.ScalarStyle
+import java.time.LocalDate
 
 class CanonicalYamlTest :
     FunSpec({
@@ -35,133 +36,101 @@ class CanonicalYamlTest :
             justification = justification,
         )
 
-        test("single-element scalar list renders as a flow array, type-safe unquoted") {
-            val yaml = CanonicalYaml.renderEntry(entry(releases = listOf("0.11.0")))
+        test("a single scalar element renders as a flow array, double-quoted only when it bears a colon") {
+            val single = entry(releases = listOf("0.11.0"), packages = listOf("pkg:maven/org.example/lib@1.2.3"))
+
+            val yaml = CanonicalYaml.renderEntry(single)
 
             yaml shouldContain "releases: [0.11.0]"
-        }
-
-        test("colon-bearing scalars (purls) are double-quoted in flow arrays") {
-            val yaml = CanonicalYaml.renderEntry(entry(packages = listOf("pkg:maven/org.example/lib@1.2.3")))
-
             yaml shouldContain """packages: ["pkg:maven/org.example/lib@1.2.3"]"""
         }
 
-        test("multi-element list renders as a block array") {
-            val yaml = CanonicalYaml.renderEntry(entry(releases = listOf("0.11.0", "0.12.0")))
+        test("several elements or a list of mappings render as a block list") {
+            val several =
+                entry(releases = listOf("0.11.0", "0.12.0"), reports = listOf(ReportEntryDto(reporter = "trivy")))
+
+            val yaml = CanonicalYaml.renderEntry(several)
 
             yaml shouldContain "releases:\n  - 0.11.0\n  - 0.12.0"
-        }
-
-        test("a single report (list of mappings) stays in block style, not inline flow") {
-            val yaml = CanonicalYaml.renderEntry(entry(reports = listOf(ReportEntryDto(reporter = "trivy"))))
-
             yaml shouldContain "reports:\n  - reporter: trivy"
-            yaml shouldNotContain "[{"
         }
 
-        test("absent report date is omitted, not rendered as null") {
-            val yaml = CanonicalYaml.renderEntry(entry(reports = listOf(ReportEntryDto(reporter = "trivy"))))
-
-            yaml shouldNotContain "at: null"
-        }
-
-        test("absent resolution date is omitted, not rendered as null") {
+        test("absent values are omitted, not rendered as null") {
             val pendingFix = entry().copy(resolution = ResolutionDto(release = "0.12.0", note = "pending"))
+
             val yaml = CanonicalYaml.renderEntry(pendingFix)
 
             yaml shouldContain "in: 0.12.0"
-            yaml shouldNotContain "at: null"
-        }
-
-        test("prose longer than two line widths renders as a folded block scalar") {
-            val long = "The vulnerable code path is not reachable in our application because we are safe. ".repeat(2)
-            val yaml = CanonicalYaml.renderEntry(entry(analysis = long.trim()))
-
-            yaml shouldContain "analysis: >"
+            yaml shouldNotContain "null"
         }
 
         test("enums and ids stay unquoted") {
-            val yaml =
-                CanonicalYaml.renderEntry(
-                    entry(verdict = "not affected", justification = "vulnerable code not in execute path"),
-                )
+            val notAffected = entry(verdict = "not affected", justification = "vulnerable code not in execute path")
+
+            val yaml = CanonicalYaml.renderEntry(notAffected)
 
             yaml shouldContain "id: CVE-2026-0001"
             yaml shouldContain "verdict: not affected"
             yaml shouldContain "justification: vulnerable code not in execute path"
         }
 
-        test("field order follows DTO declaration order") {
-            val yaml = CanonicalYaml.renderEntry(entry(description = "short summary"))
-            val keys = yaml.lines().filter { it.matches(Regex("""^\w+:.*""")) }.map { it.substringBefore(':') }
-
-            keys shouldBe listOf("id", "description", "releases", "packages", "reports")
-        }
-
         test("a multi-line string renders as a literal block scalar") {
             val multiLine = "Affected paths:\n  - parser.decode()\nNone are reachable."
+
             val yaml = CanonicalYaml.renderEntry(entry(analysis = multiLine))
 
-            yaml shouldContain "analysis: |-"
+            yaml shouldContain "analysis: |-\n"
             yaml shouldContain "  - parser.decode()"
-            yaml shouldNotContain "analysis: >"
         }
 
-        test("a very long string without newlines defaults to a folded block scalar") {
+        test("a spaced string above the fold threshold renders as a folded block scalar") {
             val long = "The vulnerable code path is not reachable in our application because we are safe. ".repeat(2)
+
             val yaml = CanonicalYaml.renderEntry(entry(analysis = long.trim()))
 
             yaml shouldContain "analysis: >"
         }
 
-        test("a moderately long spaced string stays plain instead of folding") {
+        test("a spaced string below the fold threshold stays plain on one line, beyond the emitter's default width") {
             val wouldWrap = "Time-of-check Time-of-use (TOCTOU) Race Condition (CWE-367) in the rsync daemon."
+
             val yaml = CanonicalYaml.renderEntry(entry(description = wouldWrap))
 
-            yaml shouldContain "description: Time-of-check"
-            yaml shouldNotContain "description: >"
+            yaml shouldContain "description: $wouldWrap\n"
         }
 
-        test("a short spaced string stays an inline plain scalar") {
-            val yaml = CanonicalYaml.renderEntry(entry(description = "Remote code execution in example-lib"))
+        test("surrounding whitespace is trimmed rather than forcing double quotes") {
+            val padded = "  padded  "
 
-            yaml shouldContain "description: Remote code execution in example-lib"
-            yaml shouldNotContain "description: >"
-        }
-
-        test("surrounding whitespace is trimmed, so a trailing space no longer forces double-quoting") {
-            val trailingSpace =
-                "Integer overflow vulnerability (CWE-125, CWE-190) in rsync allowing to disclose process memory. "
-            val yaml = CanonicalYaml.renderEntry(entry(description = trailingSpace))
-
-            yaml shouldContain "description: Integer overflow"
-            yaml shouldNotContain "memory. \""
-        }
-
-        test("leading and trailing whitespace is stripped from a short value") {
-            val yaml = CanonicalYaml.renderEntry(entry(description = "  padded  "))
+            val yaml = CanonicalYaml.renderEntry(entry(description = padded))
 
             yaml shouldContain "description: padded\n"
-            yaml shouldNotContain "padded  "
         }
 
         context("decision functions") {
 
-            test("canonicalScalarStyle is a pure function of the value") {
-                CanonicalYaml.canonicalScalarStyle("a\nb") shouldBe ScalarStyle.LITERAL
-                CanonicalYaml.canonicalScalarStyle("word ".repeat(40)) shouldBe ScalarStyle.FOLDED
-                CanonicalYaml.canonicalScalarStyle("word ".repeat(20)) shouldBe ScalarStyle.PLAIN
-                CanonicalYaml.canonicalScalarStyle("1") shouldBe ScalarStyle.DOUBLE_QUOTED
-                CanonicalYaml.canonicalScalarStyle("pkg:npm/x@1") shouldBe ScalarStyle.DOUBLE_QUOTED
-                CanonicalYaml.canonicalScalarStyle("not affected") shouldBe ScalarStyle.PLAIN
+            test("canonicalScalarStyle picks the style by the value alone") {
+                val values = listOf("a\nb", "word ".repeat(40), "word ".repeat(20), "1", "pkg:npm/x@1", "not affected")
+
+                val styles = values.map(CanonicalYaml::canonicalScalarStyle)
+
+                styles shouldBe
+                    listOf(
+                        ScalarStyle.LITERAL,
+                        ScalarStyle.FOLDED,
+                        ScalarStyle.PLAIN,
+                        ScalarStyle.DOUBLE_QUOTED,
+                        ScalarStyle.DOUBLE_QUOTED,
+                        ScalarStyle.PLAIN,
+                    )
             }
 
             test("canonicalFlowStyle puts at most one scalar element in flow style") {
-                CanonicalYaml.canonicalFlowStyle(0, scalarItemsOnly = true) shouldBe FlowStyle.FLOW
-                CanonicalYaml.canonicalFlowStyle(1, scalarItemsOnly = true) shouldBe FlowStyle.FLOW
-                CanonicalYaml.canonicalFlowStyle(2, scalarItemsOnly = true) shouldBe FlowStyle.BLOCK
-                CanonicalYaml.canonicalFlowStyle(1, scalarItemsOnly = false) shouldBe FlowStyle.BLOCK
+                val shapes = listOf(0 to true, 1 to true, 2 to true, 1 to false)
+
+                val styles = shapes.map { (count, scalarOnly) -> CanonicalYaml.canonicalFlowStyle(count, scalarOnly) }
+
+                styles shouldBe listOf(FlowStyle.FLOW, FlowStyle.FLOW, FlowStyle.BLOCK, FlowStyle.BLOCK)
             }
 
             test("renderEntry key order matches canonicalEntryFieldOrder") {
@@ -175,11 +144,12 @@ class CanonicalYamlTest :
                         name = "n",
                         aliases = listOf("GHSA-0000-0000-0000"),
                         tags = listOf("t"),
-                        analyzedAt = java.time.LocalDate.EPOCH,
+                        analyzedAt = LocalDate.EPOCH,
                         severity = "s",
                         resolution = ResolutionDto(release = "0"),
                         comment = "c",
                     )
+
                 val keys =
                     CanonicalYaml
                         .renderEntry(full)

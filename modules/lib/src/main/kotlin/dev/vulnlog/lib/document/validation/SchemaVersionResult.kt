@@ -12,7 +12,6 @@ import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
 import org.snakeyaml.engine.v2.nodes.ScalarNode
 
-/** Which schema version the document declares, if this build supports it. */
 sealed interface SchemaVersionResult {
     data class Recognized(
         val version: SchemaVersion,
@@ -25,7 +24,6 @@ sealed interface SchemaVersionResult {
 
 private const val VERSION_KEY = "schemaVersion"
 
-/** Reads the declared schema version and decides whether this build can go on with the document. */
 fun resolveSchemaVersion(rootNode: MappingNode): SchemaVersionResult {
     val versionNode: Node =
         valueNodeOf(rootNode, VERSION_KEY) ?: return rejected("Missing $VERSION_KEY")

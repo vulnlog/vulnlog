@@ -6,7 +6,7 @@ package dev.vulnlog.lib.document.validation
 import dev.vulnlog.lib.model.finding.ParseFailure
 import org.snakeyaml.engine.v2.nodes.MappingNode
 
-/** Whether the input text is well-formed YAML with a mapping at the root. */
+/** Well-formed YAML with a mapping at the root. */
 sealed interface NodeTreeResult {
     data class Valid(
         val rootNode: MappingNode,

@@ -118,10 +118,7 @@ object DtoV1Mapper {
             )
         }
 
-    /**
-     * Maps the DTO onto the domain model, collecting every value without a domain representation
-     * (unknown vulnerability id, purl, verdict, ...) together with the entry path it sits at.
-     */
+    /** Reports every value without a domain representation in one pass (issue #208), each with its entry path. */
     fun toDomain(
         schemaVersion: SchemaVersion,
         dto: VulnlogFileV1Dto,
@@ -142,7 +139,6 @@ object DtoV1Mapper {
         }
     }
 
-    /** Collects mapping failures so a single pass reports every problem (issue #208). */
     private class FailureCollector {
         private val failures = mutableListOf<ParseFailure>()
 

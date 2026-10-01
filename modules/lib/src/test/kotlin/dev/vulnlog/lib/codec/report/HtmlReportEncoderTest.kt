@@ -14,6 +14,8 @@ import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ReportingEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeStrictlyIncreasing
+import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.time.Instant
@@ -74,97 +76,91 @@ private fun render(
 class HtmlReportEncoderTest :
     FunSpec({
 
-        test("renders valid HTML with project name") {
-            val html = render(listOf(entry()))
+        test("fills the template, Content-Security-Policy included, with the report data") {
+            val entries = listOf(entry())
+
+            val html = render(entries)
 
             html shouldContain "<!DOCTYPE html>"
+            html shouldContain "default-src 'none'"
             html shouldContain "Acme Web App"
-        }
-
-        test("contains serialized entry data") {
-            val html = render(listOf(entry()))
-
             html shouldContain "CVE-2026-1234"
-            html shouldContain "affected"
-            html shouldContain "high"
-        }
-
-        test("placeholder is replaced") {
-            val html = render(listOf(entry()))
-
             html shouldNotContain "VULNLOG_DATA_PLACEHOLDER"
         }
 
-        test("renders with empty entries") {
-            val html = render(emptyList())
+        test("renders a report without entries") {
+            val entries = emptyList<ReportingEntry>()
+
+            val html = render(entries)
 
             html shouldContain "<!DOCTYPE html>"
             html shouldContain "\"entries\":[]"
         }
 
-        test("renders multiple entries") {
+        test("serializes every entry with its verdict and its detail") {
             val entries =
                 listOf(
-                    entry(primaryId = VulnId.Cve("CVE-2026-1234")),
+                    entry(primaryId = VulnId.Cve("CVE-2026-1234"), impact = Impact.Affected(Severity.HIGH)),
                     entry(
                         primaryId = VulnId.Cve("CVE-2026-5678"),
                         impact = Impact.NotAffected("vulnerable code not in execute path"),
-                        state = WorkState.OPEN,
                     ),
                 )
+
             val html = render(entries)
 
             html shouldContain "CVE-2026-1234"
+            html shouldContain "\"verdict\":\"affected\""
+            html shouldContain "\"severity\":\"high\""
             html shouldContain "CVE-2026-5678"
-            html shouldContain "not affected"
+            html shouldContain "\"verdict\":\"not affected\""
+            html shouldContain "vulnerable code not in execute path"
         }
 
-        test("includes aliases in serialized data") {
-            val e =
+        test("serializes aliases and fix releases") {
+            val withAliasAndFixes =
                 entry(
                     primaryId = VulnId.Cve("CVE-2026-1234"),
                     ids = setOf(VulnId.Cve("CVE-2026-1234"), VulnId.Ghsa("GHSA-abcd-1234-efgh")),
+                    fixedIn = setOf(Release("1.1.0"), Release("2.0.1")),
                 )
-            val html = render(listOf(e))
+
+            val html = render(listOf(withAliasAndFixes))
 
             html shouldContain "GHSA-abcd-1234-efgh"
-        }
-
-        test("includes fix releases in serialized data") {
-            val e = entry(fixedIn = setOf(Release("1.1.0"), Release("2.0.1")))
-            val html = render(listOf(e))
-
             html shouldContain "1.1.0"
             html shouldContain "2.0.1"
         }
 
-        test("includes vulnlog version") {
-            val html = render(listOf(entry()), vulnlogVersion = "9.9.9-test")
+        test("serializes the version, the inputs and the generation time") {
+            val generatedAt = Instant.parse("2026-05-02T08:15:30Z")
 
-            html shouldContain "9.9.9-test"
-        }
-
-        test("includes input file names") {
-            val html = render(listOf(entry()), inputs = listOf("project.vl", "deps.vl"))
-
-            html shouldContain "project.vl"
-            html shouldContain "deps.vl"
-        }
-
-        test("includes applied filter") {
             val html =
                 render(
                     listOf(entry()),
-                    filter =
-                        FilterDataDto(
-                            asOf = "1.2.0",
-                            tags = listOf("frontend", "production"),
-                            reporter = "trivy",
-                            states = listOf("open"),
-                            verdicts = listOf("affected"),
-                            dispositions = listOf("will fix"),
-                        ),
+                    generatedAt = generatedAt,
+                    vulnlogVersion = "9.9.9-test",
+                    inputs = listOf("project.vl", "deps.vl"),
                 )
+
+            html shouldContain "9.9.9-test"
+            html shouldContain "project.vl"
+            html shouldContain "deps.vl"
+            html shouldContain "2026-05-02T08:15:30Z"
+        }
+
+        test("serializes the applied filter") {
+            val filter =
+                FilterDataDto(
+                    asOf = "1.2.0",
+                    tags = listOf("frontend", "production"),
+                    reporter = "trivy",
+                    states = listOf("open"),
+                    verdicts = listOf("affected"),
+                    dispositions = listOf("will fix"),
+                )
+
+            val html = render(listOf(entry()), filter = filter)
 
             html shouldContain "1.2.0"
             html shouldContain "frontend"
@@ -174,91 +170,46 @@ class HtmlReportEncoderTest :
             html shouldContain "\"dispositions\":[\"will fix\"]"
         }
 
-        test("includes verdictDetail for not-affected entries") {
-            val e =
+        // Retired with issue #161; the report must not bring it back as a label.
+        test("renders the stated disposition, never the retired risk acceptable verdict") {
+            val accepted =
                 entry(
-                    impact = Impact.NotAffected("vulnerable code not in execute path"),
+                    state = WorkState.ACCEPTED,
+                    impact = Impact.Affected(Severity.HIGH),
+                    disposition = Disposition.WONT_FIX,
                 )
-            val html = render(listOf(e))
 
-            html shouldContain "vulnerable code not in execute path"
-        }
+            val html = render(listOf(accepted))
 
-        test("renders the disposition when the intent is stated") {
-            val html = render(listOf(entry(disposition = Disposition.WILL_FIX)))
-
-            html shouldContain "will fix"
+            html shouldContain "wont fix"
+            html shouldNotContain "risk acceptable"
         }
 
         test("omits the verdict while the entry is untriaged") {
-            val html =
-                render(
-                    listOf(entry(state = WorkState.UNDER_INVESTIGATION, impact = Impact.Unknown)),
-                )
+            val untriaged = entry(state = WorkState.UNDER_INVESTIGATION, impact = Impact.Unknown)
+
+            val html = render(listOf(untriaged))
 
             html shouldContain "\"verdict\":null"
         }
 
-        // The verdict was retired with issue #161; the report must not resurrect it as a label.
-        test("never renders the retired risk acceptable verdict") {
-            val html =
-                render(
-                    listOf(
-                        entry(
-                            state = WorkState.ACCEPTED,
-                            impact = Impact.Affected(Severity.HIGH),
-                            disposition = Disposition.WONT_FIX,
-                        ),
-                    ),
-                )
-
-            html shouldNotContain "risk acceptable"
-            html shouldContain "wont fix"
-        }
-
-        test("renders generatedAt as ISO instant") {
-            val html = render(listOf(entry()), generatedAt = Instant.parse("2026-05-02T08:15:30Z"))
-
-            html shouldContain "2026-05-02T08:15:30Z"
-        }
-
-        test("includes Content-Security-Policy meta tag") {
-            val html = render(listOf(entry()))
-
-            html shouldContain "Content-Security-Policy"
-            html shouldContain "default-src 'none'"
-        }
-
-        test("sorts entries by state then severity") {
+        test("sorts entries by state, then severity") {
+            fun entry(
+                id: String,
+                state: WorkState,
+                severity: Severity,
+            ) = entry(primaryId = VulnId.Cve(id), state = state, impact = Impact.Affected(severity))
             val entries =
                 listOf(
-                    entry(
-                        primaryId = VulnId.Cve("CVE-2026-0001"),
-                        state = WorkState.RESOLVED,
-                        impact = Impact.Affected(Severity.LOW),
-                    ),
-                    entry(
-                        primaryId = VulnId.Cve("CVE-2026-0002"),
-                        state = WorkState.OPEN,
-                        impact = Impact.Affected(Severity.MEDIUM),
-                    ),
-                    entry(
-                        primaryId = VulnId.Cve("CVE-2026-0003"),
-                        state = WorkState.OPEN,
-                        impact = Impact.Affected(Severity.CRITICAL),
-                    ),
+                    entry("CVE-2026-0001", WorkState.RESOLVED, Severity.LOW),
+                    entry("CVE-2026-0002", WorkState.OPEN, Severity.MEDIUM),
+                    entry("CVE-2026-0003", WorkState.OPEN, Severity.CRITICAL),
                 )
+
             val html = render(entries)
 
-            // Critical-open should appear before medium-open, both before low-resolved.
-            val criticalIdx = html.indexOf("CVE-2026-0003")
-            val mediumIdx = html.indexOf("CVE-2026-0002")
-            val resolvedIdx = html.indexOf("CVE-2026-0001")
-            check(criticalIdx in 0..<mediumIdx) {
-                "Expected CVE-2026-0003 (open critical) before CVE-2026-0002 (open medium)"
-            }
-            check(mediumIdx in 0..<resolvedIdx) {
-                "Expected CVE-2026-0002 (open) before CVE-2026-0001 (resolved)"
-            }
+            val positions = listOf("CVE-2026-0003", "CVE-2026-0002", "CVE-2026-0001").map(html::indexOf)
+            positions shouldNotContain -1
+            positions.shouldBeStrictlyIncreasing()
         }
     })

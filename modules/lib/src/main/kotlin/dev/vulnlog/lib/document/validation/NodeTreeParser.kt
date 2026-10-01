@@ -12,7 +12,7 @@ import org.snakeyaml.engine.v2.exceptions.YamlEngineException
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
 
-/** Composes the input text into a node tree, which carries the styles and source positions. */
+/** The node tree keeps styles and source positions, which later stages drop. */
 fun parseToNodeTree(content: String): NodeTreeResult =
     try {
         val node: Node =

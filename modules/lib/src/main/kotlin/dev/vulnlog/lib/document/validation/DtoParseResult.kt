@@ -13,7 +13,6 @@ import tools.jackson.databind.DatabindException
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.exc.UnrecognizedPropertyException
 
-/** Whether the value tree binds to the DTO of the declared schema version. */
 internal sealed interface DtoParseResult {
     data class Parsed(
         val dto: DtoVersion,
@@ -24,7 +23,7 @@ internal sealed interface DtoParseResult {
     ) : DtoParseResult
 }
 
-/** Binds the value tree to the DTO. [rootNode] only serves to resolve where a failure sits. */
+/** [rootNode] only locates a failure in the source. */
 internal fun bindToDto(
     document: JsonNode,
     version: SchemaVersion,
