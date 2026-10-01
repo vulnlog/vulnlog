@@ -40,6 +40,7 @@ import dev.vulnlog.lib.shell.FileOutputOption
 import dev.vulnlog.lib.shell.OutputOption
 import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import java.nio.file.Path
+import java.time.LocalDate
 
 class SuppressCommand : CliktCommand(name = "suppress") {
     override fun help(context: Context): String = "Create suppression files."
@@ -92,7 +93,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
                 .filter { filter.reporter == null || it == filter.reporter }
                 .toSet()
 
-        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
+        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter, LocalDate.now()))
         val suppressionResult = buildSuppressionOutputs(targetReporters, collected.included, format)
         (collected.exclusions + suppressionResult.exclusions).forEach { exclusion ->
             diagnosticSink().verbose(renderSuppressionExclusion(exclusion))

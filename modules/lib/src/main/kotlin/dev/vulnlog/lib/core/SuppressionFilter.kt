@@ -9,7 +9,7 @@ import java.time.LocalDate
 
 data class SuppressionFilter(
     val filter: ResolvedFilter = ResolvedFilter(),
-    val today: LocalDate = LocalDate.now(),
+    val today: LocalDate,
 )
 
 fun Sequence<SuppressedVulnerability>.applyFilter(filter: ResolvedFilter): Sequence<SuppressedVulnerability> =
