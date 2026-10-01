@@ -7,7 +7,7 @@ import dev.vulnlog.gradle.filter.resolveFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.validation.validateInputOrFail
-import dev.vulnlog.lib.codec.suppression.SuppressionWriter
+import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
@@ -93,7 +93,7 @@ abstract class VulnlogSuppressTask : DefaultTask() {
         val dir = outputDir.get().asFile
         dir.mkdirs()
         outputs.forEach { suppressionOutput ->
-            val suppressionFile = SuppressionWriter.writeSuppressionOutput(suppressionOutput)
+            val suppressionFile = SuppressionEncoder.encode(suppressionOutput)
             val outputPath = dir.resolve(suppressionFile.fileName)
             outputPath.writeText(suppressionFile.content)
             logger.lifecycle(formatStatus(StatusVerb.WROTE, outputPath.absolutePath))

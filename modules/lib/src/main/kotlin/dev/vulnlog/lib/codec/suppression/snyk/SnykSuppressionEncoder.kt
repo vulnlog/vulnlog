@@ -6,7 +6,7 @@ package dev.vulnlog.lib.codec.suppression.snyk
 import dev.vulnlog.lib.document.yaml.CanonicalYaml
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 
-object SnykSuppressionWriter {
-    fun write(inputData: SuppressionOutput.SnykSuppression): String =
+object SnykSuppressionEncoder {
+    fun encode(inputData: SuppressionOutput.SnykSuppression): String =
         CanonicalYaml.renderDocument(SnykMapper.toDto(inputData))
 }

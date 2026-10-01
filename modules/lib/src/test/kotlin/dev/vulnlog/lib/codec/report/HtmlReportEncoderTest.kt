@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.codec.report
 
 import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.report.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.codec.report.dto.FilterDataDto
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
@@ -61,7 +60,7 @@ private fun render(
     inputs: List<String> = listOf("vulnlog.vl"),
     filter: FilterDataDto = emptyFilter,
 ): String =
-    renderHtmlReport(
+    HtmlReportEncoder.encode(
         toDto(
             project = defaultProject,
             entries = entries,
@@ -72,7 +71,7 @@ private fun render(
         ),
     )
 
-class HtmlReportRendererTest :
+class HtmlReportEncoderTest :
     FunSpec({
 
         test("renders valid HTML with project name") {

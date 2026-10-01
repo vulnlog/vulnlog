@@ -14,8 +14,8 @@ import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.reporting.sharedProjectOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.codec.report.HtmlReportEncoder
 import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.report.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.codec.report.dto.FilterDataDto
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.FilterRequest
@@ -118,7 +118,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
                 inputs = inputNames,
                 filter = filterData,
             )
-        val content = renderHtmlReport(reportData)
+        val content = HtmlReportEncoder.encode(reportData)
 
         when (val target = output) {
             is FileOutputOption.File -> {

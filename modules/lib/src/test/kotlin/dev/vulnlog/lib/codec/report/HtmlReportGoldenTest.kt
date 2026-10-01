@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.codec.report
 
 import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.report.HtmlReportWriter.renderHtmlReport
 import dev.vulnlog.lib.codec.report.dto.FilterDataDto
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
@@ -26,7 +25,7 @@ private val GOLDEN_SOURCE: Path = Path.of("src/test/resources/report/golden-vuln
 class HtmlReportGoldenTest :
     FunSpec({
         test("matches golden HTML snapshot") {
-            val actual = renderHtmlReport(goldenFixture())
+            val actual = HtmlReportEncoder.encode(goldenFixture())
 
             if (shouldUpdateGolden()) {
                 Files.createDirectories(GOLDEN_SOURCE.parent)

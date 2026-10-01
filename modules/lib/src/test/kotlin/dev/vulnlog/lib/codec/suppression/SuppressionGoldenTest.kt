@@ -46,7 +46,7 @@ class SuppressionGoldenTest :
                         ),
                 )
 
-            val actual = SuppressionWriter.writeSuppressionOutput(output).content
+            val actual = SuppressionEncoder.encode(output).content
 
             actual shouldBe golden("trivyignore.yaml", actual)
         }
@@ -68,7 +68,7 @@ class SuppressionGoldenTest :
                         ),
                 )
 
-            val actual = SuppressionWriter.writeSuppressionOutput(output).content
+            val actual = SuppressionEncoder.encode(output).content
 
             actual shouldBe golden("snyk.yaml", actual)
         }

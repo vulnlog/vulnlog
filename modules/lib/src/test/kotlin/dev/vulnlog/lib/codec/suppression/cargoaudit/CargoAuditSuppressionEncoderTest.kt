@@ -9,7 +9,7 @@ import dev.vulnlog.lib.model.suppress.SuppressionVuln
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class CargoAuditSuppressionWriterTest :
+class CargoAuditSuppressionEncoderTest :
     FunSpec({
 
         test("writes single RUSTSEC entry") {
@@ -23,7 +23,7 @@ class CargoAuditSuppressionWriterTest :
                         ),
                 )
 
-            val result = CargoAuditSuppressionWriter.write(input)
+            val result = CargoAuditSuppressionEncoder.encode(input)
 
             result shouldBe
                 """
@@ -45,7 +45,7 @@ class CargoAuditSuppressionWriterTest :
                         ),
                 )
 
-            val result = CargoAuditSuppressionWriter.write(input)
+            val result = CargoAuditSuppressionEncoder.encode(input)
 
             result shouldBe
                 """
@@ -61,7 +61,7 @@ class CargoAuditSuppressionWriterTest :
         test("writes empty ignore list") {
             val input = SuppressionOutput.CargoAuditSuppression(entries = emptySet())
 
-            val result = CargoAuditSuppressionWriter.write(input)
+            val result = CargoAuditSuppressionEncoder.encode(input)
 
             result shouldBe "[advisories]\nignore = []\n"
         }
