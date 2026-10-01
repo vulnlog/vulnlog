@@ -3,20 +3,20 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
+import dev.vulnlog.lib.document.yaml.CanonicalYaml
+import dev.vulnlog.lib.document.yaml.FormatSource
+import dev.vulnlog.lib.document.yaml.LocatedNode
+import dev.vulnlog.lib.document.yaml.YamlWriter
+import dev.vulnlog.lib.document.yaml.hasSchemaHeader
+import dev.vulnlog.lib.document.yaml.hasYamlComments
+import dev.vulnlog.lib.document.yaml.lineOf
+import dev.vulnlog.lib.document.yaml.mappingKeys
+import dev.vulnlog.lib.document.yaml.scalarValueOf
+import dev.vulnlog.lib.document.yaml.walkValues
 import dev.vulnlog.lib.model.finding.FormatFinding
 import dev.vulnlog.lib.model.finding.FormatRule
-import dev.vulnlog.lib.parse.CanonicalYaml
-import dev.vulnlog.lib.parse.FormatSource
-import dev.vulnlog.lib.parse.LocatedNode
-import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.hasYamlComments
-import dev.vulnlog.lib.parse.lineOf
-import dev.vulnlog.lib.parse.mappingKeys
-import dev.vulnlog.lib.parse.scalarValueOf
-import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
-import dev.vulnlog.lib.parse.walkValues
 import org.snakeyaml.engine.v2.common.FlowStyle
 import org.snakeyaml.engine.v2.common.ScalarStyle
 import org.snakeyaml.engine.v2.nodes.MappingNode

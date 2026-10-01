@@ -23,7 +23,7 @@ private const val LONG_REASON =
 
 /**
  * Pins the bytes of the two YAML suppression formats. Both are emitted by
- * [dev.vulnlog.lib.parse.CanonicalYaml], so this also guards the canonical style against drift in
+ * [dev.vulnlog.lib.document.yaml.CanonicalYaml], so this also guards the canonical style against drift in
  * indentation, quoting and block folding.
  */
 class SuppressionGoldenTest :

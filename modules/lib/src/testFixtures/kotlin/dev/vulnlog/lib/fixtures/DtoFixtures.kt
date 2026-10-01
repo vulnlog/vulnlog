@@ -3,11 +3,11 @@
 
 package dev.vulnlog.lib.fixtures
 
-import dev.vulnlog.lib.parse.dto.ProjectDto
-import dev.vulnlog.lib.parse.dto.ReleaseEntryDto
-import dev.vulnlog.lib.parse.dto.TagEntryDto
-import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.document.dto.ProjectDto
+import dev.vulnlog.lib.document.dto.ReleaseEntryDto
+import dev.vulnlog.lib.document.dto.TagEntryDto
+import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 
 fun v1Dto(
     vulnerabilities: List<VulnerabilityEntryDto> = emptyList(),

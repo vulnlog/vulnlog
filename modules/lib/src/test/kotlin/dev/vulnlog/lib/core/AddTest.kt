@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
@@ -13,7 +14,6 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.TagEntry
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.parse.YamlWriter
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.shouldBeLessThan

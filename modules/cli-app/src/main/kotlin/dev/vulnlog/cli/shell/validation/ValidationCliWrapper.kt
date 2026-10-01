@@ -15,11 +15,11 @@ import dev.vulnlog.lib.core.validation.renderFindings
 import dev.vulnlog.lib.core.validation.renderParsedProject
 import dev.vulnlog.lib.core.validation.renderProblem
 import dev.vulnlog.lib.core.validation.validateDocument
+import dev.vulnlog.lib.document.InputDocument
+import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.InputDocument
 import dev.vulnlog.lib.shell.ValidationRequest
 import dev.vulnlog.lib.shell.readInputDocument
 

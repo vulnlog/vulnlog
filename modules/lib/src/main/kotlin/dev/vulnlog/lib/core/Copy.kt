@@ -3,6 +3,12 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.document.mapper.DtoV1Mapper
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.document.yaml.YamlWriter
+import dev.vulnlog.lib.document.yaml.hasSchemaHeader
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
@@ -10,12 +16,6 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.mapper.DtoV1Mapper
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import java.nio.file.Path
 
 data class CopyOutcome(

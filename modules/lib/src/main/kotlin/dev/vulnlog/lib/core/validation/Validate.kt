@@ -5,6 +5,22 @@ package dev.vulnlog.lib.core.validation
 
 import dev.vulnlog.lib.core.validation.ValidationOutcome.Ok
 import dev.vulnlog.lib.core.validation.ValidationOutcome.Stopped
+import dev.vulnlog.lib.document.DomainMappingResult
+import dev.vulnlog.lib.document.InputDocument
+import dev.vulnlog.lib.document.dto.DtoVersion
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.document.mapToDomain
+import dev.vulnlog.lib.document.validation.DocumentResult
+import dev.vulnlog.lib.document.validation.DtoParseResult
+import dev.vulnlog.lib.document.validation.NodeTreeResult
+import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
+import dev.vulnlog.lib.document.validation.SchemaVersionResult
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.document.validation.bindToDto
+import dev.vulnlog.lib.document.validation.constructDocument
+import dev.vulnlog.lib.document.validation.locateFailures
+import dev.vulnlog.lib.document.validation.parseToNodeTree
+import dev.vulnlog.lib.document.validation.resolveSchemaVersion
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity.ERROR
@@ -12,22 +28,6 @@ import dev.vulnlog.lib.model.finding.FindingSeverity.INFO
 import dev.vulnlog.lib.model.finding.FindingSeverity.WARNING
 import dev.vulnlog.lib.model.finding.ValidationFinding
 import dev.vulnlog.lib.model.finding.highestSeverity
-import dev.vulnlog.lib.parse.DomainMappingResult
-import dev.vulnlog.lib.parse.dto.DtoVersion
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.parse.mapToDomain
-import dev.vulnlog.lib.parse.validation.DocumentResult
-import dev.vulnlog.lib.parse.validation.DtoParseResult
-import dev.vulnlog.lib.parse.validation.NodeTreeResult
-import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
-import dev.vulnlog.lib.parse.validation.SchemaVersionResult
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
-import dev.vulnlog.lib.parse.validation.bindToDto
-import dev.vulnlog.lib.parse.validation.constructDocument
-import dev.vulnlog.lib.parse.validation.locateFailures
-import dev.vulnlog.lib.parse.validation.parseToNodeTree
-import dev.vulnlog.lib.parse.validation.resolveSchemaVersion
-import dev.vulnlog.lib.shell.InputDocument
 
 /**
  * Reads [document] to the Vulnlog DTO representation or returns a [ValidationOutcome] containing the details of why parsing and validation failed.

@@ -12,8 +12,8 @@ import dev.vulnlog.lib.core.formatCommentsDroppedWarning
 import dev.vulnlog.lib.core.formatCopiedMessage
 import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
-import dev.vulnlog.lib.parse.hasYamlComments
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException

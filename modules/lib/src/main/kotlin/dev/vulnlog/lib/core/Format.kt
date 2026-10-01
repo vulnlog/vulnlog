@@ -3,11 +3,11 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
+import dev.vulnlog.lib.document.yaml.YamlWriter
+import dev.vulnlog.lib.document.yaml.hasSchemaHeader
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 
 /**
  * Rewrites a parsed schema-v1 document in the canonical style: the whole file is rendered from the

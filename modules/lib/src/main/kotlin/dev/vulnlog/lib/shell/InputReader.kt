@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.shell
 
+import dev.vulnlog.lib.document.InputDocument
 import java.io.IOException
 import kotlin.io.path.name
 import kotlin.io.path.readText
