@@ -18,7 +18,6 @@ import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
-import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
@@ -138,12 +137,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     private fun fail(failed: OpenVexOutcome.Failed): Nothing {
         val failures = renderOpenVexFailure(failed, baselineRequest?.toString().orEmpty(), "--baseline")
         formatFailureLines(failures).forEach(::echoMessage)
-        val exitCode =
-            when (failed) {
-                is FilterRejected, is OpenVexOutcome.BaselineRejected -> ExitCode.INVALID_FLAG_VALUE
-                is OpenVexOutcome.NoStatementApplies -> ExitCode.VALIDATION_ERROR
-            }
-        throw ProgramResult(exitCode.code)
+        throw ProgramResult(exitCode(failed).code)
     }
 
     private fun echoLine(line: OpenVexLine) =
