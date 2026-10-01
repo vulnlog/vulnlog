@@ -10,6 +10,7 @@ import dev.vulnlog.lib.document.dto.ReportEntryDto
 import dev.vulnlog.lib.document.dto.ResolutionDto
 import dev.vulnlog.lib.document.dto.SuppressionDto
 import dev.vulnlog.lib.document.dto.TagEntryDto
+import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.releaseEntry
@@ -200,5 +201,51 @@ class DtoV1MapperTest :
                         "vulnerabilities[CVE-2021-3].verdict" to "Invalid verdict: invalid_verdict",
                     )
             }
+        }
+
+        // Copy and the reports read entries through the domain model, so a value it drops is lost (issue #192).
+        test("keeps every value of a vulnerability entry through toDomain and vulnerabilityToDto") {
+            val entries =
+                listOf(
+                    VulnerabilityEntryDto(
+                        id = "CVE-2021-44228",
+                        name = "Log4Shell",
+                        description = "Remote code execution in log4j-core",
+                        aliases = listOf("GHSA-jfh8-c2jp-5v3q"),
+                        releases = listOf("v1.0"),
+                        packages = listOf("pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"),
+                        reports =
+                            listOf(
+                                ReportEntryDto(
+                                    reporter = "snyk",
+                                    at = LocalDate.of(2021, 12, 10),
+                                    source = "nightly scan",
+                                    vulnIds = setOf("SNYK-JAVA-ORGAPACHELOGGINGLOG4J-2314720"),
+                                    suppress = SuppressionDto(expiresAt = LocalDate.of(2022, 1, 31)),
+                                ),
+                            ),
+                        tags = listOf("backend"),
+                        analysis = "Reachable through the request logger.",
+                        analyzedAt = LocalDate.of(2021, 12, 11),
+                        verdict = "affected",
+                        severity = "critical",
+                        disposition = "will fix",
+                        resolution =
+                            ResolutionDto(
+                                release = "v2.0",
+                                at = LocalDate.of(2021, 12, 14),
+                                ref = "https://example.com/fix",
+                                note = "Upgraded log4j-core.",
+                            ),
+                        comment = "Tracked in SEC-1.",
+                    ),
+                    vulnerabilityDto("CVE-2021-2", verdict = "not affected")
+                        .copy(justification = "vulnerable code not present"),
+                )
+
+            val file = toDomain(v1Dto(vulnerabilities = entries))
+            val written = file.vulnerabilities.map(DtoV1Mapper::vulnerabilityToDto)
+
+            written shouldBe entries
         }
     })
