@@ -11,12 +11,12 @@ import tools.jackson.module.kotlin.kotlinModule
 private const val TEMPLATE_PATH = "report/vulnlog-report-simple.html"
 private const val DATA_PLACEHOLDER = "/*VULNLOG_DATA_PLACEHOLDER*/"
 
-object HtmlReportWriter {
+object HtmlReportEncoder {
     /**
      * Renders a self-contained HTML report by loading the template from the classpath,
      * serializing the report data to JSON, and injecting it into the template.
      */
-    fun renderHtmlReport(reportDataDto: ReportDataDto): String {
+    fun encode(reportDataDto: ReportDataDto): String {
         val template = loadTemplate()
         val json = serializeToJson(reportDataDto)
         return template.replace(DATA_PLACEHOLDER, json)

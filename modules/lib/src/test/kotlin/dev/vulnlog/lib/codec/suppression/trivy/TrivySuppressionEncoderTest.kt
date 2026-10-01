@@ -11,7 +11,7 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.time.LocalDate
 
-class TrivySuppressionWriterTest :
+class TrivySuppressionEncoderTest :
     FunSpec({
 
         test("writes Trivy expiration key as expired_at") {
@@ -27,7 +27,7 @@ class TrivySuppressionWriterTest :
                         ),
                 )
 
-            val result = TrivySuppressionWriter.write(input)
+            val result = TrivySuppressionEncoder.encode(input)
 
             result shouldContain "expired_at: 2026-08-01"
             result shouldNotContain "expires_at"

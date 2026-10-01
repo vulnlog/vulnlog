@@ -8,8 +8,8 @@ import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
+import dev.vulnlog.lib.codec.report.HtmlReportEncoder
 import dev.vulnlog.lib.codec.report.HtmlReportMapper
-import dev.vulnlog.lib.codec.report.HtmlReportWriter
 import dev.vulnlog.lib.codec.report.dto.FilterDataDto
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
@@ -114,7 +114,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                 inputs = inputNames,
                 filter = filterData,
             )
-        val reportContent = HtmlReportWriter.renderHtmlReport(reportData)
+        val reportContent = HtmlReportEncoder.encode(reportData)
 
         val out = outputFile.get().asFile
         out.parentFile?.mkdirs()

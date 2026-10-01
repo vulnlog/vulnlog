@@ -8,7 +8,7 @@ import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
 
-object GenericSuppressionWriter {
+object GenericSuppressionEncoder {
     private val mapper =
         JsonMapper
             .builder()
@@ -16,7 +16,7 @@ object GenericSuppressionWriter {
             .addModule(kotlinModule())
             .build()
 
-    fun write(inputData: SuppressionOutput.GenericSuppression): String {
+    fun encode(inputData: SuppressionOutput.GenericSuppression): String {
         val dto = GenericMapper.toDto(inputData)
         return mapper.writeValueAsString(dto)
     }

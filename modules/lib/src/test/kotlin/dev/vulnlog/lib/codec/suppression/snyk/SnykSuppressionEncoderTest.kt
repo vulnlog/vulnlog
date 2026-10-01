@@ -10,7 +10,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.string.shouldContain
 import java.time.LocalDate
 
-class SnykSuppressionWriterTest :
+class SnykSuppressionEncoderTest :
     FunSpec({
 
         test("writes Snyk policy version and date-time expires value") {
@@ -26,7 +26,7 @@ class SnykSuppressionWriterTest :
                         ),
                 )
 
-            val result = SnykSuppressionWriter.write(input)
+            val result = SnykSuppressionEncoder.encode(input)
 
             result shouldContain "version: v1.25.0"
             result shouldContain "expires: \"2026-08-01T00:00:00.000Z\""

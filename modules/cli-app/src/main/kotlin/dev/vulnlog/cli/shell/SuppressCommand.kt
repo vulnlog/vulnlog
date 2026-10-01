@@ -20,8 +20,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
 import dev.vulnlog.lib.codec.suppression.SuppressionFile
-import dev.vulnlog.lib.codec.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
@@ -108,7 +108,7 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         }
         renderSuppressionInclusions(collected.included).forEach { diagnosticSink().debug(it) }
         val contents: List<RenderedSuppression> =
-            suppressionResult.outputs.map { output -> RenderedSuppression(output, writeSuppressionOutput(output)) }
+            suppressionResult.outputs.map { output -> RenderedSuppression(output, SuppressionEncoder.encode(output)) }
 
         if (contents.isEmpty()) {
             echoStatus(formatStatus(StatusVerb.UNCHANGED, "no suppression entries applicable"))
