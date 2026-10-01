@@ -17,7 +17,6 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.BuildInfo
-import dev.vulnlog.cli.shell.filter.failOnFilterProblems
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
@@ -29,12 +28,11 @@ import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.OpenVexLine
-import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
-import dev.vulnlog.lib.render.renderOpenVexEmptyHint
+import dev.vulnlog.lib.render.formatFailureLines
+import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.FileInputOption
@@ -132,14 +130,20 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         val outcome = generateOpenVex(vulnlogFile, request)
         renderOpenVexReport(outcome).forEach(::echoLine)
         when (outcome) {
-            is FilterRejected -> failOnFilterProblems(outcome.problems)
-
-            is OpenVexOutcome.BaselineRejected ->
-                failOnBaseline(renderOpenVexBaselineProblem(baselineRequest.toString(), outcome.problem))
-
-            is OpenVexOutcome.NoStatementApplies -> failOnEmptyDocument(outcome.reason)
+            is OpenVexOutcome.Failed -> fail(outcome)
             is OpenVexOutcome.Generated -> write(outcome)
         }
+    }
+
+    private fun fail(failed: OpenVexOutcome.Failed): Nothing {
+        val failures = renderOpenVexFailure(failed, baselineRequest?.toString().orEmpty(), "--baseline")
+        formatFailureLines(failures).forEach(::echoMessage)
+        val exitCode =
+            when (failed) {
+                is FilterRejected, is OpenVexOutcome.BaselineRejected -> ExitCode.INVALID_FLAG_VALUE
+                is OpenVexOutcome.NoStatementApplies -> ExitCode.VALIDATION_ERROR
+            }
+        throw ProgramResult(exitCode.code)
     }
 
     private fun echoLine(line: OpenVexLine) =
@@ -183,17 +187,5 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
             echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
-    }
-
-    private fun failOnBaseline(message: String): Nothing {
-        echoMessage(formatMessage(FindingSeverity.ERROR, message))
-        echoMessage(formatHint("omit --baseline to issue a new document"))
-        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
-    }
-
-    private fun failOnEmptyDocument(reason: OpenVexEmptyReason): Nothing {
-        echoMessage(formatMessage(FindingSeverity.ERROR, "no statement applies"))
-        echoMessage(formatHint(renderOpenVexEmptyHint(reason)))
-        throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
     }
 }

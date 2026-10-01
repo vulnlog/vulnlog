@@ -39,15 +39,17 @@ data class OpenVexRequest(
 )
 
 sealed interface OpenVexOutcome {
+    sealed interface Failed : OpenVexOutcome
+
     data class BaselineRejected(
         val problem: OpenVexBaselineProblem,
-    ) : OpenVexOutcome
+    ) : Failed
 
     /** OpenVEX requires at least one statement, so there is nothing to write. */
     data class NoStatementApplies(
         val collection: OpenVexCollection,
         val reason: OpenVexEmptyReason,
-    ) : OpenVexOutcome
+    ) : Failed
 
     sealed interface Generated : OpenVexOutcome {
         val collection: OpenVexCollection

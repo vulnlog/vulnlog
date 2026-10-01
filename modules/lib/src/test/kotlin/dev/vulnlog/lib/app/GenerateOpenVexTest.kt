@@ -109,7 +109,9 @@ class GenerateOpenVexTest :
         }
 
         test("a scope the file does not define is rejected") {
-            val outcome = generateOpenVex(fileWith("1.0.0"), request(release = "9.9.9"))
+            val file = fileWith("1.0.0")
+
+            val outcome = generateOpenVex(file, request(release = "9.9.9"))
 
             outcome shouldBe
                 FilterRejected(listOf(FilterProblem.UnknownRelease(release("9.9.9"), listOf(release("1.0.0")))))

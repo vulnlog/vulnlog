@@ -15,17 +15,16 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.OpenVexLine
-import dev.vulnlog.lib.render.renderFilterFailure
-import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
-import dev.vulnlog.lib.render.renderOpenVexEmptyHint
+import dev.vulnlog.lib.render.formatFailureMessage
+import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -89,13 +88,18 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val outcome = generateOpenVex(vulnlogFile, request)
         renderOpenVexReport(outcome).forEach { line -> log(line, sink) }
         when (outcome) {
-            is FilterRejected -> throw InvalidUserDataException(renderFilterFailure(outcome.problems))
-
-            is OpenVexOutcome.BaselineRejected ->
-                failOnBaseline(renderOpenVexBaselineProblem(baseline.get().asFile.path, outcome.problem))
-
-            is OpenVexOutcome.NoStatementApplies -> failOnEmptyDocument(outcome.reason)
+            is OpenVexOutcome.Failed -> throw failure(outcome)
             is OpenVexOutcome.Generated -> write(out, outcome, sink)
+        }
+    }
+
+    /** A bad scope or baseline is configuration to fix; an empty document is a verdict, so `--continue` goes on. */
+    private fun failure(failed: OpenVexOutcome.Failed): GradleException {
+        val path = baseline.orNull?.asFile?.path ?: ""
+        val message = formatFailureMessage(renderOpenVexFailure(failed, path, "'baseline'"))
+        return when (failed) {
+            is FilterRejected, is OpenVexOutcome.BaselineRejected -> InvalidUserDataException(message)
+            is OpenVexOutcome.NoStatementApplies -> VerificationException(message)
         }
     }
 
@@ -142,17 +146,5 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
             return null
         }
         return file.readText()
-    }
-
-    /** Task configuration to fix, unlike the verdict in [failOnEmptyDocument]. */
-    private fun failOnBaseline(message: String): Nothing =
-        throw InvalidUserDataException(
-            message.replaceFirstChar(Char::uppercase) + ". Unset 'baseline' to issue a new document.",
-        )
-
-    /** An empty document is a verdict on the Vulnlog file, so it works with `--continue`. */
-    private fun failOnEmptyDocument(reason: OpenVexEmptyReason): Nothing {
-        val hint = renderOpenVexEmptyHint(reason).replaceFirstChar(Char::uppercase)
-        throw VerificationException("No statement applies. $hint.")
     }
 }

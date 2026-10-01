@@ -15,7 +15,8 @@ import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.filter.resolveFilter
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.render.renderFilterProblemLines
+import dev.vulnlog.lib.render.formatFailureLines
+import dev.vulnlog.lib.render.renderFilterProblems
 
 /** Reports what [request] resolved to on the verbose sink. */
 fun CliktCommand.resolveFilterOrFail(
@@ -31,7 +32,7 @@ fun CliktCommand.resolveFilterOrFail(
         is FilterOutcome.Rejected -> failOnFilterProblems(outcome.problems)
     }
 
-fun CliktCommand.failOnFilterProblems(problems: List<FilterProblem>): Nothing {
-    renderFilterProblemLines(problems).forEach(::echoMessage)
+private fun CliktCommand.failOnFilterProblems(problems: List<FilterProblem>): Nothing {
+    formatFailureLines(renderFilterProblems(problems)).forEach(::echoMessage)
     throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
 }
