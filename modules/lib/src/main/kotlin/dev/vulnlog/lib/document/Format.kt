@@ -1,8 +1,10 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.document
 
+import dev.vulnlog.lib.core.formatFinding
+import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.yaml.YamlWriter

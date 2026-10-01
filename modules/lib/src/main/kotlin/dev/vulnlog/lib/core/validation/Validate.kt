@@ -21,6 +21,7 @@ import dev.vulnlog.lib.document.validation.constructDocument
 import dev.vulnlog.lib.document.validation.locateFailures
 import dev.vulnlog.lib.document.validation.parseToNodeTree
 import dev.vulnlog.lib.document.validation.resolveSchemaVersion
+import dev.vulnlog.lib.document.validation.v1DtoRules
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity.ERROR

@@ -6,12 +6,12 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.validation.validateInputOrFail
-import dev.vulnlog.lib.core.copyVulnerabilities
-import dev.vulnlog.lib.core.findNonExistingVulnIds
-import dev.vulnlog.lib.core.formatCommentsDroppedWarning
-import dev.vulnlog.lib.core.formatCopiedMessage
-import dev.vulnlog.lib.core.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.core.parseVulnId
+import dev.vulnlog.lib.document.copyVulnerabilities
+import dev.vulnlog.lib.document.findNonExistingVulnIds
+import dev.vulnlog.lib.document.formatCommentsDroppedWarning
+import dev.vulnlog.lib.document.formatCopiedMessage
+import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.shell.FileInputOption

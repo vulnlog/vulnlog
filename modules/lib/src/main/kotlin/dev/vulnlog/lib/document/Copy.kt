@@ -1,8 +1,13 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.document
 
+import dev.vulnlog.lib.core.StatusVerb
+import dev.vulnlog.lib.core.formatMessage
+import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.core.parseVulnId
+import dev.vulnlog.lib.core.pluralize
 import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.mapper.DtoV1Mapper

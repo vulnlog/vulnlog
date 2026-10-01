@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.document
 
 import dev.vulnlog.lib.model.finding.FormatRule
 import io.kotest.core.spec.style.FunSpec
