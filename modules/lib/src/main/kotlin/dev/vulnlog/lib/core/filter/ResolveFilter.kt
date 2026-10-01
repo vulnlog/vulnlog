@@ -4,10 +4,7 @@
 package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.dispositionTokens
 import dev.vulnlog.lib.core.parseReporter
-import dev.vulnlog.lib.core.verdictKindTokens
-import dev.vulnlog.lib.core.workStateTokens
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
@@ -16,10 +13,7 @@ import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.WorkState
 
-/**
- * Resolves a given [FilterRequest] against a list of [VulnlogFile]s and determines if the requested dimensions
- * are valid based on the provided data. The result can either be a resolved filter or a rejection with identified problems.
- */
+/** Resolves every dimension before deciding, so a rejection names all problems at once. */
 fun resolveFilter(
     request: FilterRequest,
     files: List<VulnlogFile>,
@@ -52,10 +46,7 @@ fun resolveFilter(
     }
 }
 
-/**
- * Renders one diagnostic line per active filter dimension, stating what the filter resolved to.
- * Inactive dimensions produce no line.
- */
+/** One verbose line per active dimension. */
 fun renderFilterResolution(filter: ResolvedFilter): List<String> =
     listOfNotNull(
         filter.releases
@@ -89,15 +80,7 @@ private fun resolveReporter(value: String?): Dimension<ReporterType?> {
     return try {
         Dimension(parseReporter(value))
     } catch (_: IllegalArgumentException) {
-        Dimension(
-            null,
-            listOf(
-                FilterProblem(
-                    "Invalid reporter: $value",
-                    "Supported reporters: ${ReporterType.entries.joinToString(", ") { it.canonical() }}",
-                ),
-            ),
-        )
+        Dimension(null, listOf(FilterProblem.UnknownReporter(value)))
     }
 }
 
@@ -107,20 +90,19 @@ private fun resolveReleaseWindow(
 ): Dimension<Set<Release>> {
     if (value == null) return Dimension(emptySet())
 
-    val known = files.flatMap { file -> file.releases.map { it.id } }.distinct()
-    if (value.isBlank()) return Dimension(emptySet(), listOf(releaseProblem("Release must not be blank", known)))
+    val known =
+        files
+            .map { file -> file.releases.map { it.id } }
+            .reduceOrNull { common, ids -> common.filter { it in ids } }
+            .orEmpty()
+            .distinct()
+    if (value.isBlank()) return Dimension(emptySet(), listOf(FilterProblem.BlankRelease(known)))
 
     val release = Release(value)
-    if (files.any { file -> file.releases.none { it.id == release } }) {
-        return Dimension(emptySet(), listOf(releaseProblem("Release not found: $value", known)))
-    }
+    if (release !in known) return Dimension(emptySet(), listOf(FilterProblem.UnknownRelease(release, known)))
+
     return Dimension(files.flatMap { file -> windowOf(release, file) }.toSet())
 }
-
-private fun releaseProblem(
-    message: String,
-    known: List<Release>,
-): FilterProblem = FilterProblem(message, "Known releases: ${known.joinToString(", ") { it.value }}")
 
 /** The requested release and every release declared before it in [file]. */
 private fun windowOf(
@@ -136,17 +118,8 @@ private fun resolveStates(values: Set<String>): Dimension<Set<WorkState>> {
 
     val byToken = WorkState.entries.associateBy { it.canonical() }
     val unknown = values.filterNot { it in byToken }.sorted()
-    if (unknown.isNotEmpty()) {
-        return Dimension(
-            emptySet(),
-            listOf(
-                FilterProblem(
-                    "Invalid state: ${unknown.joinToString(", ")}",
-                    "Supported states: ${workStateTokens()}",
-                ),
-            ),
-        )
-    }
+    if (unknown.isNotEmpty()) return Dimension(emptySet(), listOf(FilterProblem.UnknownStates(unknown)))
+
     return Dimension(values.mapNotNull { byToken[it] }.toSet())
 }
 
@@ -155,17 +128,8 @@ private fun resolveVerdicts(values: Set<String>): Dimension<Set<VerdictKind>> {
 
     val byToken = VerdictKind.entries.associateBy { it.canonical() }
     val unknown = values.filterNot { it in byToken }.sorted()
-    if (unknown.isNotEmpty()) {
-        return Dimension(
-            emptySet(),
-            listOf(
-                FilterProblem(
-                    "Invalid verdict: ${unknown.joinToString(", ")}",
-                    "Supported verdicts: ${verdictKindTokens()}",
-                ),
-            ),
-        )
-    }
+    if (unknown.isNotEmpty()) return Dimension(emptySet(), listOf(FilterProblem.UnknownVerdicts(unknown)))
+
     return Dimension(values.mapNotNull { byToken[it] }.toSet())
 }
 
@@ -174,21 +138,12 @@ private fun resolveDispositions(values: Set<String>): Dimension<Set<Disposition>
 
     val byToken = Disposition.entries.associateBy { canonical(it) }
     val unknown = values.filterNot { it in byToken }.sorted()
-    if (unknown.isNotEmpty()) {
-        return Dimension(
-            emptySet(),
-            listOf(
-                FilterProblem(
-                    "Invalid disposition: ${unknown.joinToString(", ")}",
-                    "Supported dispositions: ${dispositionTokens()}",
-                ),
-            ),
-        )
-    }
+    if (unknown.isNotEmpty()) return Dimension(emptySet(), listOf(FilterProblem.UnknownDispositions(unknown)))
+
     return Dimension(values.mapNotNull { byToken[it] }.toSet())
 }
 
-/** Resolves a single release the files declare, such as the one a fix must have shipped in. */
+/** Unlike the release window, one file declaring the release is enough. */
 internal fun resolveRelease(
     releaseId: String?,
     files: List<VulnlogFile>,
@@ -196,10 +151,10 @@ internal fun resolveRelease(
     if (releaseId == null) return Dimension(null)
 
     val known: List<Release> = files.flatMap { file -> file.releases.map { it.id } }.distinct()
-    if (releaseId.isBlank()) return Dimension(null, listOf(releaseProblem("Release must not be blank", known)))
+    if (releaseId.isBlank()) return Dimension(null, listOf(FilterProblem.BlankRelease(known)))
 
     val release = Release(releaseId)
-    if (release !in known) return Dimension(null, listOf(releaseProblem("Release not found: $releaseId", known)))
+    if (release !in known) return Dimension(null, listOf(FilterProblem.UnknownRelease(release, known)))
 
     return Dimension(release)
 }
@@ -211,24 +166,11 @@ internal fun resolveTags(
     if (values.isEmpty()) return Dimension(emptySet())
 
     val known = files.flatMap { file -> file.tags.map { it.id } }.distinct()
-    if (values.any { it.isBlank() }) return Dimension(emptySet(), listOf(tagProblem("Tag must not be blank", known)))
+    if (values.any { it.isBlank() }) return Dimension(emptySet(), listOf(FilterProblem.BlankTag(known)))
 
     val tags = values.map(::Tag).toSet()
     val unknown = tags.filterNot { it in known }.sortedBy { it.value }
-    if (unknown.isNotEmpty()) {
-        return Dimension(
-            emptySet(),
-            listOf(tagProblem("Tag not found: ${unknown.joinToString(", ") { it.value }}", known)),
-        )
-    }
+    if (unknown.isNotEmpty()) return Dimension(emptySet(), listOf(FilterProblem.UnknownTags(unknown, known)))
+
     return Dimension(tags)
 }
-
-private fun tagProblem(
-    message: String,
-    known: List<Tag>,
-): FilterProblem =
-    FilterProblem(
-        message,
-        if (known.isEmpty()) "The input declares no tags." else "Known tags: ${known.joinToString(", ") { it.value }}",
-    )

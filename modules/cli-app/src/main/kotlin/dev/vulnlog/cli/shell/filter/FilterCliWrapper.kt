@@ -9,19 +9,15 @@ import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.cli.shell.diagnosticSink
 import dev.vulnlog.cli.shell.echoMessage
 import dev.vulnlog.lib.core.filter.FilterOutcome
+import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.filter.resolveFilter
-import dev.vulnlog.lib.core.formatHint
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.render.renderFilterProblemLines
 
-/**
- * Checks [request] against [files] and reports what it resolved to on the verbose sink.
- * Every unknown filter value is reported before failing with [ExitCode.INVALID_FLAG_VALUE].
- */
+/** Reports what [request] resolved to on the verbose sink. */
 fun CliktCommand.resolveFilterOrFail(
     request: FilterRequest,
     files: List<VulnlogFile>,
@@ -32,11 +28,10 @@ fun CliktCommand.resolveFilterOrFail(
             outcome.filter
         }
 
-        is FilterOutcome.Rejected -> {
-            outcome.problems.forEach { problem ->
-                echoMessage(formatMessage(FindingSeverity.ERROR, problem.message))
-                echoMessage(formatHint(problem.hint))
-            }
-            throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
-        }
+        is FilterOutcome.Rejected -> failOnFilterProblems(outcome.problems)
     }
+
+fun CliktCommand.failOnFilterProblems(problems: List<FilterProblem>): Nothing {
+    renderFilterProblemLines(problems).forEach(::echoMessage)
+    throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
+}

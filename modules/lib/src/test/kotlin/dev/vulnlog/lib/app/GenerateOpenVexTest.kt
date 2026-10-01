@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.app
 
+import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
@@ -48,8 +49,7 @@ private fun request(
     baseline: String? = null,
     now: Instant = ISSUED_AT,
     release: String? = null,
-    tags: Set<String> = emptySet(),
-): OpenVexRequest = OpenVexRequest(release, tags, baseline, DOCUMENT_ID, now, OpenVexTooling("CLI", "0.18.0"))
+): OpenVexRequest = OpenVexRequest(release, emptySet(), baseline, DOCUMENT_ID, now, OpenVexTooling("CLI", "0.18.0"))
 
 private fun revised(
     file: VulnlogFile,
@@ -108,13 +108,11 @@ class GenerateOpenVexTest :
             second.content shouldContain "\"timestamp\": \"2026-04-25T00:00:00Z\""
         }
 
-        test("a scope the file does not define is rejected with every problem") {
-            val file = fileWith("1.0.0")
+        test("a scope the file does not define is rejected") {
+            val outcome = generateOpenVex(fileWith("1.0.0"), request(release = "9.9.9"))
 
-            val outcome = generateOpenVex(file, request(release = "9.9.9", tags = setOf("binary")))
-
-            outcome.shouldBeInstanceOf<FilterRejected>().problems.map { it.message } shouldContainExactly
-                listOf("Release not found: 9.9.9", "Tag not found: binary")
+            outcome shouldBe
+                FilterRejected(listOf(FilterProblem.UnknownRelease(release("9.9.9"), listOf(release("1.0.0")))))
         }
 
         test("a baseline that cannot be continued is rejected") {

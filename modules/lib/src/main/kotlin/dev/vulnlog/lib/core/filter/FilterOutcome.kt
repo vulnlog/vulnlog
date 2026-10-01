@@ -3,21 +3,55 @@
 
 package dev.vulnlog.lib.core.filter
 
-/** The result of checking a [FilterRequest] against the Vulnlog files it will be applied to. */
+import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.Tag
+
 sealed interface FilterOutcome {
-    /** Every requested dimension exists in the files. */
     data class Resolved(
         val filter: ResolvedFilter,
     ) : FilterOutcome
 
-    /** At least one requested dimension names something the files do not define. */
     data class Rejected(
         val problems: List<FilterProblem>,
     ) : FilterOutcome
 }
 
-/** Why one filter dimension could not be resolved, and what the caller can choose instead. */
-data class FilterProblem(
-    val message: String,
-    val hint: String,
-)
+/**
+ * Why one filter dimension could not be resolved. Only release and tag problems carry the `known` values, because only
+ * those come from the files; render names the fixed vocabularies of the other dimensions.
+ */
+sealed interface FilterProblem {
+    data class BlankRelease(
+        val known: List<Release>,
+    ) : FilterProblem
+
+    data class UnknownRelease(
+        val requested: Release,
+        val known: List<Release>,
+    ) : FilterProblem
+
+    data class BlankTag(
+        val known: List<Tag>,
+    ) : FilterProblem
+
+    data class UnknownTags(
+        val requested: List<Tag>,
+        val known: List<Tag>,
+    ) : FilterProblem
+
+    data class UnknownReporter(
+        val requested: String,
+    ) : FilterProblem
+
+    data class UnknownStates(
+        val requested: List<String>,
+    ) : FilterProblem
+
+    data class UnknownVerdicts(
+        val requested: List<String>,
+    ) : FilterProblem
+
+    data class UnknownDispositions(
+        val requested: List<String>,
+    ) : FilterProblem
+}

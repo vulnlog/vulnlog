@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.vex.openvex
 
+import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
@@ -82,15 +83,13 @@ class OpenVexTest :
                 result shouldBe OpenVexScopeResult.Resolved(OpenVexScope())
             }
 
-            test("rejects an unknown release and an unknown tag together, each with a hint") {
+            test("rejects an unknown release and an unknown tag together") {
                 val result = resolveOpenVexScope("9.9.9", setOf("binary"), taggedFile)
 
-                result.shouldBeInstanceOf<OpenVexScopeResult.Rejected>().problems.map {
-                    it.message to it.hint
-                } shouldContainExactly
+                result.shouldBeInstanceOf<OpenVexScopeResult.Rejected>().problems shouldContainExactly
                     listOf(
-                        "Release not found: 9.9.9" to "Known releases: 1.0.0, 1.0.1",
-                        "Tag not found: binary" to "Known tags: container",
+                        FilterProblem.UnknownRelease(release("9.9.9"), listOf(release("1.0.0"), release("1.0.1"))),
+                        FilterProblem.UnknownTags(listOf(tag("binary")), listOf(tag("container"))),
                     )
             }
         }

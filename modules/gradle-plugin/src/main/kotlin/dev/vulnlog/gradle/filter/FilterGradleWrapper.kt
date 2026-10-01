@@ -10,13 +10,11 @@ import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.filter.resolveFilter
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.render.renderFilterFailure
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 
-/**
- * Checks [request] against [files] and reports what it resolved to on the verbose sink.
- * Every unknown filter value is named in the failure.
- */
+/** Reports what [request] resolved to on the verbose sink. */
 fun DefaultTask.resolveFilterOrFail(
     request: FilterRequest,
     files: List<VulnlogFile>,
@@ -27,6 +25,5 @@ fun DefaultTask.resolveFilterOrFail(
             outcome.filter
         }
 
-        is FilterOutcome.Rejected ->
-            throw GradleException(outcome.problems.joinToString(" ") { "${it.message}. ${it.hint}" })
+        is FilterOutcome.Rejected -> throw GradleException(renderFilterFailure(outcome.problems))
     }
