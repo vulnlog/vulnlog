@@ -78,7 +78,7 @@ jobs:
             native_relevant:
               - 'modules/lib/src/main/resources/META-INF/native-image/**'
               - 'modules/lib/src/main/kotlin/dev/vulnlog/lib/document/**'
-              - 'modules/lib/src/main/kotlin/dev/vulnlog/lib/parse/**'
+              - 'modules/lib/src/main/kotlin/dev/vulnlog/lib/codec/**'
               - 'modules/cli-app/**'
               - 'modules/lib/build.gradle.kts'
               - 'gradle/libs.versions.toml'

@@ -1,0 +1,13 @@
+// Copyright the Vulnlog contributors
+// SPDX-License-Identifier: Apache-2.0
+
+package dev.vulnlog.lib.codec.report.dto
+
+data class FilterDataDto(
+    val asOf: String?,
+    val tags: List<String>,
+    val reporter: String?,
+    val states: List<String>,
+    val verdicts: List<String>,
+    val dispositions: List<String>,
+)

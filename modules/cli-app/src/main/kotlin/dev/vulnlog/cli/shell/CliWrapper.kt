@@ -12,12 +12,12 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
+import dev.vulnlog.lib.codec.suppression.SuppressionFile
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.suppression.SuppressionFile
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption

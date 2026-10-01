@@ -14,6 +14,9 @@ import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.reporting.sharedProjectOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
+import dev.vulnlog.lib.codec.report.HtmlReportWriter.renderHtmlReport
+import dev.vulnlog.lib.codec.report.dto.FilterDataDto
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.applyFilter
@@ -27,9 +30,6 @@ import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.ReportingEntry
 import dev.vulnlog.lib.model.reporting.WorkState
-import dev.vulnlog.lib.parse.reporting.HtmlReportMapper.toDto
-import dev.vulnlog.lib.parse.reporting.HtmlReportWriter.renderHtmlReport
-import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
 import java.nio.file.Path
