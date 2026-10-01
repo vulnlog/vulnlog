@@ -8,17 +8,12 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
 
-/**
- * Binds DTOs to and from an in-memory tree, honouring `@JsonProperty` renames, `@JsonInclude`
- * omission and `@JsonFormat` date formatting. It never reads or writes YAML: snakeyaml-engine parses
- * (see [dev.vulnlog.lib.document.validation.parseToNodeTree]) and emits (see [CanonicalYaml]).
- */
+/** Jackson only binds DTOs to plain trees; snakeyaml-engine reads and writes the YAML itself. */
 internal val dtoMapper: ObjectMapper by lazy {
     JsonMapper
         .builder()
         .addModule(kotlinModule())
-        // Unknown properties usually mean a newer schema than this binary.
-        // silently dropping them would corrupt canonical rewrites, parsing fails instead.
+        // Unknown properties usually mean a newer schema; dropping them would corrupt a canonical rewrite.
         .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .build()
 }

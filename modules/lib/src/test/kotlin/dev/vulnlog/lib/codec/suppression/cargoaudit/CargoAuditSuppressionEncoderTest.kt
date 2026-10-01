@@ -12,30 +12,7 @@ import io.kotest.matchers.shouldBe
 class CargoAuditSuppressionEncoderTest :
     FunSpec({
 
-        test("writes single RUSTSEC entry") {
-            val input =
-                SuppressionOutput.CargoAuditSuppression(
-                    entries =
-                        setOf(
-                            SuppressionVuln.CargoAuditSuppressionEntry(
-                                id = VulnId.RustSec("RUSTSEC-2024-0001"),
-                            ),
-                        ),
-                )
-
-            val result = CargoAuditSuppressionEncoder.encode(input)
-
-            result shouldBe
-                """
-                [advisories]
-                ignore = [
-                    "RUSTSEC-2024-0001",
-                ]
-
-                """.trimIndent()
-        }
-
-        test("writes multiple entries") {
+        test("writes every entry in order") {
             val input =
                 SuppressionOutput.CargoAuditSuppression(
                     entries =

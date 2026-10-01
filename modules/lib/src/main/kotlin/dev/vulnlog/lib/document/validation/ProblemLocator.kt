@@ -15,18 +15,13 @@ import org.snakeyaml.engine.v2.nodes.SequenceNode
 import tools.jackson.core.JacksonException
 import kotlin.jvm.optionals.getOrNull
 
-/** Where the YAML parser stopped. */
 fun locationOf(e: MarkedYamlEngineException): FailureLocation? =
     e.problemMark.getOrNull()?.let { FailureLocation(it.line + 1, it.column + 1) }
 
-/** Where [node] starts in the source text. */
 fun locationOf(node: Node): FailureLocation? =
     node.startMark.getOrNull()?.let { FailureLocation(it.line + 1, it.column + 1) }
 
-/**
- * Turns a binding failure into a finding that names both the entry it sits at and its position.
- * The entry path uses the same spelling as the domain rules, so both read alike.
- */
+/** The entry path uses the domain rules' spelling, so binding and rule findings read alike. */
 internal fun failureAt(
     root: MappingNode,
     references: List<JacksonException.Reference>,
@@ -56,7 +51,7 @@ internal fun failureAt(
     return ParseFailure(message, path.toString().ifEmpty { null }, locationOf(node))
 }
 
-/** Fills in the source position of every failure whose entry path is present in [root]. */
+/** A failure whose entry path [root] lacks ends up without a location. */
 fun locateFailures(
     root: MappingNode,
     failures: List<ParseFailure>,

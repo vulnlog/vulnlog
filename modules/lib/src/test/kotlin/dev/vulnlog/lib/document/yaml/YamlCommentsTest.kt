@@ -9,43 +9,35 @@ import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.lowlevel.Compose
 import org.snakeyaml.engine.v2.nodes.Node
 
+private const val WITH_SCHEMA_HEADER = "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---\nkey: value\n"
+
 private fun rootOf(content: String): Node =
     Compose(LoadSettings.builder().setParseComments(true).build()).composeString(content).get()
 
 class YamlCommentsTest :
     FunSpec({
 
-        test("detects a block comment") {
-            hasYamlComments(rootOf("key: value\n# note\nother: x\n")) shouldBe true
+        test("detects block, inline and trailing comments") {
+            val contents = listOf("key: value\n# note\nother: x\n", "key: value # note\n", "key: value\n# trailing\n")
+
+            val detected = contents.map { hasYamlComments(rootOf(it)) }
+
+            detected shouldBe listOf(true, true, true)
         }
 
-        test("detects an inline comment") {
-            hasYamlComments(rootOf("key: value # note\n")) shouldBe true
+        test("does not count the schema header or blank lines as comments") {
+            val contents = listOf(WITH_SCHEMA_HEADER, "key: value\n\nother: x\n", "key: value\n")
+
+            val detected = contents.map { hasYamlComments(rootOf(it)) }
+
+            detected shouldBe listOf(false, false, false)
         }
 
-        test("detects a trailing comment") {
-            hasYamlComments(rootOf("key: value\n# trailing\n")) shouldBe true
-        }
+        test("detects the schema header but no other comment as one") {
+            val contents = listOf(WITH_SCHEMA_HEADER, "key: value\n# note\n")
 
-        test("ignores the schema header") {
-            val content = "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---\nkey: value\n"
-            hasYamlComments(rootOf(content)) shouldBe false
-        }
+            val detected = contents.map { hasSchemaHeader(rootOf(it)) }
 
-        test("ignores blank lines") {
-            hasYamlComments(rootOf("key: value\n\nother: x\n")) shouldBe false
-        }
-
-        test("returns false for comment-free content") {
-            hasYamlComments(rootOf("key: value\n")) shouldBe false
-        }
-
-        test("detects the schema header") {
-            val content = "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---\nkey: value\n"
-            hasSchemaHeader(rootOf(content)) shouldBe true
-        }
-
-        test("reports no schema header for plain content") {
-            hasSchemaHeader(rootOf("key: value\n# note\n")) shouldBe false
+            detected shouldBe listOf(true, false)
         }
     })

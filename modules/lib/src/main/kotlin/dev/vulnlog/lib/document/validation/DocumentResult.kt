@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.document.validation
 
 import dev.vulnlog.lib.document.yaml.dtoMapper
+import dev.vulnlog.lib.model.finding.FailureLocation
 import dev.vulnlog.lib.model.finding.ParseFailure
 import org.snakeyaml.engine.v2.constructor.StandardConstructor
 import org.snakeyaml.engine.v2.exceptions.MarkedYamlEngineException
@@ -12,7 +13,6 @@ import org.snakeyaml.engine.v2.nodes.MappingNode
 import tools.jackson.databind.JsonNode
 import java.util.Optional
 
-/** Whether the node tree resolves into a value tree. */
 internal sealed interface DocumentResult {
     data class Built(
         val document: JsonNode,
@@ -23,10 +23,7 @@ internal sealed interface DocumentResult {
     ) : DocumentResult
 }
 
-/**
- * Resolves the node tree into a value tree: anchors and tags are applied, styles and source
- * positions are dropped. This is the representation a schema check reads.
- */
+/** Applies anchors and tags and drops styles and positions: the value tree a schema check reads. */
 internal fun constructDocument(rootNode: MappingNode): DocumentResult {
     val values =
         try {
@@ -41,5 +38,5 @@ internal fun constructDocument(rootNode: MappingNode): DocumentResult {
 
 private fun rejected(
     message: String,
-    location: dev.vulnlog.lib.model.finding.FailureLocation? = null,
+    location: FailureLocation? = null,
 ) = DocumentResult.Rejected(listOf(ParseFailure(message, location = location)))

@@ -5,7 +5,7 @@ package dev.vulnlog.lib.document
 
 import java.nio.file.Path
 
-/** The text of one input. Everything downstream works on this rather than on a path, keeping the pipeline free of I/O */
+/** Downstream code works on the text, not on a path, so the pipeline stays free of I/O. */
 data class InputDocument(
     val content: String,
     val filename: String,
@@ -17,8 +17,8 @@ data class InputDocument(
     }
 
     /**
-     * How the input is addressed on the command line: the full path for a file, the synthetic `<stdin>` name otherwise.
-     * Findings about the file as a whole use this, findings inside the document use [filename].
+     * The full path for a file, `<stdin>` otherwise. Findings about the whole file name this, findings inside it
+     * [filename].
      */
     val source: String get() = path?.toString() ?: filename
 }

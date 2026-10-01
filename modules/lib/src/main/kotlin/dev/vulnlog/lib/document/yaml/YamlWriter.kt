@@ -8,12 +8,6 @@ import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.mapper.DtoV1Mapper
 import dev.vulnlog.lib.model.VulnlogFile
 
-/**
- * Writes complete Vulnlog documents in the canonical layout: the optional `# $schema:` header, the
- * `---` document start, then the `schemaVersion`, `project`, `tags` (when present), `releases` and
- * `vulnerabilities` sections separated by blank lines, with a blank line before each vulnerability
- * entry. Sections and entries are rendered through [CanonicalYaml].
- */
 object YamlWriter {
     fun write(
         file: VulnlogFile,

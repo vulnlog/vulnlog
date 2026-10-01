@@ -16,25 +16,16 @@ class DomainMappingResultTest :
 
         context("mapToDomain") {
 
-            test("a valid document maps onto the domain model") {
-                val dto = v1Dto()
-
-                val result = mapToDomain(dto)
-
-                val mapped = result.shouldBeInstanceOf<DomainMappingResult.Mapped>()
-                mapped.vulnlogProjectFile.schemaVersion shouldBe SchemaVersion.V1
-                mapped.vulnlogProjectFile.project.organization shouldBe "acme"
-            }
-
-            test("vulnerability entries keep their order") {
+            test("a valid document maps onto the domain model with its entries in order") {
                 val dto =
                     v1Dto(vulnerabilities = listOf(vulnerabilityDto("CVE-2021-1"), vulnerabilityDto("CVE-2021-2")))
 
                 val result = mapToDomain(dto)
 
-                val mapped = result.shouldBeInstanceOf<DomainMappingResult.Mapped>()
-                mapped.vulnlogProjectFile.vulnerabilities.map { it.id.id } shouldBe
-                    listOf("CVE-2021-1", "CVE-2021-2")
+                val file = result.shouldBeInstanceOf<DomainMappingResult.Mapped>().vulnlogProjectFile
+                file.schemaVersion shouldBe SchemaVersion.V1
+                file.project.organization shouldBe "acme"
+                file.vulnerabilities.map { it.id.id } shouldBe listOf("CVE-2021-1", "CVE-2021-2")
             }
 
             test("a value without a domain representation is reported with its path") {

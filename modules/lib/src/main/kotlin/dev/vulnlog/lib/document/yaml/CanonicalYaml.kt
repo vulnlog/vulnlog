@@ -6,7 +6,6 @@ package dev.vulnlog.lib.document.yaml
 import dev.vulnlog.lib.document.dto.ReportEntryDto
 import dev.vulnlog.lib.document.dto.ResolutionDto
 import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.document.yaml.CanonicalYaml.FOLD_THRESHOLD
 import org.snakeyaml.engine.v2.api.Dump
 import org.snakeyaml.engine.v2.api.DumpSettings
 import org.snakeyaml.engine.v2.api.RepresentToNode
@@ -18,74 +17,40 @@ import org.snakeyaml.engine.v2.representer.StandardRepresenter
 import java.time.LocalDate
 
 /**
- * Renders DTOs to the canonical YAML style. Every YAML file Vulnlog writes is emitted here:
- *  - stable field order, taken from DTO declaration order
- *  - single-element lists as flow arrays, e.g. `releases: [0.11.0]`
- *  - multi-line strings as literal block scalars (`|-`)
- *  - single-line strings longer than [FOLD_THRESHOLD] as folded block scalars (`>-`); shorter
- *    strings stay plain on a single line, never wrapped
- *  - minimal, type-safe quoting: unquoted where the value round-trips as a string, double-quoted
- *    only to preserve type (e.g. `schemaVersion: "1"`, which would otherwise parse as a number)
- *
- * The style is a pure function of the value: presentation found in the source file is not consulted.
- *
- * [dtoMapper] converts the DTO to an ordered Map/List/scalar tree; snakeyaml-engine then dumps that
- * tree with a [VulnlogRepresenter] that applies the per-node flow and scalar-style rules.
+ * Every YAML file Vulnlog writes (init, fmt, add, copy, the suppression files) is emitted here, so all share one
+ * style. The style is a function of the value only; the presentation found in the source is not consulted.
  */
 object CanonicalYaml {
-    /** Indentation (spaces) for YAML blocks; entry list items derive their indent from this. */
     const val INDENTATION: Int = 2
 
-    /** Lines are kept within this column width; folded block content wraps here. */
     private const val LINE_WIDTH: Int = 120
 
-    /**
-     * Headroom for the widest `key:` prefix a prose value sits behind (e.g. `    description: `).
-     * Folding spaced strings beyond [LINE_WIDTH] minus this headroom guarantees a plain scalar
-     * always fits its line, so plain values are never wrapped bare across lines.
-     */
+    /** Room for the widest key prefix (`    description: `), so a plain value below [FOLD_THRESHOLD] fits its line. */
     private const val KEY_PREFIX_HEADROOM: Int = 17
 
-    /**
-     * Spaced strings longer than this become folded block scalars (`>-`); shorter ones stay plain
-     * on a single line. Space-less tokens (purls, ids) never fold.
-     */
     const val FOLD_THRESHOLD: Int = LINE_WIDTH - KEY_PREFIX_HEADROOM
 
     private val settings: DumpSettings =
         DumpSettings
             .builder()
-            // Default style for collections without an explicit style: indented block, not inline flow ({ }/[ ]).
             .setDefaultFlowStyle(FlowStyle.BLOCK)
-            // Spaces added per nesting level for block mappings and sequences.
             .setIndent(INDENTATION)
-            // Spaces the block-sequence "-" indicator is indented from its parent key.
             .setIndicatorIndent(INDENTATION)
-            // Stack indicatorIndent on top of the block indent (vs. absorbing it), so list items nest under their key.
+            // List items nest under their key.
             .setIndentWithIndicator(true)
-            // Preferred max column; folded block content wraps here. FOLD_THRESHOLD keeps plain
-            // values short enough that they never hit this limit, so they stay on one line.
             .setWidth(LINE_WIDTH)
-            // Line separator written between lines: force LF instead of the platform default.
             .setBestLineBreak("\n")
             .build()
 
-    /** Renders a complete document: the `---` start marker followed by the canonical body. */
     fun renderDocument(dto: Any): String = "---\n" + dump(dtoMapper.convertValue(dto, Map::class.java))
 
-    /** Renders a single vulnerability entry as a top-level mapping (no list indicator). */
     fun renderEntry(dto: VulnerabilityEntryDto): String = dump(dtoMapper.convertValue(dto, Map::class.java))
 
-    /** Renders a single top-level section (e.g. `project:`, `releases:`) as a fragment. */
     fun renderSection(
         key: String,
         value: Any?,
     ): String = dump(dtoMapper.convertValue(mapOf(key to value), Map::class.java))
 
-    /**
-     * Renders a vulnerability entry as a `vulnerabilities:` list item: the first line gets a `-` list
-     * indicator and the remaining lines are indented to sit under it.
-     */
     fun renderEntryListItem(dto: VulnerabilityEntryDto): String {
         val lines =
             renderEntry(dto)
@@ -101,11 +66,7 @@ object CanonicalYaml {
             }.joinToString("\n")
     }
 
-    /**
-     * The canonical scalar style for [rawValue]: multi-line values are literal blocks, long spaced
-     * single-line values are folded blocks, type-coercible or colon-bearing values are double-quoted,
-     * everything else is plain. Single source of truth for the emitter and the format checker.
-     */
+    /** Shared by the emitter and the format checker, so `fmt --check` and a rewrite agree. */
     fun canonicalScalarStyle(rawValue: String): ScalarStyle {
         val value = rawValue.trim()
         return when {
@@ -117,13 +78,12 @@ object CanonicalYaml {
         }
     }
 
-    /** The canonical sequence style: at most one scalar element renders flow, everything else block. */
     fun canonicalFlowStyle(
         itemCount: Int,
         scalarItemsOnly: Boolean,
     ): FlowStyle = if (itemCount <= 1 && scalarItemsOnly) FlowStyle.FLOW else FlowStyle.BLOCK
 
-    /** The canonical key order of a vulnerability entry, derived from [VulnerabilityEntryDto]. */
+    /** Derived from the DTO's declaration order through a fully populated sample, so it cannot drift. */
     fun canonicalEntryFieldOrder(): List<String> =
         dtoMapper.convertValue(SAMPLE_FULL_ENTRY, Map::class.java).keys.map { it.toString() }
 
@@ -149,11 +109,6 @@ object CanonicalYaml {
     private fun dump(tree: Any?): String = Dump(settings, VulnlogRepresenter(settings)).dumpToString(tree)
 }
 
-/**
- * Applies Vulnlog's per-node style rules on top of [StandardRepresenter]. The style decisions live
- * in [CanonicalYaml.canonicalScalarStyle] and [CanonicalYaml.canonicalFlowStyle], shared with the
- * format checker; this class only maps them onto nodes.
- */
 private class VulnlogRepresenter(
     settings: DumpSettings,
 ) : StandardRepresenter(settings) {

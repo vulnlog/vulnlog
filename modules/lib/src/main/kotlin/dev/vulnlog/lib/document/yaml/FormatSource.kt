@@ -8,28 +8,23 @@ import org.snakeyaml.engine.v2.nodes.Node
 import org.snakeyaml.engine.v2.nodes.ScalarNode
 import org.snakeyaml.engine.v2.nodes.SequenceNode
 
-/**
- * A parsed view of a Vulnlog file's presentation: the raw text plus the composed snakeyaml node
- * tree, which carries the styles and source positions that the DTO and domain models strip.
- */
+/** The presentation the DTO and domain model drop: the raw text and the node tree with styles and positions. */
 data class FormatSource(
     val raw: String,
     val root: MappingNode,
 )
 
-/** A value node and the path it sits at, e.g. `vulnerabilities[CVE-2026-0001].releases`. */
+/** [path] reads like `vulnerabilities[CVE-2026-0001].releases`. */
 data class LocatedNode(
     val path: String,
     val node: Node,
 )
 
-/** 1-based line of [node] in the source text, or 0 when unknown. */
+/** 1-based, or 0 when unknown. */
 fun lineOf(node: Node): Int = node.startMark.map { it.line + 1 }.orElse(0)
 
-/** The mapping's keys in document order. */
 fun mappingKeys(mapping: MappingNode): List<String> = mapping.value.mapNotNull { (it.keyNode as? ScalarNode)?.value }
 
-/** The value node under [key], or null when absent. */
 fun valueNodeOf(
     mapping: MappingNode,
     key: String,
@@ -38,16 +33,12 @@ fun valueNodeOf(
         .firstOrNull { (it.keyNode as? ScalarNode)?.value == key }
         ?.valueNode
 
-/** The scalar value under [key], or null when absent or not scalar. */
 fun scalarValueOf(
     mapping: MappingNode,
     key: String,
 ): String? = (valueNodeOf(mapping, key) as? ScalarNode)?.value
 
-/**
- * Flattens every value node (mapping values and sequence items) with its path. Sequence items with
- * an `id` key are addressed by it (`vulnerabilities[CVE-X]`, `releases[1.0.0]`), others by index.
- */
+/** Items with an `id` are addressed by it (`releases[1.0.0]`), others by index. */
 fun walkValues(root: MappingNode): List<LocatedNode> {
     val collected = mutableListOf<LocatedNode>()
 
