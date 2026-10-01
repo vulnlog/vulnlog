@@ -23,25 +23,27 @@ import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.io.readOpenVexBaseline
 import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
+import dev.vulnlog.lib.render.Failure
 import dev.vulnlog.lib.render.OpenVexLine
 import dev.vulnlog.lib.render.formatFailureLines
+import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
-import java.io.IOException
 import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.readText
+
+private const val BASELINE_OPTION = "--baseline"
 
 class OpenVexCommand : CliktCommand(name = "openvex") {
     override fun help(context: Context): String = "Generate OpenVEX files from Vulnlog files. (Incubating feature)"
@@ -93,7 +95,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         .unique()
 
     val baselineRequest: Path? by option(
-        "--baseline",
+        BASELINE_OPTION,
         metavar = "<path>",
         help =
             """
@@ -129,15 +131,21 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         val outcome = generateOpenVex(vulnlogFile, request)
         renderOpenVexReport(outcome).forEach(::echoLine)
         when (outcome) {
-            is OpenVexOutcome.Failed -> fail(outcome)
+            is OpenVexOutcome.Failed -> {
+                val baseline = baselineRequest?.toString().orEmpty()
+                fail(renderOpenVexFailure(outcome, baseline, BASELINE_OPTION), exitCode(outcome))
+            }
+
             is OpenVexOutcome.Generated -> write(outcome)
         }
     }
 
-    private fun fail(failed: OpenVexOutcome.Failed): Nothing {
-        val failures = renderOpenVexFailure(failed, baselineRequest?.toString().orEmpty(), "--baseline")
+    private fun fail(
+        failures: List<Failure>,
+        code: ExitCode,
+    ): Nothing {
         formatFailureLines(failures).forEach(::echoMessage)
-        throw ProgramResult(exitCode(failed).code)
+        throw ProgramResult(code.code)
     }
 
     private fun echoLine(line: OpenVexLine) =
@@ -169,17 +177,10 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         baselineRequest?.toAbsolutePath()?.normalize() == target.toAbsolutePath().normalize()
 
     /** A missing file is an error: the user asked to continue a document, and a new one would fork its identity. */
-    private fun readBaselineOrFail(path: Path): String {
-        if (!path.isRegularFile()) {
-            echoMessage(formatMessage(FindingSeverity.ERROR, "baseline '$path' does not exist"))
-            echoMessage(formatHint("omit --baseline to issue a new document"))
-            throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
+    private fun readBaselineOrFail(path: Path): String =
+        when (val read = readOpenVexBaseline(path)) {
+            is OpenVexBaselineRead.Present -> read.text
+            is OpenVexBaselineRead.Unavailable ->
+                fail(listOf(renderOpenVexBaselineFailure(read, path.toString(), BASELINE_OPTION)), exitCode(read))
         }
-        return try {
-            path.readText()
-        } catch (e: IOException) {
-            echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
-            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-        }
-    }
 }

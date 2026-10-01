@@ -12,6 +12,22 @@ data class OpenVexBaseline(
     val statements: List<OpenVexStatement> = emptyList(),
 )
 
+/** What reading the baseline file found. Each caller decides what an unavailable baseline means. */
+sealed interface OpenVexBaselineRead {
+    data class Present(
+        val text: String,
+    ) : OpenVexBaselineRead
+
+    sealed interface Unavailable : OpenVexBaselineRead
+
+    data object Absent : Unavailable
+
+    /** [reason] is the file system's own wording, such as "Is a directory". */
+    data class Unreadable(
+        val reason: String,
+    ) : Unavailable
+}
+
 /** Every case is rejected: continuing such a baseline would fork or corrupt the published document. */
 sealed interface OpenVexBaselineProblem {
     data object NotOpenVex : OpenVexBaselineProblem

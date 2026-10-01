@@ -6,11 +6,13 @@ package dev.vulnlog.gradle.internal
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.VerificationException
 
@@ -30,5 +32,13 @@ class OutcomesTest :
 
             exceptions.map { it::class } shouldContainExactly
                 listOf(InvalidUserDataException::class, InvalidUserDataException::class, VerificationException::class)
+        }
+
+        test("an unreadable baseline is configuration to fix") {
+            val unreadable = OpenVexBaselineRead.Unreadable("Is a directory")
+
+            val exception = failure(unreadable, "vex.json")
+
+            exception::class shouldBe InvalidUserDataException::class
         }
     })

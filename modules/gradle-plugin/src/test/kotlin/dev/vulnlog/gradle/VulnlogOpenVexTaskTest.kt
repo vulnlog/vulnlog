@@ -238,6 +238,20 @@ class VulnlogOpenVexTaskTest :
                 result.output shouldContain "Omit 'baseline' to issue a new document."
             }
 
+            test("fails when the baseline cannot be read") {
+                val dir =
+                    gradleProject(
+                        openVexBuildFile("""baseline = layout.projectDirectory.file("previous")"""),
+                        "test.vl.yaml" to openVexDocument(),
+                    )
+                dir.resolve("previous").mkdirs()
+
+                val result = runner(dir, "vulnlogOpenVex").buildAndFail()
+
+                result.output shouldContain "Cannot read baseline '"
+                result.output shouldContain "Pass a readable file to 'baseline', or omit it to issue a new document."
+            }
+
             test("fails when the baseline is the output file") {
                 val dir =
                     gradleProject(
