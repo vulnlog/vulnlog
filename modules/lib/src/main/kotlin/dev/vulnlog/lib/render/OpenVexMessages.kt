@@ -8,6 +8,7 @@ import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.vex.vexStatusKind
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
@@ -30,10 +31,28 @@ fun renderOpenVexFailure(
         is FilterRejected -> renderFilterProblems(failed.problems)
 
         is OpenVexOutcome.BaselineRejected ->
-            listOf(Failure(baselineProblem(baseline, failed.problem), "omit $baselineOption to issue a new document"))
+            listOf(Failure(baselineProblem(baseline, failed.problem), omitHint(baselineOption)))
 
         is OpenVexOutcome.NoStatementApplies -> listOf(Failure("no statement applies", emptyHint(failed.reason)))
     }
+
+fun renderOpenVexBaselineFailure(
+    unavailable: OpenVexBaselineRead.Unavailable,
+    baseline: String,
+    baselineOption: String,
+): Failure =
+    when (unavailable) {
+        OpenVexBaselineRead.Absent -> Failure("baseline '$baseline' does not exist", omitHint(baselineOption))
+
+        is OpenVexBaselineRead.Unreadable ->
+            Failure(
+                "cannot read baseline '$baseline': ${unavailable.reason}",
+                "pass a readable file to $baselineOption, or omit it to issue a new document",
+            )
+    }
+
+fun renderOpenVexNewDocument(baseline: String): String =
+    "baseline '$baseline' does not exist yet, issuing a new document"
 
 fun renderOpenVexWritten(
     target: String,
@@ -41,6 +60,8 @@ fun renderOpenVexWritten(
 ): String =
     "wrote $target: openvex format, version ${outcome.version.value}, " +
         pluralize(outcome.collection.statements.size, "statement")
+
+private fun omitHint(baselineOption: String): String = "omit $baselineOption to issue a new document"
 
 private fun baselineProblem(
     target: String,

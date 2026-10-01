@@ -15,6 +15,7 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
@@ -186,6 +187,27 @@ class OpenVexMessagesTest :
                     "baseline 'vex.json' has no 'timestamp', expected an RFC 3339 timestamp",
                     "baseline 'vex.json' has an invalid 'version' '0', expected a whole number from 1 to 2147483646",
                 ).map { message -> Failure(message, "omit --baseline to issue a new document") }
+        }
+
+        test("renderOpenVexBaselineFailure names the baseline, why it cannot be read and the way out") {
+            val unavailable = listOf(OpenVexBaselineRead.Absent, OpenVexBaselineRead.Unreadable("Is a directory"))
+
+            val failures = unavailable.map { renderOpenVexBaselineFailure(it, "vex.json", "--baseline") }
+
+            failures shouldContainExactly
+                listOf(
+                    Failure("baseline 'vex.json' does not exist", "omit --baseline to issue a new document"),
+                    Failure(
+                        "cannot read baseline 'vex.json': Is a directory",
+                        "pass a readable file to --baseline, or omit it to issue a new document",
+                    ),
+                )
+        }
+
+        test("renderOpenVexNewDocument says that the baseline is missing and a new document is issued") {
+            val line = renderOpenVexNewDocument("vex.json")
+
+            line shouldBe "baseline 'vex.json' does not exist yet, issuing a new document"
         }
 
         test("renderOpenVexFailure says that no statement applies and names what to change for every reason") {

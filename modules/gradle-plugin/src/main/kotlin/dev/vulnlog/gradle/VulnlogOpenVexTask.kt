@@ -14,10 +14,13 @@ import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.io.readOpenVexBaseline
 import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.OpenVexLine
+import dev.vulnlog.lib.render.renderOpenVexNewDocument
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.DiagnosticSink
@@ -127,10 +130,15 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
                     "to copy the document over the baseline.",
             )
         }
-        if (!file.exists()) {
-            sink.verbose("baseline '${file.path}' does not exist yet, issuing a new document")
-            return null
+        return when (val read = readOpenVexBaseline(file.toPath())) {
+            is OpenVexBaselineRead.Present -> read.text
+
+            OpenVexBaselineRead.Absent -> {
+                sink.verbose(renderOpenVexNewDocument(file.path))
+                null
+            }
+
+            is OpenVexBaselineRead.Unreadable -> throw failure(read, file.path)
         }
-        return file.readText()
     }
 }

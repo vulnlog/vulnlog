@@ -30,7 +30,7 @@ private const val LIB = "dev.vulnlog.lib"
 
 /** Packages migrated to the target layout: VEX, and the layers that so far hold VEX only. */
 private val strictPackages =
-    listOf("$LIB.model.vex", "$LIB.core.vex", "$LIB.codec", "$LIB.render", "$LIB.app")
+    listOf("$LIB.model.vex", "$LIB.core.vex", "$LIB.codec", "$LIB.render", "$LIB.app", "$LIB.io")
 
 /** Layer → the dev.vulnlog.lib packages it may import (itself included). */
 private val allowed: Map<String, List<String>> =
