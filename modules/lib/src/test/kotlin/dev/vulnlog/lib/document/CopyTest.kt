@@ -33,6 +33,7 @@ private val ghsa1 = VulnId.Ghsa("GHSA-1234-5678-abcd")
 
 private fun vulnerability(
     id: VulnId = cve1,
+    name: String? = null,
     aliases: List<VulnId> = emptyList(),
     releases: List<Release> = listOf(release1),
     description: String? = null,
@@ -42,6 +43,7 @@ private fun vulnerability(
     verdict: Verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
 ) = VulnerabilityEntry(
     id = id,
+    name = name,
     aliases = aliases,
     releases = releases,
     description = description,
@@ -64,11 +66,13 @@ private fun vulnlogFile(
 /** Rendered with `YamlWriter.write`, so the document starts with the `# $schema:` header. */
 private fun render(file: VulnlogFile): String = YamlWriter.write(file)
 
+/** Reads both files from YAML, as the drivers do. */
 private fun copy(
     source: VulnlogFile,
     destination: VulnlogFile,
     vulnIds: Set<VulnId>,
-): CopyOutcome = copyVulnerabilities(source, validated(render(destination)), vulnIds)
+): CopyOutcome =
+    copyVulnerabilities(validated(render(source)).vulnlogProjectFile, validated(render(destination)), vulnIds)
 
 private fun entriesOf(content: String): List<VulnerabilityEntry> =
     mapToDomain(parsed(content).validatedDto)
@@ -163,6 +167,24 @@ class CopyTest :
                 merged.verdict shouldBe Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH)
                 merged.analysis shouldBe "source analysis"
                 merged.releases shouldBe listOf(lastRelease)
+            }
+
+            test("keeps the name of a copied entry and of the entry it merges into") {
+                val source =
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(id = cve1, name = "Log4Shell"),
+                                vulnerability(id = cve2, name = "other"),
+                            ),
+                    )
+                val destination =
+                    vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve2, name = "Spring4Shell")))
+
+                val outcome = copy(source, destination, setOf(cve1, cve2))
+
+                entriesOf(outcome.newContent).associate { it.id to it.name } shouldBe
+                    mapOf(cve1 to "Log4Shell", cve2 to "Spring4Shell")
             }
 
             test("unions the lists of an existing entry, its own items first") {

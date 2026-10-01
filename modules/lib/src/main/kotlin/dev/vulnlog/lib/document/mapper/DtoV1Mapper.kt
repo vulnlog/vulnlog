@@ -222,6 +222,7 @@ object DtoV1Mapper {
         if (id == null || verdict == null) return null
         return VulnerabilityEntry(
             id = id,
+            name = dto.name,
             aliases = aliases,
             description = dto.description,
             releases = vulnerabilityReleasesToDomain(dto.releases),
