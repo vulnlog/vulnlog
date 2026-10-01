@@ -11,8 +11,10 @@
 [![Continuous Integration](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml/badge.svg)](https://github.com/vulnlog/vulnlog/actions/workflows/ci.yaml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
+⭐ If you like Vulnlog and it is helpful to you, please star the repo. It helps others discover the project.
+
 Vulnlog is the single source of truth for vulnerability analysis: you record each finding's analysis and verdict once,
-in a YAML file in your Git repository, and Vulnlog communicates that verdict to everyone who needs it -- your team, your
+in a YAML file in your Git repository, and Vulnlog communicates that verdict to everyone who needs it, your team, your
 scanners, your customers, and your automation.
 
 Vulnlog is a CLI application built around a YAML-based vulnerability definition file, designed to run in your CI
@@ -167,20 +169,22 @@ vulnlog report impact vulnlog.yaml
 
 ## Community
 
-Have a question or an idea? Join the conversation in
-[GitHub Discussions](https://github.com/vulnlog/vulnlog/discussions): ask in Q&A, propose features, or share how you use
-Vulnlog.
+Have a question or an idea? Join the conversation
+in [GitHub Discussions](https://github.com/vulnlog/vulnlog/discussions): ask in Q&A, propose features, or share how you
+use Vulnlog.
+
+Using Vulnlog? Tell us about your setup
+in [Adopters](https://github.com/vulnlog/vulnlog/discussions/categories/adopters). This directly shapes what we
+prioritize next.
 
 [![Bluesky](https://img.shields.io/bluesky/followers/vulnlog.bsky.social?style=flat&logo=bluesky&labelColor=white&color=blue)](https://bsky.app/profile/vulnlog.bsky.social)
 [![Mastodon](https://img.shields.io/mastodon/follow/114149693629631038?domain=infosec.exchange&style=flat&logo=mastodon&labelColor=white&color=blue)](https://infosec.exchange/@vulnlog)
 
 ## Contributing
 
-Contributions are welcome! Whether it is a bug report, a docs fix, or a new feature -- check out
-[CONTRIBUTING.md](CONTRIBUTING.md) to get started. If you are looking for something to pick up, look for issues labelled
-**good first issue**.
-
-⭐ If you find Vulnlog useful, giving it a star on GitHub helps others discover the project.
+Contributions are welcome! Whether it is a bug report, a docs fix, or a new feature, check
+out [CONTRIBUTING.md](CONTRIBUTING.md) to get started. If you are looking for something to pick up, look for issues
+labelled **good first issue**.
 
 The Vulnlog contributors:
 

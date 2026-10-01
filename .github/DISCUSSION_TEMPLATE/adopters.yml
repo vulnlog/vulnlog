@@ -1,0 +1,43 @@
+title: "<your name or organization>"
+labels: [ "adopters" ]
+body:
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for using Vulnlog! A few optional questions below help us understand how it is actually being used, so we can prioritize the right features and fix real pain points.
+  - type: textarea
+    id: usage
+    attributes:
+      label: "[Optional] What do you use Vulnlog for, and how?"
+      description: >
+        What problem does it solve for you, and how do you run it (CLI, Gradle plugin, CI pipeline, release process, security review, etc.)?
+    validations:
+      required: false
+  - type: input
+    id: scanners
+    attributes:
+      label: "[Optional] Which scanner(s) do you generate suppressions for?"
+      placeholder: "e.g. Trivy, Snyk, Grype"
+    validations:
+      required: false
+  - type: checkboxes
+    id: outputs
+    attributes:
+      label: "[Optional] What do you generate with Vulnlog?"
+      options:
+        - label: "Suppression / ignore files"
+        - label: "VEX documents"
+        - label: "Impact or changelog reports"
+    validations:
+      required: false
+  - type: textarea
+    id: pain_points
+    attributes:
+      label: "[Optional] What is missing, or the most annoying part of using Vulnlog today?"
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Get in touch
+        We're always interested in feedback, pain points, or feature ideas. Feel free to reply right here in the discussion. Thanks for adopting Vulnlog!
