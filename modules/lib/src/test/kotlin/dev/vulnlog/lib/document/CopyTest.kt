@@ -11,266 +11,223 @@ import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.SchemaVersion
-import dev.vulnlog.lib.model.Tag
+import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
-import io.kotest.matchers.string.shouldStartWith
+import io.kotest.matchers.types.shouldBeInstanceOf
 import java.nio.file.Path
 import java.time.LocalDate
 
 private val release1 = Release("1.0.0")
-private val release2 = Release("2.0.0")
+private val lastRelease = Release("1.5.0")
 private val cve1 = VulnId.Cve("CVE-2026-1234")
 private val cve2 = VulnId.Cve("CVE-2026-5678")
 private val ghsa1 = VulnId.Ghsa("GHSA-1234-5678-abcd")
 
 private fun vulnerability(
     id: VulnId = cve1,
-    name: String? = null,
     aliases: List<VulnId> = emptyList(),
-    releases: List<Release> = listOf(release2),
+    releases: List<Release> = listOf(release1),
     description: String? = null,
     packages: List<Purl> = listOf(Purl.Npm("pkg:npm/example-lib@2.3.0")),
     reports: List<ReportEntry> = listOf(ReportEntry(reporter = ReporterType.TRIVY)),
-    tags: List<Tag> = emptyList(),
     analysis: String? = null,
-    analyzedAt: LocalDate? = null,
     verdict: Verdict = Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
 ) = VulnerabilityEntry(
     id = id,
-    name = name,
     aliases = aliases,
     releases = releases,
     description = description,
     packages = packages,
     reports = reports,
-    tags = tags,
     analysis = analysis,
-    analyzedAt = analyzedAt,
     verdict = verdict,
 )
 
 private fun vulnlogFile(
-    releases: List<ReleaseEntry> = listOf(ReleaseEntry(id = release1, publicationDate = LocalDate.of(2026, 1, 1))),
+    releases: List<Release> = listOf(release1),
     vulnerabilities: List<VulnerabilityEntry> = emptyList(),
 ) = VulnlogFile(
     schemaVersion = SchemaVersion.V1,
     project = Project("Acme", "App", "Sec"),
-    releases = releases,
+    releases = releases.map { ReleaseEntry(id = it, publicationDate = LocalDate.of(2026, 1, 1)) },
     vulnerabilities = vulnerabilities,
 )
 
+/** Rendered with `YamlWriter.write`, so the document starts with the `# $schema:` header. */
 private fun render(file: VulnlogFile): String = YamlWriter.write(file)
+
+private fun copy(
+    source: VulnlogFile,
+    destination: VulnlogFile,
+    vulnIds: Set<VulnId>,
+): CopyOutcome = copyVulnerabilities(source, validated(render(destination)), vulnIds)
+
+private fun entriesOf(content: String): List<VulnerabilityEntry> =
+    mapToDomain(parsed(content).validatedDto)
+        .shouldBeInstanceOf<DomainMappingResult.Mapped>()
+        .vulnlogProjectFile
+        .vulnerabilities
 
 class CopyTest :
     FunSpec({
 
-        context("findNonExistingVulnIds") {
+        test("findNonExistingVulnIds returns the requested ids the entries lack") {
+            val entries = listOf(vulnerability(id = cve1), vulnerability(id = cve2))
+            val requests = listOf(setOf(cve1, ghsa1), setOf(cve1, cve2))
 
-            test("returns the requested ids that are not present") {
-                val vulns = listOf(vulnerability(id = cve1), vulnerability(id = cve2))
+            val missing = requests.map { findNonExistingVulnIds(entries, it) }
 
-                val missing = findNonExistingVulnIds(vulns, setOf(cve1, ghsa1))
-
-                missing shouldBe setOf(ghsa1)
-            }
-
-            test("returns empty set when all requested ids exist") {
-                val vulns = listOf(vulnerability(id = cve1))
-                findNonExistingVulnIds(vulns, setOf(cve1)) shouldBe emptySet()
-            }
+            missing shouldBe listOf(setOf(ghsa1), emptySet())
         }
 
-        context("formatCopiedMessage") {
+        test("formatCopiedMessage counts the copied entries, or reports the destination unchanged") {
+            val copied = listOf(listOf(cve1), listOf(cve1, cve2), emptyList())
 
-            test("renders copied ids when non-empty") {
-                formatCopiedMessage(Path.of("/tmp/x.vl.yaml"), listOf(cve1, cve2)) shouldBe
-                    "Copied: 2 entries to /tmp/x.vl.yaml"
-            }
+            val messages = copied.map { formatCopiedMessage(Path.of("/tmp/x.vl.yaml"), it) }
 
-            test("renders no-op message when empty") {
-                formatCopiedMessage(Path.of("/tmp/x.vl.yaml"), emptyList()) shouldBe
-                    "Unchanged: /tmp/x.vl.yaml: no new vulnerabilities"
-            }
+            messages shouldBe
+                listOf(
+                    "Copied: 1 entry to /tmp/x.vl.yaml",
+                    "Copied: 2 entries to /tmp/x.vl.yaml",
+                    "Unchanged: /tmp/x.vl.yaml: no new vulnerabilities",
+                )
         }
 
-        context("formatVulnIdsNotInSourceMessage") {
+        test("formatVulnIdsNotInSourceMessage lists the missing ids as an error") {
+            val missing = setOf(cve1, ghsa1)
 
-            test("renders missing ids") {
-                formatVulnIdsNotInSourceMessage(setOf(cve1, ghsa1)) shouldContain
-                    "error: vulnerability IDs not found in source file:"
-                formatVulnIdsNotInSourceMessage(setOf(cve1)) shouldContain "CVE-2026-1234"
-            }
+            val message = formatVulnIdsNotInSourceMessage(missing)
+
+            message shouldBe "error: vulnerability IDs not found in source file: CVE-2026-1234, GHSA-1234-5678-abcd"
         }
 
         context("copyVulnerabilities") {
 
-            test("inserts an entry that does not exist in the destination") {
+            test("inserts a missing entry at the top, pointing at the destination's last release") {
                 val source =
+                    vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve2, description = "from source")))
+                val destination =
                     vulnlogFile(
-                        vulnerabilities = listOf(vulnerability(id = cve1, description = "from source")),
-                    )
-                val destination = vulnlogFile()
-
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve1),
+                        releases = listOf(release1, lastRelease),
+                        vulnerabilities = listOf(vulnerability(id = cve1)),
                     )
 
-                outcome.copied shouldContainExactly listOf(cve1)
-                outcome.newContent shouldContain "CVE-2026-1234"
-                outcome.newContent shouldContain "from source"
-                // release rewritten to destination's latest release (1.0.0)
-                outcome.newContent shouldContain "releases: [1.0.0]"
-                outcome.newContent shouldNotContain "2.0.0"
+                val outcome = copy(source, destination, setOf(cve2))
+
+                val entries = entriesOf(outcome.newContent)
+                outcome.copied shouldBe listOf(cve2)
+                entries.map { it.id } shouldBe listOf(cve2, cve1)
+                entries.first().releases shouldBe listOf(lastRelease)
+                entries.first().description shouldBe "from source"
             }
 
-            test("merges with existing entry: existing scalars win, source fills nulls") {
+            test("copies every requested entry in one pass") {
+                val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1), vulnerability(id = cve2)))
+
+                val outcome = copy(source, vulnlogFile(), setOf(cve1, cve2))
+
+                outcome.copied shouldBe listOf(cve1, cve2)
+                entriesOf(outcome.newContent).map { it.id } shouldContainExactlyInAnyOrder listOf(cve1, cve2)
+            }
+
+            test("keeps an existing entry's values, fills the ones it lacks and points it at the last release") {
                 val source =
                     vulnlogFile(
                         vulnerabilities =
                             listOf(
                                 vulnerability(
-                                    id = cve1,
                                     description = "source description",
                                     analysis = "source analysis",
-                                    name = "source name",
+                                    verdict = Verdict.Affected(Severity.HIGH),
                                 ),
                             ),
                     )
                 val destination =
                     vulnlogFile(
-                        vulnerabilities =
-                            listOf(
-                                vulnerability(
-                                    id = cve1,
-                                    description = "existing description", // existing wins
-                                    analysis = null, // null in existing -> falls back to source
-                                    name = null, // null in existing -> falls back to source
-                                    releases = listOf(release1),
-                                ),
-                            ),
+                        releases = listOf(release1, lastRelease),
+                        vulnerabilities = listOf(vulnerability(description = "existing description")),
                     )
 
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve1),
-                    )
+                val outcome = copy(source, destination, setOf(cve1))
 
-                outcome.copied shouldContainExactly listOf(cve1)
-                outcome.newContent shouldContain "existing description"
-                outcome.newContent shouldNotContain "source description"
-                outcome.newContent shouldContain "source analysis"
-                outcome.newContent shouldContain "source name"
-                // exactly one entry - replace, not duplicate
-                "CVE-2026-1234".toRegex().findAll(outcome.newContent).count() shouldBe 1
+                val merged = entriesOf(outcome.newContent).single()
+                merged.description shouldBe "existing description"
+                merged.verdict shouldBe Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH)
+                merged.analysis shouldBe "source analysis"
+                merged.releases shouldBe listOf(lastRelease)
             }
 
-            test("merges lists by union (aliases, packages, tags)") {
+            test("unions the lists of an existing entry, its own items first") {
+                val shared = Purl.Npm("pkg:npm/shared@1.0")
+                val sourceOnly = Purl.Npm("pkg:npm/source-only@1.0")
+                val destinationOnly = Purl.Npm("pkg:npm/destination-only@1.0")
                 val source =
                     vulnlogFile(
                         vulnerabilities =
-                            listOf(
-                                vulnerability(
-                                    id = cve1,
-                                    aliases = listOf(ghsa1),
-                                    packages = listOf(Purl.Npm("pkg:npm/source-only@1.0")),
-                                ),
-                            ),
+                            listOf(vulnerability(aliases = listOf(ghsa1), packages = listOf(sourceOnly, shared))),
                     )
                 val destination =
-                    vulnlogFile(
-                        vulnerabilities =
-                            listOf(
-                                vulnerability(
-                                    id = cve1,
-                                    aliases = emptyList(),
-                                    packages = listOf(Purl.Npm("pkg:npm/dest-only@1.0")),
-                                    releases = listOf(release1),
-                                ),
-                            ),
-                    )
+                    vulnlogFile(vulnerabilities = listOf(vulnerability(packages = listOf(destinationOnly, shared))))
 
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve1),
-                    )
+                val outcome = copy(source, destination, setOf(cve1))
 
-                // packages: union (existing first, then unique additions)
-                outcome.newContent shouldContain "pkg:npm/dest-only@1.0"
-                outcome.newContent shouldContain "pkg:npm/source-only@1.0"
-                // aliases: source's alias appears
-                outcome.newContent shouldContain "GHSA-1234-5678-abcd"
+                val merged = entriesOf(outcome.newContent).single()
+                merged.aliases shouldBe listOf(ghsa1)
+                merged.packages shouldBe listOf(destinationOnly, shared, sourceOnly)
             }
 
-            test("rewrites releases to destination's latest release") {
-                val source =
-                    vulnlogFile(
-                        vulnerabilities = listOf(vulnerability(id = cve1, releases = listOf(release2))),
+            test("merges reports by reporter: an existing report keeps its values and gains the source's") {
+                val existingReport =
+                    ReportEntry(
+                        reporter = ReporterType.TRIVY,
+                        at = LocalDate.of(2026, 1, 10),
+                        vulnIds = setOf(VulnId.Cve("CVE-2026-1111")),
                     )
-                val destination =
-                    vulnlogFile(
-                        releases =
-                            listOf(
-                                ReleaseEntry(id = release1, publicationDate = LocalDate.of(2025, 1, 1)),
-                                ReleaseEntry(id = Release("1.5.0")),
-                            ),
+                val sourceReports =
+                    listOf(
+                        ReportEntry(
+                            reporter = ReporterType.TRIVY,
+                            at = LocalDate.of(2026, 2, 20),
+                            source = "nightly scan",
+                            vulnIds = setOf(VulnId.Cve("CVE-2026-2222")),
+                        ),
+                        ReportEntry(reporter = ReporterType.SNYK),
                     )
+                val source = vulnlogFile(vulnerabilities = listOf(vulnerability(reports = sourceReports)))
+                val destination = vulnlogFile(vulnerabilities = listOf(vulnerability(reports = listOf(existingReport))))
 
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve1),
-                    )
+                val outcome = copy(source, destination, setOf(cve1))
 
-                val entryBody = outcome.newContent.substring(outcome.newContent.indexOf("- id: CVE"))
-                entryBody shouldContain "releases: [1.5.0]"
-                entryBody shouldNotContain "1.0.0"
-                entryBody shouldNotContain "2.0.0"
+                entriesOf(outcome.newContent).single().reports shouldBe
+                    listOf(
+                        existingReport.copy(
+                            source = "nightly scan",
+                            vulnIds = setOf(VulnId.Cve("CVE-2026-1111"), VulnId.Cve("CVE-2026-2222")),
+                        ),
+                        ReportEntry(reporter = ReporterType.SNYK),
+                    )
             }
 
-            test("renders a multi-line source analysis as a literal block scalar") {
-                val analysisText = "Affected paths:\n  - decode()\nNone reachable."
-                val source =
-                    vulnlogFile(
-                        vulnerabilities = listOf(vulnerability(id = cve1, analysis = analysisText)),
-                    )
-                val destination = vulnlogFile()
+            test("ignores requested ids the source lacks") {
+                val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1)))
 
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve1),
-                    )
+                val outcome = copy(source, vulnlogFile(), setOf(cve2))
 
-                outcome.newContent shouldContain "analysis: |-"
-                outcome.newContent shouldNotContain "analysis: >"
+                outcome.copied.shouldBeEmpty()
+                entriesOf(outcome.newContent).shouldBeEmpty()
             }
 
-            test("normalizes a column-0 destination and re-formatting is a no-op") {
-                val source =
-                    vulnlogFile(
-                        vulnerabilities = listOf(vulnerability(id = cve2, description = "from source")),
-                    )
-                val existing = vulnerability(id = cve1, releases = listOf(release1))
-                val destination = vulnlogFile(vulnerabilities = listOf(existing))
-                val destinationContent =
+            test("rewrites a destination in any layout canonically, so fmt changes nothing") {
+                val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve2)))
+                val column0Destination =
                     """
                     |schemaVersion: "1"
                     |project:
@@ -290,80 +247,23 @@ class CopyTest :
                     |  justification: vulnerable code not in execute path
                     """.trimMargin() + "\n"
 
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(destinationContent),
-                        vulnIds = setOf(cve2),
-                    )
+                val outcome = copyVulnerabilities(source, validated(column0Destination), setOf(cve2))
 
-                outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-5678"
-                outcome.newContent shouldContain "releases:\n  - id: 1.0.0"
-                "CVE-2026-1234".toRegex().findAll(outcome.newContent).count() shouldBe 1
+                entriesOf(outcome.newContent).map { it.id } shouldBe listOf(cve2, cve1)
                 formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
             }
 
-            test("preserves the schema header when the destination has one") {
-                val source =
-                    vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1, description = "from source")))
-                val destination = vulnlogFile()
+            test("keeps the schema header only where the destination has one") {
+                val source = vulnlogFile(vulnerabilities = listOf(vulnerability()))
+                val withHeader = render(vulnlogFile())
+                val withoutHeader = withHeader.substringAfter('\n')
 
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        // render uses YamlWriter.write, which emits the '# $schema:' header
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve1),
-                    )
+                val firstLines =
+                    listOf(withHeader, withoutHeader).map { destination ->
+                        copyVulnerabilities(source, validated(destination), setOf(cve1)).newContent.lines().first()
+                    }
 
-                outcome.newContent shouldStartWith "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---"
-            }
-
-            test("does not add a schema header when the destination has none") {
-                val source =
-                    vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1, description = "from source")))
-                val destination = vulnlogFile()
-                val destinationContent =
-                    """
-                    |---
-                    |schemaVersion: "1"
-                    |
-                    |project:
-                    |  organization: Acme
-                    |  name: App
-                    |  author: Sec
-                    |
-                    |releases:
-                    |  - id: 1.0.0
-                    |    published_at: 2026-01-01
-                    |
-                    |vulnerabilities: []
-                    """.trimMargin() + "\n"
-
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(destinationContent),
-                        vulnIds = setOf(cve1),
-                    )
-
-                outcome.newContent shouldNotContain "# \$schema:"
-                outcome.newContent shouldStartWith "---"
-            }
-
-            test("ignores ids in vulnIds that are not present in the source") {
-                val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1)))
-                val destination = vulnlogFile()
-
-                val outcome =
-                    copyVulnerabilities(
-                        source = source,
-                        destination = validated(render(destination)),
-                        vulnIds = setOf(cve2), // not in source
-                    )
-
-                outcome.copied shouldBe emptyList()
-                outcome.newContent shouldNotContain "CVE-2026-5678"
+                firstLines shouldBe listOf("# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json", "---")
             }
         }
     })

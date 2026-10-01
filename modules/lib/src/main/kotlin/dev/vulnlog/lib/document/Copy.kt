@@ -29,16 +29,9 @@ data class CopyOutcome(
 )
 
 /**
- * Copies the requested vulnerability entries from [source] into the parsed [destination] and rewrites
- * the whole document in the canonical style ([YamlWriter.renderCanonicalDocument]), even when nothing
- * is copied. Any valid layout is accepted. The optional `# $schema:` header is kept only when the
- * destination already had it; YAML comments in the destination do not survive.
- *
- * If an entry already exists in the destination, it is merged with the source entry and keeps its
- * position: existing values win for scalars; lists (aliases, packages, tags) are unioned; reports are
- * unioned by reporter. New entries are placed at the top of the `vulnerabilities:` list. Releases on
- * every copied entry are rewritten to the destination's latest release, or to an empty list when
- * the destination has no releases yet.
+ * Rewrites the whole document canonically, as [addVulnerabilityToFile] does. An entry the destination already has
+ * keeps its place and its own values and only gains what it lacks, so a copy never overwrites the destination's
+ * analysis. Every copied entry points at the destination's last release; the source's releases mean nothing there.
  */
 fun copyVulnerabilities(
     source: VulnlogFile,
@@ -156,7 +149,4 @@ fun formatCopiedMessage(
 fun findNonExistingVulnIds(
     vulnerabilities: List<VulnerabilityEntry>,
     vulnIds: Set<VulnId>,
-): Set<VulnId> =
-    vulnIds
-        .filter { vulnId -> vulnId !in vulnerabilities.map(VulnerabilityEntry::id) }
-        .toSet()
+): Set<VulnId> = vulnIds - vulnerabilities.map { it.id }.toSet()

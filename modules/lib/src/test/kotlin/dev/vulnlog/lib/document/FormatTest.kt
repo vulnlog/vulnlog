@@ -9,8 +9,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 
-// Uses column-0 block sequences (the `- id:` indicator at the key's indent) under tags and releases.
-// This is valid YAML and must be normalised to the indented style without duplicating entries.
+// Block sequences at the key's indent are valid YAML; an earlier formatter duplicated their entries.
 private val COLUMN0_YAML =
     """
     # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
@@ -34,9 +33,7 @@ private val COLUMN0_YAML =
     vulnerabilities: []
     """.trimIndent() + "\n"
 
-// Two non-canonical entries (quoted scalars, block single-element arrays) that must each be
-// reformatted in place, exactly once and in order, without duplicating any entry.
-private val ENTRIES_YAML =
+private val QUOTED_ENTRIES_YAML =
     """
     # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
     ---
@@ -74,8 +71,6 @@ private val ENTRIES_YAML =
         justification: "vulnerable code not in execute path"
     """.trimIndent() + "\n"
 
-// A multi-line analysis and a long single-line comment: styles are a function of the value
-// (multi-line -> literal, long single-line -> folded), regardless of the source notation.
 private val STYLED_YAML =
     """
     # ${'$'}schema: https://vulnlog.dev/schema/vulnlog-v1.json
@@ -111,8 +106,6 @@ private val STYLED_YAML =
         justification: vulnerable code not in execute path
     """.trimIndent() + "\n"
 
-// User comments anywhere in the file (no header, between sections, inside entries) plus a wrong
-// schema pointer: formatting drops the comments and generates the canonical header.
 private val COMMENTED_YAML =
     """
     # ${'$'}schema: https://example.com/custom.json
@@ -138,7 +131,6 @@ private val COMMENTED_YAML =
           - reporter: trivy
     """.trimIndent() + "\n"
 
-// A flow-style vulnerabilities list: valid YAML that the textual splicing approach could not handle.
 private val FLOW_YAML =
     """
     schemaVersion: "1"
@@ -148,177 +140,108 @@ private val FLOW_YAML =
       packages: ["pkg:npm/example-lib@2.3.0"], reports: [{reporter: trivy}]}]
     """.trimIndent() + "\n"
 
+private val CANONICAL_LEGACY_VERDICT_YAML =
+    """
+    ---
+    schemaVersion: "1"
+
+    project:
+      organization: Acme
+      name: App
+      author: Sec
+
+    releases:
+      - id: 1.0.0
+
+    vulnerabilities:
+
+      - id: CVE-2026-0001
+        releases: [1.0.0]
+        packages: ["pkg:npm/example-lib@2.3.0"]
+        reports:
+          - reporter: trivy
+        verdict: risk acceptable
+        severity: low
+    """.trimIndent() + "\n"
+
+private fun occurrences(
+    haystack: String,
+    needle: String,
+) = Regex(Regex.escape(needle)).findAll(haystack).count()
+
 class FormatTest :
     FunSpec({
 
-        fun occurrences(
-            haystack: String,
-            needle: String,
-        ) = Regex(Regex.escape(needle)).findAll(haystack).count()
-
-        test("column-0 sequences are normalised without duplicating entries") {
+        test("indents column-0 sequences without duplicating their entries") {
             val result = formatYaml(parsed(COLUMN0_YAML))
 
-            // Each entry appears exactly once (the bug duplicated them).
-            occurrences(result, "id: foo") shouldBe 1
-            occurrences(result, "id: 1.0.0") shouldBe 1
-            occurrences(result, "id: 2.0.0") shouldBe 1
-            // Normalised to the indented style.
+            listOf("id: foo", "id: 1.0.0", "id: 2.0.0").map { occurrences(result, it) } shouldBe listOf(1, 1, 1)
             result shouldContain "tags:\n  - id: foo"
             result shouldContain "releases:\n  - id: 1.0.0"
-            // Header preserved.
+            result shouldContain "vulnerabilities: []"
             result shouldContain "# \$schema:"
         }
 
-        test("formatting is idempotent for column-0 input") {
-            val once = formatYaml(parsed(COLUMN0_YAML))
-            val twice = formatYaml(parsed(once))
+        test("reformats every entry in place, once and in order") {
+            val result = formatYaml(parsed(QUOTED_ENTRIES_YAML))
+
+            listOf("id: CVE-2026-0001", "id: CVE-2026-0002").map { occurrences(result, it) } shouldBe listOf(1, 1)
+            result.indexOf("CVE-2026-0001") shouldBeLessThan result.indexOf("CVE-2026-0002")
+            occurrences(result, "releases: [1.0.0]") shouldBe 2
+            result shouldContain """packages: ["pkg:npm/example-lib@2.3.0"]"""
+        }
+
+        test("picks the block style by the value, not by the notation of the source") {
+            val result = formatYaml(parsed(STYLED_YAML))
+
+            result shouldContain "analysis: |-\n"
+            result shouldContain "comment: >-\n"
+        }
+
+        test("drops user comments and writes the canonical schema header") {
+            val result = formatYaml(parsed(COMMENTED_YAML))
+
+            result.lines().take(2) shouldBe listOf("# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json", "---")
+            result shouldNotContain "reviewed by the security team"
+            result shouldNotContain "recheck after upgrade"
+        }
+
+        test("renders a flow-style document in the block style") {
+            val result = formatYaml(parsed(FLOW_YAML))
+
+            result shouldContain "project:\n  organization: Acme"
+            result shouldContain "vulnerabilities:\n\n  - id: CVE-2026-0001"
+            result shouldContain "releases: [1.0.0]"
+        }
+
+        test("is idempotent for every layout") {
+            val layouts = listOf(COLUMN0_YAML, QUOTED_ENTRIES_YAML, STYLED_YAML, COMMENTED_YAML, FLOW_YAML)
+
+            val once = layouts.map { formatYaml(parsed(it)) }
+            val twice = once.map { formatYaml(parsed(it)) }
 
             twice shouldBe once
         }
 
-        test("formatting is idempotent for already-indented input") {
-            val once = formatYaml(parsed(COLUMN0_YAML))
-            // Re-running on indented output is a no-op.
-            formatYaml(parsed(once)) shouldBe once
+        test("keeps the deprecated risk acceptable verdict as written") {
+            val outcome = formatYamlOutcome(parsed(CANONICAL_LEGACY_VERDICT_YAML))
+
+            outcome shouldBe FormatOutcome.Unchanged
         }
 
-        test("reformats every vulnerability entry in place without duplicating it") {
-            val result = formatYaml(parsed(ENTRIES_YAML))
-
-            occurrences(result, "id: CVE-2026-0001") shouldBe 1
-            occurrences(result, "id: CVE-2026-0002") shouldBe 1
-            // single-element scalar lists collapse to flow arrays
-            occurrences(result, "releases: [1.0.0]") shouldBe 2
-            // colon-bearing purls stay quoted inside the flow array
-            result shouldContain """packages: ["pkg:npm/example-lib@2.3.0"]"""
-            // header and entry order preserved
-            result shouldContain "# \$schema:"
-            result.indexOf("CVE-2026-0001") shouldBeLessThan result.indexOf("CVE-2026-0002")
-        }
-
-        test("formatting an entry-bearing document is idempotent") {
-            val once = formatYaml(parsed(ENTRIES_YAML))
-
-            formatYaml(parsed(once)) shouldBe once
-        }
-
-        test("renders multi-line values as literal and long single-line values as folded blocks") {
-            val result = formatYaml(parsed(STYLED_YAML))
-
-            result shouldContain "analysis: |-"
-            result shouldContain "comment: >-"
-            result shouldNotContain "analysis: >"
-        }
-
-        test("formatting a styled document is idempotent") {
-            val once = formatYaml(parsed(STYLED_YAML))
-
-            formatYaml(parsed(once)) shouldBe once
-        }
-
-        test("removes user comments and generates the schema header") {
-            val result = formatYaml(parsed(COMMENTED_YAML))
-
-            result shouldNotContain "# reviewed by the security team"
-            result shouldNotContain "# temporary, recheck after upgrade"
-            occurrences(result, "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json") shouldBe 1
-            result.lines().first() shouldBe "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json"
-            result.lines()[1] shouldBe "---"
-        }
-
-        test("renders a flow-style vulnerabilities list in the canonical block style") {
-            val result = formatYaml(parsed(FLOW_YAML))
-
-            result shouldContain "vulnerabilities:\n\n  - id: CVE-2026-0001"
-            result shouldContain "releases: [1.0.0]"
-            formatYaml(parsed(result)) shouldBe result
-        }
-
-        test("an empty vulnerabilities list renders as an empty flow array") {
-            val result = formatYaml(parsed(COLUMN0_YAML))
-
-            result shouldContain "vulnerabilities: []"
-        }
-
-        test("formatYamlOutcome reports canonical content as unchanged") {
+        test("formatYamlOutcome tells canonical content from content it reformats") {
             val canonical = formatYaml(parsed(COLUMN0_YAML))
 
-            formatYamlOutcome(parsed(canonical)) shouldBe FormatOutcome.Unchanged
+            val outcomes = listOf(canonical, COLUMN0_YAML).map { formatYamlOutcome(parsed(it)) }
+
+            outcomes shouldBe listOf(FormatOutcome.Unchanged, FormatOutcome.Reformatted(canonical))
         }
 
-        test("formatYamlOutcome carries the reformatted content for non-canonical input") {
-            val outcome = formatYamlOutcome(parsed(COLUMN0_YAML))
-
-            outcome shouldBe FormatOutcome.Reformatted(formatYaml(parsed(COLUMN0_YAML)))
-        }
-
-        test("the comments-dropped warning names the source and the replacement fields") {
+        test("the comments-dropped warning names the file and the fields to use instead") {
             val warning = formatCommentsDroppedWarning("web-app.vl.yaml")
 
-            warning shouldContain "web-app.vl.yaml"
-            warning shouldContain "removed on write"
-            warning shouldContain "comment"
-        }
-
-        test("writes the deprecated risk acceptable verdict unchanged") {
-            val legacy =
-                """
-                ---
-                schemaVersion: "1"
-
-                project:
-                  organization: Acme
-                  name: App
-                  author: Sec
-
-                releases:
-                  - id: 1.0.0
-
-                vulnerabilities:
-
-                  - id: CVE-2026-0001
-                    releases: [1.0.0]
-                    packages: ["pkg:npm/example-lib@2.3.0"]
-                    reports:
-                      - reporter: trivy
-                    verdict: risk acceptable
-                    severity: low
-                """.trimIndent() + "\n"
-
-            val result = formatYaml(parsed(legacy))
-
-            result shouldContain "verdict: risk acceptable"
-            result shouldNotContain "disposition"
-        }
-
-        test("a canonically formatted file with the deprecated verdict is unchanged") {
-            val legacy =
-                """
-                ---
-                schemaVersion: "1"
-
-                project:
-                  organization: Acme
-                  name: App
-                  author: Sec
-
-                releases:
-                  - id: 1.0.0
-
-                vulnerabilities:
-
-                  - id: CVE-2026-0001
-                    releases: [1.0.0]
-                    packages: ["pkg:npm/example-lib@2.3.0"]
-                    reports:
-                      - reporter: trivy
-                    verdict: risk acceptable
-                    severity: low
-                """.trimIndent() + "\n"
-
-            val once = formatYaml(parsed(legacy))
-
-            formatYamlOutcome(parsed(once)) shouldBe FormatOutcome.Unchanged
+            warning shouldBe
+                "warning: web-app.vl.yaml: contains YAML comments; they are removed on write\n" +
+                "  hint: record notes in schema fields (e.g. comment, analysis)"
         }
     })
