@@ -5,6 +5,7 @@ package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
@@ -119,11 +120,7 @@ class OpenVexMessagesTest :
 
             test("reports no count when no statement applies, and blames the scope for bare releases") {
                 val onlyOnLibraryRelease =
-                    taggedFile.vulnerabilities.map {
-                        it.copy(
-                            releases = listOf(release("1.0.1")),
-                        )
-                    }
+                    taggedFile.vulnerabilities.map { it.copy(releases = listOf(release("1.0.1"))) }
                 val file = taggedFile.copy(vulnerabilities = onlyOnLibraryRelease)
                 val collection = collectOpenVexStatements(file, OpenVexScope(tags = setOf(tag("container"))))
                 val outcome = OpenVexOutcome.NoStatementApplies(collection, OpenVexEmptyReason.NO_ENTRY_IN_TAG_SCOPE)
@@ -161,40 +158,49 @@ class OpenVexMessagesTest :
             line shouldBe "wrote vex.json: openvex format, version 3, 1 statement"
         }
 
-        test("renderOpenVexEmptyHint names what to change for every reason") {
-            val reasons = OpenVexEmptyReason.entries
+        test("renderOpenVexFailure words every filter problem of a rejected scope") {
+            val problem = FilterProblem.UnknownTags(listOf(tag("binary")), listOf(tag("app")))
 
-            val hints = reasons.map(::renderOpenVexEmptyHint)
+            val failures = renderOpenVexFailure(FilterRejected(listOf(problem)), "", "--baseline")
 
-            hints shouldContainExactly
-                listOf(
-                    "declare 'purls' on the releases you want the document to cover",
-                    "tag the vulnerability entries with the tags of the release purls they apply to",
-                    "no vulnerability entry and release purl in scope share one of the requested tags",
-                    "no vulnerability entry applies to the release in scope",
-                    "no vulnerability entry references a release that declares purls",
-                )
+            failures shouldContainExactly listOf(Failure("Tag not found: binary", "Known tags: app"))
         }
 
-        test("renderOpenVexBaselineProblem names the problem and what the field has to be") {
-            val problems =
+        test("renderOpenVexFailure names the baseline, what is wrong with it and the option to omit") {
+            val outcomes =
                 listOf(
                     OpenVexBaselineProblem.NotOpenVex,
                     OpenVexBaselineProblem.OtherFormatVersion("0.1.0", OpenVexFormatVersion.VERSION_0_2_0),
                     OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.ID, "vex-1"),
                     OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.TIMESTAMP, null),
                     OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, "0"),
-                )
+                ).map(OpenVexOutcome::BaselineRejected)
 
-            val messages = problems.map { renderOpenVexBaselineProblem("vex.json", it) }
+            val failures = outcomes.flatMap { renderOpenVexFailure(it, "vex.json", "--baseline") }
 
-            messages shouldContainExactly
+            failures shouldContainExactly
                 listOf(
                     "baseline 'vex.json' is not an OpenVEX document",
                     "baseline 'vex.json' is an OpenVEX 0.1.0 document, but this run writes OpenVEX 0.2.0",
                     "baseline 'vex.json' has an invalid '@id' 'vex-1', expected an absolute IRI",
                     "baseline 'vex.json' has no 'timestamp', expected an RFC 3339 timestamp",
                     "baseline 'vex.json' has an invalid 'version' '0', expected a whole number from 1 to 2147483646",
-                )
+                ).map { message -> Failure(message, "omit --baseline to issue a new document") }
+        }
+
+        test("renderOpenVexFailure says that no statement applies and names what to change for every reason") {
+            val collection = collectOpenVexStatements(file)
+            val outcomes = OpenVexEmptyReason.entries.map { OpenVexOutcome.NoStatementApplies(collection, it) }
+
+            val failures = outcomes.flatMap { renderOpenVexFailure(it, "", "--baseline") }
+
+            failures shouldContainExactly
+                listOf(
+                    "declare 'purls' on the releases you want the document to cover",
+                    "tag the vulnerability entries with the tags of the release purls they apply to",
+                    "no vulnerability entry and release purl in scope share one of the requested tags",
+                    "no vulnerability entry applies to the release in scope",
+                    "no vulnerability entry references a release that declares purls",
+                ).map { hint -> Failure("no statement applies", hint) }
         }
     })

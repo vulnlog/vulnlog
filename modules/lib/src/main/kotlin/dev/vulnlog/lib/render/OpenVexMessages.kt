@@ -20,7 +20,29 @@ fun renderOpenVexReport(outcome: OpenVexOutcome): List<OpenVexLine> =
         is OpenVexOutcome.Generated -> collectionLines(outcome.collection) + countLine(outcome.collection)
     }
 
-fun renderOpenVexBaselineProblem(
+/** [baseline] and [baselineOption] name the file and the setting it came from; only a rejected baseline uses them. */
+fun renderOpenVexFailure(
+    failed: OpenVexOutcome.Failed,
+    baseline: String,
+    baselineOption: String,
+): List<Failure> =
+    when (failed) {
+        is FilterRejected -> renderFilterProblems(failed.problems)
+
+        is OpenVexOutcome.BaselineRejected ->
+            listOf(Failure(baselineProblem(baseline, failed.problem), "omit $baselineOption to issue a new document"))
+
+        is OpenVexOutcome.NoStatementApplies -> listOf(Failure("no statement applies", emptyHint(failed.reason)))
+    }
+
+fun renderOpenVexWritten(
+    target: String,
+    outcome: OpenVexOutcome.Generated,
+): String =
+    "wrote $target: openvex format, version ${outcome.version.value}, " +
+        pluralize(outcome.collection.statements.size, "statement")
+
+private fun baselineProblem(
     target: String,
     problem: OpenVexBaselineProblem,
 ): String =
@@ -43,7 +65,7 @@ fun renderOpenVexBaselineProblem(
         }
     }
 
-fun renderOpenVexEmptyHint(reason: OpenVexEmptyReason): String =
+private fun emptyHint(reason: OpenVexEmptyReason): String =
     when (reason) {
         OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS -> "declare 'purls' on the releases you want the document to cover"
         OpenVexEmptyReason.NO_ENTRY_MATCHES_RELEASE_PURL_TAGS ->
@@ -56,13 +78,6 @@ fun renderOpenVexEmptyHint(reason: OpenVexEmptyReason): String =
         OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE ->
             "no vulnerability entry references a release that declares purls"
     }
-
-fun renderOpenVexWritten(
-    target: String,
-    outcome: OpenVexOutcome.Generated,
-): String =
-    "wrote $target: openvex format, version ${outcome.version.value}, " +
-        pluralize(outcome.collection.statements.size, "statement")
 
 private fun collectionLines(collection: OpenVexCollection): List<OpenVexLine> =
     scopeLines(collection).map(OpenVexLine::Verbose) +

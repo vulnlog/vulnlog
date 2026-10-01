@@ -235,7 +235,7 @@ class VulnlogOpenVexTaskTest :
                 val result = runner(dir, "vulnlogOpenVex").buildAndFail()
 
                 result.output shouldContain "previous.json' is not an OpenVEX document"
-                result.output shouldContain "Unset 'baseline' to issue a new document."
+                result.output shouldContain "Omit 'baseline' to issue a new document."
             }
 
             test("fails when the baseline is the output file") {

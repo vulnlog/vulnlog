@@ -10,7 +10,8 @@ import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.filter.resolveFilter
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.render.renderFilterFailure
+import dev.vulnlog.lib.render.formatFailureMessage
+import dev.vulnlog.lib.render.renderFilterProblems
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 
@@ -25,5 +26,5 @@ fun DefaultTask.resolveFilterOrFail(
             outcome.filter
         }
 
-        is FilterOutcome.Rejected -> throw GradleException(renderFilterFailure(outcome.problems))
+        is FilterOutcome.Rejected -> throw GradleException(formatFailureMessage(renderFilterProblems(outcome.problems)))
     }
