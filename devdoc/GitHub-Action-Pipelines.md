@@ -42,7 +42,7 @@ flowchart TD
 - **detect-changes**: sets the `native_relevant` output if the PR touches any of:
   `modules/lib/src/main/resources/META-INF/native-image/**`,
   `modules/lib/src/main/kotlin/dev/vulnlog/lib/document/**`,
-  `modules/lib/src/main/kotlin/dev/vulnlog/lib/parse/**`, `modules/cli-app/**`,
+  `modules/lib/src/main/kotlin/dev/vulnlog/lib/codec/**`, `modules/cli-app/**`,
   `modules/lib/build.gradle.kts`, `gradle/libs.versions.toml`, `buildSrc/**`.
 - **check**: runs `./gradlew check` (compile, lint, unit tests, JVM integration tests) on
   Java 21 / Temurin via the [`setup-jvm`](../.github/actions/setup-jvm/action.yml) composite

@@ -20,6 +20,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.codec.suppression.SuppressionFile
+import dev.vulnlog.lib.codec.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
 import dev.vulnlog.lib.core.buildSuppressionOutputs
@@ -34,8 +36,6 @@ import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
-import dev.vulnlog.lib.parse.suppression.SuppressionFile
-import dev.vulnlog.lib.parse.suppression.SuppressionWriter.writeSuppressionOutput
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption
