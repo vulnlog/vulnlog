@@ -18,13 +18,6 @@ import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import java.nio.file.Path
 import java.time.LocalDate
 
-/**
- * The values an `add` invocation contributes to an entry. List-valued options are added to whatever an
- * existing entry already has; scalar options overwrite the existing value when supplied. `resolution` is
- * intentionally not settable here. The verdict, severity and justification are kept as raw strings and are
- * not cross-checked, so an inconsistent combination (e.g. `affected` with a justification) is accepted and
- * left for the validate command to flag.
- */
 data class AddVulnerabilityOptions(
     val vulnId: VulnId,
     val name: String? = null,
@@ -49,32 +42,25 @@ data class AddOutcome(
     val updated: Boolean,
 )
 
-/**
- * Builds an entry from [options] and serializes it as a `vulnerabilities:` list item for printing to STDOUT.
- * Absent options leave their fields empty; a reporter adds a report dated today.
- */
-fun createVulnerabilityEntry(options: AddVulnerabilityOptions): String {
-    val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, options.releases), options)
+fun createVulnerabilityEntry(
+    options: AddVulnerabilityOptions,
+    today: LocalDate,
+): String {
+    val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, options.releases), options, today)
     return CanonicalYaml.renderEntryListItem(entry)
 }
 
 /**
- * Inserts or updates the [options].vulnId entry in the parsed [destination] and rewrites the whole
- * document in the canonical style ([YamlWriter.renderCanonicalDocument]), so any valid layout is
- * accepted and a subsequent `fmt` is a no-op. The optional `# $schema:` header is kept only when the
- * destination already had it; YAML comments in the destination do not survive.
+ * Rewrites the whole document canonically, so a later `fmt` changes nothing; YAML comments do not survive, the
+ * `# $schema:` header only when it was there. A new entry goes to the top and defaults to the latest release; an
+ * updated one keeps its place.
  *
- * On insert, the new entry is placed at the top of the `vulnerabilities:` list; an empty
- * [options].releases defaults to the latest release of the destination, or stays empty when it
- * defines no releases. On update, the entry keeps its position: list options are added to the
- * existing values, scalar options overwrite them, and omitted options are kept.
- *
- * Throws [IllegalArgumentException] if any release or tag in [options] is not defined in the
- * destination.
+ * Throws [IllegalArgumentException] for a release or tag the destination does not define.
  */
 fun addVulnerabilityToFile(
     destination: ValidVulnlogProject,
     options: AddVulnerabilityOptions,
+    today: LocalDate,
 ): AddOutcome {
     val destinationFile = destination.vulnlogProjectFile
     val knownReleases = knownReleases(destinationFile)
@@ -95,7 +81,7 @@ fun addVulnerabilityToFile(
     val existing = dto.vulnerabilities.firstOrNull { parseVulnId(it.id) == options.vulnId }
     val (entries, updated) =
         if (existing != null) {
-            val merged = mergeOptionsIntoEntry(existing, options)
+            val merged = mergeOptionsIntoEntry(existing, options, today)
             dto.vulnerabilities.map { if (it === existing) merged else it } to true
         } else {
             val effectiveReleases =
@@ -110,7 +96,7 @@ fun addVulnerabilityToFile(
                         )
                     }
                 }
-            val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options)
+            val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options, today)
             listOf(entry) + dto.vulnerabilities to false
         }
     val newContent =
@@ -121,7 +107,6 @@ fun addVulnerabilityToFile(
     return AddOutcome(newContent, options.vulnId, updated)
 }
 
-/** Message stating whether [outcome] added a new entry to [destinationPath] or updated an existing one. */
 fun formatAddOutcomeMessage(
     destinationPath: Path,
     outcome: AddOutcome,
@@ -147,6 +132,7 @@ private fun emptyEntryDto(
 private fun mergeOptionsIntoEntry(
     base: VulnerabilityEntryDto,
     options: AddVulnerabilityOptions,
+    today: LocalDate,
 ): VulnerabilityEntryDto =
     base.copy(
         name = options.name ?: base.name,
@@ -154,7 +140,7 @@ private fun mergeOptionsIntoEntry(
         aliases = addDistinct(base.aliases, options.aliases.map { it.id }),
         releases = addDistinct(base.releases, options.releases.map { it.value }),
         packages = addDistinct(base.packages, options.packages.map { it.value }),
-        reports = mergeReporters(base.reports, options.reporters),
+        reports = mergeReporters(base.reports, options.reporters, today),
         tags = addDistinct(base.tags, options.tags.map { it.value }),
         analysis = options.analysis ?: base.analysis,
         analyzedAt = options.analyzedAt ?: base.analyzedAt,
@@ -174,13 +160,12 @@ private fun addDistinct(
     return result
 }
 
-/** Sets the date to today for each already-present reporter and appends a today-dated report for each new one. */
 private fun mergeReporters(
     existing: List<ReportEntryDto>,
     reporters: Set<ReporterType>,
+    today: LocalDate,
 ): List<ReportEntryDto> {
     if (reporters.isEmpty()) return existing
-    val today = LocalDate.now()
     val byReporter = existing.associateByTo(LinkedHashMap()) { it.reporter }
     reporters.forEach { reporter ->
         val name = reporter.canonical()

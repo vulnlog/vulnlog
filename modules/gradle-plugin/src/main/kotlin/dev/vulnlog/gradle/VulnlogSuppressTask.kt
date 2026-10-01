@@ -32,6 +32,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import java.time.LocalDate
 
 @CacheableTask
 abstract class VulnlogSuppressTask : DefaultTask() {
@@ -80,7 +81,7 @@ abstract class VulnlogSuppressTask : DefaultTask() {
                 .filter { filter.reporter == null || it == filter.reporter }
                 .toSet()
 
-        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter))
+        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter, LocalDate.now()))
         val suppressionFormatRequest: SuppressionFormatRequest =
             SuppressionFormatRequest.fromToken(
                 format.getOrElse("auto"),

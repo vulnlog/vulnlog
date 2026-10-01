@@ -170,7 +170,7 @@ class AddCommand : CliktCommand(name = "add") {
             )
 
         if (destinations.isEmpty()) {
-            echo(createVulnerabilityEntry(commandOption))
+            echo(createVulnerabilityEntry(commandOption, LocalDate.now()))
             return
         }
 
@@ -180,7 +180,7 @@ class AddCommand : CliktCommand(name = "add") {
         for (validDestination in validated) {
             val outcome =
                 try {
-                    addVulnerabilityToFile(validDestination, commandOption)
+                    addVulnerabilityToFile(validDestination, commandOption, LocalDate.now())
                 } catch (e: IllegalArgumentException) {
                     echoMessage(
                         formatFinding(
