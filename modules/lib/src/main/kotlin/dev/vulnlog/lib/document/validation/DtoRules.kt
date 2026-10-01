@@ -8,6 +8,7 @@ import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.finding.Rule
 import dev.vulnlog.lib.model.finding.ValidationFinding
 
+/** The DTO keeps the raw tokens, so these rules can name spellings the domain model normalizes away. */
 val v1DtoRules =
     listOf(
         ::validateNoDeprecatedVerdict,

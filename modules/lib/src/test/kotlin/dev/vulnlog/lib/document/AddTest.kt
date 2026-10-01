@@ -287,19 +287,49 @@ class AddTest :
                             tagIds = listOf("frontend"),
                         ),
                     )
-                val options = DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/new-lib@2.0.0")))
+                val options =
+                    DEFAULT_OPTIONS.copy(
+                        packages = setOf(Purl.Npm("pkg:npm/new-lib@2.0.0"), Purl.Npm("pkg:npm/old-lib@1.0.0")),
+                    )
 
                 val outcome = addVulnerabilityToFile(destination, options, TODAY)
 
                 outcome.updated shouldBe true
                 outcome.newContent shouldContain "pkg:npm/new-lib@2.0.0"
-                outcome.newContent shouldContain "pkg:npm/old-lib@1.0.0"
+                occurrences(outcome.newContent, "pkg:npm/old-lib@1.0.0") shouldBe 1
                 outcome.newContent shouldContain "Existing Name"
                 outcome.newContent shouldContain "Existing description."
                 outcome.newContent shouldContain "frontend"
                 outcome.newContent shouldContain "verdict: affected"
                 outcome.newContent shouldContain "severity: high"
                 outcome.newContent shouldContain "Existing comment."
+            }
+
+            test("overwrites the values it is given on an existing entry") {
+                val destination =
+                    validated(
+                        yamlWithEntries(
+                            """
+                            |  - id: "CVE-2026-1234"
+                            |    description: "Old description."
+                            |    releases:
+                            |      - "1.0.0"
+                            |    packages: []
+                            |    reports: []
+                            |    verdict: affected
+                            |    severity: high
+                            """.trimMargin(),
+                        ),
+                    )
+                val options = DEFAULT_OPTIONS.copy(description = "New description.", severity = "low")
+
+                val outcome = addVulnerabilityToFile(destination, options, TODAY)
+
+                val entry = outcome.newContent.substringAfter("- id: CVE-2026-1234")
+                entry shouldContain "description: New description."
+                entry shouldContain "verdict: affected"
+                entry shouldContain "severity: low"
+                entry shouldNotContain "Old description."
             }
 
             test("keeps the releases of an existing entry when none is named") {

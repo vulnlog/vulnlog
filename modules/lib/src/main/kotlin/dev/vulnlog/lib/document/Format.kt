@@ -11,12 +11,7 @@ import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.document.yaml.hasSchemaHeader
 import dev.vulnlog.lib.model.finding.FindingSeverity
 
-/**
- * Rewrites a parsed schema-v1 document in the canonical style: the whole file is rendered from the
- * DTO (a 1:1 image of the YAML, so no field is dropped), replacing whatever layout the source used.
- * The optional `# $schema:` header is kept only when the source already had it; YAML comments are
- * not part of the format and do not survive.
- */
+/** Renders from the DTO, not the domain model: the DTO is a 1:1 image of the YAML, so no field is lost. */
 fun formatYaml(parsedVulnlogProject: ParsedVulnlogProject): String {
     val dto =
         when (parsedVulnlogProject.validatedDto) {

@@ -24,12 +24,9 @@ import org.snakeyaml.engine.v2.nodes.ScalarNode
 import org.snakeyaml.engine.v2.nodes.SequenceNode
 
 /**
- * Explains why [parsedVulnlogProject] is not in the canonical style as findings, one per deviation,
- * with the rule set versioned per schema version. Each rule compares the observed presentation
- * against the same [CanonicalYaml] decision functions the writer uses, so checker and writer cannot
- * disagree. Deviations no rule names (blank lines, indentation, quoting, chomping) fall into a
- * single [FormatRule.NON_CANONICAL_LAYOUT] finding. An empty result means the content is
- * byte-canonical.
+ * The rules ask the writer's own [CanonicalYaml] decisions, so checker and writer cannot disagree. When no rule fires
+ * but a rewrite would still change the text (blank lines, indentation, quoting), one
+ * [FormatRule.NON_CANONICAL_LAYOUT] finding says so. An empty result therefore means the content is byte-canonical.
  */
 fun checkFormat(parsedVulnlogProject: ParsedVulnlogProject): List<FormatFinding> {
     val source =
@@ -45,14 +42,13 @@ fun checkFormat(parsedVulnlogProject: ParsedVulnlogProject): List<FormatFinding>
     return findings.ifEmpty { layoutCatchAll(parsedVulnlogProject) }
 }
 
-/** One line per finding, tagged with the kebab-case rule id, e.g. `[non-canonical-array-style]`. */
 fun renderFormatFinding(finding: FormatFinding): String {
     val ruleName = finding.rule.name
     val id = ruleName.lowercase().replace('_', '-')
     return if (finding.path.isEmpty()) "[$id] ${finding.message}" else "[$id] ${finding.path}: ${finding.message}"
 }
 
-data class FormatCheckContext(
+private data class FormatCheckContext(
     val source: FormatSource,
     val nodes: List<LocatedNode>,
 )

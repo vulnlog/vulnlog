@@ -3,14 +3,12 @@
 
 package dev.vulnlog.lib.document
 
+import dev.vulnlog.lib.model.finding.FormatFinding
 import dev.vulnlog.lib.model.finding.FormatRule
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
-import io.kotest.matchers.string.shouldNotContain
 
 private val BASE_INPUT =
     """
@@ -62,52 +60,51 @@ class FormatCheckTest :
 
         fun check(content: String) = checkFormat(parsed(content))
 
+        // BASE_INPUT has no schema header, so neither has its canonical form.
         val canonical = formatYaml(parsed(BASE_INPUT))
+        val canonicalWithHeader = "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n$canonical"
+        val blockArray = canonical.replace("    releases: [1.0.0]", "    releases:\n      - 1.0.0")
+        val commented = canonical.replace("vulnerabilities:", "# audit note\nvulnerabilities:")
 
         context("drift invariants") {
 
-            test("byte-canonical documents produce zero findings") {
-                listOf(BASE_INPUT, MULTILINE_INPUT)
-                    .map { formatYaml(parsed(it)) }
-                    .forEach { canonicalContent ->
-                        check(canonicalContent).shouldBeEmpty()
-                    }
+            test("a canonical document yields no finding, with or without the schema header") {
+                val documents = listOf(canonical, canonicalWithHeader, formatYaml(parsed(MULTILINE_INPUT)))
+
+                val findings = documents.map(::check)
+
+                findings shouldBe List(3) { emptyList() }
             }
 
-            test("any non-canonical document produces at least one finding (catch-all)") {
-                // quoting deviation: no named rule covers it, the layout catch-all must fire
+            test("a deviation no rule names yields the layout catch-all and nothing else") {
                 val quoted = canonical.replace("verdict: not affected", "verdict: \"not affected\"")
+                val collapsed = canonical.replace("\n\nreleases:", "\nreleases:")
 
-                val findings = check(quoted)
+                val rules = listOf(quoted, collapsed).map { check(it).map(FormatFinding::rule) }
 
-                findings.shouldNotBeEmpty()
-                findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_LAYOUT)
+                rules shouldBe List(2) { listOf(FormatRule.NON_CANONICAL_LAYOUT) }
+            }
+
+            test("every deviation a rule names is reported, and the catch-all stays silent") {
+                val commentedBlockArray = blockArray.replace("vulnerabilities:", "# audit note\nvulnerabilities:")
+
+                val findings = check(commentedBlockArray)
+
+                findings.map { it.rule } shouldBe
+                    listOf(FormatRule.NON_CANONICAL_ARRAY_STYLE, FormatRule.COMMENTS_NOT_PRESERVED)
             }
         }
 
         context("rules") {
 
-            // BASE_INPUT carries no header, so its canonical form has none either
-            val canonicalWithHeader = "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n$canonical"
-
-            test("a document without the optional schema header is canonical") {
-                canonical shouldNotContain "# \$schema:"
-                check(canonical).shouldBeEmpty()
-            }
-
-            test("a document with the optional schema header is canonical") {
-                check(canonicalWithHeader).shouldBeEmpty()
-            }
-
             test("a missing document-start marker is reported") {
-                // drop the '---' marker from the header-less canonical form
                 val withoutStart = canonical.lines().drop(1).joinToString("\n")
 
                 val findings = check(withoutStart)
 
                 findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_DOCUMENT_START)
                 findings.first().path shouldBe "line 1"
-                findings.first().message shouldContain "'---'"
+                findings.first().message shouldBe "File should start with '---'."
             }
 
             test("a present schema header with a non-canonical URL is reported") {
@@ -120,38 +117,31 @@ class FormatCheckTest :
                 val findings = check(wrongUrl)
 
                 findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_DOCUMENT_START)
-                findings.first().message shouldContain "# \$schema:"
+                findings.first().message shouldContain "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json"
             }
 
-            test("single-element array in block style") {
-                val blockArray =
-                    canonical.replace(
-                        "    releases: [1.0.0]",
-                        "    releases:\n      - 1.0.0",
-                    )
-
+            test("a single-element array in block style is reported") {
                 val findings = check(blockArray)
 
                 findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_ARRAY_STYLE)
                 findings.first().path shouldBe "vulnerabilities[CVE-2026-0001].releases"
-                findings.first().message shouldContain "flow array"
-                findings.first().message shouldMatch Regex("Line \\d+:.*")
+                findings.first().message shouldMatch Regex("Line \\d+: .*flow array.*")
             }
 
-            test("multi-element array in flow style") {
-                val flowTags =
+            test("a multi-element array in flow style is reported") {
+                val flowPackages =
                     canonical.replace(
                         "    packages: [\"pkg:npm/example-lib@2.3.0\"]",
                         "    packages: [\"pkg:npm/example-lib@2.3.0\", \"pkg:npm/other-lib@1.0.0\"]",
                     )
 
-                val findings = check(flowTags)
+                val findings = check(flowPackages)
 
                 findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_ARRAY_STYLE)
                 findings.first().message shouldContain "block list"
             }
 
-            test("entry fields out of canonical order") {
+            test("entry fields out of canonical order are reported") {
                 val swapped =
                     canonical.replace(
                         "    description: Remote code execution in example-lib\n    releases: [1.0.0]",
@@ -165,8 +155,8 @@ class FormatCheckTest :
                 findings.first().message shouldContain "'releases' is misplaced"
             }
 
-            test("long prose written as a plain scalar") {
-                // the folded block's wrap points are emitter-determined, so replace the whole block
+            test("long prose written as a plain scalar is reported") {
+                // The emitter decides where the folded block wraps, so the whole block is replaced.
                 val plainAnalysis =
                     Regex("    analysis: >-\\n(?:      .*\\n)+").replace(
                         canonical,
@@ -179,44 +169,44 @@ class FormatCheckTest :
 
                 findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_BLOCK_SCALAR)
                 findings.first().path shouldBe "vulnerabilities[CVE-2026-0001].analysis"
-                findings.first().message shouldContain "folded block"
+                findings.first().message shouldContain "is a folded block (>-) (found plain)"
+            }
+
+            test("a short value written as a block scalar is reported") {
+                val foldedDescription =
+                    canonical.replace(
+                        "    description: Remote code execution in example-lib",
+                        "    description: >-\n      Remote code execution in example-lib",
+                    )
+
+                val findings = check(foldedDescription)
+
+                findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_BLOCK_SCALAR)
+                findings.first().path shouldBe "vulnerabilities[CVE-2026-0001].description"
+                findings.first().message shouldContain "is plain (found a folded block (>-))"
             }
 
             test("comments are reported as not preserved") {
-                val commented = canonical.replace("vulnerabilities:", "# audit note\nvulnerabilities:")
-
                 val findings = check(commented)
 
                 findings.map { it.rule } shouldBe listOf(FormatRule.COMMENTS_NOT_PRESERVED)
-                findings.first().message shouldContain "YAML comments are removed on write."
-            }
-
-            test("blank-line deviation falls into the layout catch-all") {
-                val collapsed = canonical.replace("\n\nreleases:", "\nreleases:")
-
-                val findings = check(collapsed)
-
-                findings.map { it.rule } shouldBe listOf(FormatRule.NON_CANONICAL_LAYOUT)
+                findings.first().message shouldBe "YAML comments are removed on write."
             }
         }
 
-        context("rendering") {
+        test("renderFormatFinding tags a finding with its rule id and names the path when there is one") {
+            val findings =
+                listOf(
+                    FormatFinding(FormatRule.NON_CANONICAL_ARRAY_STYLE, "vulnerabilities[CVE-2026-0001].releases", "m"),
+                    FormatFinding(FormatRule.COMMENTS_NOT_PRESERVED, "", "m"),
+                )
 
-            test("a finding with a path renders as rule id, path and message") {
-                val blockArray = canonical.replace("    releases: [1.0.0]", "    releases:\n      - 1.0.0")
+            val rendered = findings.map(::renderFormatFinding)
 
-                val rendered = renderFormatFinding(check(blockArray).first())
-
-                rendered shouldMatch
-                    Regex("\\[non-canonical-array-style] vulnerabilities\\[CVE-2026-0001]\\.releases: Line \\d+:.*")
-            }
-
-            test("a file-level finding renders without a path") {
-                val commented = canonical.replace("vulnerabilities:", "# audit note\nvulnerabilities:")
-
-                val rendered = renderFormatFinding(check(commented).first())
-
-                rendered shouldMatch Regex("\\[comments-not-preserved] [^:].*")
-            }
+            rendered shouldBe
+                listOf(
+                    "[non-canonical-array-style] vulnerabilities[CVE-2026-0001].releases: m",
+                    "[comments-not-preserved] m",
+                )
         }
     })
