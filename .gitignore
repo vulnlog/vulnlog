@@ -1,4 +1,5 @@
 .gradle
+.kotlin/
 **/build/
 website/public/
 !gradle/wrapper/gradle-wrapper.jar
@@ -10,6 +11,13 @@ website/public/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/libraries/
+.idea/checkstyle-idea.xml
+.idea/gradle.xml
+.idea/kotlinc.xml
+.idea/ktlint-plugin.xml
+.idea/misc.xml
+.idea/uiDesigner.xml
+.idea/vcs.xml
 *.iws
 *.iml
 *.ipr
@@ -47,3 +55,6 @@ snyk
 
 ### Nodejs
 **/node_modules
+
+### Temporary files
+tmp/
