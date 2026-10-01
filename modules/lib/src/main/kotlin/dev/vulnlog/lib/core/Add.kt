@@ -3,18 +3,18 @@
 
 package dev.vulnlog.lib.core
 
+import dev.vulnlog.lib.document.dto.ReportEntryDto
+import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.document.yaml.CanonicalYaml
+import dev.vulnlog.lib.document.yaml.YamlWriter
+import dev.vulnlog.lib.document.yaml.hasSchemaHeader
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.parse.CanonicalYaml
-import dev.vulnlog.lib.parse.YamlWriter
-import dev.vulnlog.lib.parse.dto.ReportEntryDto
-import dev.vulnlog.lib.parse.dto.VulnerabilityEntryDto
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.parse.hasSchemaHeader
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import java.nio.file.Path
 import java.time.LocalDate
 

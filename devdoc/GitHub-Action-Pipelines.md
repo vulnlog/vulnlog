@@ -41,6 +41,7 @@ flowchart TD
   from the DCO check because bot commits carry no sign-off.
 - **detect-changes**: sets the `native_relevant` output if the PR touches any of:
   `modules/lib/src/main/resources/META-INF/native-image/**`,
+  `modules/lib/src/main/kotlin/dev/vulnlog/lib/document/**`,
   `modules/lib/src/main/kotlin/dev/vulnlog/lib/parse/**`, `modules/cli-app/**`,
   `modules/lib/build.gradle.kts`, `gradle/libs.versions.toml`, `buildSrc/**`.
 - **check**: runs `./gradlew check` (compile, lint, unit tests, JVM integration tests) on

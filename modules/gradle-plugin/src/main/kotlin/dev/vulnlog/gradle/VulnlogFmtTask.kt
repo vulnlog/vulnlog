@@ -14,9 +14,9 @@ import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatYamlOutcome
 import dev.vulnlog.lib.core.renderFormatFinding
+import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
+import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.parse.hasYamlComments
-import dev.vulnlog.lib.parse.validation.ParsedVulnlogProject
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection

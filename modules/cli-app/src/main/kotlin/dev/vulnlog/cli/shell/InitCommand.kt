@@ -11,8 +11,8 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import dev.vulnlog.lib.core.init
+import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.model.SchemaVersion
-import dev.vulnlog.lib.parse.YamlWriter
 import dev.vulnlog.lib.shell.FileOutputOption
 
 class InitCommand : CliktCommand(name = "init") {

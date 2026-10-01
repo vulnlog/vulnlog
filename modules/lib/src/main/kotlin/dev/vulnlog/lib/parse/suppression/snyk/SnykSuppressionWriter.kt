@@ -3,8 +3,8 @@
 
 package dev.vulnlog.lib.parse.suppression.snyk
 
+import dev.vulnlog.lib.document.yaml.CanonicalYaml
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
-import dev.vulnlog.lib.parse.CanonicalYaml
 
 object SnykSuppressionWriter {
     fun write(inputData: SuppressionOutput.SnykSuppression): String =

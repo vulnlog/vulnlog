@@ -16,12 +16,12 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.reporting.collectChangelogReleases
 import dev.vulnlog.lib.core.reporting.formatChangelogMarkdown
 import dev.vulnlog.lib.core.reporting.formatChangelogText
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.model.reporting.ReportingChangelogProject
 import dev.vulnlog.lib.model.reporting.ReportingChangelogRelease
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import dev.vulnlog.lib.shell.ChangelogFormatRequest
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection

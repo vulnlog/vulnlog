@@ -16,6 +16,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
 import dev.vulnlog.lib.core.reporting.renderReportingCounts
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
@@ -25,7 +26,6 @@ import dev.vulnlog.lib.model.reporting.WorkState
 import dev.vulnlog.lib.parse.reporting.HtmlReportMapper
 import dev.vulnlog.lib.parse.reporting.HtmlReportWriter
 import dev.vulnlog.lib.parse.reporting.dto.FilterDataDto
-import dev.vulnlog.lib.parse.validation.ValidVulnlogProject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty

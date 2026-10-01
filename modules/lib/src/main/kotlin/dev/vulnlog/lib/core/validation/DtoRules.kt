@@ -3,10 +3,10 @@
 
 package dev.vulnlog.lib.core.validation
 
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.finding.Rule
 import dev.vulnlog.lib.model.finding.ValidationFinding
-import dev.vulnlog.lib.parse.dto.VulnlogFileV1Dto
 
 val v1DtoRules =
     listOf(
