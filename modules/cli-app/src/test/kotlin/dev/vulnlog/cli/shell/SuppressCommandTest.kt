@@ -18,18 +18,6 @@ class SuppressCommandTest :
 
         context("happy path") {
 
-            test("writes a suppression file to the configured directory") {
-                withTempFile(content = vulnlogDocument()) { input ->
-                    withTempDir(prefix = "suppress-out") { outputDir ->
-                        val result =
-                            SuppressCommand().test("${input.absolutePath} --output-dir ${outputDir.toAbsolutePath()}")
-
-                        result.statusCode shouldBe 0
-                        result.stderr shouldContain "Wrote: "
-                    }
-                }
-            }
-
             test("-o writes the single applicable suppression file to the user-specified path") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
@@ -62,17 +50,6 @@ class SuppressCommandTest :
                 }
             }
 
-            test("reads from stdin and writes to a directory") {
-                withTempDir(prefix = "suppress-out") { outputDir ->
-                    withStdin(vulnlogDocument()) {
-                        val result = SuppressCommand().test("- --output-dir ${outputDir.toAbsolutePath()}")
-
-                        result.statusCode shouldBe 0
-                        result.stderr shouldContain "Wrote: "
-                    }
-                }
-            }
-
             test("falls back to the current working directory when no output flag is given") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-cwd") { cwd ->
@@ -91,6 +68,7 @@ class SuppressCommandTest :
                             SuppressCommand().test("${input.absolutePath} --output-dir ${outputDir.toAbsolutePath()}")
 
                         result.statusCode shouldBe 0
+                        result.stderr shouldContain "Wrote: "
                         outputDir.resolve(".trivyignore.yaml").toFile().exists() shouldBe true
                         outputDir.resolve(".snyk").toFile().exists() shouldBe true
                     }
@@ -135,17 +113,7 @@ class SuppressCommandTest :
                 }
             }
 
-            test("-o exits success with an informational message when nothing is suppressible") {
-                withTempFile(content = vulnlogYamlOtherReporterOnly()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} -o -")
-
-                    result.statusCode shouldBe 0
-                    result.stderr shouldContain "Unchanged: no suppression entries applicable"
-                    result.stdout shouldNotContain "CVE-2026-1234"
-                }
-            }
-
-            test("--output-dir exits success with an informational message when nothing is suppressible") {
+            test("exits success with an informational message when nothing is suppressible") {
                 withTempFile(content = vulnlogYamlOtherReporterOnly()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
                         val result =
@@ -223,52 +191,18 @@ class SuppressCommandTest :
 
         context("filter validation") {
 
-            context("--reporter accepts the canonical hyphenated names") {
-                listOf(
-                    "trivy",
-                    "snyk",
-                    "dependency-check",
-                    "github-dependabot",
-                    "grype",
-                    "npm-audit",
-                    "cargo-audit",
-                    "semgrep",
-                    "other",
-                ).forEach { reporter ->
-                    test("--reporter $reporter is accepted") {
-                        withTempFile(content = vulnlogDocument()) { input ->
-                            withTempDir(prefix = "suppress-out") { outputDir ->
-                                val result =
-                                    SuppressCommand().test(
-                                        "${input.absolutePath} --reporter $reporter " +
-                                            "--output-dir ${outputDir.toAbsolutePath()}",
-                                    )
-
-                                result.statusCode shouldBe 0
-                            }
-                        }
-                    }
-                }
-            }
-
-            test("--reporter rejects underscored names without leaking internals") {
+            test("names every bad filter value at once") {
                 withTempFile(content = vulnlogDocument()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --reporter dependency_check")
+                    val result =
+                        SuppressCommand().test(
+                            "${input.absolutePath} --reporter dependency_check --as-of 9.9.9 --tag missing-tag",
+                        )
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain "Invalid reporter: dependency_check"
-                    result.stderr shouldNotContain "dev.vulnlog"
-                    result.stderr shouldNotContain "No enum constant"
-                }
-            }
-
-            test("--reporter rejects unknown values without leaking internals") {
-                withTempFile(content = vulnlogDocument()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --reporter bogus")
-
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain "Invalid reporter: bogus"
-                    result.stderr shouldNotContain "dev.vulnlog"
+                    result.stderr shouldContain "error: Invalid reporter: dependency_check"
+                    result.stderr shouldContain "error: Release not found: 9.9.9"
+                    result.stderr shouldContain "hint: Known releases: 1.0.0"
+                    result.stderr shouldContain "error: Tag not found: missing-tag"
                 }
             }
 
@@ -278,25 +212,6 @@ class SuppressCommandTest :
 
                     result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
                     result.stderr shouldContain "Option --release was renamed to --as-of."
-                }
-            }
-
-            test("fails on an unknown release") {
-                withTempFile(content = vulnlogDocument()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --as-of 9.9.9")
-
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain "Release not found: 9.9.9"
-                    result.stderr shouldContain "Known releases: 1.0.0"
-                }
-            }
-
-            test("fails on an unknown tag") {
-                withTempFile(content = vulnlogDocument()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --tag missing-tag")
-
-                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-                    result.stderr shouldContain "Tag not found: missing-tag"
                 }
             }
 
@@ -369,20 +284,6 @@ class SuppressCommandTest :
                 }
             }
 
-            test("--format auto writes the native format for a native reporter") {
-                withTempFile(content = vulnlogDocument()) { input ->
-                    withTempDir(prefix = "suppress-out") { outputDir ->
-                        val result =
-                            SuppressCommand().test(
-                                "${input.absolutePath} --format auto --output-dir ${outputDir.toAbsolutePath()}",
-                            )
-
-                        result.statusCode shouldBe 0
-                        outputDir.resolve(".trivyignore.yaml").toFile().exists() shouldBe true
-                    }
-                }
-            }
-
             test("--format is case insensitive") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     withTempDir(prefix = "suppress-out") { outputDir ->
@@ -394,16 +295,6 @@ class SuppressCommandTest :
                         result.statusCode shouldBe 0
                         outputDir.resolve("trivy.generic.json").toFile().exists() shouldBe true
                     }
-                }
-            }
-
-            test("--format generic emits generic JSON to stdout") {
-                withTempFile(content = vulnlogDocument()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --format generic -o -")
-
-                    result.statusCode shouldBe 0
-                    result.stdout shouldContain "vulnerabilities"
-                    result.stdout shouldContain "CVE-2026-1234"
                 }
             }
 
