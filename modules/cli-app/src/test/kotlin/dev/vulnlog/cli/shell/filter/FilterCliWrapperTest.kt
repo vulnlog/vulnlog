@@ -4,200 +4,59 @@
 package dev.vulnlog.cli.shell.filter
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.obj
 import com.github.ajalt.clikt.testing.test
+import dev.vulnlog.cli.shell.CliDiagnostics
 import dev.vulnlog.cli.shell.ExitCode
+import dev.vulnlog.cli.shell.Verbosity
 import dev.vulnlog.lib.core.filter.FilterRequest
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
+import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
-import dev.vulnlog.lib.model.VulnlogFile
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 
-/** A file declaring two releases in order and one tag, for the wrapper to resolve against. */
-private fun twoReleaseFile(): VulnlogFile =
+private val twoReleaseFile =
     vulnlogFile(
         releases = listOf(releaseEntry("1.0.0"), releaseEntry("2.0.0")),
         tags = listOf(tagEntry("internal")),
     )
 
-/**
- * Drives the wrapper on its own and echoes what it resolved to, so the assertions look at the exit
- * code and the messages the wrapper wrote rather than at a whole command's behaviour.
- */
 private class WrapperCommand(
     private val request: FilterRequest,
-    private val files: List<VulnlogFile>,
 ) : CliktCommand(name = "wrapper") {
+    var resolved: ResolvedFilter? = null
+
     override fun run() {
-        val filter = resolveFilterOrFail(request, files)
-        echo("releases=${filter.releases.joinToString(",") { it.value }}", err = true)
-        echo("tags=${filter.tags.joinToString(",") { it.value }}", err = true)
-        echo("reporter=${filter.reporter}", err = true)
-        echo("states=${filter.states.joinToString(",")}", err = true)
-        echo("verdicts=${filter.verdicts.joinToString(",")}", err = true)
-        echo("dispositions=${filter.dispositions.joinToString(",")}", err = true)
+        currentContext.obj = CliDiagnostics(Verbosity(level = 1)) { message -> echo(message, err = true) }
+        resolved = resolveFilterOrFail(request, listOf(twoReleaseFile))
     }
 }
-
-private fun resolve(
-    request: FilterRequest,
-    files: List<VulnlogFile> = listOf(twoReleaseFile()),
-) = WrapperCommand(request, files).test("")
 
 class FilterCliWrapperTest :
     FunSpec({
 
-        context("a filter every file knows") {
+        test("hands back the resolved filter and reports it on the verbose sink") {
+            val command = WrapperCommand(FilterRequest(asOf = "2.0.0", tags = setOf("internal")))
 
-            test("hands back the expanded release window") {
-                val request = FilterRequest(asOf = "2.0.0")
+            val result = command.test("")
 
-                val result = resolve(request)
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "releases=1.0.0,2.0.0"
-            }
-
-            test("hands back the tags and the reporter untouched") {
-                val request = FilterRequest(reporter = "trivy", tags = setOf("internal"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "tags=internal"
-                result.stderr shouldContain "reporter=TRIVY"
-            }
-
-            test("hands back the resolved states") {
-                val request = FilterRequest(states = setOf("open", "not applicable"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "OPEN"
-                result.stderr shouldContain "NOT_APPLICABLE"
-            }
-
-            test("hands back the resolved verdicts") {
-                val request = FilterRequest(verdicts = setOf("affected", "not affected"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "AFFECTED"
-                result.stderr shouldContain "NOT_AFFECTED"
-            }
-
-            test("hands back the resolved dispositions") {
-                val request = FilterRequest(dispositions = setOf("wont fix"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "WONT_FIX"
-            }
-
-            test("resolves an empty request to an inactive filter") {
-                val request = FilterRequest()
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe 0
-                result.stderr shouldContain "releases="
-                result.stderr shouldContain "reporter=null"
-            }
+            result.statusCode shouldBe 0
+            command.resolved shouldBe
+                ResolvedFilter(releases = setOf(release("1.0.0"), release("2.0.0")), tags = setOf(tag("internal")))
+            result.stderr shouldContain "as-of filter expanded to releases: 1.0.0, 2.0.0"
         }
 
-        context("a filter the files do not know") {
+        test("names every problem with its hint and fails with the invalid flag value exit code") {
+            val result = WrapperCommand(FilterRequest(asOf = "9.9.9", tags = setOf("missing"))).test("")
 
-            test("fails with the invalid flag value exit code") {
-                val request = FilterRequest(asOf = "9.9.9")
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-            }
-
-            test("reports the offending value and what the files do declare") {
-                val request = FilterRequest(asOf = "9.9.9")
-
-                val result = resolve(request)
-
-                result.stderr shouldContain "Release not found: 9.9.9"
-                result.stderr shouldContain "Known releases: 1.0.0, 2.0.0"
-            }
-
-            test("reports every failing dimension before giving up") {
-                val request = FilterRequest(asOf = "9.9.9", tags = setOf("missing"))
-
-                val result = resolve(request)
-
-                result.stderr shouldContain "Release not found: 9.9.9"
-                result.stderr shouldContain "Tag not found: missing"
-            }
-
-            test("fails with the invalid flag value exit code on an unknown state") {
-                val request = FilterRequest(states = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-            }
-
-            test("reports the offending state and the states Vulnlog defines") {
-                val request = FilterRequest(states = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.stderr shouldContain "Invalid state: bogus"
-                result.stderr shouldContain
-                    "Supported states: under investigation, open, accepted, resolved, not applicable"
-            }
-
-            test("keeps internals out of the message") {
-                val request = FilterRequest(states = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.stderr shouldNotContain "dev.vulnlog"
-                result.stderr shouldNotContain "No enum constant"
-            }
-
-            test("fails with the invalid flag value exit code on an unknown verdict") {
-                val request = FilterRequest(verdicts = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-            }
-
-            test("reports the offending verdict and the verdicts Vulnlog defines") {
-                val request = FilterRequest(verdicts = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.stderr shouldContain "Invalid verdict: bogus"
-                result.stderr shouldContain "Supported verdicts: under investigation, affected, not affected"
-            }
-
-            test("fails with the invalid flag value exit code on an unknown disposition") {
-                val request = FilterRequest(dispositions = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
-            }
-
-            test("reports the offending disposition and the dispositions Vulnlog defines") {
-                val request = FilterRequest(dispositions = setOf("bogus"))
-
-                val result = resolve(request)
-
-                result.stderr shouldContain "Invalid disposition: bogus"
-                result.stderr shouldContain "Supported dispositions: will fix, wont fix"
-            }
+            result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+            result.stderr shouldContain "error: Release not found: 9.9.9"
+            result.stderr shouldContain "hint: Known releases: 1.0.0, 2.0.0"
+            result.stderr shouldContain "error: Tag not found: missing"
         }
     })

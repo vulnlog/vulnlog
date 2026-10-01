@@ -19,6 +19,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.OpenVexLine
+import dev.vulnlog.lib.render.renderFilterFailure
 import dev.vulnlog.lib.render.renderOpenVexBaselineProblem
 import dev.vulnlog.lib.render.renderOpenVexEmptyHint
 import dev.vulnlog.lib.render.renderOpenVexReport
@@ -43,7 +44,7 @@ import java.io.File
 import java.time.Instant
 import java.util.UUID
 
-/** The single place a `formatVersion` property would feed once a second OpenVEX version is supported. */
+/** Becomes a `formatVersion` property once a second OpenVEX version is supported. */
 private val FORMAT_VERSION = OpenVexFormatVersion.LATEST
 
 @CacheableTask
@@ -59,10 +60,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     @get:Input
     abstract val tags: SetProperty<String>
 
-    /**
-     * The committed document this run continues. Declared with [InputFiles] rather than `@InputFile`, because the
-     * file does not exist before the first `vulnlogOpenVexUpdate` creates it.
-     */
+    /** [InputFiles] rather than `@InputFile`: the baseline does not exist before the first `vulnlogOpenVexUpdate`. */
     @get:InputFiles
     @get:Optional
     @get:PathSensitive(PathSensitivity.NONE)
@@ -91,8 +89,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val outcome = generateOpenVex(vulnlogFile, request)
         renderOpenVexReport(outcome).forEach { line -> log(line, sink) }
         when (outcome) {
-            is FilterRejected ->
-                throw InvalidUserDataException(outcome.problems.joinToString(" ") { "${it.message}. ${it.hint}" })
+            is FilterRejected -> throw InvalidUserDataException(renderFilterFailure(outcome.problems))
 
             is OpenVexOutcome.BaselineRejected ->
                 failOnBaseline(renderOpenVexBaselineProblem(baseline.get().asFile.path, outcome.problem))
@@ -111,7 +108,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         is OpenVexLine.Debug -> sink.debug(line.text)
     }
 
-    /** Always writes, since [out] lives under the build directory; `vulnlogOpenVexUpdate` decides about the baseline. */
+    /** Always writes: [out] lives under the build directory, and `vulnlogOpenVexUpdate` owns the baseline. */
     private fun write(
         out: File,
         outcome: OpenVexOutcome.Generated,
@@ -147,7 +144,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         return file.readText()
     }
 
-    /** A baseline that cannot be continued is task configuration to fix. */
+    /** Task configuration to fix, unlike the verdict in [failOnEmptyDocument]. */
     private fun failOnBaseline(message: String): Nothing =
         throw InvalidUserDataException(
             message.replaceFirstChar(Char::uppercase) + ". Unset 'baseline' to issue a new document.",

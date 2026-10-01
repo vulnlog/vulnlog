@@ -17,6 +17,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.path
 import dev.vulnlog.cli.BuildInfo
+import dev.vulnlog.cli.shell.filter.failOnFilterProblems
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
@@ -24,7 +25,6 @@ import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
@@ -113,7 +113,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     ).convert(conversion = OptionCallTransformContext::toOutputFileOption)
         .default(FileOutputOption.File(Path.of("vex.json")))
 
-    /** The single place a `--format-version` option would feed once a second OpenVEX version is supported. */
+    /** Becomes a `--format-version` option once a second OpenVEX version is supported. */
     private val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST
 
     override fun run() {
@@ -132,7 +132,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         val outcome = generateOpenVex(vulnlogFile, request)
         renderOpenVexReport(outcome).forEach(::echoLine)
         when (outcome) {
-            is FilterRejected -> failOnScope(outcome.problems)
+            is FilterRejected -> failOnFilterProblems(outcome.problems)
 
             is OpenVexOutcome.BaselineRejected ->
                 failOnBaseline(renderOpenVexBaselineProblem(baselineRequest.toString(), outcome.problem))
@@ -183,14 +183,6 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
             echoMessage(formatMessage(FindingSeverity.ERROR, "cannot read baseline '$path': ${e.message}"))
             throw ProgramResult(ExitCode.GENERAL_ERROR.code)
         }
-    }
-
-    private fun failOnScope(problems: List<FilterProblem>): Nothing {
-        problems.forEach { problem ->
-            echoMessage(formatMessage(FindingSeverity.ERROR, problem.message))
-            echoMessage(formatHint(problem.hint))
-        }
-        throw ProgramResult(ExitCode.INVALID_FLAG_VALUE.code)
     }
 
     private fun failOnBaseline(message: String): Nothing {
