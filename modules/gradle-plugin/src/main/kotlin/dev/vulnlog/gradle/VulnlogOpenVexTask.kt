@@ -4,9 +4,9 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.failure
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.validation.validateInputOrFail
-import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
@@ -18,13 +18,10 @@ import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.OpenVexLine
-import dev.vulnlog.lib.render.formatFailureMessage
-import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -38,7 +35,6 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.VerificationException
 import java.io.File
 import java.time.Instant
 import java.util.UUID
@@ -88,18 +84,8 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         val outcome = generateOpenVex(vulnlogFile, request)
         renderOpenVexReport(outcome).forEach { line -> log(line, sink) }
         when (outcome) {
-            is OpenVexOutcome.Failed -> throw failure(outcome)
+            is OpenVexOutcome.Failed -> throw failure(outcome, baseline.orNull?.asFile?.path ?: "")
             is OpenVexOutcome.Generated -> write(out, outcome, sink)
-        }
-    }
-
-    /** A bad scope or baseline is configuration to fix; an empty document is a verdict, so `--continue` goes on. */
-    private fun failure(failed: OpenVexOutcome.Failed): GradleException {
-        val path = baseline.orNull?.asFile?.path ?: ""
-        val message = formatFailureMessage(renderOpenVexFailure(failed, path, "'baseline'"))
-        return when (failed) {
-            is FilterRejected, is OpenVexOutcome.BaselineRejected -> InvalidUserDataException(message)
-            is OpenVexOutcome.NoStatementApplies -> VerificationException(message)
         }
     }
 

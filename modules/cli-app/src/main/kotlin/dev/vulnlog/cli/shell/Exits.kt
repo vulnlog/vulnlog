@@ -6,6 +6,8 @@ package dev.vulnlog.cli.shell
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 
+
+/** Mirrors [Outcomes] for the CLI */
 fun exitCode(failed: OpenVexOutcome.Failed): ExitCode =
     when (failed) {
         is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
