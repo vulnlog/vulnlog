@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.document.validation
 
-import dev.vulnlog.lib.model.finding.ParseFailure
+import dev.vulnlog.lib.finding.ParseFailure
 import org.snakeyaml.engine.v2.nodes.MappingNode
 
 /** Well-formed YAML with a mapping at the root. */

@@ -3,13 +3,13 @@
 
 package dev.vulnlog.lib.core.validation
 
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.finding
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 

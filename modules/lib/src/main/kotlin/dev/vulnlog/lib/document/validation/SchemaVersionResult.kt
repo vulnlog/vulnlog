@@ -6,8 +6,8 @@ package dev.vulnlog.lib.document.validation
 import dev.vulnlog.lib.document.SchemaVersionParseResult
 import dev.vulnlog.lib.document.parseSchemaVersion
 import dev.vulnlog.lib.document.yaml.valueNodeOf
+import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.model.SchemaVersion
-import dev.vulnlog.lib.model.finding.ParseFailure
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import org.snakeyaml.engine.v2.nodes.Node
 import org.snakeyaml.engine.v2.nodes.ScalarNode

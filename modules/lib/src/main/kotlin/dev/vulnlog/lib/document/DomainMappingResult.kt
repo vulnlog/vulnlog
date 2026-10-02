@@ -6,9 +6,9 @@ package dev.vulnlog.lib.document
 import dev.vulnlog.lib.document.dto.DtoVersion
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.mapper.DtoV1Mapper
+import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.ParseFailure
 
 sealed interface DomainMappingResult {
     data class Rejected(

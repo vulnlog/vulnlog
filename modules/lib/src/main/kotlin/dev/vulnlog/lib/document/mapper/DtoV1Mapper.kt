@@ -22,6 +22,7 @@ import dev.vulnlog.lib.document.dto.SuppressionDto
 import dev.vulnlog.lib.document.dto.TagEntryDto
 import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
+import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
@@ -45,7 +46,6 @@ import dev.vulnlog.lib.model.VexJustification.VULNERABLE_CODE_NOT_PRESENT
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.ParseFailure
 
 object DtoV1Mapper {
     fun toDto(file: VulnlogFile): VulnlogFileV1Dto =

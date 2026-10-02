@@ -4,9 +4,9 @@
 package dev.vulnlog.lib.document.validation
 
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
-import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.finding.Rule
-import dev.vulnlog.lib.model.finding.ValidationFinding
+import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.Rule
+import dev.vulnlog.lib.finding.ValidationFinding
 
 /** The DTO keeps the raw tokens, so these rules can name spellings the domain model normalizes away. */
 val v1DtoRules =

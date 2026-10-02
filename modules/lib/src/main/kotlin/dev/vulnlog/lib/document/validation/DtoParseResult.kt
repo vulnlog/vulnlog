@@ -6,8 +6,8 @@ package dev.vulnlog.lib.document.validation
 import dev.vulnlog.lib.document.dto.DtoVersion
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.yaml.dtoMapper
+import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.model.SchemaVersion
-import dev.vulnlog.lib.model.finding.ParseFailure
 import org.snakeyaml.engine.v2.nodes.MappingNode
 import tools.jackson.databind.DatabindException
 import tools.jackson.databind.JsonNode

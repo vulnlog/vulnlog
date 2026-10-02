@@ -34,7 +34,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption

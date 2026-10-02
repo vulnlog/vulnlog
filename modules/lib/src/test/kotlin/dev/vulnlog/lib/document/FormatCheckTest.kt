@@ -3,8 +3,8 @@
 
 package dev.vulnlog.lib.document
 
-import dev.vulnlog.lib.model.finding.FormatFinding
-import dev.vulnlog.lib.model.finding.FormatRule
+import dev.vulnlog.lib.finding.FormatFinding
+import dev.vulnlog.lib.finding.FormatRule
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

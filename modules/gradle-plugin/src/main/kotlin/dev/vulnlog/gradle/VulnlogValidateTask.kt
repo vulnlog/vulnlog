@@ -12,7 +12,7 @@ import dev.vulnlog.lib.core.validation.ValidationConfig
 import dev.vulnlog.lib.core.validation.ValidationOutcome
 import dev.vulnlog.lib.core.validation.renderValidationSummary
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
-import dev.vulnlog.lib.model.finding.ALL_SEVERITIES
+import dev.vulnlog.lib.finding.ALL_SEVERITIES
 import dev.vulnlog.lib.shell.ValidationRequest
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection

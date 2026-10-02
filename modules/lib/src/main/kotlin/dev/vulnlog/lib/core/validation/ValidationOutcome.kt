@@ -3,8 +3,8 @@
 
 package dev.vulnlog.lib.core.validation
 
-import dev.vulnlog.lib.model.finding.ParseFailure
-import dev.vulnlog.lib.model.finding.ValidationFinding
+import dev.vulnlog.lib.finding.ParseFailure
+import dev.vulnlog.lib.finding.ValidationFinding
 
 sealed interface ValidationOutcome<out T> {
     val findings: List<ValidationFinding>

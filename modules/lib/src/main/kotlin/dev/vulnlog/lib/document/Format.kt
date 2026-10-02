@@ -9,7 +9,7 @@ import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.document.yaml.hasSchemaHeader
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FindingSeverity
 
 /** Renders from the DTO, not the domain model: the DTO is a 1:1 image of the YAML, so no field is lost. */
 fun formatYaml(parsedVulnlogProject: ParsedVulnlogProject): String {

@@ -14,13 +14,13 @@ import dev.vulnlog.lib.document.mapper.DtoV1Mapper
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.document.yaml.hasSchemaHeader
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity
 import java.nio.file.Path
 
 data class CopyOutcome(
