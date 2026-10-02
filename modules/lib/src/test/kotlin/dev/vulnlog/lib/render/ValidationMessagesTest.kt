@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core.validation
+package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.fixtures.cve
@@ -13,7 +13,7 @@ import dev.vulnlog.lib.fixtures.vulnlogFile
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class ValidationRendererTest :
+class ValidationMessagesTest :
     FunSpec({
 
         context("renderValidationFindings") {

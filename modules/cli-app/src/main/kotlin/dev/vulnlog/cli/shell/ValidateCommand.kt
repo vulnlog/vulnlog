@@ -8,15 +8,15 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.app.ValidationConfig
+import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.validation.ValidationConfig
-import dev.vulnlog.lib.core.validation.ValidationOutcome
-import dev.vulnlog.lib.core.validation.renderValidationSummary
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.ALL_SEVERITIES
 import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.render.renderValidationSummary
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."

@@ -3,9 +3,9 @@
 
 package dev.vulnlog.gradle.validation
 
+import dev.vulnlog.lib.app.ValidationConfig
+import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
-import dev.vulnlog.lib.core.validation.ValidationConfig
-import dev.vulnlog.lib.core.validation.ValidationOutcome
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.Rule

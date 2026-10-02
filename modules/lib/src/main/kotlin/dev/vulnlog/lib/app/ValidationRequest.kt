@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.app
 
-import dev.vulnlog.lib.core.validation.ValidationConfig
 import dev.vulnlog.lib.finding.ERRORS_ONLY
 import dev.vulnlog.lib.finding.FindingSeverity
 
