@@ -11,7 +11,7 @@ import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.finding.ValidationFinding
 import dev.vulnlog.lib.model.VulnlogFile
 
-/** One line per finding of a reported severity, plus a summary. Blank when nothing is reported. */
+/** Blank when no finding has a reported severity. */
 fun renderFindings(
     filename: String,
     findings: List<ValidationFinding>,
@@ -24,7 +24,6 @@ fun renderFindings(
     return (lines + summaryOf(reported)).joinToString("\n")
 }
 
-/** One error line per problem, naming the position in the document when it is known. */
 fun renderProblem(
     filename: String,
     problem: ParseFailure,
@@ -37,13 +36,12 @@ fun renderProblem(
     return formatFinding(FindingSeverity.ERROR, filename, position, problem.message)
 }
 
-/** The counts per severity for one file, including findings the output held back. */
+/** Counts every finding, including those the output held back. */
 fun renderValidationSummary(
     filename: String,
     findings: List<ValidationFinding>,
 ): String = "validated $filename: ${summaryOf(findings).ifEmpty { "no findings" }}"
 
-/** States the schema version and entry counts of a file that was read successfully. */
 fun renderParsedProject(
     filename: String,
     vulnlogProjectFile: VulnlogFile,

@@ -30,9 +30,7 @@ import dev.vulnlog.lib.finding.highestSeverity
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
 
-/**
- * Reads [document] to the Vulnlog DTO representation or returns a [ValidationOutcome] containing the details of why parsing and validation failed.
- */
+/** Stops at the DTO, so a file whose domain rules fail can still be formatted. */
 fun parseDocument(
     document: InputDocument,
     config: ValidationConfig = ValidationConfig(),
@@ -65,7 +63,6 @@ fun parseDocument(
     return outcomeOf(findings, config) { ParsedVulnlogProject(document, nodeTree, dto) }
 }
 
-/** Continues [parseDocument] into the domain model and runs the domain rules over it. */
 fun validateDocument(
     document: InputDocument,
     config: ValidationConfig = ValidationConfig(),

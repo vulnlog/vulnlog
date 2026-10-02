@@ -65,7 +65,7 @@ object ValidationDocuments {
     /** Not valid YAML: fails while building the node tree. */
     val MALFORMED_YAML: String = "schemaVersion: [unclosed"
 
-    /** Declares a schema version this build does not support: fails while building the DTO. */
+    /** Declares a schema version this build does not support: fails while reading the schema version. */
     val UNSUPPORTED_SCHEMA_VERSION: String = vulnlogDocument(schemaVersion = "99")
 
     /** Carries a key the schema does not define: fails while building the DTO. */
