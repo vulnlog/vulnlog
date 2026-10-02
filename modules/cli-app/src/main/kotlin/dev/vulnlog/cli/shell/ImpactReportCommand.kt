@@ -24,14 +24,14 @@ import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
 import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.ReportingEntry
 import dev.vulnlog.lib.model.reporting.WorkState
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.FileOutputOption
 import java.nio.file.Path
 import java.time.Instant
 

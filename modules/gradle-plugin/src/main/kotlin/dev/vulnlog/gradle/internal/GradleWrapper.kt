@@ -3,7 +3,7 @@
 
 package dev.vulnlog.gradle.internal
 
-import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.io.FileInputOption
 import org.gradle.api.GradleException
 import java.io.File
 

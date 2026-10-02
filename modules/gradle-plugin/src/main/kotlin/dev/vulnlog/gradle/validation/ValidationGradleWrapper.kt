@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle.validation
 
 import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.lib.app.ValidationRequest
 import dev.vulnlog.lib.core.validation.ValidationOutcome
 import dev.vulnlog.lib.core.validation.parseDocument
 import dev.vulnlog.lib.core.validation.renderFindings
@@ -14,9 +15,8 @@ import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.ValidationRequest
-import dev.vulnlog.lib.shell.readInputDocument
+import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.readInputDocument
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 

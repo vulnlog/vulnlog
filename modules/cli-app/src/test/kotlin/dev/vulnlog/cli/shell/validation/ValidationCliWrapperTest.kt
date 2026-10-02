@@ -7,11 +7,11 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.testing.test
 import dev.vulnlog.cli.shell.ExitCode
 import dev.vulnlog.cli.shell.withTempFile
+import dev.vulnlog.lib.app.ValidationRequest
 import dev.vulnlog.lib.core.validation.ValidationConfig
 import dev.vulnlog.lib.finding.ALL_SEVERITIES
 import dev.vulnlog.lib.fixtures.ValidationDocuments
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.ValidationRequest
+import dev.vulnlog.lib.io.FileInputOption
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

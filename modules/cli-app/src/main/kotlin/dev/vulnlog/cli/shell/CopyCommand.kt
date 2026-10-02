@@ -23,8 +23,8 @@ import dev.vulnlog.lib.document.formatCopiedMessage
 import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
+import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.shell.FileInputOption
 import kotlin.io.path.writeText
 
 class CopyCommand : CliktCommand(name = "copy") {

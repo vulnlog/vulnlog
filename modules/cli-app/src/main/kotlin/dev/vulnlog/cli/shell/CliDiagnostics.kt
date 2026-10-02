@@ -4,8 +4,8 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
-import dev.vulnlog.lib.shell.DiagnosticSink
-import dev.vulnlog.lib.shell.renderDiagnostic
+import dev.vulnlog.lib.io.DiagnosticSink
+import dev.vulnlog.lib.io.renderDiagnostic
 
 class CliDiagnostics(
     val verbosity: Verbosity,

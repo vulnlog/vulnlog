@@ -15,6 +15,7 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.io.DiagnosticSink
 import dev.vulnlog.lib.io.readOpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
@@ -23,7 +24,6 @@ import dev.vulnlog.lib.render.OpenVexLine
 import dev.vulnlog.lib.render.renderOpenVexNewDocument
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
-import dev.vulnlog.lib.shell.DiagnosticSink
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.ConfigurableFileCollection

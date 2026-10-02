@@ -20,8 +20,8 @@ import dev.vulnlog.lib.document.renderFormatFinding
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.finding.FindingSeverity
-import dev.vulnlog.lib.shell.DiagnosticLevel
-import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.io.DiagnosticLevel
+import dev.vulnlog.lib.io.FileInputOption
 import kotlin.io.path.writeText
 
 class FmtCommand : CliktCommand(name = "fmt") {

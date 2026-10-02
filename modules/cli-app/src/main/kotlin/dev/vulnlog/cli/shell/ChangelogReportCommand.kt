@@ -15,6 +15,7 @@ import com.github.ajalt.clikt.parameters.types.choice
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.reporting.sharedProjectOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.app.ChangelogFormatRequest
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.formatMessage
@@ -23,14 +24,13 @@ import dev.vulnlog.lib.core.reporting.formatChangelogMarkdown
 import dev.vulnlog.lib.core.reporting.formatChangelogText
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.model.reporting.ReportingChangelogProject
 import dev.vulnlog.lib.model.reporting.ReportingChangelogRelease
-import dev.vulnlog.lib.shell.ChangelogFormatRequest
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.FileOutputOption
 
 class ChangelogReportCommand : CliktCommand(name = "changelog") {
     override fun help(context: Context): String =

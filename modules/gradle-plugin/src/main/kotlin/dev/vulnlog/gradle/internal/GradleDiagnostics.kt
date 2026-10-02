@@ -3,8 +3,8 @@
 
 package dev.vulnlog.gradle.internal
 
-import dev.vulnlog.lib.shell.DiagnosticLevel
-import dev.vulnlog.lib.shell.DiagnosticSink
+import dev.vulnlog.lib.io.DiagnosticLevel
+import dev.vulnlog.lib.io.DiagnosticSink
 import org.gradle.api.DefaultTask
 
 /**

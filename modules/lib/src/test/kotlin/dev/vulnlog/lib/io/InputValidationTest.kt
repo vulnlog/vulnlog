@@ -1,9 +1,8 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.shell
+package dev.vulnlog.lib.io
 
-import dev.vulnlog.lib.shell.InputSelectionResult
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.nio.file.Path

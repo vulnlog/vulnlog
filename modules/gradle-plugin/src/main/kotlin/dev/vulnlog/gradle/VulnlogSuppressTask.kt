@@ -7,6 +7,7 @@ import dev.vulnlog.gradle.filter.resolveFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.validation.validateInputOrFail
+import dev.vulnlog.lib.app.SuppressionFormatRequest
 import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.SuppressionFilter
@@ -17,7 +18,6 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
-import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty

@@ -20,6 +20,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.app.SuppressionFormatRequest
 import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
 import dev.vulnlog.lib.codec.suppression.SuppressionFile
 import dev.vulnlog.lib.core.StatusVerb
@@ -35,12 +36,11 @@ import dev.vulnlog.lib.core.renderSuppressionExclusion
 import dev.vulnlog.lib.core.renderSuppressionInclusions
 import dev.vulnlog.lib.core.renderSuppressionWritten
 import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.io.DirectoryOutputOption
+import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.FileOutputOption
+import dev.vulnlog.lib.io.OutputOption
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
-import dev.vulnlog.lib.shell.DirectoryOutputOption
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.FileOutputOption
-import dev.vulnlog.lib.shell.OutputOption
-import dev.vulnlog.lib.shell.SuppressionFormatRequest
 import java.nio.file.Path
 import java.time.LocalDate
 

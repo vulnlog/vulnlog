@@ -19,7 +19,7 @@ import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
-import dev.vulnlog.lib.shell.isVulnlogFileName
+import dev.vulnlog.lib.io.isVulnlogFileName
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
