@@ -39,7 +39,7 @@ import dev.vulnlog.lib.render.renderOpenVexMessages
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import java.nio.file.Path
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 private const val BASELINE_OPTION = "--baseline"
 

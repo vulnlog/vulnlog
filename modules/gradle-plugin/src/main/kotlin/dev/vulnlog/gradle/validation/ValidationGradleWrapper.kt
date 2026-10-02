@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle.validation
 
 import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.failure
 import dev.vulnlog.lib.app.ValidationRequest
 import dev.vulnlog.lib.core.validation.ValidationOutcome
 import dev.vulnlog.lib.core.validation.parseDocument
@@ -12,6 +13,7 @@ import dev.vulnlog.lib.core.validation.renderParsedProject
 import dev.vulnlog.lib.core.validation.renderProblem
 import dev.vulnlog.lib.core.validation.validateDocument
 import dev.vulnlog.lib.document.InputDocument
+import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
@@ -27,7 +29,7 @@ fun DefaultTask.parseInputOrFail(
     input: FileInputOption,
     validationRequest: ValidationRequest = ValidationRequest(),
 ): ValidationOutcome.Ok<ParsedVulnlogProject> {
-    val document = readInputDocument(input)
+    val document = readOrFail(input)
     return unwrap(parseDocument(document, validationRequest.config), document, validationRequest.reportedSeverities)
 }
 
@@ -36,11 +38,17 @@ fun DefaultTask.validateInputOrFail(
     input: FileInputOption,
     request: ValidationRequest = ValidationRequest(),
 ): ValidationOutcome.Ok<ValidVulnlogProject> {
-    val document = readInputDocument(input)
+    val document = readOrFail(input)
     val ok = unwrap(validateDocument(document, request.config), document, request.reportedSeverities)
     diagnosticSink().verbose(renderParsedProject(document.filename, ok.project.vulnlogProjectFile))
     return ok
 }
+
+private fun readOrFail(input: FileInputOption): InputDocument =
+    when (val read = readInputDocument(input)) {
+        is InputRead.Read -> read.document
+        is InputRead.Failed -> throw failure(read)
+    }
 
 private fun <T> DefaultTask.unwrap(
     outcome: ValidationOutcome<T>,

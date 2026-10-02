@@ -12,7 +12,6 @@ data class InputDocument(
     val path: Path? = null,
 ) {
     init {
-        require(content.isNotBlank()) { "content must not be blank" }
         require(filename.isNotBlank()) { "filename must not be blank" }
     }
 
