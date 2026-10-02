@@ -5,13 +5,11 @@ package dev.vulnlog.gradle.validation
 
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.failure
+import dev.vulnlog.lib.app.InputRejected
+import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
-import dev.vulnlog.lib.core.validation.ValidationOutcome
-import dev.vulnlog.lib.core.validation.parseDocument
-import dev.vulnlog.lib.core.validation.renderFindings
-import dev.vulnlog.lib.core.validation.renderParsedProject
-import dev.vulnlog.lib.core.validation.renderProblem
-import dev.vulnlog.lib.core.validation.validateDocument
+import dev.vulnlog.lib.app.parseDocument
+import dev.vulnlog.lib.app.validateDocument
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
@@ -19,6 +17,9 @@ import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.readInputDocument
+import dev.vulnlog.lib.render.renderFindings
+import dev.vulnlog.lib.render.renderParsedProject
+import dev.vulnlog.lib.render.renderProblem
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 
@@ -61,12 +62,12 @@ private fun <T> DefaultTask.unwrap(
     return when (outcome) {
         is ValidationOutcome.Ok -> outcome
 
-        is ValidationOutcome.Stopped.Unreadable -> {
+        is InputRejected.Unparsable -> {
             outcome.problems.forEach { problem -> logMessage(renderProblem(document.filename, problem)) }
             throw GradleException(VALIDATION_FAILED)
         }
 
-        is ValidationOutcome.Stopped.Rejected -> throw GradleException(VALIDATION_FAILED)
+        is InputRejected.Invalid -> throw GradleException(VALIDATION_FAILED)
     }
 }
 

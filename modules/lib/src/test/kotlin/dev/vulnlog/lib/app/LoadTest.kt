@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core.validation
+package dev.vulnlog.lib.app
 
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
@@ -25,7 +25,7 @@ private fun document(content: String) = InputDocument(content, TEST_FILE_NAME)
 
 private val STRICT = ValidationConfig(strict = true)
 
-class ValidateTest :
+class LoadTest :
     FunSpec({
 
         context("parseDocument") {
@@ -58,7 +58,7 @@ class ValidateTest :
             test("malformed YAML stops the run with a problem") {
                 val outcome = parseDocument(document(ValidationDocuments.MALFORMED_YAML))
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
                 stopped.problems shouldHaveSize 1
                 stopped.findings.shouldBeEmpty()
             }
@@ -68,21 +68,21 @@ class ValidateTest :
 
                 val outcomes = contents.map { parseDocument(document(it)) }
 
-                val problems = outcomes.map { it.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>().problems }
+                val problems = outcomes.map { it.shouldBeInstanceOf<InputRejected.Unparsable>().problems }
                 problems.map { it.single().message } shouldBe List(4) { "Empty YAML document" }
             }
 
             test("an unsupported schema version stops the run and names the version") {
                 val outcome = parseDocument(document(ValidationDocuments.UNSUPPORTED_SCHEMA_VERSION))
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
                 stopped.problems.single().message shouldContain "Unsupported schema version '99'"
             }
 
             test("an unknown property stops the run and names the property") {
                 val outcome = parseDocument(document(ValidationDocuments.UNKNOWN_PROPERTY))
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
                 stopped.problems.single().message shouldContain "Unknown property 'bogus'"
             }
         }
@@ -100,7 +100,7 @@ class ValidateTest :
             test("a value without a domain representation stops the run") {
                 val outcome = validateDocument(document(ValidationDocuments.UNMAPPABLE_VULN_ID))
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
                 stopped.problems
                     .single()
                     .path shouldBe "vulnerabilities[UNKNOWN-2026-1234].id"
@@ -109,7 +109,7 @@ class ValidateTest :
             test("a located problem carries its source position") {
                 val outcome = validateDocument(document(ValidationDocuments.UNMAPPABLE_VULN_ID))
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
                 stopped.problems.single().location shouldNotBe null
             }
         }
@@ -147,7 +147,7 @@ class ValidateTest :
             test("a DTO warning stops the run in strict mode, carrying the finding") {
                 val outcome = parseDocument(document(ValidationDocuments.DEPRECATED_VERDICT), STRICT)
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Rejected>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
                 stopped.findings
                     .single()
                     .rule shouldBe Rule.DEPRECATED_VERDICT
@@ -166,7 +166,7 @@ class ValidateTest :
             test("a domain warning stops the run in strict mode") {
                 val outcome = validateDocument(document(ValidationDocuments.ANALYZED_BEFORE_REPORTED), STRICT)
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Rejected>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
                 stopped.findings shouldHaveSize 1
             }
         }
@@ -176,7 +176,7 @@ class ValidateTest :
             test("a broken domain rule stops the run, carrying the finding") {
                 val outcome = validateDocument(document(ValidationDocuments.DANGLING_RELEASE))
 
-                val stopped = outcome.shouldBeInstanceOf<ValidationOutcome.Stopped.Rejected>()
+                val stopped = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
                 with(stopped.findings.errors.single()) {
                     severity shouldBe FindingSeverity.ERROR
                     rule shouldBe Rule.DANGLING_RELEASE_REFERENCE

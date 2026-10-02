@@ -3,9 +3,9 @@
 
 package dev.vulnlog.lib.document
 
-import dev.vulnlog.lib.core.validation.ValidationOutcome
-import dev.vulnlog.lib.core.validation.parseDocument
-import dev.vulnlog.lib.core.validation.validateDocument
+import dev.vulnlog.lib.app.ValidationOutcome
+import dev.vulnlog.lib.app.parseDocument
+import dev.vulnlog.lib.app.validateDocument
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import io.kotest.matchers.types.shouldBeInstanceOf

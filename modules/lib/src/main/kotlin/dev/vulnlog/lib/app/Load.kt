@@ -1,10 +1,10 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core.validation
+package dev.vulnlog.lib.app
 
-import dev.vulnlog.lib.core.validation.ValidationOutcome.Ok
-import dev.vulnlog.lib.core.validation.ValidationOutcome.Stopped
+import dev.vulnlog.lib.app.ValidationOutcome.Ok
+import dev.vulnlog.lib.core.validation.v1DomainRules
 import dev.vulnlog.lib.document.DomainMappingResult
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.dto.DtoVersion
@@ -39,25 +39,25 @@ fun parseDocument(
 ): ValidationOutcome<ParsedVulnlogProject> {
     val nodeTree =
         when (val result = parseToNodeTree(document.content)) {
-            is NodeTreeResult.Rejected -> return Stopped.Unreadable(result.problems, emptyList())
+            is NodeTreeResult.Rejected -> return InputRejected.Unparsable(result.problems, emptyList())
             is NodeTreeResult.Valid -> result
         }
 
     val version =
         when (val result = resolveSchemaVersion(nodeTree.rootNode)) {
-            is SchemaVersionResult.Rejected -> return Stopped.Unreadable(result.problems, emptyList())
+            is SchemaVersionResult.Rejected -> return InputRejected.Unparsable(result.problems, emptyList())
             is SchemaVersionResult.Recognized -> result.version
         }
 
     val values =
         when (val result = constructDocument(nodeTree.rootNode)) {
-            is DocumentResult.Rejected -> return Stopped.Unreadable(result.problems, emptyList())
+            is DocumentResult.Rejected -> return InputRejected.Unparsable(result.problems, emptyList())
             is DocumentResult.Built -> result.document
         }
 
     val dto =
         when (val result = bindToDto(values, version, nodeTree.rootNode)) {
-            is DtoParseResult.Rejected -> return Stopped.Unreadable(result.problems, emptyList())
+            is DtoParseResult.Rejected -> return InputRejected.Unparsable(result.problems, emptyList())
             is DtoParseResult.Parsed -> result.dto
         }
 
@@ -72,14 +72,14 @@ fun validateDocument(
 ): ValidationOutcome<ValidVulnlogProject> {
     val parsed =
         when (val outcome = parseDocument(document, config)) {
-            is Stopped -> return outcome
+            is InputRejected -> return outcome
             is Ok -> outcome
         }
 
     val file =
         when (val result = mapToDomain(parsed.project.validatedDto)) {
             is DomainMappingResult.Rejected ->
-                return Stopped.Unreadable(
+                return InputRejected.Unparsable(
                     locateFailures(parsed.project.nodeTree.rootNode, result.problems),
                     parsed.findings,
                 )
@@ -107,7 +107,7 @@ private fun <T> outcomeOf(
     project: () -> T,
 ): ValidationOutcome<T> =
     when (findings.highestSeverity) {
-        ERROR -> Stopped.Rejected(findings)
-        WARNING -> if (config.strict) Stopped.Rejected(findings) else Ok(project(), findings)
+        ERROR -> InputRejected.Invalid(findings)
+        WARNING -> if (config.strict) InputRejected.Invalid(findings) else Ok(project(), findings)
         INFO -> Ok(project(), findings)
     }

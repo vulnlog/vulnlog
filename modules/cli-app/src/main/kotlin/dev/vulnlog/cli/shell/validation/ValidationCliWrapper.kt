@@ -10,13 +10,11 @@ import dev.vulnlog.cli.shell.diagnosticSink
 import dev.vulnlog.cli.shell.echoHelpHint
 import dev.vulnlog.cli.shell.echoMessage
 import dev.vulnlog.cli.shell.exitCode
+import dev.vulnlog.lib.app.InputRejected
+import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
-import dev.vulnlog.lib.core.validation.ValidationOutcome
-import dev.vulnlog.lib.core.validation.parseDocument
-import dev.vulnlog.lib.core.validation.renderFindings
-import dev.vulnlog.lib.core.validation.renderParsedProject
-import dev.vulnlog.lib.core.validation.renderProblem
-import dev.vulnlog.lib.core.validation.validateDocument
+import dev.vulnlog.lib.app.parseDocument
+import dev.vulnlog.lib.app.validateDocument
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
@@ -25,7 +23,10 @@ import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.readInputDocument
 import dev.vulnlog.lib.render.formatFailureLines
+import dev.vulnlog.lib.render.renderFindings
 import dev.vulnlog.lib.render.renderInputFailure
+import dev.vulnlog.lib.render.renderParsedProject
+import dev.vulnlog.lib.render.renderProblem
 
 /** Reads [input] to DTO and validates on DTO-level. Any finding is reported to stderr. Fails with [ExitCode.VALIDATION_ERROR] on any finding. */
 fun CliktCommand.parseInputOrFail(
@@ -69,12 +70,12 @@ private fun <T> CliktCommand.unwrap(
     return when (outcome) {
         is ValidationOutcome.Ok -> outcome
 
-        is ValidationOutcome.Stopped.Unreadable -> {
+        is InputRejected.Unparsable -> {
             outcome.problems.forEach { problem -> echoMessage(renderProblem(document.filename, problem)) }
             failValidation()
         }
 
-        is ValidationOutcome.Stopped.Rejected -> failValidation()
+        is InputRejected.Invalid -> failValidation()
     }
 }
 
