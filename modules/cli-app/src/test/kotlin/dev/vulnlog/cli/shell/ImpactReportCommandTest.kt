@@ -181,6 +181,21 @@ class ImpactReportCommandTest :
                 }
             }
 
+            test("fails with a named error and a hint when the output directory does not exist") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempDir { dir ->
+                        val output = dir.resolve("missing").resolve("report.html")
+
+                        val result = ImpactReportCommand().test("${input.absolutePath} -o $output")
+
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
+                        result.stderr shouldBe
+                            "error: cannot write $output: its directory does not exist\n" +
+                            "  hint: create the directory first\n"
+                    }
+                }
+            }
+
             test("fails when the input file name does not match the expected pattern") {
                 withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogDocument()) { input ->
                     val result = ImpactReportCommand().test(input.absolutePath)

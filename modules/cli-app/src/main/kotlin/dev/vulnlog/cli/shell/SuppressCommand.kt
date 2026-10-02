@@ -40,6 +40,7 @@ import dev.vulnlog.lib.io.DirectoryOutputOption
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.OutputOption
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.suppress.SuppressionOutput
 import java.nio.file.Path
 import java.time.LocalDate
@@ -138,12 +139,8 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     ) {
         suppressions.forEach { (output, suppressionFile) ->
             val outputPath: Path = destination.path.resolve(suppressionFile.fileName)
-            writeSuppressionFile(
-                { echoStatus(it) },
-                { echoMessage(it) },
-                outputPath,
-                suppressionFile,
-            )
+            writeOrFail(writeOutput(outputPath, suppressionFile.content))
+            echoStatus(formatStatus(StatusVerb.WROTE, outputPath.toString()))
             diagnosticSink().verbose(renderSuppressionWritten(outputPath.toString(), output))
         }
     }
@@ -153,12 +150,8 @@ class SuppressCommand : CliktCommand(name = "suppress") {
         suppression: RenderedSuppression,
     ) {
         val outputPath = destination.path
-        writeSuppressionFile(
-            { echoStatus(it) },
-            { echoMessage(it) },
-            outputPath,
-            suppression.file,
-        )
+        writeOrFail(writeOutput(outputPath, suppression.file.content))
+        echoStatus(formatStatus(StatusVerb.WROTE, outputPath.toString()))
         diagnosticSink().verbose(renderSuppressionWritten(outputPath.toString(), suppression.output))
     }
 }

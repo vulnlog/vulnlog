@@ -6,11 +6,13 @@ package dev.vulnlog.gradle.internal
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.document.InputRead
+import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
+import dev.vulnlog.lib.render.renderWriteFailure
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.VerificationException
@@ -42,5 +44,13 @@ fun failure(failed: InputRead.Failed): GradleException {
     val message = formatFailureMessage(listOf(renderInputFailure(failed)))
     return when (failed) {
         is InputRead.Missing, is InputRead.Denied, is InputRead.Unreadable -> InvalidUserDataException(message)
+    }
+}
+
+fun failure(failed: OutputWrite.Failed): GradleException {
+    val message = formatFailureMessage(listOf(renderWriteFailure(failed)))
+    return when (failed) {
+        is OutputWrite.MissingDirectory, is OutputWrite.Denied, is OutputWrite.Unwritable ->
+            InvalidUserDataException(message)
     }
 }

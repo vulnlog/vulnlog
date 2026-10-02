@@ -6,6 +6,7 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.filter.resolveFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.codec.report.HtmlReportEncoder
@@ -20,6 +21,7 @@ import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
 import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
@@ -117,8 +119,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
         val reportContent = HtmlReportEncoder.encode(reportData)
 
         val out = outputFile.get().asFile
-        out.parentFile?.mkdirs()
-        out.writeText(reportContent)
+        writeOrFail(writeOutput(out.toPath(), reportContent, createDirectories = true))
         sink.verbose("wrote ${out.path}")
         logger.lifecycle(formatStatus(StatusVerb.WROTE, out.absolutePath))
     }

@@ -5,6 +5,7 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.document.copyVulnerabilities
@@ -15,6 +16,7 @@ import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.writeOutput
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -27,7 +29,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
-import kotlin.io.path.writeText
 
 @DisableCachingByDefault(because = "Rewrites Vulnlog files in place")
 abstract class VulnlogCopyTask : DefaultTask() {
@@ -71,7 +72,7 @@ abstract class VulnlogCopyTask : DefaultTask() {
             }
             val destinationPath =
                 requireNotNull(validDestination.inputDocument.path) { "Gradle inputs are always files" }
-            destinationPath.writeText(outcome.newContent)
+            writeOrFail(writeOutput(destinationPath, outcome.newContent))
             sink.verbose("wrote $source")
             if (outcome.copied.isNotEmpty()) {
                 sink.verbose("copied to $source: ${outcome.copied.joinToString(", ") { it.id }}")

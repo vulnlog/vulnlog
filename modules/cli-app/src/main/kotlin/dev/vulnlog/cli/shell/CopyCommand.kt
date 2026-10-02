@@ -24,8 +24,8 @@ import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.VulnId
-import kotlin.io.path.writeText
 
 class CopyCommand : CliktCommand(name = "copy") {
     override fun help(context: Context): String =
@@ -73,7 +73,7 @@ class CopyCommand : CliktCommand(name = "copy") {
             }
             val destinationPath =
                 requireNotNull(validDestination.inputDocument.path) { "copy destinations are always files" }
-            destinationPath.writeText(outcome.newContent)
+            writeOrFail(writeOutput(destinationPath, outcome.newContent))
             diagnosticSink().verbose("wrote $source")
             if (outcome.copied.isNotEmpty()) {
                 diagnosticSink().verbose("copied to $source: ${outcome.copied.joinToString(", ") { it.id }}")

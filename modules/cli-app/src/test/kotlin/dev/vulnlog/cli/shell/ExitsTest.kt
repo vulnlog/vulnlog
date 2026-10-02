@@ -4,6 +4,7 @@
 package dev.vulnlog.cli.shell
 
 import dev.vulnlog.lib.document.InputRead
+import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
@@ -25,6 +26,19 @@ class ExitsTest :
                     InputRead.Missing("a.vl.yaml"),
                     InputRead.Denied("a.vl.yaml"),
                     InputRead.Unreadable("a.vl.yaml", "Is a directory"),
+                )
+
+            val codes = failed.map { exitCode(it) }
+
+            codes shouldContainExactly List(3) { ExitCode.GENERAL_ERROR }
+        }
+
+        test("an output that cannot be written is an I/O error, whatever the reason") {
+            val failed =
+                listOf(
+                    OutputWrite.MissingDirectory("out/report.html"),
+                    OutputWrite.Denied("out/report.html"),
+                    OutputWrite.Unwritable("out/report.html", "Is a directory"),
                 )
 
             val codes = failed.map { exitCode(it) }

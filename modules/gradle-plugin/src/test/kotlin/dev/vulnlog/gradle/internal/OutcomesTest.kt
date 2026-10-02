@@ -6,6 +6,7 @@ package dev.vulnlog.gradle.internal
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.document.InputRead
+import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
@@ -55,5 +56,20 @@ class OutcomesTest :
 
             exceptions.map { it::class } shouldContainExactly List(3) { InvalidUserDataException::class }
             exceptions.first().message shouldBe "Cannot read a.vl.yaml: it does not exist. Check the path."
+        }
+
+        test("an output that cannot be written is configuration to fix, worded in sentences") {
+            val failed =
+                listOf(
+                    OutputWrite.MissingDirectory("out/report.html"),
+                    OutputWrite.Denied("out/report.html"),
+                    OutputWrite.Unwritable("out/report.html", "Is a directory"),
+                )
+
+            val exceptions = failed.map(::failure)
+
+            exceptions.map { it::class } shouldContainExactly List(3) { InvalidUserDataException::class }
+            exceptions[1].message shouldBe
+                "Cannot write out/report.html: permission denied. Make the location writable for this user."
         }
     })

@@ -31,13 +31,13 @@ import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 import java.time.LocalDate
-import kotlin.io.path.writeText
 
 class AddCommand : CliktCommand(name = "add") {
     override fun help(context: Context): String =
@@ -194,9 +194,11 @@ class AddCommand : CliktCommand(name = "add") {
             if (hasYamlComments(validDestination.nodeTree.rootNode)) {
                 echoMessage(formatCommentsDroppedWarning(validDestination.inputDocument.filename))
             }
-            validDestination.inputDocument.path!!.writeText(outcome.newContent)
-            diagnosticSink().verbose("wrote ${validDestination.inputDocument.path}")
-            echoStatus(formatAddOutcomeMessage(validDestination.inputDocument.path!!, outcome))
+            val destinationPath =
+                requireNotNull(validDestination.inputDocument.path) { "add destinations are always files" }
+            writeOrFail(writeOutput(destinationPath, outcome.newContent))
+            diagnosticSink().verbose("wrote $destinationPath")
+            echoStatus(formatAddOutcomeMessage(destinationPath, outcome))
         }
     }
 }

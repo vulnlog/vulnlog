@@ -14,6 +14,6 @@ fun readOpenVexBaseline(path: Path): OpenVexBaselineRead {
     return try {
         OpenVexBaselineRead.Present(path.readText())
     } catch (e: IOException) {
-        OpenVexBaselineRead.Unreadable(e.message ?: e.javaClass.simpleName)
+        OpenVexBaselineRead.Unreadable(e.reason())
     }
 }

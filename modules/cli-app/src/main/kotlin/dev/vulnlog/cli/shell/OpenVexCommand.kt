@@ -27,6 +27,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.readOpenVexBaseline
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -153,7 +154,8 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                     echoMessage(Message.Status(formatStatus(StatusVerb.UNCHANGED, target.path.toString())))
                     return
                 }
-                writeReport({ echoMessage(Message.Status(it)) }, { echoMessage(it) }, target, outcome.content)
+                writeOrFail(writeOutput(target.path, outcome.content))
+                echoMessage(Message.Status(formatStatus(StatusVerb.WROTE, target.path.toString())))
                 echoMessage(renderOpenVexWritten(target.path.toString(), outcome))
             }
 

@@ -4,10 +4,12 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.init
 import dev.vulnlog.lib.document.yaml.YamlWriter
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.SchemaVersion
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -47,7 +49,7 @@ abstract class VulnlogInitTask : DefaultTask() {
         }
         val vulnlogFile = init(SchemaVersion.V1, organization.get(), projectName.get(), author.get())
         val content = YamlWriter.write(vulnlogFile)
-        file.writeText(content)
+        writeOrFail(writeOutput(file.toPath(), content))
         diagnosticSink().verbose("wrote ${file.path}")
         logger.lifecycle(formatStatus(StatusVerb.CREATED, file.absolutePath))
     }
