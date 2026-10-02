@@ -3,20 +3,13 @@
 
 package dev.vulnlog.lib.io
 
-/**
- * Receiver for optional diagnostic events. Shells install a sink that filters by the requested
- * verbosity and writes to their own output channel; [NONE] discards everything.
- */
+/** Each driver installs a sink that filters by its verbosity and writes to its own channel. */
 fun interface DiagnosticSink {
     fun accept(event: DiagnosticEvent)
 
     fun verbose(message: String) = accept(DiagnosticEvent(DiagnosticLevel.VERBOSE, message))
 
     fun debug(message: String) = accept(DiagnosticEvent(DiagnosticLevel.DEBUG, message))
-
-    companion object {
-        val NONE: DiagnosticSink = DiagnosticSink { }
-    }
 }
 
 data class DiagnosticEvent(

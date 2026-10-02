@@ -8,7 +8,7 @@ import dev.vulnlog.lib.fixtures.withTempFile
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
 import java.nio.file.Path
 
 private const val CONTENT = "schemaVersion: \"1\"\n"
@@ -16,53 +16,33 @@ private const val CONTENT = "schemaVersion: \"1\"\n"
 class InputReaderTest :
     FunSpec({
 
-        context("a file input") {
+        test("reads a file with its name, and addresses it by its full path") {
+            withTempFile(content = CONTENT) { file ->
+                val input = readInputDocument(FileInputOption.File(file))
 
-            test("is read with its content, name and path") {
-                withTempFile(content = CONTENT) { file ->
-                    val input = readInputDocument(FileInputOption.File(file))
-
-                    input.content shouldBe CONTENT
-                    input.filename shouldBe file.fileName.toString()
-                    input.path shouldBe file
-                }
-            }
-
-            test("is addressed by its full path") {
-                withTempFile(content = CONTENT) { file ->
-                    val input = readInputDocument(FileInputOption.File(file))
-
-                    input.source shouldBe file.toString()
-                }
-            }
-
-            test("that cannot be read reports the file name") {
-                val missing = Path.of("/nonexistent/vulnlog.vl.yaml")
-
-                val error = shouldThrow<IllegalStateException> { readInputDocument(FileInputOption.File(missing)) }
-
-                error.message shouldContain "Cannot read vulnlog.vl.yaml"
+                input.content shouldBe CONTENT
+                input.filename shouldBe file.fileName.toString()
+                input.path shouldBe file
+                input.source shouldBe file.toString()
             }
         }
 
-        context("a stdin input") {
+        test("reads stdin under the synthetic name <stdin>, without a path") {
+            withStdin(CONTENT) {
+                val input = readInputDocument(FileInputOption.Stdin)
 
-            test("is read with the synthetic file name and no path") {
-                withStdin(CONTENT) {
-                    val input = readInputDocument(FileInputOption.Stdin)
-
-                    input.content shouldBe CONTENT
-                    input.filename shouldBe "<stdin>"
-                    input.path shouldBe null
-                }
+                input.content shouldBe CONTENT
+                input.filename shouldBe "<stdin>"
+                input.path shouldBe null
+                input.source shouldBe "<stdin>"
             }
+        }
 
-            test("is addressed by the synthetic file name") {
-                withStdin(CONTENT) {
-                    val input = readInputDocument(FileInputOption.Stdin)
+        test("names the file it cannot read") {
+            val missing = Path.of("/nonexistent/vulnlog.vl.yaml")
 
-                    input.source shouldBe "<stdin>"
-                }
-            }
+            val error = shouldThrow<IllegalStateException> { readInputDocument(FileInputOption.File(missing)) }
+
+            error.message shouldStartWith "Cannot read vulnlog.vl.yaml: "
         }
     })

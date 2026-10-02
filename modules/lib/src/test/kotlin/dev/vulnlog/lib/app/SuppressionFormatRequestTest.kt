@@ -5,42 +5,29 @@ package dev.vulnlog.lib.app
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 
 class SuppressionFormatRequestTest :
     FunSpec({
 
-        context("fromToken") {
+        test("byToken names every format, and fromToken parses each token in any case") {
+            val tokens = listOf("auto", "generic", "AUTO", "Generic")
 
-            test("parses auto") {
-                SuppressionFormatRequest.fromToken("auto") shouldBe SuppressionFormatRequest.Auto
-            }
+            val requests = tokens.map(SuppressionFormatRequest::fromToken)
 
-            test("parses generic") {
-                SuppressionFormatRequest.fromToken("generic") shouldBe SuppressionFormatRequest.Generic
-            }
-
-            test("is case insensitive") {
-                SuppressionFormatRequest.fromToken("AUTO") shouldBe SuppressionFormatRequest.Auto
-                SuppressionFormatRequest.fromToken("Generic") shouldBe SuppressionFormatRequest.Generic
-            }
-
-            test("rejects an unknown token with a helpful message") {
-                val exception =
-                    shouldThrow<IllegalArgumentException> {
-                        SuppressionFormatRequest.fromToken("xml")
-                    }
-
-                val message = exception.message.shouldNotBeNull()
-                message shouldContain "Unknown suppression format 'xml'"
-                message shouldContain "auto"
-                message shouldContain "generic"
-            }
+            SuppressionFormatRequest.byToken.keys shouldBe setOf("auto", "generic")
+            requests shouldBe
+                listOf(
+                    SuppressionFormatRequest.Auto,
+                    SuppressionFormatRequest.Generic,
+                    SuppressionFormatRequest.Auto,
+                    SuppressionFormatRequest.Generic,
+                )
         }
 
-        test("byToken exposes the supported tokens") {
-            SuppressionFormatRequest.byToken.keys shouldBe setOf("auto", "generic")
+        test("fromToken rejects an unknown token and lists the valid ones") {
+            val failure = shouldThrow<IllegalArgumentException> { SuppressionFormatRequest.fromToken("xml") }
+
+            failure.message shouldBe "Unknown suppression format 'xml'. Valid values: auto, generic."
         }
     })

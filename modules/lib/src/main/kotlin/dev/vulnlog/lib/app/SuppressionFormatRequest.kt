@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.app
 
-/** The requested format for the suppression file. */
 sealed interface SuppressionFormatRequest {
     /** Native format where the reporter has one, generic JSON otherwise. */
     data object Auto : SuppressionFormatRequest

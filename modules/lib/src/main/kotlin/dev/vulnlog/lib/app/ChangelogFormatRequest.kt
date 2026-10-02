@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.app
 
-/** The requested format for the changelog report. */
 sealed interface ChangelogFormatRequest {
     val fileExtension: String
 

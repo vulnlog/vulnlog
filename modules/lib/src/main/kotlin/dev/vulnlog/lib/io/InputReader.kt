@@ -9,12 +9,17 @@ import kotlin.io.path.name
 import kotlin.io.path.readText
 
 fun readInputDocument(input: FileInputOption): InputDocument {
+    val name =
+        when (input) {
+            is FileInputOption.File -> input.path.name
+            FileInputOption.Stdin -> "<stdin>"
+        }
     try {
         return when (input) {
-            is FileInputOption.File -> InputDocument(input.path.readText(), input.path.name, input.path)
-            FileInputOption.Stdin -> InputDocument(System.`in`.bufferedReader().readText(), "<stdin>")
+            is FileInputOption.File -> InputDocument(input.path.readText(), name, input.path)
+            FileInputOption.Stdin -> InputDocument(System.`in`.bufferedReader().readText(), name)
         }
     } catch (e: IOException) {
-        error("Cannot read ${input.sourceFile().name}: ${e.message}")
+        error("Cannot read $name: ${e.message}")
     }
 }
