@@ -140,6 +140,21 @@ class ValidateCommandTest :
                 }
             }
 
+            test("fails an empty file the same way as an empty YAML document") {
+                val contents = listOf("  \n", "---\n")
+
+                val results =
+                    contents.map { content ->
+                        withTempFile(content = content) { input ->
+                            val result = ValidateCommand().test(input.absolutePath)
+                            val firstLine = result.stderr.lines().first()
+                            result.statusCode to firstLine.replace(input.name, "<file>")
+                        }
+                    }
+
+                results shouldBe List(2) { ExitCode.VALIDATION_ERROR.code to "error: <file>: Empty YAML document" }
+            }
+
             test("fails when the input file name does not match the expected pattern") {
                 withTempFile(prefix = "invalid-name", suffix = ".txt", content = vulnlogDocument()) { input ->
                     val result = ValidateCommand().test(input.absolutePath)

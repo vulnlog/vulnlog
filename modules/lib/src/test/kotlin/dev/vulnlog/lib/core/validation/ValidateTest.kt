@@ -63,6 +63,15 @@ class ValidateTest :
                 stopped.findings.shouldBeEmpty()
             }
 
+            test("a document without data stops the run as an empty YAML document") {
+                val contents = listOf("", "  \n", "---\n", "# only a comment\n")
+
+                val outcomes = contents.map { parseDocument(document(it)) }
+
+                val problems = outcomes.map { it.shouldBeInstanceOf<ValidationOutcome.Stopped.Unreadable>().problems }
+                problems.map { it.single().message } shouldBe List(4) { "Empty YAML document" }
+            }
+
             test("an unsupported schema version stops the run and names the version") {
                 val outcome = parseDocument(document(ValidationDocuments.UNSUPPORTED_SCHEMA_VERSION))
 

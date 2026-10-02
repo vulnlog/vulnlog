@@ -5,6 +5,7 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
@@ -40,5 +41,19 @@ class OutcomesTest :
             val exception = failure(unreadable, "vex.json")
 
             exception::class shouldBe InvalidUserDataException::class
+        }
+
+        test("an input that cannot be read is configuration to fix, worded in sentences") {
+            val failed =
+                listOf(
+                    InputRead.Missing("a.vl.yaml"),
+                    InputRead.Denied("a.vl.yaml"),
+                    InputRead.Unreadable("a.vl.yaml", "Is a directory"),
+                )
+
+            val exceptions = failed.map(::failure)
+
+            exceptions.map { it::class } shouldContainExactly List(3) { InvalidUserDataException::class }
+            exceptions.first().message shouldBe "Cannot read a.vl.yaml: it does not exist. Check the path."
         }
     })

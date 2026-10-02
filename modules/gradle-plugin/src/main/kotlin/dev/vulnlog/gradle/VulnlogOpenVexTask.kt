@@ -37,7 +37,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 /** Becomes a `formatVersion` property once a second OpenVEX version is supported. */
 private val FORMAT_VERSION = OpenVexFormatVersion.LATEST

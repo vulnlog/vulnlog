@@ -5,6 +5,7 @@ package dev.vulnlog.cli.shell
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 
 /** Mirrors [Outcomes] for the CLI */
@@ -19,4 +20,9 @@ fun exitCode(unavailable: OpenVexBaselineRead.Unavailable): ExitCode =
     when (unavailable) {
         OpenVexBaselineRead.Absent -> ExitCode.INVALID_FLAG_VALUE
         is OpenVexBaselineRead.Unreadable -> ExitCode.GENERAL_ERROR
+    }
+
+fun exitCode(failed: InputRead.Failed): ExitCode =
+    when (failed) {
+        is InputRead.Missing, is InputRead.Denied, is InputRead.Unreadable -> ExitCode.GENERAL_ERROR
     }

@@ -73,6 +73,15 @@ class ValidationGradleWrapperTest :
                 parsed.validatedDto shouldNotBe null
             }
 
+            test("fails the build on an empty file the same way as on an empty YAML document") {
+                val contents = listOf("  \n", "---\n")
+
+                val failures = contents.map { content -> shouldThrow<GradleException> { parse(content) } }
+
+                failures.map { it::class to it.message } shouldBe
+                    List(2) { GradleException::class to "Vulnlog validation failed." }
+            }
+
             test("fails the build on malformed YAML") {
                 val error = shouldThrow<GradleException> { parse(ValidationDocuments.MALFORMED_YAML) }
 
