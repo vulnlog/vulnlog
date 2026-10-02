@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.finding
 
-/** One problem found while reading a file, with the YAML path and source position when known. */
+/** Stops validation: the file cannot be read into the domain model, so no rule can run on it. */
 data class ParseFailure(
     val message: String,
     val path: String? = null,

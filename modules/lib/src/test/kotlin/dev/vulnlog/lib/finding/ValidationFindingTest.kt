@@ -3,6 +3,9 @@
 
 package dev.vulnlog.lib.finding
 
+import dev.vulnlog.lib.finding.FindingSeverity.ERROR
+import dev.vulnlog.lib.finding.FindingSeverity.INFO
+import dev.vulnlog.lib.finding.FindingSeverity.WARNING
 import dev.vulnlog.lib.fixtures.finding
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -10,43 +13,11 @@ import io.kotest.matchers.shouldBe
 class ValidationFindingTest :
     FunSpec({
 
-        context("highestSeverity") {
+        test("highestSeverity is the most severe one in any order, and INFO without findings") {
+            val severities = listOf(emptyList(), listOf(INFO, ERROR, WARNING), listOf(INFO, WARNING))
 
-            test("no findings count as informational") {
-                val findings = emptyList<ValidationFinding>()
+            val highest = severities.map { list -> list.map { finding(it) }.highestSeverity }
 
-                val highest = findings.highestSeverity
-
-                highest shouldBe FindingSeverity.INFO
-            }
-
-            test("a single finding reports its own severity") {
-                val findings = listOf(finding(FindingSeverity.WARNING))
-
-                val highest = findings.highestSeverity
-
-                highest shouldBe FindingSeverity.WARNING
-            }
-
-            test("an error outranks warnings and infos regardless of order") {
-                val findings =
-                    listOf(
-                        finding(FindingSeverity.INFO),
-                        finding(FindingSeverity.ERROR),
-                        finding(FindingSeverity.WARNING),
-                    )
-
-                val highest = findings.highestSeverity
-
-                highest shouldBe FindingSeverity.ERROR
-            }
-
-            test("a warning outranks infos") {
-                val findings = listOf(finding(FindingSeverity.INFO), finding(FindingSeverity.WARNING))
-
-                val highest = findings.highestSeverity
-
-                highest shouldBe FindingSeverity.WARNING
-            }
+            highest shouldBe listOf(INFO, ERROR, WARNING)
         }
     })

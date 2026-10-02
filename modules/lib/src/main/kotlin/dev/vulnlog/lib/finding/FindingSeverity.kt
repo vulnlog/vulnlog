@@ -3,23 +3,17 @@
 
 package dev.vulnlog.lib.finding
 
+// Declared from least to most severe: comparisons rely on the order.
 enum class FindingSeverity {
-    /**
-     * Observations that help the user improve their file.
-     */
+    /** An observation that could improve the file. */
     INFO,
 
-    /**
-     * File is technically valid, but something is likely wrong or will cause problems in the future.
-     */
+    /** The file is valid, but something is likely wrong or will cause problems later. */
     WARNING,
 
-    /**
-     * Indicate structurally invalid or semantically broken files that would produce incorrect output.
-     */
+    /** The file is structurally invalid or semantically broken; output built from it would be wrong. */
     ERROR,
 }
 
-/** Helper for filtering for specific finding severity levels */
 val ERRORS_ONLY: Set<FindingSeverity> = setOf(FindingSeverity.ERROR)
 val ALL_SEVERITIES: Set<FindingSeverity> = FindingSeverity.entries.toSet()
