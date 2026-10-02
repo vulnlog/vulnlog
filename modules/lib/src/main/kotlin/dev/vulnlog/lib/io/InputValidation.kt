@@ -5,14 +5,6 @@ package dev.vulnlog.lib.io
 
 import java.nio.file.Path
 
-/**
- * Validates the provided file path based on its existence and naming conventions.
- *
- * @param path the file path to be validated.
- * @return an instance of [InputValidationResult], which is either:
- * - `Ok` if the path exists and the file name follows the required pattern.
- * - `Error` if the path does not exist or the file name is invalid.
- */
 fun validateInputPath(path: Path): InputValidationResult {
     if (!path.toFile().exists()) {
         return InputValidationResult.Error("Path '$path' does not exist.")
@@ -24,11 +16,9 @@ fun validateInputPath(path: Path): InputValidationResult {
     return InputValidationResult.Ok(path)
 }
 
-/** Whether [name] is a Vulnlog file name: `vulnlog.yaml`, `vulnlog.yml`, or `*.vl.yaml` / `*.vl.yml`. */
 fun isVulnlogFileName(name: String): Boolean =
     name == "vulnlog.yaml" || name == "vulnlog.yml" || name.endsWith(".vl.yaml") || name.endsWith(".vl.yml")
 
-/** Validates how `<stdin>` combines with file inputs across a multi-input command: at most one `<stdin>`, and never mixed with files. */
 fun validateInputSelection(inputs: List<FileInputOption>): InputSelectionResult {
     val stdinCount = inputs.count { it is FileInputOption.Stdin }
     val hasFiles = inputs.any { it is FileInputOption.File }

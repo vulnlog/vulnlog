@@ -9,38 +9,29 @@ import io.kotest.matchers.shouldBe
 class DiagnosticsTest :
     FunSpec({
 
-        test("NONE discards events") {
-            DiagnosticSink.NONE.verbose("ignored")
-            DiagnosticSink.NONE.debug("ignored")
-        }
-
-        test("verbose builds a verbose event") {
+        test("verbose and debug hand an event of their level to the sink") {
             val events = mutableListOf<DiagnosticEvent>()
             val sink = DiagnosticSink(events::add)
 
             sink.verbose("parsed file")
-
-            events shouldBe listOf(DiagnosticEvent(DiagnosticLevel.VERBOSE, "parsed file"))
-        }
-
-        test("debug builds a debug event") {
-            val events = mutableListOf<DiagnosticEvent>()
-            val sink = DiagnosticSink(events::add)
-
             sink.debug("timing")
 
-            events shouldBe listOf(DiagnosticEvent(DiagnosticLevel.DEBUG, "timing"))
+            events shouldBe
+                listOf(
+                    DiagnosticEvent(DiagnosticLevel.VERBOSE, "parsed file"),
+                    DiagnosticEvent(DiagnosticLevel.DEBUG, "timing"),
+                )
         }
 
-        context("renderDiagnostic") {
+        test("renderDiagnostic prefixes the message with its level") {
+            val events =
+                listOf(
+                    DiagnosticEvent(DiagnosticLevel.VERBOSE, "parsed file"),
+                    DiagnosticEvent(DiagnosticLevel.DEBUG, "timing"),
+                )
 
-            test("prefixes verbose events") {
-                renderDiagnostic(DiagnosticEvent(DiagnosticLevel.VERBOSE, "parsed file")) shouldBe
-                    "verbose: parsed file"
-            }
+            val lines = events.map(::renderDiagnostic)
 
-            test("prefixes debug events") {
-                renderDiagnostic(DiagnosticEvent(DiagnosticLevel.DEBUG, "timing")) shouldBe "debug: timing"
-            }
+            lines shouldBe listOf("verbose: parsed file", "debug: timing")
         }
     })
