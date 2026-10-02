@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.finding
 
-/** The domain rules a Vulnlog file is checked against. */
 enum class Rule {
     ACCEPTED_CRITICAL_RISK,
     ANALYZED_BEFORE_REPORTED,

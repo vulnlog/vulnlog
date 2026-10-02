@@ -3,7 +3,6 @@
 
 package dev.vulnlog.lib.finding
 
-/** The canonical style rules a Vulnlog file is checked against. */
 enum class FormatRule {
     COMMENTS_NOT_PRESERVED,
     NON_CANONICAL_ARRAY_STYLE,
@@ -13,7 +12,7 @@ enum class FormatRule {
     NON_CANONICAL_LAYOUT,
 }
 
-/** A single deviation from the canonical style. [path] may be empty for file-level findings. */
+/** [path] is empty for a finding about the whole file. */
 data class FormatFinding(
     val rule: FormatRule,
     val path: String,
