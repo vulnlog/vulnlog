@@ -12,7 +12,7 @@ import java.io.File
  * pure layers free of the clock, randomness, the environment and the file system. No extra dependency.
  *
  * Packages in [strictPackages] already follow the rules and fail the build on a violation. Every other package is only
- * reported while the migration is in progress. A package that no layer names yet, such as `shell`, is not checked.
+ * reported while the migration is in progress. A package that no layer names is not checked.
  */
 class ArchitectureTest :
     FunSpec({

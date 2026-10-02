@@ -26,6 +26,8 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.readOpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
@@ -37,8 +39,6 @@ import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexReport
 import dev.vulnlog.lib.render.renderOpenVexWritten
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.FileOutputOption
 import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID

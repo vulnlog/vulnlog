@@ -8,6 +8,7 @@ import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
+import dev.vulnlog.lib.app.ChangelogFormatRequest
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.applyFilter
@@ -22,7 +23,6 @@ import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.model.reporting.ReportingChangelogProject
 import dev.vulnlog.lib.model.reporting.ReportingChangelogRelease
-import dev.vulnlog.lib.shell.ChangelogFormatRequest
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty

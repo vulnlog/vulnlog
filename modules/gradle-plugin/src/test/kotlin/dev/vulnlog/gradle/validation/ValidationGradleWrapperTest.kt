@@ -3,14 +3,14 @@
 
 package dev.vulnlog.gradle.validation
 
+import dev.vulnlog.lib.app.ValidationRequest
 import dev.vulnlog.lib.core.validation.ValidationConfig
 import dev.vulnlog.lib.core.validation.ValidationOutcome
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.Rule
 import dev.vulnlog.lib.fixtures.ValidationDocuments
-import dev.vulnlog.lib.shell.FileInputOption
-import dev.vulnlog.lib.shell.ValidationRequest
+import dev.vulnlog.lib.io.FileInputOption
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec

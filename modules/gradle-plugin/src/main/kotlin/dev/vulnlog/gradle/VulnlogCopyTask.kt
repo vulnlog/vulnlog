@@ -14,7 +14,7 @@ import dev.vulnlog.lib.document.formatCopiedMessage
 import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
-import dev.vulnlog.lib.shell.FileInputOption
+import dev.vulnlog.lib.io.FileInputOption
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection

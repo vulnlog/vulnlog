@@ -3,7 +3,7 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.lib.shell.ChangelogFormatRequest
+import dev.vulnlog.lib.app.ChangelogFormatRequest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile

@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.shell
+package dev.vulnlog.lib.io
 
 /**
  * Receiver for optional diagnostic events. Shells install a sink that filters by the requested
