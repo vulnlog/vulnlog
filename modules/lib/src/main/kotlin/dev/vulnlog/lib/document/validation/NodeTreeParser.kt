@@ -3,8 +3,8 @@
 
 package dev.vulnlog.lib.document.validation
 
-import dev.vulnlog.lib.model.finding.FailureLocation
-import dev.vulnlog.lib.model.finding.ParseFailure
+import dev.vulnlog.lib.finding.FailureLocation
+import dev.vulnlog.lib.finding.ParseFailure
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.lowlevel.Compose
 import org.snakeyaml.engine.v2.exceptions.MarkedYamlEngineException

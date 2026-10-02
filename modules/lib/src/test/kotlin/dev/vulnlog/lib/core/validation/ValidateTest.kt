@@ -7,10 +7,10 @@ import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.Rule
+import dev.vulnlog.lib.finding.errors
 import dev.vulnlog.lib.fixtures.ValidationDocuments
-import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.finding.Rule
-import dev.vulnlog.lib.model.finding.errors
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize

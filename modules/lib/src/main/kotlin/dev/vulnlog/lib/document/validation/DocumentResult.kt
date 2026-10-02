@@ -4,8 +4,8 @@
 package dev.vulnlog.lib.document.validation
 
 import dev.vulnlog.lib.document.yaml.dtoMapper
-import dev.vulnlog.lib.model.finding.FailureLocation
-import dev.vulnlog.lib.model.finding.ParseFailure
+import dev.vulnlog.lib.finding.FailureLocation
+import dev.vulnlog.lib.finding.ParseFailure
 import org.snakeyaml.engine.v2.constructor.StandardConstructor
 import org.snakeyaml.engine.v2.exceptions.MarkedYamlEngineException
 import org.snakeyaml.engine.v2.exceptions.YamlEngineException

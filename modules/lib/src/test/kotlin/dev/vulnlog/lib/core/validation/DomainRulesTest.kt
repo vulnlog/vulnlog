@@ -3,6 +3,9 @@
 
 package dev.vulnlog.lib.core.validation
 
+import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.Rule
+import dev.vulnlog.lib.finding.ValidationFinding
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
@@ -20,9 +23,6 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.finding.Rule
-import dev.vulnlog.lib.model.finding.ValidationFinding
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly

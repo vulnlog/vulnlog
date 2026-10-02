@@ -6,10 +6,10 @@ package dev.vulnlog.lib.core.validation
 import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.formatSummary
 import dev.vulnlog.lib.core.shortenSchemaVersion
+import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.ParseFailure
+import dev.vulnlog.lib.finding.ValidationFinding
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.finding.ParseFailure
-import dev.vulnlog.lib.model.finding.ValidationFinding
 
 /** One line per finding of a reported severity, plus a summary. Blank when nothing is reported. */
 fun renderFindings(

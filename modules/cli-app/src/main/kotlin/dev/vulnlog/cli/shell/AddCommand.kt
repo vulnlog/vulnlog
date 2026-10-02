@@ -29,12 +29,12 @@ import dev.vulnlog.lib.document.formatAddOutcomeMessage
 import dev.vulnlog.lib.document.formatCommentsDroppedWarning
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.finding.FindingSeverity
 import dev.vulnlog.lib.shell.FileInputOption
 import java.time.LocalDate
 import kotlin.io.path.writeText

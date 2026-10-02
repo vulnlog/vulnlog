@@ -19,7 +19,7 @@ import dev.vulnlog.lib.document.formatYamlOutcome
 import dev.vulnlog.lib.document.renderFormatFinding
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.shell.DiagnosticLevel
 import dev.vulnlog.lib.shell.FileInputOption
 import kotlin.io.path.writeText

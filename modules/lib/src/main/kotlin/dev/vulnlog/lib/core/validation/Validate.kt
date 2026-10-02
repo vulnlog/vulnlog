@@ -22,13 +22,13 @@ import dev.vulnlog.lib.document.validation.locateFailures
 import dev.vulnlog.lib.document.validation.parseToNodeTree
 import dev.vulnlog.lib.document.validation.resolveSchemaVersion
 import dev.vulnlog.lib.document.validation.v1DtoRules
+import dev.vulnlog.lib.finding.FindingSeverity.ERROR
+import dev.vulnlog.lib.finding.FindingSeverity.INFO
+import dev.vulnlog.lib.finding.FindingSeverity.WARNING
+import dev.vulnlog.lib.finding.ValidationFinding
+import dev.vulnlog.lib.finding.highestSeverity
 import dev.vulnlog.lib.model.SchemaVersion
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity.ERROR
-import dev.vulnlog.lib.model.finding.FindingSeverity.INFO
-import dev.vulnlog.lib.model.finding.FindingSeverity.WARNING
-import dev.vulnlog.lib.model.finding.ValidationFinding
-import dev.vulnlog.lib.model.finding.highestSeverity
 
 /**
  * Reads [document] to the Vulnlog DTO representation or returns a [ValidationOutcome] containing the details of why parsing and validation failed.

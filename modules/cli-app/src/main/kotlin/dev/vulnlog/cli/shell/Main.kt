@@ -18,7 +18,7 @@ import com.github.ajalt.clikt.parameters.options.versionOption
 import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.shell.isVulnlogFileName
 import kotlin.system.exitProcess
 

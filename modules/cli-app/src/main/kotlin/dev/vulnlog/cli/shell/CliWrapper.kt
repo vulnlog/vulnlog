@@ -17,7 +17,7 @@ import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.shell.DirectoryOutputOption
 import dev.vulnlog.lib.shell.FileInputOption
 import dev.vulnlog.lib.shell.FileOutputOption

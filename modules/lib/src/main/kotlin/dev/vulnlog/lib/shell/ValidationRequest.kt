@@ -4,8 +4,8 @@
 package dev.vulnlog.lib.shell
 
 import dev.vulnlog.lib.core.validation.ValidationConfig
-import dev.vulnlog.lib.model.finding.ERRORS_ONLY
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.ERRORS_ONLY
+import dev.vulnlog.lib.finding.FindingSeverity
 
 /**
  * What a command asks of a validation run: the policy the core applies, and the severities the

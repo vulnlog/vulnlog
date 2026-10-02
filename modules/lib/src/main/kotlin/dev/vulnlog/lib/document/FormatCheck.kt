@@ -15,8 +15,8 @@ import dev.vulnlog.lib.document.yaml.lineOf
 import dev.vulnlog.lib.document.yaml.mappingKeys
 import dev.vulnlog.lib.document.yaml.scalarValueOf
 import dev.vulnlog.lib.document.yaml.walkValues
-import dev.vulnlog.lib.model.finding.FormatFinding
-import dev.vulnlog.lib.model.finding.FormatRule
+import dev.vulnlog.lib.finding.FormatFinding
+import dev.vulnlog.lib.finding.FormatRule
 import org.snakeyaml.engine.v2.common.FlowStyle
 import org.snakeyaml.engine.v2.common.ScalarStyle
 import org.snakeyaml.engine.v2.nodes.MappingNode

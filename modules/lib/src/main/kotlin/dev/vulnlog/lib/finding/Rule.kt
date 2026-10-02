@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.model.finding
+package dev.vulnlog.lib.finding
 
 /** The domain rules a Vulnlog file is checked against. */
 enum class Rule {

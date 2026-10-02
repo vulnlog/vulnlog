@@ -6,6 +6,9 @@ package dev.vulnlog.lib.core.validation
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.vex.filterReleasePurlsMatchingVulnerabilityEntryTags
 import dev.vulnlog.lib.core.vex.releaseStatuses
+import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.Rule
+import dev.vulnlog.lib.finding.ValidationFinding
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReporterType
@@ -13,9 +16,6 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.finding.Rule
-import dev.vulnlog.lib.model.finding.ValidationFinding
 
 val v1DomainRules =
     listOf(

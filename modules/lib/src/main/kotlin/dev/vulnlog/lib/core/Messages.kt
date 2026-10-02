@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.core
 
-import dev.vulnlog.lib.model.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FindingSeverity
 
 /**
  * The verbs allowed on status lines. One vocabulary for every surface, so the CLI and the

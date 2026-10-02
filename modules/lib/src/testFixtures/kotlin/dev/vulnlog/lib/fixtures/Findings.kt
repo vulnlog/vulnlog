@@ -3,9 +3,9 @@
 
 package dev.vulnlog.lib.fixtures
 
-import dev.vulnlog.lib.model.finding.FindingSeverity
-import dev.vulnlog.lib.model.finding.Rule
-import dev.vulnlog.lib.model.finding.ValidationFinding
+import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.Rule
+import dev.vulnlog.lib.finding.ValidationFinding
 
 fun finding(
     severity: FindingSeverity,
