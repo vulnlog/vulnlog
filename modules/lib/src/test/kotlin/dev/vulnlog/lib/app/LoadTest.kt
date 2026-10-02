@@ -11,12 +11,12 @@ import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.finding.Rule
 import dev.vulnlog.lib.finding.errors
 import dev.vulnlog.lib.fixtures.ValidationDocuments
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 
 private const val TEST_FILE_NAME = "test.vl.yaml"
@@ -25,12 +25,19 @@ private fun document(content: String) = InputDocument(content, TEST_FILE_NAME)
 
 private val STRICT = ValidationConfig(strict = true)
 
+private fun ValidationOutcome<*>.kind(): String =
+    when (this) {
+        is ValidationOutcome.Ok -> "ok"
+        is InputRejected.Unparsable -> "unparsable"
+        is InputRejected.Invalid -> "invalid"
+    }
+
 class LoadTest :
     FunSpec({
 
         context("parseDocument") {
 
-            test("a clean document yields the parsed project without findings") {
+            test("a clean document yields its DTO without findings and keeps the document") {
                 val input = document(ValidationDocuments.CLEAN)
 
                 val outcome = parseDocument(input)
@@ -38,24 +45,17 @@ class LoadTest :
                 val ok = outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ParsedVulnlogProject>>()
                 ok.findings.shouldBeEmpty()
                 ok.project.inputDocument shouldBe input
+                val dto = ok.project.validatedDto.shouldBeInstanceOf<VulnlogFileV1Dto>()
+                dto.vulnerabilities shouldHaveSize 1
             }
 
-            test("the document is carried through unchanged") {
-                val outcome = parseDocument(document(ValidationDocuments.CLEAN))
-
-                val ok = outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ParsedVulnlogProject>>()
-                ok.project.validatedDto
-                    .shouldBeInstanceOf<VulnlogFileV1Dto>()
-                    .vulnerabilities shouldHaveSize 1
-            }
-
-            test("a document whose domain rules do not hold still parses") {
+            test("a document whose domain rules do not hold still parses, so it can be formatted") {
                 val outcome = parseDocument(document(ValidationDocuments.DANGLING_RELEASE))
 
                 outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ParsedVulnlogProject>>()
             }
 
-            test("malformed YAML stops the run with a problem") {
+            test("malformed YAML stops the run with one problem and no findings") {
                 val outcome = parseDocument(document(ValidationDocuments.MALFORMED_YAML))
 
                 val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
@@ -63,27 +63,25 @@ class LoadTest :
                 stopped.findings.shouldBeEmpty()
             }
 
-            test("a document without data stops the run as an empty YAML document") {
-                val contents = listOf("", "  \n", "---\n", "# only a comment\n")
+            test("an unsupported schema version, an unknown property or no data stops the run, naming the cause") {
+                val contents =
+                    listOf(
+                        ValidationDocuments.UNSUPPORTED_SCHEMA_VERSION,
+                        ValidationDocuments.UNKNOWN_PROPERTY,
+                        "",
+                        "  \n",
+                        "---\n",
+                        "# only a comment\n",
+                    )
 
                 val outcomes = contents.map { parseDocument(document(it)) }
 
                 val problems = outcomes.map { it.shouldBeInstanceOf<InputRejected.Unparsable>().problems }
-                problems.map { it.single().message } shouldBe List(4) { "Empty YAML document" }
-            }
-
-            test("an unsupported schema version stops the run and names the version") {
-                val outcome = parseDocument(document(ValidationDocuments.UNSUPPORTED_SCHEMA_VERSION))
-
-                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
-                stopped.problems.single().message shouldContain "Unsupported schema version '99'"
-            }
-
-            test("an unknown property stops the run and names the property") {
-                val outcome = parseDocument(document(ValidationDocuments.UNKNOWN_PROPERTY))
-
-                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
-                stopped.problems.single().message shouldContain "Unknown property 'bogus'"
+                problems.map { it.single().message } shouldBe
+                    listOf(
+                        "Unsupported schema version '99'. Try updating vulnlog.",
+                        "Unknown property 'bogus'. Try updating vulnlog.",
+                    ) + List(4) { "Empty YAML document" }
             }
         }
 
@@ -97,90 +95,72 @@ class LoadTest :
                 ok.project.vulnlogProjectFile.vulnerabilities shouldHaveSize 1
             }
 
-            test("a value without a domain representation stops the run") {
+            test("a stop in a parse stage is passed on") {
+                val outcome = validateDocument(document(ValidationDocuments.MALFORMED_YAML))
+
+                outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
+            }
+
+            test("a value without a domain representation stops the run, located by path and position") {
                 val outcome = validateDocument(document(ValidationDocuments.UNMAPPABLE_VULN_ID))
 
+                val problem = outcome.shouldBeInstanceOf<InputRejected.Unparsable>().problems.single()
+                problem.path shouldBe "vulnerabilities[UNKNOWN-2026-1234].id"
+                problem.location shouldNotBe null
+            }
+
+            test("a stop in the domain stage keeps the warnings of the DTO stage") {
+                val content =
+                    vulnlogDocument(
+                        vulnId = "UNKNOWN-2026-1234",
+                        verdictBlock = "    verdict: risk acceptable\n    severity: low",
+                    )
+
+                val outcome = validateDocument(document(content))
+
                 val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
-                stopped.problems
-                    .single()
-                    .path shouldBe "vulnerabilities[UNKNOWN-2026-1234].id"
-            }
-
-            test("a located problem carries its source position") {
-                val outcome = validateDocument(document(ValidationDocuments.UNMAPPABLE_VULN_ID))
-
-                val stopped = outcome.shouldBeInstanceOf<InputRejected.Unparsable>()
-                stopped.problems.single().location shouldNotBe null
+                stopped.findings.map { it.rule } shouldBe listOf(Rule.DEPRECATED_VERDICT)
             }
         }
 
-        context("informational findings") {
+        context("findings") {
 
-            test("do not stop the run and are carried to the caller") {
-                val outcome = validateDocument(document(ValidationDocuments.UNREFERENCED_RELEASE))
+            test("an info never stops the run, in strict mode neither") {
+                val configs = listOf(ValidationConfig(), STRICT)
 
-                val ok = outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ValidVulnlogProject>>()
-                with(ok.findings.single()) {
-                    severity shouldBe FindingSeverity.INFO
-                    rule shouldBe Rule.UNREFERENCED_RELEASE_ID
-                }
+                val outcomes = configs.map { validateDocument(document(ValidationDocuments.UNREFERENCED_RELEASE), it) }
+
+                outcomes.map { it.kind() to it.findings.single().rule } shouldBe
+                    List(2) { "ok" to Rule.UNREFERENCED_RELEASE_ID }
             }
 
-            test("do not stop the run in strict mode either") {
-                val outcome = validateDocument(document(ValidationDocuments.UNREFERENCED_RELEASE), STRICT)
+            test("a warning of the DTO or the domain rules stops the run only in strict mode") {
+                val dtoWarning = document(ValidationDocuments.DEPRECATED_VERDICT)
+                val domainWarning = document(ValidationDocuments.ANALYZED_BEFORE_REPORTED)
 
-                outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ValidVulnlogProject>>()
-            }
-        }
+                val outcomes =
+                    listOf(
+                        parseDocument(dtoWarning),
+                        parseDocument(dtoWarning, STRICT),
+                        validateDocument(domainWarning),
+                        validateDocument(domainWarning, STRICT),
+                    )
 
-        context("warnings") {
-
-            test("a DTO warning does not stop the run") {
-                val outcome = parseDocument(document(ValidationDocuments.DEPRECATED_VERDICT))
-
-                val ok = outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ParsedVulnlogProject>>()
-                ok.findings
-                    .single()
-                    .rule shouldBe Rule.DEPRECATED_VERDICT
-            }
-
-            test("a DTO warning stops the run in strict mode, carrying the finding") {
-                val outcome = parseDocument(document(ValidationDocuments.DEPRECATED_VERDICT), STRICT)
-
-                val stopped = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
-                stopped.findings
-                    .single()
-                    .rule shouldBe Rule.DEPRECATED_VERDICT
+                outcomes.map { it.kind() to it.findings.single().rule } shouldBe
+                    listOf(
+                        "ok" to Rule.DEPRECATED_VERDICT,
+                        "invalid" to Rule.DEPRECATED_VERDICT,
+                        "ok" to Rule.ANALYZED_BEFORE_REPORTED,
+                        "invalid" to Rule.ANALYZED_BEFORE_REPORTED,
+                    )
             }
 
-            test("a domain warning does not stop the run") {
-                val outcome = validateDocument(document(ValidationDocuments.ANALYZED_BEFORE_REPORTED))
-
-                val ok = outcome.shouldBeInstanceOf<ValidationOutcome.Ok<ValidVulnlogProject>>()
-                with(ok.findings.single()) {
-                    severity shouldBe FindingSeverity.WARNING
-                    rule shouldBe Rule.ANALYZED_BEFORE_REPORTED
-                }
-            }
-
-            test("a domain warning stops the run in strict mode") {
-                val outcome = validateDocument(document(ValidationDocuments.ANALYZED_BEFORE_REPORTED), STRICT)
-
-                val stopped = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
-                stopped.findings shouldHaveSize 1
-            }
-        }
-
-        context("errors") {
-
-            test("a broken domain rule stops the run, carrying the finding") {
+            test("an error stops the run, carrying the finding") {
                 val outcome = validateDocument(document(ValidationDocuments.DANGLING_RELEASE))
 
-                val stopped = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
-                with(stopped.findings.errors.single()) {
-                    severity shouldBe FindingSeverity.ERROR
-                    rule shouldBe Rule.DANGLING_RELEASE_REFERENCE
-                }
+                val invalid = outcome.shouldBeInstanceOf<InputRejected.Invalid>()
+                val error = invalid.findings.errors.single()
+                error.severity to error.rule shouldBe (FindingSeverity.ERROR to Rule.DANGLING_RELEASE_REFERENCE)
             }
         }
     })

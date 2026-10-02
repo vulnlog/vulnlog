@@ -13,7 +13,7 @@ sealed interface InputRejected : ValidationOutcome<Nothing> {
         override val findings: List<ValidationFinding>,
     ) : InputRejected
 
-    /** Every stage produced its representation, but at least one rule refused the result. */
+    /** Every stage produced its representation, but a rule refused it: an error, or a warning in strict mode. */
     data class Invalid(
         override val findings: List<ValidationFinding>,
     ) : InputRejected

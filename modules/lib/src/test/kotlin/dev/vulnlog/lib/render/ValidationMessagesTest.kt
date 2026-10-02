@@ -3,7 +3,11 @@
 
 package dev.vulnlog.lib.render
 
-import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.finding.FailureLocation
+import dev.vulnlog.lib.finding.FindingSeverity.ERROR
+import dev.vulnlog.lib.finding.FindingSeverity.INFO
+import dev.vulnlog.lib.finding.FindingSeverity.WARNING
+import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.finding
 import dev.vulnlog.lib.fixtures.releaseEntry
@@ -16,10 +20,10 @@ import io.kotest.matchers.shouldBe
 class ValidationMessagesTest :
     FunSpec({
 
-        context("renderValidationFindings") {
+        context("renderFindings") {
 
-            test("renders one line per finding followed by a summary") {
-                val findings = listOf(finding(FindingSeverity.ERROR), finding(FindingSeverity.WARNING))
+            test("renders one line per finding, followed by a summary") {
+                val findings = listOf(finding(ERROR), finding(WARNING))
 
                 val rendered = renderFindings("vulnlog.yaml", findings)
 
@@ -31,10 +35,10 @@ class ValidationMessagesTest :
                     """.trimIndent()
             }
 
-            test("keeps only the findings of the requested severities") {
-                val findings = listOf(finding(FindingSeverity.ERROR), finding(FindingSeverity.WARNING))
+            test("keeps only the findings of the reported severities") {
+                val findings = listOf(finding(ERROR), finding(WARNING))
 
-                val rendered = renderFindings("vulnlog.yaml", findings, setOf(FindingSeverity.ERROR))
+                val rendered = renderFindings("vulnlog.yaml", findings, setOf(ERROR))
 
                 rendered shouldBe
                     """
@@ -43,72 +47,68 @@ class ValidationMessagesTest :
                     """.trimIndent()
             }
 
-            test("renders nothing when no finding has a requested severity") {
-                val findings = listOf(finding(FindingSeverity.INFO))
+            test("renders nothing when no finding has a reported severity") {
+                val findingLists = listOf(emptyList(), listOf(finding(INFO)))
 
-                val rendered = renderFindings("vulnlog.yaml", findings, setOf(FindingSeverity.ERROR))
+                val rendered = findingLists.map { renderFindings("vulnlog.yaml", it, setOf(ERROR)) }
 
-                rendered shouldBe ""
-            }
-
-            test("renders nothing when there are no findings") {
-                val rendered = renderFindings("vulnlog.yaml", emptyList())
-
-                rendered shouldBe ""
+                rendered shouldBe listOf("", "")
             }
         }
 
-        context("renderValidationSummary") {
+        test("renderProblem names the position and the path of a problem, as far as they are known") {
+            val problems =
+                listOf(
+                    ParseFailure(
+                        "Invalid verdict: maybe",
+                        "vulnerabilities[CVE-2026-1].verdict",
+                        FailureLocation(7, 14),
+                    ),
+                    ParseFailure("Missing schemaVersion", "schemaVersion"),
+                    ParseFailure("Empty YAML document"),
+                )
 
-            test("reports 'no findings' when there are none") {
-                val rendered = renderValidationSummary("vulnlog.yaml", emptyList())
+            val rendered = problems.map { renderProblem("vulnlog.yaml", it) }
 
-                rendered shouldBe "validated vulnlog.yaml: no findings"
-            }
-
-            test("reports the counts per severity") {
-                val findings =
-                    listOf(
-                        finding(FindingSeverity.ERROR),
-                        finding(FindingSeverity.WARNING),
-                        finding(FindingSeverity.WARNING),
-                    )
-
-                val rendered = renderValidationSummary("vulnlog.yaml", findings)
-
-                rendered shouldBe "validated vulnlog.yaml: 1 error, 2 warnings"
-            }
-
-            test("counts findings the output holds back") {
-                val findings = listOf(finding(FindingSeverity.INFO))
-
-                val rendered = renderValidationSummary("vulnlog.yaml", findings)
-
-                rendered shouldBe "validated vulnlog.yaml: 1 info"
-            }
+            rendered shouldBe
+                listOf(
+                    "error: vulnlog.yaml: 7:14: vulnerabilities[CVE-2026-1].verdict: Invalid verdict: maybe",
+                    "error: vulnlog.yaml: schemaVersion: Missing schemaVersion",
+                    "error: vulnlog.yaml: Empty YAML document",
+                )
         }
 
-        context("renderParsedProject") {
+        test("renderValidationSummary counts every finding, including those the output holds back") {
+            val findingLists =
+                listOf(emptyList(), listOf(finding(ERROR), finding(WARNING), finding(WARNING)), listOf(finding(INFO)))
 
-            test("states the schema version and the entry counts") {
-                val file =
+            val rendered = findingLists.map { renderValidationSummary("vulnlog.yaml", it) }
+
+            rendered shouldBe
+                listOf(
+                    "validated vulnlog.yaml: no findings",
+                    "validated vulnlog.yaml: 1 error, 2 warnings",
+                    "validated vulnlog.yaml: 1 info",
+                )
+        }
+
+        test("renderParsedProject states the schema version and the entry counts") {
+            val files =
+                listOf(
                     vulnlogFile(
                         releases = listOf(releaseEntry("v1.0"), releaseEntry("v2.0")),
                         tags = listOf(tagEntry("backend")),
                         vulnerabilities = listOf(vulnerability(cve("CVE-2021-1"))),
-                    )
+                    ),
+                    vulnlogFile(),
+                )
 
-                val rendered = renderParsedProject("vulnlog.yaml", file)
+            val rendered = files.map { renderParsedProject("vulnlog.yaml", it) }
 
-                rendered shouldBe
-                    "parsed vulnlog.yaml: schema version 1, releases: 2, tags: 1, vulnerabilities: 1"
-            }
-
-            test("counts an empty file as zero of everything") {
-                val rendered = renderParsedProject("vulnlog.yaml", vulnlogFile())
-
-                rendered shouldBe
-                    "parsed vulnlog.yaml: schema version 1, releases: 0, tags: 0, vulnerabilities: 0"
-            }
+            rendered shouldBe
+                listOf(
+                    "parsed vulnlog.yaml: schema version 1, releases: 2, tags: 1, vulnerabilities: 1",
+                    "parsed vulnlog.yaml: schema version 1, releases: 0, tags: 0, vulnerabilities: 0",
+                )
         }
     })
