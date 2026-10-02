@@ -3,8 +3,10 @@
 
 package dev.vulnlog.gradle
 
+import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.render.Message
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -30,11 +32,11 @@ abstract class VulnlogOpenVexUpdateTask : DefaultTask() {
         val target = baseline.get().asFile
         val content = source.readBytes()
         if (target.isFile && target.readBytes().contentEquals(content)) {
-            logger.lifecycle(formatStatus(StatusVerb.UNCHANGED, target.absolutePath))
+            logger.log(Message.Status(formatStatus(StatusVerb.UNCHANGED, target.absolutePath)))
             return
         }
         target.parentFile?.mkdirs()
         target.writeBytes(content)
-        logger.lifecycle(formatStatus(StatusVerb.WROTE, target.absolutePath))
+        logger.log(Message.Status(formatStatus(StatusVerb.WROTE, target.absolutePath)))
     }
 }

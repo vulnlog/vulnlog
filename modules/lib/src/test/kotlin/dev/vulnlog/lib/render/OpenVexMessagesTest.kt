@@ -83,21 +83,21 @@ private val taggedFile =
 class OpenVexMessagesTest :
     FunSpec({
 
-        context("renderOpenVexReport") {
+        context("renderOpenVexMessages") {
 
             test("reports the scope, what is left out, the anchors and the counts, in print order") {
                 val scope = OpenVexScope(releases = setOf(release("1.0.0")), tags = setOf(tag("container")))
                 val collection = collectOpenVexStatements(taggedFile, scope)
                 val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
 
-                val lines = renderOpenVexReport(outcome)
+                val messages = renderOpenVexMessages(outcome)
 
-                lines shouldContainExactly
+                messages shouldContainExactly
                     listOf(
-                        OpenVexLine.Verbose("release scope: 1.0.0"),
-                        OpenVexLine.Verbose("tag scope matched tags: container"),
-                        OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
-                        OpenVexLine.Verbose("collected 1 statement: 1 under_investigation"),
+                        Message.Verbose("release scope: 1.0.0"),
+                        Message.Verbose("tag scope matched tags: container"),
+                        Message.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
+                        Message.Verbose("collected 1 statement: 1 under_investigation"),
                     )
             }
 
@@ -105,17 +105,17 @@ class OpenVexMessagesTest :
                 val collection = collectOpenVexStatements(file)
                 val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
 
-                val lines = renderOpenVexReport(outcome)
+                val messages = renderOpenVexMessages(outcome)
 
-                lines shouldContainExactly
+                messages shouldContainExactly
                     listOf(
-                        OpenVexLine.Warning("releases without purls are not part of the document: '1.0.1'"),
-                        OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
-                        OpenVexLine.Debug("skipped CVE-2026-2222: no release it applies to declares purls in scope"),
-                        OpenVexLine.Debug("skipped CVE-2026-3333: it references no release"),
-                        OpenVexLine.Debug("skipped CVE-2026-4444: it has no tags to match a release purl"),
-                        OpenVexLine.Debug("skipped CVE-2026-5555: no release purl in scope shares one of its tags"),
-                        OpenVexLine.Verbose("collected 1 statement: 1 under_investigation"),
+                        Message.Warning("releases without purls are not part of the document: '1.0.1'"),
+                        Message.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
+                        Message.Debug("skipped CVE-2026-2222: no release it applies to declares purls in scope"),
+                        Message.Debug("skipped CVE-2026-3333: it references no release"),
+                        Message.Debug("skipped CVE-2026-4444: it has no tags to match a release purl"),
+                        Message.Debug("skipped CVE-2026-5555: no release purl in scope shares one of its tags"),
+                        Message.Verbose("collected 1 statement: 1 under_investigation"),
                     )
             }
 
@@ -126,14 +126,14 @@ class OpenVexMessagesTest :
                 val collection = collectOpenVexStatements(file, OpenVexScope(tags = setOf(tag("container"))))
                 val outcome = OpenVexOutcome.NoStatementApplies(collection, OpenVexEmptyReason.NO_ENTRY_IN_TAG_SCOPE)
 
-                val lines = renderOpenVexReport(outcome)
+                val messages = renderOpenVexMessages(outcome)
 
-                lines shouldContainExactly
+                messages shouldContainExactly
                     listOf(
-                        OpenVexLine.Verbose("tag scope matched tags: container"),
-                        OpenVexLine.Warning("releases without purls in scope are not part of the document: '1.0.1'"),
-                        OpenVexLine.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
-                        OpenVexLine.Debug("skipped CVE-2026-1111: no release it applies to declares purls in scope"),
+                        Message.Verbose("tag scope matched tags: container"),
+                        Message.Warning("releases without purls in scope are not part of the document: '1.0.1'"),
+                        Message.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
+                        Message.Debug("skipped CVE-2026-1111: no release it applies to declares purls in scope"),
                     )
             }
 
@@ -144,9 +144,9 @@ class OpenVexMessagesTest :
                         FilterRejected(emptyList()),
                     )
 
-                val lines = outcomes.flatMap(::renderOpenVexReport)
+                val messages = outcomes.flatMap(::renderOpenVexMessages)
 
-                lines shouldBe emptyList()
+                messages shouldBe emptyList()
             }
         }
 
@@ -154,9 +154,9 @@ class OpenVexMessagesTest :
             val collection = collectOpenVexStatements(file)
             val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion(3), content = "")
 
-            val line = renderOpenVexWritten("vex.json", outcome)
+            val message = renderOpenVexWritten("vex.json", outcome)
 
-            line shouldBe "wrote vex.json: openvex format, version 3, 1 statement"
+            message shouldBe Message.Verbose("wrote vex.json: openvex format, version 3, 1 statement")
         }
 
         test("renderOpenVexFailure words every filter problem of a rejected scope") {
@@ -205,9 +205,9 @@ class OpenVexMessagesTest :
         }
 
         test("renderOpenVexNewDocument says that the baseline is missing and a new document is issued") {
-            val line = renderOpenVexNewDocument("vex.json")
+            val message = renderOpenVexNewDocument("vex.json")
 
-            line shouldBe "baseline 'vex.json' does not exist yet, issuing a new document"
+            message shouldBe Message.Verbose("baseline 'vex.json' does not exist yet, issuing a new document")
         }
 
         test("renderOpenVexFailure says that no statement applies and names what to change for every reason") {
