@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.io.FileInputOption
+import dev.vulnlog.lib.model.OutputWrite
 import org.gradle.api.GradleException
 import java.io.File
 
@@ -29,3 +30,6 @@ fun singleVulnlogFileInput(
     }
     return inputFiles.single()
 }
+
+/** Returns the write when it succeeded, so a caller can tell [OutputWrite.Unchanged] apart. */
+fun writeOrFail(write: OutputWrite): OutputWrite = if (write is OutputWrite.Failed) throw failure(write) else write

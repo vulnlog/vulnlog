@@ -6,6 +6,7 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.filter.resolveFilterOrFail
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.app.ChangelogFormatRequest
@@ -19,6 +20,7 @@ import dev.vulnlog.lib.core.reporting.formatChangelogMarkdown
 import dev.vulnlog.lib.core.reporting.formatChangelogText
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.model.reporting.ReportingChangelogProject
@@ -102,8 +104,7 @@ abstract class VulnlogChangelogReportTask : DefaultTask() {
             }
 
         val out = outputFile.get().asFile
-        out.parentFile?.mkdirs()
-        out.writeText(content)
+        writeOrFail(writeOutput(out.toPath(), content, createDirectories = true))
         sink.verbose("wrote ${out.path}")
         logger.lifecycle(formatStatus(StatusVerb.WROTE, out.absolutePath))
     }

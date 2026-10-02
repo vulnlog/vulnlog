@@ -30,7 +30,7 @@ private fun readFile(path: Path): InputRead {
         } catch (_: AccessDeniedException) {
             return InputRead.Denied(source)
         } catch (e: IOException) {
-            return InputRead.Unreadable(source, e.message ?: e.javaClass.simpleName)
+            return InputRead.Unreadable(source, e.reason())
         }
     return InputRead.Read(InputDocument(text, path.name, path))
 }
@@ -40,7 +40,7 @@ private fun readStdin(): InputRead {
         try {
             System.`in`.bufferedReader().readText()
         } catch (e: IOException) {
-            return InputRead.Unreadable(STDIN, e.message ?: e.javaClass.simpleName)
+            return InputRead.Unreadable(STDIN, e.reason())
         }
     return InputRead.Read(InputDocument(text, STDIN))
 }

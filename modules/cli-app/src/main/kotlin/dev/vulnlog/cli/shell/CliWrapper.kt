@@ -12,11 +12,8 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
-import dev.vulnlog.lib.codec.suppression.SuppressionFile
-import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.DirectoryOutputOption
 import dev.vulnlog.lib.io.FileInputOption
@@ -25,10 +22,12 @@ import dev.vulnlog.lib.io.InputSelectionResult
 import dev.vulnlog.lib.io.InputValidationResult
 import dev.vulnlog.lib.io.validateInputPath
 import dev.vulnlog.lib.io.validateInputSelection
+import dev.vulnlog.lib.model.OutputWrite
+import dev.vulnlog.lib.render.formatFailureLines
+import dev.vulnlog.lib.render.renderWriteFailure
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
-import kotlin.io.path.writeText
 
 private const val HELP_DISCUSSIONS_URL = "https://github.com/vulnlog/vulnlog/discussions/categories/q-a"
 
@@ -103,53 +102,9 @@ fun ArgumentTransformContext.toInputFile(input: String): FileInputOption.File {
     return FileInputOption.File(inputPath)
 }
 
-fun writeInit(
-    out: (String) -> Unit,
-    err: (String) -> Unit,
-    initFile: FileOutputOption.File,
-    content: String,
-    force: Boolean = false,
-) {
-    if (!force && initFile.path.exists()) {
-        val message = "The file ${initFile.path} already exists. Pass --force to replace it."
-        err(formatMessage(FindingSeverity.ERROR, message))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-    }
-    try {
-        initFile.path.writeText(content)
-        out(formatStatus(StatusVerb.CREATED, initFile.path.toString()))
-    } catch (e: Exception) {
-        err(formatMessage(FindingSeverity.ERROR, "cannot write ${initFile.path}: ${e.message}"))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-    }
-}
-
-fun writeSuppressionFile(
-    out: (String) -> Unit,
-    err: (String) -> Unit,
-    outputPath: Path,
-    suppressionFile: SuppressionFile,
-) {
-    try {
-        outputPath.writeText(suppressionFile.content)
-        out(formatStatus(StatusVerb.WROTE, outputPath.toString()))
-    } catch (e: Exception) {
-        err(formatMessage(FindingSeverity.ERROR, "cannot write $outputPath: ${e.message}"))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-    }
-}
-
-fun writeReport(
-    out: (String) -> Unit,
-    err: (String) -> Unit,
-    reportFile: FileOutputOption.File,
-    content: String,
-) {
-    try {
-        reportFile.path.writeText(content)
-        out(formatStatus(StatusVerb.WROTE, reportFile.path.toString()))
-    } catch (e: Exception) {
-        err(formatMessage(FindingSeverity.ERROR, "cannot write ${reportFile.path}: ${e.message}"))
-        throw ProgramResult(ExitCode.GENERAL_ERROR.code)
+fun CliktCommand.writeOrFail(write: OutputWrite) {
+    if (write is OutputWrite.Failed) {
+        formatFailureLines(listOf(renderWriteFailure(write))).forEach(::echoMessage)
+        throw ProgramResult(exitCode(write).code)
     }
 }

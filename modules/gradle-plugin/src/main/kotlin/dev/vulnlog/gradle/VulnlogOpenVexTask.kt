@@ -6,6 +6,7 @@ package dev.vulnlog.gradle
 import dev.vulnlog.gradle.internal.failure
 import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
+import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
@@ -14,6 +15,7 @@ import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.readOpenVexBaseline
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
@@ -93,8 +95,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
         out: File,
         outcome: OpenVexOutcome.Generated,
     ) {
-        out.parentFile?.mkdirs()
-        out.writeText(outcome.content)
+        writeOrFail(writeOutput(out.toPath(), outcome.content, createDirectories = true))
         logger.log(renderOpenVexWritten(out.path, outcome))
         val verb = if (outcome is OpenVexOutcome.Unchanged) StatusVerb.UNCHANGED else StatusVerb.WROTE
         logger.log(Message.Status(formatStatus(verb, out.absolutePath)))

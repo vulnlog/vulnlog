@@ -22,7 +22,7 @@ import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.DiagnosticLevel
 import dev.vulnlog.lib.io.FileInputOption
-import kotlin.io.path.writeText
+import dev.vulnlog.lib.io.writeOutput
 
 class FmtCommand : CliktCommand(name = "fmt") {
     override fun help(context: Context): String =
@@ -96,7 +96,7 @@ class FmtCommand : CliktCommand(name = "fmt") {
         when (val path = parsedInput.inputDocument.path) {
             null -> echo(formatted, trailingNewline = false)
             else -> {
-                path.writeText(formatted)
+                writeOrFail(writeOutput(path, formatted))
                 diagnosticSink().verbose("wrote $source")
                 echoStatus(formatStatus(StatusVerb.FORMATTED, source))
             }

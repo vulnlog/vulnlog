@@ -5,6 +5,7 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
+import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.parseInputOrFail
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatFinding
@@ -17,6 +18,7 @@ import dev.vulnlog.lib.document.renderFormatFinding
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.lib.io.writeOutput
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -30,7 +32,6 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.work.DisableCachingByDefault
 import java.nio.file.Path
-import kotlin.io.path.writeText
 
 @DisableCachingByDefault(because = "Rewrites Vulnlog files in place")
 abstract class VulnlogFmtTask : DefaultTask() {
@@ -87,7 +88,7 @@ abstract class VulnlogFmtTask : DefaultTask() {
             logger.warn(formatCommentsDroppedWarning(source))
         }
         debugFormatFindings(parsedInput)
-        inputPathOf(parsedInput).writeText(formatted)
+        writeOrFail(writeOutput(inputPathOf(parsedInput), formatted))
         diagnosticSink().verbose("wrote $source")
         logger.lifecycle(formatStatus(StatusVerb.FORMATTED, source))
     }

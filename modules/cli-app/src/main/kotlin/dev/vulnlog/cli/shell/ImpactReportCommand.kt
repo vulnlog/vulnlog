@@ -17,15 +17,18 @@ import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.codec.report.HtmlReportEncoder
 import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
 import dev.vulnlog.lib.codec.report.dto.FilterDataDto
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.applyFilter
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
 import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
+import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
@@ -122,12 +125,8 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
 
         when (val target = output) {
             is FileOutputOption.File -> {
-                writeReport(
-                    { echoStatus(it) },
-                    { echoMessage(it) },
-                    target,
-                    content,
-                )
+                writeOrFail(writeOutput(target.path, content))
+                echoStatus(formatStatus(StatusVerb.WROTE, target.path.toString()))
                 diagnosticSink().verbose("wrote ${target.path}")
             }
 
