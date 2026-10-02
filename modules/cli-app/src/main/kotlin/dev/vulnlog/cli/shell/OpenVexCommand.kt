@@ -23,9 +23,7 @@ import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.readOpenVexBaseline
@@ -33,15 +31,15 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.Failure
-import dev.vulnlog.lib.render.OpenVexLine
+import dev.vulnlog.lib.render.Message
 import dev.vulnlog.lib.render.formatFailureLines
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
-import dev.vulnlog.lib.render.renderOpenVexReport
+import dev.vulnlog.lib.render.renderOpenVexMessages
 import dev.vulnlog.lib.render.renderOpenVexWritten
 import java.nio.file.Path
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 private const val BASELINE_OPTION = "--baseline"
 
@@ -129,7 +127,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
             )
 
         val outcome = generateOpenVex(vulnlogFile, request)
-        renderOpenVexReport(outcome).forEach(::echoLine)
+        renderOpenVexMessages(outcome).forEach(::echoMessage)
         when (outcome) {
             is OpenVexOutcome.Failed -> {
                 val baseline = baselineRequest?.toString().orEmpty()
@@ -148,27 +146,20 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         throw ProgramResult(code.code)
     }
 
-    private fun echoLine(line: OpenVexLine) =
-        when (line) {
-            is OpenVexLine.Warning -> echoMessage(formatMessage(FindingSeverity.WARNING, line.text))
-            is OpenVexLine.Verbose -> diagnosticSink().verbose(line.text)
-            is OpenVexLine.Debug -> diagnosticSink().debug(line.text)
-        }
-
     private fun write(outcome: OpenVexOutcome.Generated) {
         when (val target = output) {
             is FileOutputOption.File -> {
                 if (outcome is OpenVexOutcome.Unchanged && isBaselinePath(target.path)) {
-                    echoStatus(formatStatus(StatusVerb.UNCHANGED, target.path.toString()))
+                    echoMessage(Message.Status(formatStatus(StatusVerb.UNCHANGED, target.path.toString())))
                     return
                 }
-                writeReport({ echoStatus(it) }, { echoMessage(it) }, target, outcome.content)
-                diagnosticSink().verbose(renderOpenVexWritten(target.path.toString(), outcome))
+                writeReport({ echoMessage(Message.Status(it)) }, { echoMessage(it) }, target, outcome.content)
+                echoMessage(renderOpenVexWritten(target.path.toString(), outcome))
             }
 
             FileOutputOption.Stdout -> {
                 echo(outcome.content, trailingNewline = false)
-                diagnosticSink().verbose(renderOpenVexWritten("<stdout>", outcome))
+                echoMessage(renderOpenVexWritten("<stdout>", outcome))
             }
         }
     }

@@ -14,11 +14,11 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 
-fun renderOpenVexReport(outcome: OpenVexOutcome): List<OpenVexLine> =
+fun renderOpenVexMessages(outcome: OpenVexOutcome): List<Message> =
     when (outcome) {
         is FilterRejected, is OpenVexOutcome.BaselineRejected -> emptyList()
-        is OpenVexOutcome.NoStatementApplies -> collectionLines(outcome.collection)
-        is OpenVexOutcome.Generated -> collectionLines(outcome.collection) + countLine(outcome.collection)
+        is OpenVexOutcome.NoStatementApplies -> collectionMessages(outcome.collection)
+        is OpenVexOutcome.Generated -> collectionMessages(outcome.collection) + countMessage(outcome.collection)
     }
 
 /** [baseline] and [baselineOption] name the file and the setting it came from; only a rejected baseline uses them. */
@@ -51,15 +51,17 @@ fun renderOpenVexBaselineFailure(
             )
     }
 
-fun renderOpenVexNewDocument(baseline: String): String =
-    "baseline '$baseline' does not exist yet, issuing a new document"
+fun renderOpenVexNewDocument(baseline: String): Message =
+    Message.Verbose("baseline '$baseline' does not exist yet, issuing a new document")
 
 fun renderOpenVexWritten(
     target: String,
     outcome: OpenVexOutcome.Generated,
-): String =
-    "wrote $target: openvex format, version ${outcome.version.value}, " +
-        pluralize(outcome.collection.statements.size, "statement")
+): Message =
+    Message.Verbose(
+        "wrote $target: openvex format, version ${outcome.version.value}, " +
+            pluralize(outcome.collection.statements.size, "statement"),
+    )
 
 private fun omitHint(baselineOption: String): String = "omit $baselineOption to issue a new document"
 
@@ -100,16 +102,16 @@ private fun emptyHint(reason: OpenVexEmptyReason): String =
             "no vulnerability entry references a release that declares purls"
     }
 
-private fun collectionLines(collection: OpenVexCollection): List<OpenVexLine> =
-    scopeLines(collection).map(OpenVexLine::Verbose) +
+private fun collectionMessages(collection: OpenVexCollection): List<Message> =
+    scopeLines(collection).map(Message::Verbose) +
         listOfNotNull(
-            skippedReleasesLine(collection)?.let(OpenVexLine::Warning),
-            anchorsLine(collection)?.let(OpenVexLine::Verbose),
+            skippedReleasesLine(collection)?.let(Message::Warning),
+            anchorsLine(collection)?.let(Message::Verbose),
         ) +
         collection.skippedEntries
             .map(::skippedEntryLine)
             .sorted()
-            .map(OpenVexLine::Debug)
+            .map(Message::Debug)
 
 private fun scopeLines(collection: OpenVexCollection): List<String> =
     listOfNotNull(
@@ -147,13 +149,13 @@ private fun skippedEntryLine(entry: OpenVexSkippedEntry): String =
             "skipped ${entry.id.canonical()}: no release purl in scope shares one of its tags"
     }
 
-private fun countLine(collection: OpenVexCollection): OpenVexLine {
+private fun countMessage(collection: OpenVexCollection): Message {
     val byStatus =
         collection.statements
             .groupingBy { vexStatusKind(it.status).name.lowercase() }
             .eachCount()
     val detail = byStatus.entries.sortedBy { it.key }.joinToString(", ") { "${it.value} ${it.key}" }
-    return OpenVexLine.Verbose("collected ${pluralize(collection.statements.size, "statement")}: $detail")
+    return Message.Verbose("collected ${pluralize(collection.statements.size, "statement")}: $detail")
 }
 
 private fun pluralize(
