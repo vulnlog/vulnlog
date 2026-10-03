@@ -46,28 +46,6 @@ fun resolveFilter(
     }
 }
 
-/** One verbose line per active dimension. */
-fun renderFilterResolution(filter: ResolvedFilter): List<String> =
-    listOfNotNull(
-        filter.releases
-            .takeIf { it.isNotEmpty() }
-            ?.let { releases -> "as-of filter expanded to releases: ${releases.joinToString(", ") { it.value }}" },
-        filter.tags
-            .takeIf { it.isNotEmpty() }
-            ?.let { tags -> "tag filter matched tags: ${tags.joinToString(", ") { it.value }}" },
-        filter.reporter?.let { reporter -> "reporter filter: ${reporter.canonical()}" },
-        filter.states
-            .takeIf { it.isNotEmpty() }
-            ?.let { states -> "state filter: ${states.joinToString(", ") { it.canonical() }}" },
-        filter.verdicts
-            .takeIf { it.isNotEmpty() }
-            ?.let { verdicts -> "verdict filter: ${verdicts.joinToString(", ") { it.canonical() }}" },
-        filter.dispositions
-            .takeIf { it.isNotEmpty() }
-            ?.let { dispositions -> "disposition filter: ${dispositions.joinToString(", ") { canonical(it) }}" },
-        filter.fixedIn?.let { release -> "fixed-in filter: ${release.value}" },
-    )
-
 /** One resolved dimension: the value to filter with, or the problems that stopped it resolving. */
 internal data class Dimension<T>(
     val value: T,

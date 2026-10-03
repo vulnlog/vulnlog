@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.core.suppression
 
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.fixtures.cve
@@ -21,8 +21,8 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
-import dev.vulnlog.lib.model.suppress.SuppressionCollectionResult
-import dev.vulnlog.lib.model.suppress.SuppressionExclusion
+import dev.vulnlog.lib.model.suppression.SuppressionCollectionResult
+import dev.vulnlog.lib.model.suppression.SuppressionExclusion
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly

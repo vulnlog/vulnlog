@@ -12,11 +12,11 @@ import dev.vulnlog.lib.core.filter.FilterOutcome
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
-import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.filter.resolveFilter
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.render.formatFailureLines
 import dev.vulnlog.lib.render.renderFilterProblems
+import dev.vulnlog.lib.render.renderFilterResolution
 
 /** Reports what [request] resolved to on the verbose sink. */
 fun CliktCommand.resolveFilterOrFail(

@@ -5,7 +5,7 @@ package dev.vulnlog.lib.codec.suppression.trivy
 
 import dev.vulnlog.lib.codec.suppression.trivy.dto.TrivySuppressionDto
 import dev.vulnlog.lib.codec.suppression.trivy.dto.TrivyVulnerabilityEntryDto
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 
 object TrivyMapper {
     fun toDto(suppressionData: SuppressionOutput.TrivySuppression): TrivySuppressionDto {

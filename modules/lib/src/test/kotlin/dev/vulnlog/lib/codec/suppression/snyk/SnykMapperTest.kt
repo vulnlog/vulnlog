@@ -5,8 +5,8 @@ package dev.vulnlog.lib.codec.suppression.snyk
 
 import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykIgnoreEntryDto
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
-import dev.vulnlog.lib.model.suppress.SuppressionVuln
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionVuln
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe

@@ -5,7 +5,7 @@ package dev.vulnlog.lib.codec.suppression.generic
 
 import dev.vulnlog.lib.codec.suppression.generic.dto.GenericSuppressionDto
 import dev.vulnlog.lib.codec.suppression.generic.dto.GenericVulnerabilityEntryDto
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 
 object GenericMapper {
     fun toDto(suppressionData: SuppressionOutput.GenericSuppression): GenericSuppressionDto {

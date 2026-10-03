@@ -7,7 +7,7 @@ import dev.vulnlog.lib.codec.suppression.cargoaudit.CargoAuditSuppressionEncoder
 import dev.vulnlog.lib.codec.suppression.generic.GenericSuppressionEncoder
 import dev.vulnlog.lib.codec.suppression.snyk.SnykSuppressionEncoder
 import dev.vulnlog.lib.codec.suppression.trivy.TrivySuppressionEncoder
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 
 data class SuppressionFile(
     val fileName: String,

@@ -1,10 +1,10 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.core.suppression
 
 import dev.vulnlog.lib.core.filter.ResolvedFilter
-import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
 import java.time.LocalDate
 
 data class SuppressionFilter(

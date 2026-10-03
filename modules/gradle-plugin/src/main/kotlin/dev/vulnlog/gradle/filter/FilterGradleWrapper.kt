@@ -7,11 +7,11 @@ import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.lib.core.filter.FilterOutcome
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
-import dev.vulnlog.lib.core.filter.renderFilterResolution
 import dev.vulnlog.lib.core.filter.resolveFilter
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderFilterProblems
+import dev.vulnlog.lib.render.renderFilterResolution
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 

@@ -6,6 +6,7 @@ package dev.vulnlog.lib.render
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.dispositionTokens
 import dev.vulnlog.lib.core.filter.FilterProblem
+import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.verdictKindTokens
 import dev.vulnlog.lib.core.workStateTokens
 import dev.vulnlog.lib.model.Release
@@ -14,6 +15,28 @@ import dev.vulnlog.lib.model.Tag
 
 fun renderFilterProblems(problems: List<FilterProblem>): List<Failure> =
     problems.map { problem -> Failure(message(problem), hint(problem)) }
+
+/** One verbose line per active dimension. */
+fun renderFilterResolution(filter: ResolvedFilter): List<String> =
+    listOfNotNull(
+        filter.releases
+            .takeIf { it.isNotEmpty() }
+            ?.let { releases -> "as-of filter expanded to releases: ${releases.joinToString(", ") { it.value }}" },
+        filter.tags
+            .takeIf { it.isNotEmpty() }
+            ?.let { tags -> "tag filter matched tags: ${tags.joinToString(", ") { it.value }}" },
+        filter.reporter?.let { reporter -> "reporter filter: ${reporter.canonical()}" },
+        filter.states
+            .takeIf { it.isNotEmpty() }
+            ?.let { states -> "state filter: ${states.joinToString(", ") { it.canonical() }}" },
+        filter.verdicts
+            .takeIf { it.isNotEmpty() }
+            ?.let { verdicts -> "verdict filter: ${verdicts.joinToString(", ") { it.canonical() }}" },
+        filter.dispositions
+            .takeIf { it.isNotEmpty() }
+            ?.let { dispositions -> "disposition filter: ${dispositions.joinToString(", ") { canonical(it) }}" },
+        filter.fixedIn?.let { release -> "fixed-in filter: ${release.value}" },
+    )
 
 private fun message(problem: FilterProblem): String =
     when (problem) {

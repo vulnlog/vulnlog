@@ -1,14 +1,15 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
-import dev.vulnlog.lib.model.suppress.SuppressionExclusion
-import dev.vulnlog.lib.model.suppress.SuppressionFormat
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppression.SuppressionExclusion
+import dev.vulnlog.lib.model.suppression.SuppressionFormat
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 import kotlin.reflect.KClass
 
 /**

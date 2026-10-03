@@ -4,7 +4,7 @@
 package dev.vulnlog.lib.codec.suppression.trivy
 
 import dev.vulnlog.lib.document.yaml.CanonicalYaml
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 
 object TrivySuppressionEncoder {
     fun encode(inputData: SuppressionOutput.TrivySuppression): String =

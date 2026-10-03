@@ -1,16 +1,16 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.core.suppression
 
 import dev.vulnlog.lib.app.SuppressionFormatRequest
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
-import dev.vulnlog.lib.model.suppress.SuppressionExclusion
-import dev.vulnlog.lib.model.suppress.SuppressionFormat
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppression.SuppressionExclusion
+import dev.vulnlog.lib.model.suppression.SuppressionFormat
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -33,7 +33,7 @@ private fun suppressedVuln(
     analysis = analysis,
 )
 
-class SuppressionOutputsTest :
+class SuppressionListsTest :
     FunSpec({
 
         context("buildSuppressionOutputs for Trivy") {

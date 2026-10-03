@@ -4,8 +4,13 @@
 package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.core.filter.FilterProblem
+import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.tag
+import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.VerdictKind
+import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -79,5 +84,40 @@ class FilterMessagesTest :
                     ),
                     Failure("Invalid disposition: bogus", "Supported dispositions: will fix, wont fix"),
                 )
+        }
+
+        context("renderFilterResolution") {
+
+            test("renders one line per active dimension, under its canonical tokens") {
+                val filter =
+                    ResolvedFilter(
+                        reporter = ReporterType.CARGO_AUDIT,
+                        releases = setOf(release("1.0.0"), release("2.0.0")),
+                        tags = setOf(tag("internal")),
+                        states = setOf(WorkState.NOT_APPLICABLE),
+                        verdicts = setOf(VerdictKind.NOT_AFFECTED),
+                        dispositions = setOf(Disposition.WONT_FIX),
+                        fixedIn = release("2.0.0"),
+                    )
+
+                val lines = renderFilterResolution(filter)
+
+                lines shouldBe
+                    listOf(
+                        "as-of filter expanded to releases: 1.0.0, 2.0.0",
+                        "tag filter matched tags: internal",
+                        "reporter filter: cargo-audit",
+                        "state filter: not applicable",
+                        "verdict filter: not affected",
+                        "disposition filter: wont fix",
+                        "fixed-in filter: 2.0.0",
+                    )
+            }
+
+            test("renders nothing for an inactive filter") {
+                val lines = renderFilterResolution(ResolvedFilter())
+
+                lines shouldBe emptyList()
+            }
         }
     })

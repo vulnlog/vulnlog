@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.codec.suppression.cargoaudit
 
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 
 object CargoAuditSuppressionEncoder {
     fun encode(inputData: SuppressionOutput.CargoAuditSuppression): String {
