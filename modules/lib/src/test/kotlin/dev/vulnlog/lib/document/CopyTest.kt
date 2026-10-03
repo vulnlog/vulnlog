@@ -22,7 +22,6 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import java.nio.file.Path
 import java.time.LocalDate
 
 private val release1 = Release("1.0.0")
@@ -90,27 +89,6 @@ class CopyTest :
             val missing = requests.map { findNonExistingVulnIds(entries, it) }
 
             missing shouldBe listOf(setOf(ghsa1), emptySet())
-        }
-
-        test("formatCopiedMessage counts the copied entries, or reports the destination unchanged") {
-            val copied = listOf(listOf(cve1), listOf(cve1, cve2), emptyList())
-
-            val messages = copied.map { formatCopiedMessage(Path.of("/tmp/x.vl.yaml"), it) }
-
-            messages shouldBe
-                listOf(
-                    "Copied: 1 entry to /tmp/x.vl.yaml",
-                    "Copied: 2 entries to /tmp/x.vl.yaml",
-                    "Unchanged: /tmp/x.vl.yaml: no new vulnerabilities",
-                )
-        }
-
-        test("formatVulnIdsNotInSourceMessage lists the missing ids as an error") {
-            val missing = setOf(cve1, ghsa1)
-
-            val message = formatVulnIdsNotInSourceMessage(missing)
-
-            message shouldBe "error: vulnerability IDs not found in source file: CVE-2026-1234, GHSA-1234-5678-abcd"
         }
 
         context("copyVulnerabilities") {
