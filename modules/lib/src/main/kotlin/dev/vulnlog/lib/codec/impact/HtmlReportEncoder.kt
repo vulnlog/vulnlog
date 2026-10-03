@@ -1,9 +1,9 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.codec.report
+package dev.vulnlog.lib.codec.impact
 
-import dev.vulnlog.lib.codec.report.dto.ReportDataDto
+import dev.vulnlog.lib.codec.impact.dto.ReportDataDto
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
