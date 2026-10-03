@@ -4,8 +4,6 @@
 package dev.vulnlog.lib.document
 
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.knownReleases
-import dev.vulnlog.lib.core.knownTags
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.document.dto.ReportEntryDto
 import dev.vulnlog.lib.document.dto.VulnerabilityEntryDto
@@ -39,9 +37,8 @@ data class AddVulnerabilityOptions(
     val comment: String? = null,
 )
 
-data class AddOutcome(
+data class AddEdit(
     val newContent: String,
-    val vulnId: VulnId,
     val updated: Boolean,
 )
 
@@ -56,27 +53,14 @@ fun createVulnerabilityEntry(
 /**
  * Rewrites the whole document canonically, so a later `fmt` changes nothing; YAML comments do not survive, the
  * `# $schema:` header only when it was there. A new entry goes to the top and defaults to the latest release; an
- * updated one keeps its place.
- *
- * Throws [IllegalArgumentException] for a release or tag the destination does not define.
+ * updated one keeps its place. The caller has checked that the destination declares the releases and tags.
  */
 fun addVulnerabilityToFile(
     destination: ValidVulnlogProject,
     options: AddVulnerabilityOptions,
     today: LocalDate,
-): AddOutcome {
+): AddEdit {
     val destinationFile = destination.vulnlogProjectFile
-    val knownReleases = knownReleases(destinationFile)
-    val missingReleases = options.releases - knownReleases
-    require(missingReleases.isEmpty()) {
-        "Releases not defined in file: ${missingReleases.joinToString(", ") { it.value }}"
-    }
-
-    val missingTags = options.tags - knownTags(destinationFile)
-    require(missingTags.isEmpty()) {
-        "Tags not defined in file: ${missingTags.joinToString(", ") { it.value }}"
-    }
-
     val dto =
         when (destination.parsedVulnlogProject.validatedDto) {
             is VulnlogFileV1Dto -> destination.parsedVulnlogProject.validatedDto
@@ -88,17 +72,7 @@ fun addVulnerabilityToFile(
             dto.vulnerabilities.map { if (it === existing) merged else it } to true
         } else {
             val effectiveReleases =
-                options.releases.ifEmpty {
-                    if (knownReleases.isEmpty()) {
-                        emptySet()
-                    } else {
-                        setOf(
-                            destinationFile.releases
-                                .last()
-                                .id,
-                        )
-                    }
-                }
+                options.releases.ifEmpty { setOfNotNull(destinationFile.releases.lastOrNull()?.id) }
             val entry = mergeOptionsIntoEntry(emptyEntryDto(options.vulnId, effectiveReleases), options, today)
             listOf(entry) + dto.vulnerabilities to false
         }
@@ -107,7 +81,7 @@ fun addVulnerabilityToFile(
             dto.copy(vulnerabilities = entries),
             includeSchemaHeader = hasSchemaHeader(destination.nodeTree.rootNode),
         )
-    return AddOutcome(newContent, options.vulnId, updated)
+    return AddEdit(newContent, updated)
 }
 
 private fun emptyEntryDto(

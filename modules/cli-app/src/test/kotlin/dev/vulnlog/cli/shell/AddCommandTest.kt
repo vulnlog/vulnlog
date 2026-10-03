@@ -250,27 +250,31 @@ class AddCommandTest :
                 }
             }
 
-            test("fails when --release is not defined in the file") {
+            test("names every --release and --tag the file does not define") {
                 withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
                     val result =
                         AddCommand().test(
-                            "${target.absolutePath} --vuln-id CVE-2026-9999 --release 9.9.9",
+                            "${target.absolutePath} --vuln-id CVE-2026-9999 --release 9.9.9 --tag unknown",
                         )
 
                     result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
-                    result.stderr shouldContain "not defined"
+                    result.stderr shouldContain "error: ${target.toPath()}: releases not defined in the file: 9.9.9"
+                    result.stderr shouldContain "error: ${target.toPath()}: tags not defined in the file: unknown"
                 }
             }
 
-            test("fails when --tag is not defined in the file") {
-                withTempFile(prefix = "target", content = vulnlogDocument()) { target ->
-                    val result =
-                        AddCommand().test(
-                            "${target.absolutePath} --vuln-id CVE-2026-9999 --tag unknown",
-                        )
+            test("writes no file when one destination refuses the entry") {
+                withTempFile(prefix = "target1", content = vulnlogDocument()) { accepting ->
+                    withTempFile(prefix = "target2", content = vulnlogDocument(releaseId = "2.0.0")) { refusing ->
+                        val result =
+                            AddCommand().test(
+                                "${accepting.absolutePath} ${refusing.absolutePath} " +
+                                    "--vuln-id CVE-2026-9999 --release 1.0.0",
+                            )
 
-                    result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
-                    result.stderr shouldContain "not defined"
+                        result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
+                        accepting.readText() shouldBe vulnlogDocument()
+                    }
                 }
             }
         }
