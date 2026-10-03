@@ -3,6 +3,7 @@
 
 package dev.vulnlog.gradle.internal
 
+import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
@@ -37,7 +38,7 @@ fun failure(
     }
 }
 
-/** A rejected filter is still a plain [GradleException] here, unlike in OpenVEX: the types are not settled yet. */
+/** This and the report overloads keep their wrappers' plain [GradleException], unlike OpenVEX: the types are open. */
 fun failure(failed: SuppressionOutcome.Failed): GradleException =
     when (failed) {
         is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
@@ -46,8 +47,13 @@ fun failure(failed: SuppressionOutcome.Failed): GradleException =
         is SuppressionOutcome.SeveralReporters -> error("vulnlogSuppress never targets a single file")
     }
 
-/** Plain [GradleException]s here, unlike in OpenVEX: the types are not settled yet. */
 fun failure(failed: ImpactReportOutcome.Failed): GradleException =
+    when (failed) {
+        is ProjectsDiffer -> GradleException(formatFailureMessage(listOf(renderProjectsDiffer(failed))))
+        is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
+    }
+
+fun failure(failed: ChangelogOutcome.Failed): GradleException =
     when (failed) {
         is ProjectsDiffer -> GradleException(formatFailureMessage(listOf(renderProjectsDiffer(failed))))
         is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))

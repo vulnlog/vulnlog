@@ -17,7 +17,7 @@ import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
 import dev.vulnlog.lib.render.renderImpactReportMessages
-import dev.vulnlog.lib.render.renderImpactReportWritten
+import dev.vulnlog.lib.render.renderWritten
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
@@ -91,7 +91,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
     private fun write(content: String) {
         val out = outputFile.get().asFile
         writeOrFail(writeOutput(out.toPath(), content, createDirectories = true))
-        logger.log(renderImpactReportWritten(out.path))
+        logger.log(renderWritten(out.path))
         logger.log(Message.Status(formatStatus(StatusVerb.WROTE, out.absolutePath)))
     }
 }

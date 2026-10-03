@@ -9,18 +9,17 @@ import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.Resolution
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.reporting.ChangelogEntry
+import dev.vulnlog.lib.model.reporting.ChangelogRelease
 import dev.vulnlog.lib.model.reporting.ChangelogSummary
-import dev.vulnlog.lib.model.reporting.ReportingChangelogEntry
-import dev.vulnlog.lib.model.reporting.ReportingChangelogRelease
 
-/** A vulnerability paired with the resolution that put it into the changelog. */
 internal data class FixedVulnerability(
     val vulnerability: VulnerabilityEntry,
     val resolution: Resolution,
 )
 
-/** Collects what every release fixed, newest release first. */
-fun collectChangelogReleases(files: List<VulnlogFile>): List<ReportingChangelogRelease> {
+/** Newest release first, as a changelog reads. */
+fun collectChangelogReleases(files: List<VulnlogFile>): List<ChangelogRelease> {
     val declared: List<ReleaseEntry> = declaredReleases(files)
     val declaration: Map<Release, ReleaseEntry> = declared.associateBy { it.id }
     val oldestFirst: List<Release> = declared.map { it.id }
@@ -31,11 +30,10 @@ fun collectChangelogReleases(files: List<VulnlogFile>): List<ReportingChangelogR
         .sortedByDescending { release -> oldestFirst.indexOf(release.fixedIn) }
 }
 
-/** Every release the files declare, in declaration order, each one once. */
+/** Declaration order is release order: validation warns when a file does not declare its releases oldest first. */
 internal fun declaredReleases(files: List<VulnlogFile>): List<ReleaseEntry> =
     files.flatMap { file -> file.releases }.distinctBy { it.id }
 
-/** The vulnerabilities whose fix reached users, paired with the resolution that shipped it. */
 internal fun selectFixedVulnerabilities(
     files: List<VulnlogFile>,
     oldestFirst: List<Release>,
@@ -70,9 +68,9 @@ private fun changelogRelease(
     release: Release,
     declaration: ReleaseEntry?,
     fixed: List<FixedVulnerability>,
-): ReportingChangelogRelease {
+): ChangelogRelease {
     val entries = mergeChangelogEntries(fixed.map(::changelogEntry)).sortedWith(entryOrder)
-    return ReportingChangelogRelease(
+    return ChangelogRelease(
         fixedIn = release,
         publishedAt = declaration?.publicationDate,
         summary = summarize(entries),
@@ -80,8 +78,8 @@ private fun changelogRelease(
     )
 }
 
-private fun changelogEntry(fixed: FixedVulnerability): ReportingChangelogEntry =
-    ReportingChangelogEntry(
+private fun changelogEntry(fixed: FixedVulnerability): ChangelogEntry =
+    ChangelogEntry(
         primaryId = fixed.vulnerability.id,
         aliases = fixed.vulnerability.aliases.toSet(),
         name = fixed.vulnerability.name,
@@ -91,16 +89,15 @@ private fun changelogEntry(fixed: FixedVulnerability): ReportingChangelogEntry =
         ref = fixed.resolution.ref,
     )
 
-/** Folds the records of one vulnerability from several files into one entry, keeping every alias. */
-internal fun mergeChangelogEntries(entries: List<ReportingChangelogEntry>): List<ReportingChangelogEntry> =
+internal fun mergeChangelogEntries(entries: List<ChangelogEntry>): List<ChangelogEntry> =
     entries
         .groupBy { it.primaryId }
         .map { (_, group) -> group.reduce(::mergeTwoChangelogEntries) }
 
 private fun mergeTwoChangelogEntries(
-    a: ReportingChangelogEntry,
-    b: ReportingChangelogEntry,
-): ReportingChangelogEntry =
+    a: ChangelogEntry,
+    b: ChangelogEntry,
+): ChangelogEntry =
     a.copy(
         aliases = a.aliases + b.aliases,
         name = a.name ?: b.name,
@@ -109,7 +106,7 @@ private fun mergeTwoChangelogEntries(
         ref = a.ref ?: b.ref,
     )
 
-internal fun summarize(entries: List<ReportingChangelogEntry>): ChangelogSummary =
+internal fun summarize(entries: List<ChangelogEntry>): ChangelogSummary =
     ChangelogSummary(
         total = entries.size,
         bySeverity =
@@ -120,6 +117,6 @@ internal fun summarize(entries: List<ReportingChangelogEntry>): ChangelogSummary
                 .toSortedMap(compareBy(::severityOrder)),
     )
 
-private val entryOrder: Comparator<ReportingChangelogEntry> =
-    compareBy<ReportingChangelogEntry> { severityOrder(severityOf(it.impact)) }
+private val entryOrder: Comparator<ChangelogEntry> =
+    compareBy<ChangelogEntry> { severityOrder(severityOf(it.impact)) }
         .thenBy { it.primaryId.id }

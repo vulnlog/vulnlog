@@ -7,10 +7,10 @@ import dev.vulnlog.lib.model.Release
 import java.time.LocalDate
 
 /** The vulnerabilities one release shipped a fix for. */
-data class ReportingChangelogRelease(
+data class ChangelogRelease(
     val fixedIn: Release,
     /** Publication date of the release. Absence means the release is not yet published. */
     val publishedAt: LocalDate? = null,
     val summary: ChangelogSummary = ChangelogSummary(),
-    val entries: List<ReportingChangelogEntry> = emptyList(),
+    val entries: List<ChangelogEntry> = emptyList(),
 )

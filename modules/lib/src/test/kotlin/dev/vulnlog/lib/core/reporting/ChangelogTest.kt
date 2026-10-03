@@ -16,9 +16,9 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
+import dev.vulnlog.lib.model.reporting.ChangelogEntry
 import dev.vulnlog.lib.model.reporting.ChangelogSummary
 import dev.vulnlog.lib.model.reporting.Impact
-import dev.vulnlog.lib.model.reporting.ReportingChangelogEntry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -75,7 +75,7 @@ private fun changelogOf(vulnerabilities: List<VulnerabilityEntry>) =
 private fun affectedEntry(
     id: VulnId = first,
     severity: Severity = Severity.HIGH,
-) = ReportingChangelogEntry(primaryId = id, impact = Impact.Affected(severity))
+) = ChangelogEntry(primaryId = id, impact = Impact.Affected(severity))
 
 class ChangelogTest :
     FunSpec({
@@ -176,7 +176,7 @@ class ChangelogTest :
             }
 
             test("counts an entry without a severity in the total only") {
-                val entries = listOf(ReportingChangelogEntry(primaryId = first, impact = Impact.NotAffected("reason")))
+                val entries = listOf(ChangelogEntry(primaryId = first, impact = Impact.NotAffected("reason")))
 
                 val summary = summarize(entries)
 

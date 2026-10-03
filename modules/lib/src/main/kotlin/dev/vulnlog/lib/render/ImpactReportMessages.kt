@@ -20,7 +20,5 @@ fun renderImpactReportFailure(failed: ImpactReportOutcome.Failed): List<Failure>
         is FilterRejected -> renderFilterProblems(failed.problems)
     }
 
-fun renderImpactReportWritten(target: String): Message = Message.Verbose("wrote $target")
-
 private fun countMessage(outcome: ImpactReportOutcome.Generated): Message =
     Message.Debug("collected ${outcome.collected.size} report entries, merged to ${outcome.report.entries.size}")

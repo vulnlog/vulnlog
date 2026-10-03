@@ -5,7 +5,7 @@ package dev.vulnlog.lib.model.reporting
 
 import dev.vulnlog.lib.model.Project
 
-data class ReportingChangelogProject(
+data class Changelog(
     val project: Project,
-    val releases: List<ReportingChangelogRelease>,
+    val releases: List<ChangelogRelease>,
 )

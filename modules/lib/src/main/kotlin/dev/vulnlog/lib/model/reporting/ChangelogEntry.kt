@@ -6,7 +6,7 @@ package dev.vulnlog.lib.model.reporting
 import dev.vulnlog.lib.model.VulnId
 
 /** One vulnerability a release shipped a fix for. */
-data class ReportingChangelogEntry(
+data class ChangelogEntry(
     val primaryId: VulnId,
     val aliases: Set<VulnId> = emptySet(),
     val name: String? = null,

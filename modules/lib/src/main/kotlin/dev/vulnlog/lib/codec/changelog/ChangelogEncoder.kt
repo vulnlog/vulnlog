@@ -4,33 +4,34 @@
 package dev.vulnlog.lib.codec.changelog
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.model.reporting.Changelog
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
+import dev.vulnlog.lib.model.reporting.ChangelogEntry
+import dev.vulnlog.lib.model.reporting.ChangelogRelease
 import dev.vulnlog.lib.model.reporting.ChangelogSummary
 import dev.vulnlog.lib.model.reporting.Impact
-import dev.vulnlog.lib.model.reporting.ReportingChangelogEntry
-import dev.vulnlog.lib.model.reporting.ReportingChangelogProject
-import dev.vulnlog.lib.model.reporting.ReportingChangelogRelease
 
 private const val UNRELEASED = "unreleased"
 
-/** Renders the changelog as plain text, headed by the project it describes. */
-fun formatChangelogText(
-    report: ReportingChangelogProject,
-    detail: ChangelogDetail,
-): String {
-    val project = "${report.project.organization} / ${report.project.name}"
-    val releases = report.releases.map { release -> textRelease(release, detail) }
-    return (listOf(project) + releases).joinToString("\n\n")
+object ChangelogEncoder {
+    fun encodeText(
+        changelog: Changelog,
+        detail: ChangelogDetail,
+    ): String {
+        val project = "${changelog.project.organization} / ${changelog.project.name}"
+        val releases = changelog.releases.map { release -> textRelease(release, detail) }
+        return (listOf(project) + releases).joinToString("\n\n")
+    }
+
+    /** Release sections without the project, ready to paste under the heading a changelog file already has. */
+    fun encodeMarkdown(
+        changelog: Changelog,
+        detail: ChangelogDetail,
+    ): String = changelog.releases.joinToString("\n\n") { release -> markdownRelease(release, detail) }
 }
 
-/** Renders the changelog as Markdown, one section per release. */
-fun formatChangelogMarkdown(
-    report: ReportingChangelogProject,
-    detail: ChangelogDetail,
-): String = report.releases.joinToString("\n\n") { release -> markdownRelease(release, detail) }
-
 private fun textRelease(
-    release: ReportingChangelogRelease,
+    release: ChangelogRelease,
     detail: ChangelogDetail,
 ): String =
     buildString {
@@ -46,7 +47,7 @@ private fun textRelease(
     }.trimEnd('\n')
 
 private fun markdownRelease(
-    release: ReportingChangelogRelease,
+    release: ChangelogRelease,
     detail: ChangelogDetail,
 ): String =
     buildString {
@@ -59,7 +60,7 @@ private fun markdownRelease(
         release.entries.forEach { entry -> appendLine("- ${markdownEntry(entry, detail)}") }
     }.trimEnd('\n')
 
-private fun releaseDate(release: ReportingChangelogRelease): String = release.publishedAt?.toString() ?: UNRELEASED
+private fun releaseDate(release: ChangelogRelease): String = release.publishedAt?.toString() ?: UNRELEASED
 
 /** The per-release headline, as in `3 fixed: 1 critical, 2 high`. */
 private fun summaryLine(summary: ChangelogSummary): String {
@@ -69,11 +70,11 @@ private fun summaryLine(summary: ChangelogSummary): String {
 }
 
 /** The primary identifier followed by the impact and any alias, as in `CVE-2026-001 (high, also GHSA-a)`. */
-private fun identifiers(entry: ReportingChangelogEntry): String = "${entry.primaryId.id} ${qualifier(entry)}"
+private fun identifiers(entry: ChangelogEntry): String = "${entry.primaryId.id} ${qualifier(entry)}"
 
 /** One bullet on one line, because a wrapped bullet renders as a single paragraph anyway. */
 private fun markdownEntry(
-    entry: ReportingChangelogEntry,
+    entry: ChangelogEntry,
     detail: ChangelogDetail,
 ): String {
     val identifier = "**${entry.primaryId.id}** ${qualifier(entry)}"
@@ -86,19 +87,18 @@ private fun markdownEntry(
 
 private fun sentence(text: String): String = if (text.isEmpty() || text.last() in ".!?") text else "$text."
 
-private fun qualifier(entry: ReportingChangelogEntry): String {
+private fun qualifier(entry: ChangelogEntry): String {
     val aliases = entry.aliases.joinToString(", ") { it.id }
     val also = if (aliases.isEmpty()) "" else ", also $aliases"
     return "(${impactLabel(entry.impact)}$also)"
 }
 
 private fun textDescription(
-    entry: ReportingChangelogEntry,
+    entry: ChangelogEntry,
     detail: ChangelogDetail,
 ): String = if (detail == ChangelogDetail.BRIEF) "" else description(entry)?.let { " $it" } ?: ""
 
-/** The name and description, whichever the entry records. */
-private fun description(entry: ReportingChangelogEntry): String? =
+private fun description(entry: ChangelogEntry): String? =
     listOfNotNull(entry.name?.let { "\"$it\"" }, entry.description)
         .joinToString(" ")
         .takeIf { it.isNotEmpty() }
