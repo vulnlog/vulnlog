@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.core.suppression
 
 import dev.vulnlog.lib.core.filter.scopeResolution
 import dev.vulnlog.lib.core.reporting.findWorkState
@@ -11,9 +11,9 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.WorkState
-import dev.vulnlog.lib.model.suppress.SuppressedVulnerability
-import dev.vulnlog.lib.model.suppress.SuppressionCollectionResult
-import dev.vulnlog.lib.model.suppress.SuppressionExclusion
+import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppression.SuppressionCollectionResult
+import dev.vulnlog.lib.model.suppression.SuppressionExclusion
 
 /**
  * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression

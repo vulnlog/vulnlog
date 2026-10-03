@@ -5,7 +5,7 @@ package dev.vulnlog.lib.codec.suppression.snyk
 
 import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykIgnoreEntryDto
 import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykSuppressionDto
-import dev.vulnlog.lib.model.suppress.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionOutput
 
 object SnykMapper {
     fun toDto(suppressionData: SuppressionOutput.SnykSuppression): SnykSuppressionDto {
