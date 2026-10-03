@@ -6,7 +6,6 @@ package dev.vulnlog.cli.shell.filter
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.ProgramResult
 import dev.vulnlog.cli.shell.ExitCode
-import dev.vulnlog.cli.shell.diagnosticSink
 import dev.vulnlog.cli.shell.echoMessage
 import dev.vulnlog.lib.core.filter.FilterOutcome
 import dev.vulnlog.lib.core.filter.FilterProblem
@@ -18,14 +17,14 @@ import dev.vulnlog.lib.render.formatFailureLines
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderFilterResolution
 
-/** Reports what [request] resolved to on the verbose sink. */
+/** Also reports what [request] resolved to, at verbose level. */
 fun CliktCommand.resolveFilterOrFail(
     request: FilterRequest,
     files: List<VulnlogFile>,
 ): ResolvedFilter =
     when (val outcome = resolveFilter(request, files)) {
         is FilterOutcome.Resolved -> {
-            renderFilterResolution(outcome.filter).forEach { diagnosticSink().verbose(it) }
+            renderFilterResolution(outcome.filter).forEach(::echoMessage)
             outcome.filter
         }
 

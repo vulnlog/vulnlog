@@ -3,29 +3,64 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.SuppressionFile
+import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.formatStatus
+import dev.vulnlog.lib.core.suppression.suppressionFileName
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
 import dev.vulnlog.lib.model.suppression.SuppressionExclusion
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
 import kotlin.reflect.KClass
 
-/**
- * Renders one diagnostic line for a written suppression output, stating the target, the format,
- * and the number of entries. Shared by the CLI and the Gradle plugin.
- */
+fun renderSuppressionMessages(outcome: SuppressionOutcome): List<Message> =
+    when (outcome) {
+        is FilterRejected -> emptyList()
+
+        is SuppressionOutcome.SeveralReporters, is SuppressionOutcome.Generated -> collectedMessages(outcome)
+
+        is SuppressionOutcome.NothingToSuppress ->
+            collectedMessages(outcome) +
+                Message.Status(formatStatus(StatusVerb.UNCHANGED, "no suppression entries applicable"))
+    }
+
+/** The option names come from the driver; only [SuppressionOutcome.SeveralReporters] uses them. */
+fun renderSuppressionFailure(
+    failed: SuppressionOutcome.Failed,
+    outputOption: String,
+    reporterOption: String,
+    outputDirOption: String,
+): List<Failure> =
+    when (failed) {
+        is FilterRejected -> renderFilterProblems(failed.problems)
+
+        is SuppressionOutcome.SeveralReporters -> {
+            val names = failed.reporters.map { it.canonical() }.sorted()
+            listOf(
+                Failure(
+                    "$outputOption requires a single reporter, found: ${names.joinToString(", ")}",
+                    "use $reporterOption <name> to pick one, or $outputDirOption for one file per reporter",
+                ),
+            )
+        }
+    }
+
 fun renderSuppressionWritten(
     target: String,
-    output: SuppressionOutput,
-): String = "wrote $target: ${formatName(output)} format, ${pluralizeEntries(output.entries.size)}"
+    file: SuppressionFile,
+): Message =
+    Message.Verbose("wrote $target: ${formatName(file.list.format)} format, ${entries(file.list.entries.size)}")
 
-/**
- * Renders one diagnostic line per entry included in the suppression outputs, the counterpart of
- * [renderSuppressionExclusion]. Shared by the CLI and the Gradle plugin.
- */
-fun renderSuppressionInclusions(included: Map<ReporterType, List<SuppressedVulnerability>>): List<String> =
+private fun collectedMessages(outcome: SuppressionOutcome.Collected): List<Message> =
+    renderFilterResolution(outcome.filter) +
+        outcome.collection.exclusions.map { Message.Verbose(exclusionLine(it)) } +
+        inclusionLines(outcome.collection.included).map(Message::Debug)
+
+private fun inclusionLines(included: Map<ReporterType, List<SuppressedVulnerability>>): List<String> =
     included
         .flatMap { (reporter, suppressions) ->
             suppressions.map { suppression ->
@@ -34,34 +69,30 @@ fun renderSuppressionInclusions(included: Map<ReporterType, List<SuppressedVulne
             }
         }.sorted()
 
-/**
- * Renders one diagnostic line for an entry excluded from a suppression output, stating what was
- * skipped and why. Shared by the CLI and the Gradle plugin.
- */
-fun renderSuppressionExclusion(exclusion: SuppressionExclusion): String =
+private fun exclusionLine(exclusion: SuppressionExclusion): String =
     when (exclusion) {
         is SuppressionExclusion.UnsupportedIdType ->
-            "skipped ${exclusion.id.canonical()} for ${exclusion.fileName}: " +
+            "skipped ${exclusion.id.canonical()} for ${suppressionFileName(exclusion.format)}: " +
                 "the ${formatName(exclusion.format)} format requires ${requiredIdTypes(exclusion.format)} ids"
 
         is SuppressionExclusion.UnsupportedReporter ->
             "skipped ${exclusion.id.canonical()} for reporter ${exclusion.reporter.canonical()}: " +
                 "no suppression format available"
 
-        is SuppressionExclusion.ResolvedVulnerability ->
+        is SuppressionExclusion.Resolved ->
             "skipped ${exclusion.id.canonical()}: resolved vulnerabilities are not suppressed"
 
-        is SuppressionExclusion.ExpiredSuppression ->
+        is SuppressionExclusion.Expired ->
             "skipped ${exclusion.id.canonical()} for reporter ${exclusion.reporter.canonical()}: " +
                 "suppression expired on ${exclusion.expiredAt}"
     }
 
 private fun formatName(format: SuppressionFormat): String =
     when (format) {
-        is SuppressionFormat.GenericFormat.Generic -> "generic"
-        SuppressionFormat.NativeFormat.Trivy -> "trivy"
-        SuppressionFormat.NativeFormat.Snyk -> "snyk"
-        SuppressionFormat.NativeFormat.CargoAudit -> "cargo-audit"
+        is SuppressionFormat.Generic -> "generic"
+        SuppressionFormat.Trivy -> "trivy"
+        SuppressionFormat.Snyk -> "snyk"
+        SuppressionFormat.CargoAudit -> "cargo-audit"
     }
 
 private fun requiredIdTypes(format: SuppressionFormat): String =
@@ -76,12 +107,4 @@ private fun idTypeName(type: KClass<out VulnId>): String =
         else -> type.simpleName ?: "unknown"
     }
 
-private fun formatName(output: SuppressionOutput): String =
-    when (output) {
-        is SuppressionOutput.GenericSuppression -> "generic"
-        is SuppressionOutput.TrivySuppression -> "trivy"
-        is SuppressionOutput.SnykSuppression -> "snyk"
-        is SuppressionOutput.CargoAuditSuppression -> "cargo-audit"
-    }
-
-private fun pluralizeEntries(count: Int): String = if (count == 1) "1 entry" else "$count entries"
+private fun entries(count: Int): String = if (count == 1) "1 entry" else "$count entries"

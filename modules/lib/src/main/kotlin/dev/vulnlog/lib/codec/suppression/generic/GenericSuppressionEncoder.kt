@@ -3,12 +3,12 @@
 
 package dev.vulnlog.lib.codec.suppression.generic
 
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionList
 import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.kotlinModule
 
-object GenericSuppressionEncoder {
+internal object GenericSuppressionEncoder {
     private val mapper =
         JsonMapper
             .builder()
@@ -16,8 +16,8 @@ object GenericSuppressionEncoder {
             .addModule(kotlinModule())
             .build()
 
-    fun encode(inputData: SuppressionOutput.GenericSuppression): String {
-        val dto = GenericMapper.toDto(inputData)
+    fun encode(list: SuppressionList): String {
+        val dto = GenericMapper.toDto(list)
         return mapper.writeValueAsString(dto)
     }
 }

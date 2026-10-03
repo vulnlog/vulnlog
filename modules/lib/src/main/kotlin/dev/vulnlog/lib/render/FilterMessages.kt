@@ -16,8 +16,7 @@ import dev.vulnlog.lib.model.Tag
 fun renderFilterProblems(problems: List<FilterProblem>): List<Failure> =
     problems.map { problem -> Failure(message(problem), hint(problem)) }
 
-/** One verbose line per active dimension. */
-fun renderFilterResolution(filter: ResolvedFilter): List<String> =
+fun renderFilterResolution(filter: ResolvedFilter): List<Message> =
     listOfNotNull(
         filter.releases
             .takeIf { it.isNotEmpty() }
@@ -36,7 +35,7 @@ fun renderFilterResolution(filter: ResolvedFilter): List<String> =
             .takeIf { it.isNotEmpty() }
             ?.let { dispositions -> "disposition filter: ${dispositions.joinToString(", ") { canonical(it) }}" },
         filter.fixedIn?.let { release -> "fixed-in filter: ${release.value}" },
-    )
+    ).map(Message::Verbose)
 
 private fun message(problem: FilterProblem): String =
     when (problem) {

@@ -3,14 +3,32 @@
 
 package dev.vulnlog.cli.shell
 
+import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
+import dev.vulnlog.lib.model.ReporterType
+import dev.vulnlog.lib.model.suppression.SuppressionCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 
 class ExitsTest :
     FunSpec({
+
+        test("a rejected suppression filter is a bad flag value, several reporters for one file an error") {
+            val collection = SuppressionCollection(emptyMap(), emptyList())
+            val failed: List<SuppressionOutcome.Failed> =
+                listOf(
+                    FilterRejected(emptyList()),
+                    SuppressionOutcome.SeveralReporters(ResolvedFilter(), collection, listOf(ReporterType.TRIVY)),
+                )
+
+            val codes = failed.map { exitCode(it) }
+
+            codes shouldContainExactly listOf(ExitCode.INVALID_FLAG_VALUE, ExitCode.GENERAL_ERROR)
+        }
 
         test("an absent baseline is a bad flag value, an unreadable one an I/O error") {
             val unavailable = listOf(OpenVexBaselineRead.Absent, OpenVexBaselineRead.Unreadable("Permission denied"))

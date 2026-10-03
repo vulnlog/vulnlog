@@ -5,10 +5,12 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
+import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
@@ -31,6 +33,15 @@ fun failure(
         is OpenVexOutcome.NoStatementApplies -> VerificationException(message)
     }
 }
+
+/** A rejected filter is still a plain [GradleException] here, unlike in OpenVEX: the types are not settled yet. */
+fun failure(failed: SuppressionOutcome.Failed): GradleException =
+    when (failed) {
+        is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
+
+        // The task writes one file per reporter, so it never asks for a single file.
+        is SuppressionOutcome.SeveralReporters -> error("vulnlogSuppress never targets a single file")
+    }
 
 fun failure(
     unreadable: OpenVexBaselineRead.Unreadable,

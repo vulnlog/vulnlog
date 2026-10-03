@@ -3,163 +3,166 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.SuppressionFile
+import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.core.filter.FilterProblem
+import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
+import dev.vulnlog.lib.model.suppression.SuppressionCollection
+import dev.vulnlog.lib.model.suppression.SuppressionEntry
 import dev.vulnlog.lib.model.suppression.SuppressionExclusion
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
-import dev.vulnlog.lib.model.suppression.SuppressionVuln
+import dev.vulnlog.lib.model.suppression.SuppressionList
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import java.time.LocalDate
+
+private val CVE = VulnId.Cve("CVE-2026-1234")
+
+private fun suppressed(
+    id: VulnId,
+    reporter: ReporterType,
+    expiresAt: LocalDate? = null,
+) = SuppressedVulnerability(id, emptyList(), reporter, expiresAt, analysis = "not reachable")
+
+private fun generated(
+    filter: ResolvedFilter = ResolvedFilter(),
+    included: Map<ReporterType, List<SuppressedVulnerability>> = emptyMap(),
+    exclusions: List<SuppressionExclusion> = emptyList(),
+) = SuppressionOutcome.Generated(filter, SuppressionCollection(included, exclusions), emptyList())
 
 class SuppressionMessagesTest :
     FunSpec({
 
-        context("renderSuppressionWritten") {
+        context("renderSuppressionMessages") {
 
-            test("renders a trivy output with a single entry") {
-                val output =
-                    SuppressionOutput.TrivySuppression(
-                        entries =
-                            setOf(
-                                SuppressionVuln.TrivySuppressionEntry(
-                                    id = VulnId.Cve("CVE-2026-1234"),
-                                    reason = "not reachable",
-                                ),
+            test("reports the filter and the exclusions verbosely, then every inclusion, sorted, at debug") {
+                val outcome =
+                    generated(
+                        filter = ResolvedFilter(reporter = ReporterType.TRIVY),
+                        included =
+                            mapOf(
+                                ReporterType.TRIVY to
+                                    listOf(suppressed(CVE, ReporterType.TRIVY, expiresAt = LocalDate.of(2026, 9, 1))),
+                                ReporterType.SNYK to listOf(suppressed(VulnId.Cve("CVE-2026-0002"), ReporterType.SNYK)),
                             ),
+                        exclusions = listOf(SuppressionExclusion.Resolved(VulnId.Cve("CVE-2026-0003"))),
                     )
 
-                renderSuppressionWritten("/out/.trivyignore.yaml", output) shouldBe
-                    "wrote /out/.trivyignore.yaml: trivy format, 1 entry"
-            }
+                val messages = renderSuppressionMessages(outcome)
 
-            test("pluralizes the entry count") {
-                val output =
-                    SuppressionOutput.GenericSuppression(
-                        entries =
-                            setOf(
-                                SuppressionVuln.GenericSuppressionEntry(
-                                    id = VulnId.Cve("CVE-2026-1234"),
-                                    reason = "not reachable",
-                                ),
-                                SuppressionVuln.GenericSuppressionEntry(
-                                    id = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"),
-                                    reason = "not reachable",
-                                ),
-                            ),
-                    )
-
-                renderSuppressionWritten("trivy.generic.json", output) shouldBe
-                    "wrote trivy.generic.json: generic format, 2 entries"
-            }
-
-            test("renders an empty snyk output") {
-                val output = SuppressionOutput.SnykSuppression(entries = emptySet())
-
-                renderSuppressionWritten("<stdout>", output) shouldBe "wrote <stdout>: snyk format, 0 entries"
-            }
-
-            test("renders the cargo-audit format name") {
-                val entry = SuppressionVuln.CargoAuditSuppressionEntry(id = VulnId.RustSec("RUSTSEC-2026-0001"))
-                val output = SuppressionOutput.CargoAuditSuppression(entries = setOf(entry))
-
-                renderSuppressionWritten("audit.toml", output) shouldBe
-                    "wrote audit.toml: cargo-audit format, 1 entry"
-            }
-        }
-
-        context("renderSuppressionInclusions") {
-
-            test("renders one sorted line per included entry, with the expiry when present") {
-                val included =
-                    mapOf(
-                        ReporterType.TRIVY to
-                            listOf(
-                                SuppressedVulnerability(
-                                    id = VulnId.Cve("CVE-2026-1234"),
-                                    releases = emptyList(),
-                                    reporter = ReporterType.TRIVY,
-                                    expiresAt = LocalDate.of(2026, 9, 1),
-                                    analysis = "not reachable",
-                                ),
-                            ),
-                        ReporterType.SNYK to
-                            listOf(
-                                SuppressedVulnerability(
-                                    id = VulnId.Cve("CVE-2026-0002"),
-                                    releases = emptyList(),
-                                    reporter = ReporterType.SNYK,
-                                    expiresAt = null,
-                                    analysis = "not reachable",
-                                ),
-                            ),
-                    )
-
-                renderSuppressionInclusions(included) shouldBe
+                messages shouldContainExactly
                     listOf(
-                        "included CVE-2026-0002 for reporter snyk",
-                        "included CVE-2026-1234 for reporter trivy (expires 2026-09-01)",
+                        Message.Verbose("reporter filter: trivy"),
+                        Message.Verbose("skipped CVE-2026-0003: resolved vulnerabilities are not suppressed"),
+                        Message.Debug("included CVE-2026-0002 for reporter snyk"),
+                        Message.Debug("included CVE-2026-1234 for reporter trivy (expires 2026-09-01)"),
                     )
             }
 
-            test("renders nothing when nothing was included") {
-                renderSuppressionInclusions(emptyMap()) shouldBe emptyList()
+            test("words why each excluded entry is left out") {
+                val outcome =
+                    generated(
+                        exclusions =
+                            listOf(
+                                SuppressionExclusion.UnsupportedIdType(CVE, SuppressionFormat.Snyk),
+                                SuppressionExclusion.UnsupportedIdType(
+                                    VulnId.RustSec("RUSTSEC-2026-0001"),
+                                    SuppressionFormat.Trivy,
+                                ),
+                                SuppressionExclusion.UnsupportedReporter(CVE, ReporterType.OTHER),
+                                SuppressionExclusion.Expired(CVE, ReporterType.TRIVY, LocalDate.of(2026, 1, 31)),
+                            ),
+                    )
+
+                val texts = renderSuppressionMessages(outcome).map { it.text }
+
+                texts shouldContainExactly
+                    listOf(
+                        "skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids",
+                        "skipped RUSTSEC-2026-0001 for .trivyignore.yaml: the trivy format requires CVE or GHSA ids",
+                        "skipped CVE-2026-1234 for reporter other: no suppression format available",
+                        "skipped CVE-2026-1234 for reporter trivy: suppression expired on 2026-01-31",
+                    )
+            }
+
+            test("nothing to suppress ends with the unchanged status") {
+                val exclusion = SuppressionExclusion.UnsupportedReporter(CVE, ReporterType.OTHER)
+                val collection = SuppressionCollection(emptyMap(), listOf(exclusion))
+                val outcome = SuppressionOutcome.NothingToSuppress(ResolvedFilter(), collection)
+
+                val messages = renderSuppressionMessages(outcome)
+
+                messages shouldContainExactly
+                    listOf(
+                        Message.Verbose("skipped CVE-2026-1234 for reporter other: no suppression format available"),
+                        Message.Status("Unchanged: no suppression entries applicable"),
+                    )
+            }
+
+            test("a rejected filter reports nothing besides its failure") {
+                val outcome = FilterRejected(listOf(FilterProblem.UnknownReporter("bogus")))
+
+                val messages = renderSuppressionMessages(outcome)
+
+                messages.shouldBeEmpty()
             }
         }
 
-        context("renderSuppressionExclusion") {
+        context("renderSuppressionFailure") {
 
-            test("names the file and the required id type for an unsupported id type") {
-                val exclusion =
-                    SuppressionExclusion.UnsupportedIdType(
-                        id = VulnId.Cve("CVE-2026-1234"),
-                        fileName = ".snyk",
-                        format = SuppressionFormat.NativeFormat.Snyk,
+            test("several reporters for one file names them, sorted, and the options that resolve it") {
+                val failed =
+                    SuppressionOutcome.SeveralReporters(
+                        ResolvedFilter(),
+                        SuppressionCollection(emptyMap(), emptyList()),
+                        listOf(ReporterType.TRIVY, ReporterType.SNYK),
                     )
 
-                renderSuppressionExclusion(exclusion) shouldBe
-                    "skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids"
-            }
+                val failures = renderSuppressionFailure(failed, "-o", "--reporter", "--output-dir")
 
-            test("lists all id types a format accepts") {
-                val exclusion =
-                    SuppressionExclusion.UnsupportedIdType(
-                        id = VulnId.RustSec("RUSTSEC-2026-0001"),
-                        fileName = ".trivyignore.yaml",
-                        format = SuppressionFormat.NativeFormat.Trivy,
+                failures shouldContainExactly
+                    listOf(
+                        Failure(
+                            "-o requires a single reporter, found: snyk, trivy",
+                            "use --reporter <name> to pick one, or --output-dir for one file per reporter",
+                        ),
                     )
-
-                renderSuppressionExclusion(exclusion) shouldBe
-                    "skipped RUSTSEC-2026-0001 for .trivyignore.yaml: the trivy format requires CVE or GHSA ids"
             }
 
-            test("names the reporter for an unsupported reporter") {
-                val exclusion =
-                    SuppressionExclusion.UnsupportedReporter(VulnId.Cve("CVE-2026-1234"), ReporterType.OTHER)
+            test("a rejected filter is worded like every filter problem") {
+                val problems = listOf(FilterProblem.UnknownReporter("bogus"))
 
-                renderSuppressionExclusion(exclusion) shouldBe
-                    "skipped CVE-2026-1234 for reporter other: no suppression format available"
+                val failures = renderSuppressionFailure(FilterRejected(problems), "-o", "--reporter", "--output-dir")
+
+                failures shouldBe renderFilterProblems(problems)
             }
+        }
 
-            test("explains a resolved vulnerability") {
-                val exclusion = SuppressionExclusion.ResolvedVulnerability(VulnId.Cve("CVE-2026-1234"))
+        test("renderSuppressionWritten names the target, the format and the entry count") {
+            val one = setOf(SuppressionEntry(CVE))
+            val two = one + SuppressionEntry(VulnId.Cve("CVE-2026-0002"))
+            val files =
+                listOf(
+                    ".trivyignore.yaml" to SuppressionList(SuppressionFormat.Trivy, one),
+                    "grype.generic.json" to SuppressionList(SuppressionFormat.Generic(ReporterType.GRYPE), two),
+                    "<stdout>" to SuppressionList(SuppressionFormat.Snyk, emptySet()),
+                    "audit.toml" to SuppressionList(SuppressionFormat.CargoAudit, one),
+                )
 
-                renderSuppressionExclusion(exclusion) shouldBe
-                    "skipped CVE-2026-1234: resolved vulnerabilities are not suppressed"
-            }
+            val messages = files.map { (target, list) -> renderSuppressionWritten(target, SuppressionFile(list, "")) }
 
-            test("names the expiry date of an expired suppression") {
-                val exclusion =
-                    SuppressionExclusion.ExpiredSuppression(
-                        VulnId.Cve("CVE-2026-1234"),
-                        ReporterType.TRIVY,
-                        LocalDate.of(2026, 1, 31),
-                    )
-
-                renderSuppressionExclusion(exclusion) shouldBe
-                    "skipped CVE-2026-1234 for reporter trivy: suppression expired on 2026-01-31"
-            }
+            messages shouldContainExactly
+                listOf(
+                    Message.Verbose("wrote .trivyignore.yaml: trivy format, 1 entry"),
+                    Message.Verbose("wrote grype.generic.json: generic format, 2 entries"),
+                    Message.Verbose("wrote <stdout>: snyk format, 0 entries"),
+                    Message.Verbose("wrote audit.toml: cargo-audit format, 1 entry"),
+                )
         }
     })

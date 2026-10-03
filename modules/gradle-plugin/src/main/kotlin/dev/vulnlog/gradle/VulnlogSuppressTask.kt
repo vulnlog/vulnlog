@@ -3,22 +3,22 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.filter.resolveFilterOrFail
-import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.failure
+import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.singleVulnlogFileInput
 import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
+import dev.vulnlog.lib.app.SuppressionFile
 import dev.vulnlog.lib.app.SuppressionFormatRequest
-import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
+import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.app.SuppressionRequest
+import dev.vulnlog.lib.app.generateSuppressions
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.suppression.SuppressionFilter
-import dev.vulnlog.lib.core.suppression.buildSuppressionOutputs
-import dev.vulnlog.lib.core.suppression.collectSuppressedVulnerabilities
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.render.renderSuppressionExclusion
-import dev.vulnlog.lib.render.renderSuppressionInclusions
+import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.renderSuppressionMessages
 import dev.vulnlog.lib.render.renderSuppressionWritten
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
@@ -61,44 +61,29 @@ abstract class VulnlogSuppressTask : DefaultTask() {
 
     @TaskAction
     fun generate() {
-        val sink = diagnosticSink()
         val inputFile = singleVulnlogFileInput(name, files.files)
-        val validated = validateInputOrFail(inputFile).project
-
-        val vulnlogFile = validated.vulnlogProjectFile
-        val request = FilterRequest(reporter = reporter.orNull, asOf = asOf.orNull, tags = tags.get())
-        val filter = resolveFilterOrFail(request, listOf(vulnlogFile))
-
-        val targetReporters =
-            vulnlogFile.vulnerabilities
-                .flatMap { it.reports }
-                .map { it.reporter }
-                .filter { filter.reporter == null || it == filter.reporter }
-                .toSet()
-
-        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter, LocalDate.now()))
-        val suppressionFormatRequest: SuppressionFormatRequest =
-            SuppressionFormatRequest.fromToken(
-                format.getOrElse("auto"),
+        val project = validateInputOrFail(inputFile).project
+        val request =
+            SuppressionRequest(
+                filter = FilterRequest(reporter = reporter.orNull, asOf = asOf.orNull, tags = tags.get()),
+                format = SuppressionFormatRequest.fromToken(format.getOrElse("auto")),
+                today = LocalDate.now(),
+                singleFile = false,
             )
-        val suppressionResult = buildSuppressionOutputs(targetReporters, collected.included, suppressionFormatRequest)
-        (collected.exclusions + suppressionResult.exclusions).forEach { exclusion ->
-            sink.verbose(renderSuppressionExclusion(exclusion))
-        }
-        renderSuppressionInclusions(collected.included).forEach(sink::debug)
-        val outputs = suppressionResult.outputs
-        if (outputs.isEmpty()) {
-            logger.lifecycle(formatStatus(StatusVerb.UNCHANGED, "no suppression entries applicable"))
-            return
-        }
 
-        val dir = outputDir.get().asFile
-        outputs.forEach { suppressionOutput ->
-            val suppressionFile = SuppressionEncoder.encode(suppressionOutput)
-            val outputPath = dir.resolve(suppressionFile.fileName)
-            writeOrFail(writeOutput(outputPath.toPath(), suppressionFile.content, createDirectories = true))
-            logger.lifecycle(formatStatus(StatusVerb.WROTE, outputPath.absolutePath))
-            sink.verbose(renderSuppressionWritten(outputPath.path, suppressionOutput))
+        val outcome = generateSuppressions(project, request)
+        renderSuppressionMessages(outcome).forEach(logger::log)
+        when (outcome) {
+            is SuppressionOutcome.Failed -> throw failure(outcome)
+            is SuppressionOutcome.NothingToSuppress -> Unit
+            is SuppressionOutcome.Generated -> outcome.files.forEach(::write)
         }
+    }
+
+    private fun write(file: SuppressionFile) {
+        val out = outputDir.get().asFile.resolve(file.fileName)
+        writeOrFail(writeOutput(out.toPath(), file.content, createDirectories = true))
+        logger.log(Message.Status(formatStatus(StatusVerb.WROTE, out.absolutePath)))
+        logger.log(renderSuppressionWritten(out.path, file))
     }
 }

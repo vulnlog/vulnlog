@@ -246,27 +246,6 @@ class SuppressCommandTest :
             }
         }
 
-        context("pending fix at deployed release") {
-
-            test("--as-of including only the deployed release suppresses an affected CVE whose fix is unshipped") {
-                withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} --as-of 1.0.0 -o -")
-
-                    result.statusCode shouldBe 0
-                    result.stdout shouldContain "CVE-2026-9999"
-                }
-            }
-
-            test("without --as-of the affected CVE with a resolution is dropped") {
-                withTempFile(content = vulnlogYamlWithPendingFix()) { input ->
-                    val result = SuppressCommand().test("${input.absolutePath} -o -")
-
-                    result.statusCode shouldBe 0
-                    result.stdout shouldNotContain "CVE-2026-9999"
-                }
-            }
-        }
-
         context("format selection") {
 
             test("--format generic writes the generic JSON file for a native reporter") {

@@ -23,6 +23,7 @@ import dev.vulnlog.lib.io.InputValidationResult
 import dev.vulnlog.lib.io.validateInputPath
 import dev.vulnlog.lib.io.validateInputSelection
 import dev.vulnlog.lib.model.OutputWrite
+import dev.vulnlog.lib.render.Failure
 import dev.vulnlog.lib.render.formatFailureLines
 import dev.vulnlog.lib.render.renderWriteFailure
 import java.nio.file.Path
@@ -103,8 +104,13 @@ fun ArgumentTransformContext.toInputFile(input: String): FileInputOption.File {
 }
 
 fun CliktCommand.writeOrFail(write: OutputWrite) {
-    if (write is OutputWrite.Failed) {
-        formatFailureLines(listOf(renderWriteFailure(write))).forEach(::echoMessage)
-        throw ProgramResult(exitCode(write).code)
-    }
+    if (write is OutputWrite.Failed) failWith(listOf(renderWriteFailure(write)), exitCode(write))
+}
+
+fun CliktCommand.failWith(
+    failures: List<Failure>,
+    code: ExitCode,
+): Nothing {
+    formatFailureLines(failures).forEach(::echoMessage)
+    throw ProgramResult(code.code)
 }

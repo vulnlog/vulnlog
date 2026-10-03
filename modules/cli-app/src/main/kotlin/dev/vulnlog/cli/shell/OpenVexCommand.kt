@@ -5,7 +5,6 @@ package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
@@ -31,9 +30,7 @@ import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
-import dev.vulnlog.lib.render.Failure
 import dev.vulnlog.lib.render.Message
-import dev.vulnlog.lib.render.formatFailureLines
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexMessages
@@ -132,19 +129,11 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         when (outcome) {
             is OpenVexOutcome.Failed -> {
                 val baseline = baselineRequest?.toString().orEmpty()
-                fail(renderOpenVexFailure(outcome, baseline, BASELINE_OPTION), exitCode(outcome))
+                failWith(renderOpenVexFailure(outcome, baseline, BASELINE_OPTION), exitCode(outcome))
             }
 
             is OpenVexOutcome.Generated -> write(outcome)
         }
-    }
-
-    private fun fail(
-        failures: List<Failure>,
-        code: ExitCode,
-    ): Nothing {
-        formatFailureLines(failures).forEach(::echoMessage)
-        throw ProgramResult(code.code)
     }
 
     private fun write(outcome: OpenVexOutcome.Generated) {
@@ -174,6 +163,6 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         when (val read = readOpenVexBaseline(path)) {
             is OpenVexBaselineRead.Present -> read.text
             is OpenVexBaselineRead.Unavailable ->
-                fail(listOf(renderOpenVexBaselineFailure(read, path.toString(), BASELINE_OPTION)), exitCode(read))
+                failWith(listOf(renderOpenVexBaselineFailure(read, path.toString(), BASELINE_OPTION)), exitCode(read))
         }
 }

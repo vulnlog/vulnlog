@@ -10,29 +10,25 @@ import kotlin.reflect.KClass
 sealed interface SuppressionFormat {
     val vulnIdTypes: Set<KClass<out VulnId>>
 
-    sealed interface GenericFormat : SuppressionFormat {
-        data class Generic(
-            val reporter: ReporterType,
-        ) : GenericFormat {
-            override val vulnIdTypes: Set<KClass<out VulnId>>
-                get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class, VulnId.Snyk::class, VulnId.RustSec::class)
-        }
+    data class Generic(
+        val reporter: ReporterType,
+    ) : SuppressionFormat {
+        override val vulnIdTypes: Set<KClass<out VulnId>>
+            get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class, VulnId.Snyk::class, VulnId.RustSec::class)
     }
 
-    sealed interface NativeFormat : SuppressionFormat {
-        data object Trivy : NativeFormat {
-            override val vulnIdTypes: Set<KClass<out VulnId>>
-                get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class)
-        }
+    data object Trivy : SuppressionFormat {
+        override val vulnIdTypes: Set<KClass<out VulnId>>
+            get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class)
+    }
 
-        data object Snyk : NativeFormat {
-            override val vulnIdTypes: Set<KClass<out VulnId>>
-                get() = setOf(VulnId.Snyk::class)
-        }
+    data object Snyk : SuppressionFormat {
+        override val vulnIdTypes: Set<KClass<out VulnId>>
+            get() = setOf(VulnId.Snyk::class)
+    }
 
-        data object CargoAudit : NativeFormat {
-            override val vulnIdTypes: Set<KClass<out VulnId>>
-                get() = setOf(VulnId.RustSec::class)
-        }
+    data object CargoAudit : SuppressionFormat {
+        override val vulnIdTypes: Set<KClass<out VulnId>>
+            get() = setOf(VulnId.RustSec::class)
     }
 }

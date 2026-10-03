@@ -7,16 +7,16 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import java.time.LocalDate
 
-/**
- * A suppression entry excluded from an output, carrying the data needed to explain why. The
- * shells decide whether to render exclusions as diagnostics or warnings.
- */
+data class SuppressionCollection(
+    val included: Map<ReporterType, List<SuppressedVulnerability>>,
+    val exclusions: List<SuppressionExclusion>,
+)
+
 sealed interface SuppressionExclusion {
     val id: VulnId
 
     data class UnsupportedIdType(
         override val id: VulnId,
-        val fileName: String,
         val format: SuppressionFormat,
     ) : SuppressionExclusion
 
@@ -25,23 +25,13 @@ sealed interface SuppressionExclusion {
         val reporter: ReporterType,
     ) : SuppressionExclusion
 
-    data class ResolvedVulnerability(
+    data class Resolved(
         override val id: VulnId,
     ) : SuppressionExclusion
 
-    data class ExpiredSuppression(
+    data class Expired(
         override val id: VulnId,
         val reporter: ReporterType,
         val expiredAt: LocalDate,
     ) : SuppressionExclusion
 }
-
-data class SuppressionOutputsResult(
-    val outputs: Set<SuppressionOutput>,
-    val exclusions: List<SuppressionExclusion>,
-)
-
-data class SuppressionCollectionResult(
-    val included: Map<ReporterType, List<SuppressedVulnerability>>,
-    val exclusions: List<SuppressionExclusion>,
-)

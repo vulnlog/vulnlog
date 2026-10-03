@@ -5,12 +5,12 @@ package dev.vulnlog.lib.codec.suppression.trivy
 
 import dev.vulnlog.lib.codec.suppression.trivy.dto.TrivySuppressionDto
 import dev.vulnlog.lib.codec.suppression.trivy.dto.TrivyVulnerabilityEntryDto
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionList
 
-object TrivyMapper {
-    fun toDto(suppressionData: SuppressionOutput.TrivySuppression): TrivySuppressionDto {
+internal object TrivyMapper {
+    fun toDto(list: SuppressionList): TrivySuppressionDto {
         val entries =
-            suppressionData.entries
+            list.entries
                 .map { entry ->
                     TrivyVulnerabilityEntryDto(
                         id = entry.id.id,

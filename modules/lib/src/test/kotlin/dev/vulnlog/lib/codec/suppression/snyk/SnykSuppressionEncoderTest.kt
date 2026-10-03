@@ -4,8 +4,9 @@
 package dev.vulnlog.lib.codec.suppression.snyk
 
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
-import dev.vulnlog.lib.model.suppression.SuppressionVuln
+import dev.vulnlog.lib.model.suppression.SuppressionEntry
+import dev.vulnlog.lib.model.suppression.SuppressionFormat
+import dev.vulnlog.lib.model.suppression.SuppressionList
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.string.shouldContain
 import java.time.LocalDate
@@ -15,10 +16,11 @@ class SnykSuppressionEncoderTest :
 
         test("writes Snyk policy version and date-time expires value") {
             val input =
-                SuppressionOutput.SnykSuppression(
+                SuppressionList(
+                    format = SuppressionFormat.Snyk,
                     entries =
                         setOf(
-                            SuppressionVuln.SnykSuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Snyk("SNYK-JS-EXAMPLE-1234567"),
                                 expiresAt = LocalDate.of(2026, 8, 1),
                                 reason = "temp suppression",

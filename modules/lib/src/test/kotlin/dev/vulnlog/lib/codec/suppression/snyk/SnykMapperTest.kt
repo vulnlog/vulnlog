@@ -5,8 +5,9 @@ package dev.vulnlog.lib.codec.suppression.snyk
 
 import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykIgnoreEntryDto
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
-import dev.vulnlog.lib.model.suppression.SuppressionVuln
+import dev.vulnlog.lib.model.suppression.SuppressionEntry
+import dev.vulnlog.lib.model.suppression.SuppressionFormat
+import dev.vulnlog.lib.model.suppression.SuppressionList
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -18,15 +19,16 @@ class SnykMapperTest :
 
         test("maps each entry to a wildcard path under its own id, with or without an expiry") {
             val input =
-                SuppressionOutput.SnykSuppression(
+                SuppressionList(
+                    format = SuppressionFormat.Snyk,
                     entries =
                         setOf(
-                            SuppressionVuln.SnykSuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Snyk("SNYK-JAVA-001"),
                                 reason = "not exploitable",
                                 expiresAt = LocalDate.of(2026, 12, 31),
                             ),
-                            SuppressionVuln.SnykSuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Snyk("SNYK-JAVA-002"),
                                 reason = "permanent",
                             ),
@@ -45,7 +47,7 @@ class SnykMapperTest :
         }
 
         test("maps no entries to an empty ignore map") {
-            val input = SuppressionOutput.SnykSuppression(entries = emptySet())
+            val input = SuppressionList(SuppressionFormat.Snyk, emptySet())
 
             val dto = SnykMapper.toDto(input)
 
