@@ -3,9 +3,7 @@
 
 package dev.vulnlog.lib.document
 
-import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.knownReleases
 import dev.vulnlog.lib.core.knownTags
 import dev.vulnlog.lib.core.parseVulnId
@@ -21,7 +19,6 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import java.nio.file.Path
 import java.time.LocalDate
 
 data class AddVulnerabilityOptions(
@@ -112,16 +109,6 @@ fun addVulnerabilityToFile(
         )
     return AddOutcome(newContent, options.vulnId, updated)
 }
-
-fun formatAddOutcomeMessage(
-    destinationPath: Path,
-    outcome: AddOutcome,
-): String =
-    if (outcome.updated) {
-        formatStatus(StatusVerb.UPDATED, "${outcome.vulnId.id} in $destinationPath")
-    } else {
-        formatStatus(StatusVerb.ADDED, "${outcome.vulnId.id} to $destinationPath")
-    }
 
 private fun emptyEntryDto(
     vulnId: VulnId,

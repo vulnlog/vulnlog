@@ -21,7 +21,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
-import java.nio.file.Path
 import java.time.LocalDate
 
 private val TODAY = LocalDate.of(2026, 5, 4)
@@ -439,15 +438,5 @@ class AddTest :
 
                 failure.message shouldBe "Tags not defined in file: unknown"
             }
-        }
-
-        test("formatAddOutcomeMessage names the vulnerability and whether it was added or updated") {
-            val added = AddOutcome(newContent = "", vulnId = VulnId.Cve("CVE-2026-1234"), updated = false)
-            val updated = added.copy(updated = true)
-
-            val messages = listOf(added, updated).map { formatAddOutcomeMessage(Path.of("/tmp/x.vl.yaml"), it) }
-
-            messages shouldBe
-                listOf("Added: CVE-2026-1234 to /tmp/x.vl.yaml", "Updated: CVE-2026-1234 in /tmp/x.vl.yaml")
         }
     })
