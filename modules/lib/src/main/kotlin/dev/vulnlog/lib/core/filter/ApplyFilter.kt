@@ -4,8 +4,8 @@
 package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.findDisposition
+import dev.vulnlog.lib.core.findWorkState
 import dev.vulnlog.lib.core.kind
-import dev.vulnlog.lib.core.reporting.findWorkState
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile

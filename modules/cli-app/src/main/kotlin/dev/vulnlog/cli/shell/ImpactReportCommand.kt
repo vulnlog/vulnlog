@@ -11,30 +11,20 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.BuildInfo
-import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
-import dev.vulnlog.cli.shell.reporting.sharedProjectOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
-import dev.vulnlog.lib.codec.impact.HtmlReportEncoder
-import dev.vulnlog.lib.codec.impact.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
+import dev.vulnlog.lib.app.ImpactReportOutcome
+import dev.vulnlog.lib.app.ImpactReportRequest
+import dev.vulnlog.lib.app.generateImpactReport
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.FilterRequest
-import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.reporting.collectReportingEntries
-import dev.vulnlog.lib.core.reporting.mergeReportingEntries
-import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.model.Disposition
-import dev.vulnlog.lib.model.Tag
-import dev.vulnlog.lib.model.VerdictKind
-import dev.vulnlog.lib.model.VulnlogFile
-import dev.vulnlog.lib.model.reporting.ReportingEntry
-import dev.vulnlog.lib.model.reporting.WorkState
-import dev.vulnlog.lib.render.renderReportingCounts
+import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.renderImpactReportFailure
+import dev.vulnlog.lib.render.renderImpactReportMessages
+import dev.vulnlog.lib.render.renderImpactReportWritten
 import java.nio.file.Path
 import java.time.Instant
 
@@ -81,53 +71,37 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
     val impactFilterOptions by ImpactFilterOptions()
 
     override fun run() {
-        val validated: List<ValidVulnlogProject> = inputs.map { input -> validateInputOrFail(input).project }
-        val files: List<VulnlogFile> = validated.map(ValidVulnlogProject::vulnlogProjectFile)
-        val project = sharedProjectOrFail(files)
-
+        val projects = inputs.map { input -> validateInputOrFail(input).project }
         failOnRenamedFilterFlags(renamedFilterOptions)
         val request =
-            FilterRequest(
-                reporter = filterOptions.reporterRequest,
-                asOf = filterOptions.asOfRequest,
-                tags = filterOptions.tagsRequest,
-                states = impactFilterOptions.statesRequest,
-                verdicts = impactFilterOptions.verdictsRequest,
-                dispositions = impactFilterOptions.dispositionsRequest,
-            )
-        val filter = resolveFilterOrFail(request, files)
-
-        val reported: List<ReportingEntry> = files.flatMap { collectReportingEntries(it.applyFilter(filter)) }
-        val merged = mergeReportingEntries(reported)
-        diagnosticSink().debug(renderReportingCounts(reported.size, merged.size))
-
-        val filterData =
-            FilterDataDto(
-                asOf = filterOptions.asOfRequest,
-                tags = filter.tags.map(Tag::value).sorted(),
-                reporter = filter.reporter?.canonical(),
-                states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
-                verdicts = VerdictKind.entries.filter { it in filter.verdicts }.map { it.canonical() },
-                dispositions = Disposition.entries.filter { it in filter.dispositions }.map { canonical(it) },
-            )
-        val inputNames = validated.map { it.inputDocument.filename }
-
-        val reportData =
-            toDto(
-                project = project,
-                entries = merged,
+            ImpactReportRequest(
+                filter =
+                    FilterRequest(
+                        reporter = filterOptions.reporterRequest,
+                        asOf = filterOptions.asOfRequest,
+                        tags = filterOptions.tagsRequest,
+                        states = impactFilterOptions.statesRequest,
+                        verdicts = impactFilterOptions.verdictsRequest,
+                        dispositions = impactFilterOptions.dispositionsRequest,
+                    ),
                 generatedAt = Instant.now(),
                 vulnlogVersion = BuildInfo.VERSION,
-                inputs = inputNames,
-                filter = filterData,
             )
-        val content = HtmlReportEncoder.encode(reportData)
 
+        val outcome = generateImpactReport(projects, request)
+        renderImpactReportMessages(outcome).forEach(::echoMessage)
+        when (outcome) {
+            is ImpactReportOutcome.Failed -> failWith(renderImpactReportFailure(outcome), exitCode(outcome))
+            is ImpactReportOutcome.Generated -> write(outcome.content)
+        }
+    }
+
+    private fun write(content: String) {
         when (val target = output) {
             is FileOutputOption.File -> {
                 writeOrFail(writeOutput(target.path, content))
-                echoStatus(formatStatus(StatusVerb.WROTE, target.path.toString()))
-                diagnosticSink().verbose("wrote ${target.path}")
+                echoMessage(Message.Status(formatStatus(StatusVerb.WROTE, target.path.toString())))
+                echoMessage(renderImpactReportWritten(target.path.toString()))
             }
 
             is FileOutputOption.Stdout -> echo(content)

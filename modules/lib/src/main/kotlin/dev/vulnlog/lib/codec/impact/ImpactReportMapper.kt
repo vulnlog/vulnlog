@@ -3,49 +3,59 @@
 
 package dev.vulnlog.lib.codec.impact
 
-import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
-import dev.vulnlog.lib.codec.impact.dto.ProjectDataDto
-import dev.vulnlog.lib.codec.impact.dto.ReportDataDto
-import dev.vulnlog.lib.codec.impact.dto.ReportEntryDataDto
+import dev.vulnlog.lib.codec.impact.dto.FilterDto
+import dev.vulnlog.lib.codec.impact.dto.ImpactEntryDto
+import dev.vulnlog.lib.codec.impact.dto.ImpactReportDto
+import dev.vulnlog.lib.codec.impact.dto.ProjectDto
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.core.reporting.severityOf
 import dev.vulnlog.lib.core.severityOrder
-import dev.vulnlog.lib.model.Project
+import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.reporting.Impact
-import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
-import java.time.Instant
 
-object HtmlReportMapper {
-    fun toDto(
-        project: Project,
-        entries: List<ReportingEntry>,
-        generatedAt: Instant,
-        vulnlogVersion: String,
-        inputs: List<String>,
-        filter: FilterDataDto,
-    ): ReportDataDto =
-        ReportDataDto(
+internal object ImpactReportMapper {
+    fun toDto(report: ImpactReport): ImpactReportDto =
+        ImpactReportDto(
             project =
-                ProjectDataDto(
-                    organization = project.organization,
-                    name = project.name,
-                    author = project.author,
+                ProjectDto(
+                    organization = report.project.organization,
+                    name = report.project.name,
+                    author = report.project.author,
                 ),
-            generatedAt = generatedAt.toString(),
-            vulnlogVersion = vulnlogVersion,
-            inputs = inputs,
-            filter = filter,
-            entries = entries.sortedWith(entrySortComparator).map(::toReportEntryData),
+            generatedAt = report.generatedAt.toString(),
+            vulnlogVersion = report.vulnlogVersion,
+            inputs = report.inputs,
+            filter = toFilterDto(report.filter, report.asOf),
+            entries = report.entries.sortedWith(entrySortComparator).map(::toImpactEntryDto),
         )
 
-    private val entrySortComparator: Comparator<ReportingEntry> =
-        compareBy<ReportingEntry> { stateOrder(it.state) }
+    /** In the order Vulnlog declares the values, not the order requested, so equal filters read the same. */
+    private fun toFilterDto(
+        filter: ResolvedFilter,
+        asOf: Release?,
+    ): FilterDto =
+        FilterDto(
+            asOf = asOf?.value,
+            tags = filter.tags.map { it.value }.sorted(),
+            reporter = filter.reporter?.canonical(),
+            states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
+            verdicts = VerdictKind.entries.filter { it in filter.verdicts }.map { it.canonical() },
+            dispositions = Disposition.entries.filter { it in filter.dispositions }.map { canonical(it) },
+        )
+
+    private val entrySortComparator: Comparator<ImpactEntry> =
+        compareBy<ImpactEntry> { stateOrder(it.state) }
             .thenBy { severityOrder(severityOf(it.impact)) }
             .thenBy { it.primaryId.id }
 
-    private fun toReportEntryData(entry: ReportingEntry): ReportEntryDataDto =
-        ReportEntryDataDto(
+    private fun toImpactEntryDto(entry: ImpactEntry): ImpactEntryDto =
+        ImpactEntryDto(
             primaryId = entry.primaryId.id,
             ids = entry.ids.map { it.id },
             state = entry.state.name.lowercase(),

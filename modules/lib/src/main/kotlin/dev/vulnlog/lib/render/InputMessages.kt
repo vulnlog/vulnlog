@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.document.InputRead
 
 fun renderInputFailure(failed: InputRead.Failed): Failure {
@@ -14,3 +15,9 @@ fun renderInputFailure(failed: InputRead.Failed): Failure {
         }
     return Failure("cannot read ${failed.source}: $reason", hint)
 }
+
+fun renderProjectsDiffer(failed: ProjectsDiffer): Failure =
+    Failure(
+        "all input files must share the same project metadata, found ${failed.projects.size} different ones",
+        "give every input the same project block, or report each project on its own",
+    )

@@ -4,18 +4,15 @@
 package dev.vulnlog.cli.shell.reporting
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.core.ProgramResult
-import dev.vulnlog.cli.shell.ExitCode
-import dev.vulnlog.cli.shell.echoMessage
-import dev.vulnlog.lib.core.formatMessage
-import dev.vulnlog.lib.core.reporting.validateSharedProject
-import dev.vulnlog.lib.finding.FindingSeverity
+import dev.vulnlog.cli.shell.exitCode
+import dev.vulnlog.cli.shell.failWith
+import dev.vulnlog.lib.app.ProjectsDiffer
+import dev.vulnlog.lib.core.reporting.sharedProject
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.render.renderProjectsDiffer
 
-/** The project [files] share. Fails with [ExitCode.VALIDATION_ERROR] when their coordinates differ. */
 fun CliktCommand.sharedProjectOrFail(files: List<VulnlogFile>): Project =
-    validateSharedProject(files) ?: run {
-        echoMessage(formatMessage(FindingSeverity.ERROR, "all input files must share the same project metadata"))
-        throw ProgramResult(ExitCode.VALIDATION_ERROR.code)
+    sharedProject(files) ?: ProjectsDiffer(files.map { it.project }.distinct()).let { differ ->
+        failWith(listOf(renderProjectsDiffer(differ)), exitCode(differ))
     }

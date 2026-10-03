@@ -5,9 +5,12 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.app.ProjectsDiffer
+import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
+import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
@@ -40,12 +43,23 @@ class OutcomesTest :
         }
 
         test("a rejected suppression filter is still a plain GradleException, worded in sentences") {
-            val failed = FilterRejected(listOf(FilterProblem.UnknownReporter("bogus")))
+            val failed: SuppressionOutcome.Failed = FilterRejected(listOf(FilterProblem.UnknownReporter("bogus")))
 
             val exception = failure(failed)
 
             exception::class shouldBe GradleException::class
             exception.message shouldStartWith "Invalid reporter: bogus. Supported reporters: "
+        }
+
+        test("differing projects are still a plain GradleException, worded in sentences") {
+            val failed = ProjectsDiffer(listOf(Project("Acme", "App", "Team"), Project("Other", "App", "Team")))
+
+            val exception = failure(failed)
+
+            exception::class shouldBe GradleException::class
+            exception.message shouldBe
+                "All input files must share the same project metadata, found 2 different ones. " +
+                "Give every input the same project block, or report each project on its own."
         }
 
         test("an unreadable baseline is configuration to fix") {

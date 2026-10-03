@@ -7,7 +7,7 @@ import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.VulnId
 
-data class ReportingEntry(
+data class ImpactEntry(
     val state: WorkState,
     val primaryId: VulnId,
     val ids: Set<VulnId>,

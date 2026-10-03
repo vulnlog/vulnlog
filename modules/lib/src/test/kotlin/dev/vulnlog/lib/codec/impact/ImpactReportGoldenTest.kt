@@ -3,15 +3,18 @@
 
 package dev.vulnlog.lib.codec.impact
 
-import dev.vulnlog.lib.codec.impact.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.Tag
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Impact
-import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -22,10 +25,10 @@ import java.time.Instant
 private const val GOLDEN_RESOURCE = "/report/golden-vulnlog-report-simple.html"
 private val GOLDEN_SOURCE: Path = Path.of("src/test/resources/report/golden-vulnlog-report-simple.html")
 
-class HtmlReportGoldenTest :
+class ImpactReportGoldenTest :
     FunSpec({
         test("matches golden HTML snapshot") {
-            val actual = HtmlReportEncoder.encode(goldenFixture())
+            val actual = ImpactReportEncoder.encode(goldenFixture())
 
             if (shouldUpdateGolden()) {
                 Files.createDirectories(GOLDEN_SOURCE.parent)
@@ -35,7 +38,7 @@ class HtmlReportGoldenTest :
             }
 
             val expected =
-                HtmlReportGoldenTest::class.java
+                ImpactReportGoldenTest::class.java
                     .getResourceAsStream(GOLDEN_RESOURCE)
                     ?.bufferedReader()
                     ?.use { it.readText() }
@@ -51,11 +54,11 @@ class HtmlReportGoldenTest :
 private fun shouldUpdateGolden(): Boolean = System.getenv("UPDATE_GOLDEN") in listOf("1", "true")
 
 private fun goldenFixture() =
-    toDto(
+    ImpactReport(
         project = Project("Acme Corp", "Acme Web App", "Security Team"),
         entries =
             listOf(
-                ReportingEntry(
+                ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-1111"),
                     state = WorkState.OPEN,
                     ids = setOf(VulnId.Cve("CVE-2026-1111"), VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
@@ -66,7 +69,7 @@ private fun goldenFixture() =
                     reportFor = setOf(Release("1.0.0"), Release("1.1.0")),
                     fixedIn = setOf(Release("1.2.0")),
                 ),
-                ReportingEntry(
+                ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-2222"),
                     state = WorkState.NOT_APPLICABLE,
                     ids = setOf(VulnId.Cve("CVE-2026-2222")),
@@ -77,7 +80,7 @@ private fun goldenFixture() =
                     reportFor = setOf(Release("1.1.0")),
                     fixedIn = emptySet(),
                 ),
-                ReportingEntry(
+                ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-3333"),
                     state = WorkState.RESOLVED,
                     ids = setOf(VulnId.Cve("CVE-2026-3333")),
@@ -88,7 +91,7 @@ private fun goldenFixture() =
                     reportFor = setOf(Release("1.0.0")),
                     fixedIn = setOf(Release("1.0.1")),
                 ),
-                ReportingEntry(
+                ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-4444"),
                     state = WorkState.ACCEPTED,
                     ids = setOf(VulnId.Cve("CVE-2026-4444")),
@@ -99,7 +102,7 @@ private fun goldenFixture() =
                     reportFor = setOf(Release("1.1.0")),
                     fixedIn = emptySet(),
                 ),
-                ReportingEntry(
+                ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-5555"),
                     state = WorkState.UNDER_INVESTIGATION,
                     ids = setOf(VulnId.Cve("CVE-2026-5555")),
@@ -115,12 +118,13 @@ private fun goldenFixture() =
         vulnlogVersion = "1.2.3-test",
         inputs = listOf("frontend.vl", "backend.vl"),
         filter =
-            FilterDataDto(
-                asOf = "1.1.0",
-                tags = listOf("production"),
-                reporter = "trivy",
-                states = listOf("open", "accepted"),
-                verdicts = listOf("affected"),
-                dispositions = listOf("wont fix"),
+            ResolvedFilter(
+                reporter = ReporterType.TRIVY,
+                releases = setOf(Release("1.0.0"), Release("1.1.0")),
+                tags = setOf(Tag("production")),
+                states = setOf(WorkState.OPEN, WorkState.ACCEPTED),
+                verdicts = setOf(VerdictKind.AFFECTED),
+                dispositions = setOf(Disposition.WONT_FIX),
             ),
+        asOf = Release("1.1.0"),
     )

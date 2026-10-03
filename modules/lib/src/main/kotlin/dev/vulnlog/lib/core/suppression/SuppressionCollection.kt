@@ -5,7 +5,7 @@ package dev.vulnlog.lib.core.suppression
 
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.filter.scopeResolution
-import dev.vulnlog.lib.core.reporting.findWorkState
+import dev.vulnlog.lib.core.findWorkState
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.Verdict
