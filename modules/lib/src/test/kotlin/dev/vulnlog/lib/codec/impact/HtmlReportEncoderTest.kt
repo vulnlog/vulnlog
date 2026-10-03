@@ -1,10 +1,10 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.codec.report
+package dev.vulnlog.lib.codec.impact
 
-import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.report.dto.FilterDataDto
+import dev.vulnlog.lib.codec.impact.HtmlReportMapper.toDto
+import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release

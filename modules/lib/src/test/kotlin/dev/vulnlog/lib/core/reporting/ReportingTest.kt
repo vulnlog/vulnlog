@@ -1,12 +1,8 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.core.reporting
 
-import dev.vulnlog.lib.core.reporting.collectReportingEntries
-import dev.vulnlog.lib.core.reporting.mergeReportingEntries
-import dev.vulnlog.lib.core.reporting.renderReportingCounts
-import dev.vulnlog.lib.core.reporting.validateSharedProject
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Purl
@@ -449,14 +445,6 @@ class ReportingTest :
 
                 result.shouldNotBeNull()
                 result shouldBe defaultProject
-            }
-        }
-
-        context("renderReportingCounts") {
-
-            test("states the collected and merged counts") {
-                renderReportingCounts(collected = 12, merged = 9) shouldBe
-                    "collected 12 report entries, merged to 9"
             }
         }
     })

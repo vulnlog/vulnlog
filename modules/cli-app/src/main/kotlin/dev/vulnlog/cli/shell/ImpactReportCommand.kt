@@ -14,9 +14,9 @@ import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.reporting.sharedProjectOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
-import dev.vulnlog.lib.codec.report.HtmlReportEncoder
-import dev.vulnlog.lib.codec.report.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.report.dto.FilterDataDto
+import dev.vulnlog.lib.codec.impact.HtmlReportEncoder
+import dev.vulnlog.lib.codec.impact.HtmlReportMapper.toDto
+import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.FilterRequest
@@ -24,7 +24,6 @@ import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.reporting.collectReportingEntries
 import dev.vulnlog.lib.core.reporting.mergeReportingEntries
-import dev.vulnlog.lib.core.reporting.renderReportingCounts
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
@@ -35,6 +34,7 @@ import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.ReportingEntry
 import dev.vulnlog.lib.model.reporting.WorkState
+import dev.vulnlog.lib.render.renderReportingCounts
 import java.nio.file.Path
 import java.time.Instant
 

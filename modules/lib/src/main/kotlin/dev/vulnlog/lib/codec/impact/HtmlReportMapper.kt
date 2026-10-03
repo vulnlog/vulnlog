@@ -1,12 +1,12 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.codec.report
+package dev.vulnlog.lib.codec.impact
 
-import dev.vulnlog.lib.codec.report.dto.FilterDataDto
-import dev.vulnlog.lib.codec.report.dto.ProjectDataDto
-import dev.vulnlog.lib.codec.report.dto.ReportDataDto
-import dev.vulnlog.lib.codec.report.dto.ReportEntryDataDto
+import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
+import dev.vulnlog.lib.codec.impact.dto.ProjectDataDto
+import dev.vulnlog.lib.codec.impact.dto.ReportDataDto
+import dev.vulnlog.lib.codec.impact.dto.ReportEntryDataDto
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.reporting.severityOf
 import dev.vulnlog.lib.core.severityOrder
