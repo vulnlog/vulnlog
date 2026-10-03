@@ -4,9 +4,8 @@
 package dev.vulnlog.lib.codec.suppression.snyk
 
 import dev.vulnlog.lib.document.yaml.CanonicalYaml
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionList
 
-object SnykSuppressionEncoder {
-    fun encode(inputData: SuppressionOutput.SnykSuppression): String =
-        CanonicalYaml.renderDocument(SnykMapper.toDto(inputData))
+internal object SnykSuppressionEncoder {
+    fun encode(list: SuppressionList): String = CanonicalYaml.renderDocument(SnykMapper.toDto(list))
 }

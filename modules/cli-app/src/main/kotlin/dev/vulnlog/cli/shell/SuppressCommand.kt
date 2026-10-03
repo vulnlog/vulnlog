@@ -5,7 +5,6 @@ package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
@@ -18,29 +17,23 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.choice
-import dev.vulnlog.cli.shell.filter.resolveFilterOrFail
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.app.SuppressionFile
 import dev.vulnlog.lib.app.SuppressionFormatRequest
-import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
-import dev.vulnlog.lib.codec.suppression.SuppressionFile
+import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.app.SuppressionRequest
+import dev.vulnlog.lib.app.generateSuppressions
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.FilterRequest
-import dev.vulnlog.lib.core.formatHint
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.suppression.SuppressionFilter
-import dev.vulnlog.lib.core.suppression.buildSuppressionOutputs
-import dev.vulnlog.lib.core.suppression.collectSuppressedVulnerabilities
-import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.DirectoryOutputOption
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.OutputOption
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
-import dev.vulnlog.lib.render.renderSuppressionExclusion
-import dev.vulnlog.lib.render.renderSuppressionInclusions
+import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.renderSuppressionFailure
+import dev.vulnlog.lib.render.renderSuppressionMessages
 import dev.vulnlog.lib.render.renderSuppressionWritten
 import java.nio.file.Path
 import java.time.LocalDate
@@ -83,80 +76,54 @@ class SuppressCommand : CliktCommand(name = "suppress") {
     val renamedFilterOptions by RenamedFilterOptions()
 
     override fun run() {
-        val validated = validateInputOrFail(input).project
-
-        val vulnlogFile = validated.vulnlogProjectFile
+        val project = validateInputOrFail(input).project
         failOnRenamedFilterFlags(renamedFilterOptions)
         val request =
-            FilterRequest(
-                reporter = filterOptions.reporterRequest,
-                asOf = filterOptions.asOfRequest,
-                tags = filterOptions.tagsRequest,
+            SuppressionRequest(
+                filter =
+                    FilterRequest(
+                        reporter = filterOptions.reporterRequest,
+                        asOf = filterOptions.asOfRequest,
+                        tags = filterOptions.tagsRequest,
+                    ),
+                format = format,
+                today = LocalDate.now(),
+                singleFile = destination !is DirectoryOutputOption,
             )
-        val filter = resolveFilterOrFail(request, listOf(vulnlogFile))
 
-        val targetReporters =
-            vulnlogFile.vulnerabilities
-                .flatMap { it.reports }
-                .map { it.reporter }
-                .filter { filter.reporter == null || it == filter.reporter }
-                .toSet()
+        val outcome = generateSuppressions(project, request)
+        renderSuppressionMessages(outcome).forEach(::echoMessage)
+        when (outcome) {
+            is SuppressionOutcome.Failed ->
+                failWith(renderSuppressionFailure(outcome, "-o", "--reporter", "--output-dir"), exitCode(outcome))
 
-        val collected = collectSuppressedVulnerabilities(vulnlogFile, SuppressionFilter(filter, LocalDate.now()))
-        val suppressionResult = buildSuppressionOutputs(targetReporters, collected.included, format)
-        (collected.exclusions + suppressionResult.exclusions).forEach { exclusion ->
-            diagnosticSink().verbose(renderSuppressionExclusion(exclusion))
+            is SuppressionOutcome.NothingToSuppress -> Unit
+
+            is SuppressionOutcome.Generated -> write(outcome.files)
         }
-        renderSuppressionInclusions(collected.included).forEach { diagnosticSink().debug(it) }
-        val contents: List<RenderedSuppression> =
-            suppressionResult.outputs.map { output -> RenderedSuppression(output, SuppressionEncoder.encode(output)) }
+    }
 
-        if (contents.isEmpty()) {
-            echoStatus(formatStatus(StatusVerb.UNCHANGED, "no suppression entries applicable"))
-            return
-        }
+    /** A single-file target gets exactly one file: the use case fails on several. */
+    private fun write(files: List<SuppressionFile>) {
+        when (val target = destination) {
+            is DirectoryOutputOption.Directory ->
+                files.forEach { file -> write(target.path.resolve(file.fileName), file) }
 
-        if (contents.size > 1 && destination !is DirectoryOutputOption) {
-            val names = targetReporters.map { it.canonical() }.sorted().joinToString(", ")
-            echoMessage(formatMessage(FindingSeverity.ERROR, "-o requires a single reporter, found: $names"))
-            echoMessage(formatHint("use --reporter <name> to pick one, or --output-dir for one file per reporter"))
-            throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-        }
+            is FileOutputOption.File -> write(target.path, files.single())
 
-        when (val resolved = destination) {
-            is DirectoryOutputOption.Directory -> writeToDirectory(resolved, contents)
-            is FileOutputOption.File -> writeSingleFileOutput(resolved, contents.first())
             FileOutputOption.Stdout -> {
-                echo(contents.first().file.content)
-                diagnosticSink().verbose(renderSuppressionWritten("<stdout>", contents.first().output))
+                echo(files.single().content)
+                echoMessage(renderSuppressionWritten("<stdout>", files.single()))
             }
         }
     }
 
-    private fun writeToDirectory(
-        destination: DirectoryOutputOption.Directory,
-        suppressions: List<RenderedSuppression>,
+    private fun write(
+        path: Path,
+        file: SuppressionFile,
     ) {
-        suppressions.forEach { (output, suppressionFile) ->
-            val outputPath: Path = destination.path.resolve(suppressionFile.fileName)
-            writeOrFail(writeOutput(outputPath, suppressionFile.content))
-            echoStatus(formatStatus(StatusVerb.WROTE, outputPath.toString()))
-            diagnosticSink().verbose(renderSuppressionWritten(outputPath.toString(), output))
-        }
-    }
-
-    private fun writeSingleFileOutput(
-        destination: FileOutputOption.File,
-        suppression: RenderedSuppression,
-    ) {
-        val outputPath = destination.path
-        writeOrFail(writeOutput(outputPath, suppression.file.content))
-        echoStatus(formatStatus(StatusVerb.WROTE, outputPath.toString()))
-        diagnosticSink().verbose(renderSuppressionWritten(outputPath.toString(), suppression.output))
+        writeOrFail(writeOutput(path, file.content))
+        echoMessage(Message.Status(formatStatus(StatusVerb.WROTE, path.toString())))
+        echoMessage(renderSuppressionWritten(path.toString(), file))
     }
 }
-
-private data class RenderedSuppression(
-    val output: SuppressionOutput,
-    val file: SuppressionFile,
-)

@@ -3,7 +3,7 @@
 
 package dev.vulnlog.gradle.filter
 
-import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.lib.core.filter.FilterOutcome
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
@@ -15,14 +15,14 @@ import dev.vulnlog.lib.render.renderFilterResolution
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 
-/** Reports what [request] resolved to on the verbose sink. */
+/** Also reports what [request] resolved to, at verbose level. */
 fun DefaultTask.resolveFilterOrFail(
     request: FilterRequest,
     files: List<VulnlogFile>,
 ): ResolvedFilter =
     when (val outcome = resolveFilter(request, files)) {
         is FilterOutcome.Resolved -> {
-            renderFilterResolution(outcome.filter).forEach(diagnosticSink()::verbose)
+            renderFilterResolution(outcome.filter).forEach(logger::log)
             outcome.filter
         }
 

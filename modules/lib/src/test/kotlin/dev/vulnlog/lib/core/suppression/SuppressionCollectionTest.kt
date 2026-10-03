@@ -21,7 +21,7 @@ import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
-import dev.vulnlog.lib.model.suppression.SuppressionCollectionResult
+import dev.vulnlog.lib.model.suppression.SuppressionCollection
 import dev.vulnlog.lib.model.suppression.SuppressionExclusion
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -62,10 +62,10 @@ private fun entry(
 private fun collect(
     vararg entries: VulnerabilityEntry,
     filter: ResolvedFilter = ResolvedFilter(),
-): SuppressionCollectionResult =
-    collectSuppressedVulnerabilities(vulnlogFile(vulnerabilities = entries.toList()), SuppressionFilter(filter, TODAY))
+): SuppressionCollection =
+    collectSuppressedVulnerabilities(vulnlogFile(vulnerabilities = entries.toList()), filter, TODAY)
 
-private fun SuppressionCollectionResult.includedIds(): List<VulnId> = included.values.flatten().map { it.id }
+private fun SuppressionCollection.includedIds(): List<VulnId> = included.values.flatten().map { it.id }
 
 class SuppressionCollectionTest :
     FunSpec({
@@ -118,8 +118,8 @@ class SuppressionCollectionTest :
                 result.included shouldBe emptyMap()
                 result.exclusions shouldContainExactly
                     listOf(
-                        SuppressionExclusion.ResolvedVulnerability(cve("CVE-2024-0001")),
-                        SuppressionExclusion.ResolvedVulnerability(cve("CVE-2024-0002")),
+                        SuppressionExclusion.Resolved(cve("CVE-2024-0001")),
+                        SuppressionExclusion.Resolved(cve("CVE-2024-0002")),
                     )
             }
 
@@ -165,13 +165,7 @@ class SuppressionCollectionTest :
 
                 result.includedIds() shouldContainExactly listOf(cve("CVE-2024-0002"), cve("CVE-2024-0003"))
                 result.exclusions shouldContainExactly
-                    listOf(
-                        SuppressionExclusion.ExpiredSuppression(
-                            cve("CVE-2024-0001"),
-                            ReporterType.TRIVY,
-                            TODAY.minusDays(1),
-                        ),
-                    )
+                    listOf(SuppressionExclusion.Expired(cve("CVE-2024-0001"), ReporterType.TRIVY, TODAY.minusDays(1)))
             }
 
             test("an expired suppression ends a not affected entry too") {
@@ -246,7 +240,7 @@ class SuppressionCollectionTest :
                 val result = collect(*entries, filter = ResolvedFilter(reporter = ReporterType.TRIVY))
 
                 result.exclusions shouldContainExactly
-                    listOf(SuppressionExclusion.ResolvedVulnerability(cve("CVE-2024-0001")))
+                    listOf(SuppressionExclusion.Resolved(cve("CVE-2024-0001")))
             }
         }
 

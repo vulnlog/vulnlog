@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.suppression
 
+import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.filter.scopeResolution
 import dev.vulnlog.lib.core.reporting.findWorkState
 import dev.vulnlog.lib.model.Release
@@ -12,47 +13,51 @@ import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.WorkState
 import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
-import dev.vulnlog.lib.model.suppression.SuppressionCollectionResult
+import dev.vulnlog.lib.model.suppression.SuppressionCollection
 import dev.vulnlog.lib.model.suppression.SuppressionExclusion
+import java.time.LocalDate
 
 /**
- * Collects and filters suppressed vulnerabilities from a given Vulnlog file based on the specified suppression
- * filter criteria. The collected vulnerabilities are grouped by their reporter type. Resolved vulnerabilities
- * and expired suppressions come back as exclusions; entries that merely fall outside the user-requested
- * release, tag, or reporter filter do not.
- *
- * @param vulnlogFile The Vulnlog file containing vulnerability records to analyze.
- * @param filter The suppression filter to apply for selecting and grouping vulnerabilities.
- * @return The suppressed vulnerabilities grouped by reporter type, plus all exclusions.
+ * Resolved vulnerabilities and expired suppressions come back as exclusions, so a message can explain them. Entries
+ * outside the requested releases, tags or reporter do not: the user left them out.
  */
 fun collectSuppressedVulnerabilities(
     vulnlogFile: VulnlogFile,
-    filter: SuppressionFilter,
-): SuppressionCollectionResult {
+    filter: ResolvedFilter,
+    today: LocalDate,
+): SuppressionCollection {
     val (resolved, unresolved) =
-        vulnlogFile.vulnerabilities.partition { vulnerability -> isResolved(vulnerability, filter.filter.releases) }
+        vulnlogFile.vulnerabilities.partition { vulnerability -> isResolved(vulnerability, filter.releases) }
     val (active, expired) =
         unresolved
             .asSequence()
             .flatMap(::explodeOnReports)
-            .applyFilter(filter.filter)
-            .partition { it.isActiveOn(filter.today) }
+            .filter { suppression -> isInScope(suppression, filter) }
+            .partition { it.isActiveOn(today) }
     val resolvedExclusions =
         resolved
             .asSequence()
             .flatMap(::explodeOnReports)
-            .applyFilter(filter.filter)
-            .map { SuppressionExclusion.ResolvedVulnerability(it.id) }
+            .filter { suppression -> isInScope(suppression, filter) }
+            .map { SuppressionExclusion.Resolved(it.id) }
             .toList()
-    return SuppressionCollectionResult(
+    return SuppressionCollection(
         included = active.groupBy { it.reporter },
         exclusions = (resolvedExclusions + expired.mapNotNull(::expiredExclusion)).distinct(),
     )
 }
 
+private fun isInScope(
+    suppression: SuppressedVulnerability,
+    filter: ResolvedFilter,
+): Boolean =
+    (filter.releases.isEmpty() || suppression.releases.any { release -> release in filter.releases }) &&
+        (filter.tags.isEmpty() || filter.tags.any { tag -> tag in suppression.tags }) &&
+        (filter.reporter == null || filter.reporter == suppression.reporter)
+
 private fun expiredExclusion(suppression: SuppressedVulnerability): SuppressionExclusion? =
     suppression.expiresAt?.let { expiredAt ->
-        SuppressionExclusion.ExpiredSuppression(suppression.id, suppression.reporter, expiredAt)
+        SuppressionExclusion.Expired(suppression.id, suppression.reporter, expiredAt)
     }
 
 private fun isResolved(

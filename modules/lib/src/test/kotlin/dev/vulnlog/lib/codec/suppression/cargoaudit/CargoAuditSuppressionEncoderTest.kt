@@ -4,8 +4,9 @@
 package dev.vulnlog.lib.codec.suppression.cargoaudit
 
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
-import dev.vulnlog.lib.model.suppression.SuppressionVuln
+import dev.vulnlog.lib.model.suppression.SuppressionEntry
+import dev.vulnlog.lib.model.suppression.SuppressionFormat
+import dev.vulnlog.lib.model.suppression.SuppressionList
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -14,11 +15,12 @@ class CargoAuditSuppressionEncoderTest :
 
         test("writes every entry in order") {
             val input =
-                SuppressionOutput.CargoAuditSuppression(
+                SuppressionList(
+                    format = SuppressionFormat.CargoAudit,
                     entries =
                         setOf(
-                            SuppressionVuln.CargoAuditSuppressionEntry(id = VulnId.RustSec("RUSTSEC-2024-0001")),
-                            SuppressionVuln.CargoAuditSuppressionEntry(id = VulnId.RustSec("RUSTSEC-2021-0073")),
+                            SuppressionEntry(id = VulnId.RustSec("RUSTSEC-2024-0001")),
+                            SuppressionEntry(id = VulnId.RustSec("RUSTSEC-2021-0073")),
                         ),
                 )
 
@@ -36,7 +38,7 @@ class CargoAuditSuppressionEncoderTest :
         }
 
         test("writes empty ignore list") {
-            val input = SuppressionOutput.CargoAuditSuppression(entries = emptySet())
+            val input = SuppressionList(SuppressionFormat.CargoAudit, emptySet())
 
             val result = CargoAuditSuppressionEncoder.encode(input)
 

@@ -5,12 +5,12 @@ package dev.vulnlog.lib.codec.suppression.generic
 
 import dev.vulnlog.lib.codec.suppression.generic.dto.GenericSuppressionDto
 import dev.vulnlog.lib.codec.suppression.generic.dto.GenericVulnerabilityEntryDto
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionList
 
-object GenericMapper {
-    fun toDto(suppressionData: SuppressionOutput.GenericSuppression): GenericSuppressionDto {
+internal object GenericMapper {
+    fun toDto(list: SuppressionList): GenericSuppressionDto {
         val entries =
-            suppressionData.entries
+            list.entries
                 .map { entry ->
                     GenericVulnerabilityEntryDto(
                         id = entry.id.id,

@@ -4,8 +4,9 @@
 package dev.vulnlog.lib.codec.suppression
 
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
-import dev.vulnlog.lib.model.suppression.SuppressionVuln
+import dev.vulnlog.lib.model.suppression.SuppressionEntry
+import dev.vulnlog.lib.model.suppression.SuppressionFormat
+import dev.vulnlog.lib.model.suppression.SuppressionList
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.nio.file.Files
@@ -30,45 +31,47 @@ class SuppressionGoldenTest :
     FunSpec({
 
         test("Trivy suppression file matches golden bytes") {
-            val output =
-                SuppressionOutput.TrivySuppression(
+            val list =
+                SuppressionList(
+                    format = SuppressionFormat.Trivy,
                     entries =
                         setOf(
-                            SuppressionVuln.TrivySuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Cve("CVE-2026-1111"),
                                 expiresAt = EXPIRY,
                                 reason = SHORT_REASON,
                             ),
-                            SuppressionVuln.TrivySuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"),
                                 reason = LONG_REASON,
                             ),
                         ),
                 )
 
-            val actual = SuppressionEncoder.encode(output).content
+            val actual = SuppressionEncoder.encode(list)
 
             actual shouldBe golden("trivyignore.yaml", actual)
         }
 
         test("Snyk suppression file matches golden bytes") {
-            val output =
-                SuppressionOutput.SnykSuppression(
+            val list =
+                SuppressionList(
+                    format = SuppressionFormat.Snyk,
                     entries =
                         setOf(
-                            SuppressionVuln.SnykSuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Snyk("SNYK-JAVA-CHQOSLOGBACK-8539867"),
                                 expiresAt = EXPIRY,
                                 reason = SHORT_REASON,
                             ),
-                            SuppressionVuln.SnykSuppressionEntry(
+                            SuppressionEntry(
                                 id = VulnId.Snyk("SNYK-JAVA-CHQOSLOGBACK-8539866"),
                                 reason = LONG_REASON,
                             ),
                         ),
                 )
 
-            val actual = SuppressionEncoder.encode(output).content
+            val actual = SuppressionEncoder.encode(list)
 
             actual shouldBe golden("snyk.yaml", actual)
         }

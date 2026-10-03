@@ -35,6 +35,7 @@ private val strictPackages =
         "$LIB.finding",
         "$LIB.core.filter",
         "$LIB.core.reporting",
+        "$LIB.core.suppression",
         "$LIB.core.validation",
         "$LIB.core.vex",
         "$LIB.document",

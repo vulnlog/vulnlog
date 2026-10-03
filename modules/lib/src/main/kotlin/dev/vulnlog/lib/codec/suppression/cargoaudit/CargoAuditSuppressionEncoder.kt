@@ -3,12 +3,12 @@
 
 package dev.vulnlog.lib.codec.suppression.cargoaudit
 
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionList
 
-object CargoAuditSuppressionEncoder {
-    fun encode(inputData: SuppressionOutput.CargoAuditSuppression): String {
-        if (inputData.entries.isEmpty()) return "[advisories]\nignore = []\n"
-        val ids = inputData.entries.joinToString(",\n") { "    \"${it.id.id}\"" }
+internal object CargoAuditSuppressionEncoder {
+    fun encode(list: SuppressionList): String {
+        if (list.entries.isEmpty()) return "[advisories]\nignore = []\n"
+        val ids = list.entries.joinToString(",\n") { "    \"${it.id.id}\"" }
         return "[advisories]\nignore = [\n$ids,\n]\n"
     }
 }

@@ -5,12 +5,12 @@ package dev.vulnlog.lib.codec.suppression.snyk
 
 import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykIgnoreEntryDto
 import dev.vulnlog.lib.codec.suppression.snyk.dto.SnykSuppressionDto
-import dev.vulnlog.lib.model.suppression.SuppressionOutput
+import dev.vulnlog.lib.model.suppression.SuppressionList
 
-object SnykMapper {
-    fun toDto(suppressionData: SuppressionOutput.SnykSuppression): SnykSuppressionDto {
+internal object SnykMapper {
+    fun toDto(list: SuppressionList): SnykSuppressionDto {
         val ignore =
-            suppressionData.entries.associate { entry ->
+            list.entries.associate { entry ->
                 entry.id.id to
                     listOf(
                         mapOf(

@@ -5,6 +5,7 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
@@ -15,6 +16,8 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
+import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.VerificationException
 
@@ -34,6 +37,15 @@ class OutcomesTest :
 
             exceptions.map { it::class } shouldContainExactly
                 listOf(InvalidUserDataException::class, InvalidUserDataException::class, VerificationException::class)
+        }
+
+        test("a rejected suppression filter is still a plain GradleException, worded in sentences") {
+            val failed = FilterRejected(listOf(FilterProblem.UnknownReporter("bogus")))
+
+            val exception = failure(failed)
+
+            exception::class shouldBe GradleException::class
+            exception.message shouldStartWith "Invalid reporter: bogus. Supported reporters: "
         }
 
         test("an unreadable baseline is configuration to fix") {
