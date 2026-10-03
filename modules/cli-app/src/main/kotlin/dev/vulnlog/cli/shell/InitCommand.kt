@@ -5,21 +5,21 @@ package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import dev.vulnlog.lib.app.InitOutcome
+import dev.vulnlog.lib.app.InitRequest
+import dev.vulnlog.lib.app.initDocument
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.init
-import dev.vulnlog.lib.document.yaml.YamlWriter
-import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.model.SchemaVersion
+import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.renderInitFailure
+import dev.vulnlog.lib.render.renderWritten
 import kotlin.io.path.exists
 
 class InitCommand : CliktCommand(name = "init") {
@@ -50,19 +50,28 @@ class InitCommand : CliktCommand(name = "init") {
     ).flag(default = false)
 
     override fun run() {
-        val vulnlogFile = init(SchemaVersion.V1, organization, project, author)
-        val content = YamlWriter.write(vulnlogFile)
+        val file = (output as? FileOutputOption.File)?.path
+        val request =
+            InitRequest(
+                organization = organization,
+                name = project,
+                author = author,
+                targetExists = file?.exists() ?: false,
+                force = force,
+            )
 
+        when (val outcome = initDocument(request)) {
+            is InitOutcome.Failed -> failWith(listOf(renderInitFailure(outcome, "$file", "--force")), exitCode(outcome))
+            is InitOutcome.Created -> write(outcome.content)
+        }
+    }
+
+    private fun write(content: String) {
         when (val target = output) {
             is FileOutputOption.File -> {
-                if (!force && target.path.exists()) {
-                    val message = "The file ${target.path} already exists. Pass --force to replace it."
-                    echoMessage(formatMessage(FindingSeverity.ERROR, message))
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-                }
                 writeOrFail(writeOutput(target.path, content))
-                echoStatus(formatStatus(StatusVerb.CREATED, target.path.toString()))
-                diagnosticSink().verbose("wrote ${target.path}")
+                echoMessage(Message.Status(formatStatus(StatusVerb.CREATED, target.path.toString())))
+                echoMessage(renderWritten(target.path.toString()))
             }
 
             is FileOutputOption.Stdout -> echo(content)

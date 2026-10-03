@@ -6,6 +6,7 @@ package dev.vulnlog.cli.shell
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
+import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.core.filter.ResolvedFilter
@@ -16,6 +17,7 @@ import dev.vulnlog.lib.model.suppression.SuppressionCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldBe
 
 class ExitsTest :
     FunSpec({
@@ -47,6 +49,14 @@ class ExitsTest :
                     ExitCode.VALIDATION_ERROR,
                     ExitCode.INVALID_FLAG_VALUE,
                 )
+        }
+
+        test("an init target that exists is a general error") {
+            val failed: InitOutcome.Failed = InitOutcome.AlreadyExists
+
+            val code = exitCode(failed)
+
+            code shouldBe ExitCode.GENERAL_ERROR
         }
 
         test("an absent baseline is a bad flag value, an unreadable one an I/O error") {
