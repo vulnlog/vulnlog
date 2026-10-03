@@ -11,12 +11,12 @@ import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.document.copyVulnerabilities
 import dev.vulnlog.lib.document.findNonExistingVulnIds
-import dev.vulnlog.lib.document.formatCopiedMessage
-import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
+import dev.vulnlog.lib.render.formatCopiedMessage
+import dev.vulnlog.lib.render.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.render.renderCommentsDropped
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException

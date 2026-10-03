@@ -18,13 +18,13 @@ import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.document.copyVulnerabilities
 import dev.vulnlog.lib.document.findNonExistingVulnIds
-import dev.vulnlog.lib.document.formatCopiedMessage
-import dev.vulnlog.lib.document.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.render.formatCopiedMessage
+import dev.vulnlog.lib.render.formatVulnIdsNotInSourceMessage
 import dev.vulnlog.lib.render.renderCommentsDropped
 
 class CopyCommand : CliktCommand(name = "copy") {
