@@ -3,6 +3,7 @@
 
 package dev.vulnlog.cli.shell
 
+import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
@@ -32,13 +33,20 @@ class ExitsTest :
             codes shouldContainExactly listOf(ExitCode.INVALID_FLAG_VALUE, ExitCode.GENERAL_ERROR)
         }
 
-        test("differing projects are a validation error, a rejected report filter a bad flag value") {
-            val failed: List<ImpactReportOutcome.Failed> =
-                listOf(ProjectsDiffer(emptyList()), FilterRejected(emptyList()))
+        test("in both reports, differing projects are a validation error and a rejected filter a bad flag value") {
+            val failed = listOf(ProjectsDiffer(emptyList()), FilterRejected(emptyList()))
+            val impact: List<ImpactReportOutcome.Failed> = failed
+            val changelog: List<ChangelogOutcome.Failed> = failed
 
-            val codes = failed.map { exitCode(it) }
+            val codes = impact.map { exitCode(it) } + changelog.map { exitCode(it) }
 
-            codes shouldContainExactly listOf(ExitCode.VALIDATION_ERROR, ExitCode.INVALID_FLAG_VALUE)
+            codes shouldContainExactly
+                listOf(
+                    ExitCode.VALIDATION_ERROR,
+                    ExitCode.INVALID_FLAG_VALUE,
+                    ExitCode.VALIDATION_ERROR,
+                    ExitCode.INVALID_FLAG_VALUE,
+                )
         }
 
         test("an absent baseline is a bad flag value, an unreadable one an I/O error") {

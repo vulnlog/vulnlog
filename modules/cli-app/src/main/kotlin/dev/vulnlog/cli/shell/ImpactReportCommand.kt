@@ -24,7 +24,7 @@ import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
 import dev.vulnlog.lib.render.renderImpactReportFailure
 import dev.vulnlog.lib.render.renderImpactReportMessages
-import dev.vulnlog.lib.render.renderImpactReportWritten
+import dev.vulnlog.lib.render.renderWritten
 import java.nio.file.Path
 import java.time.Instant
 
@@ -101,7 +101,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
             is FileOutputOption.File -> {
                 writeOrFail(writeOutput(target.path, content))
                 echoMessage(Message.Status(formatStatus(StatusVerb.WROTE, target.path.toString())))
-                echoMessage(renderImpactReportWritten(target.path.toString()))
+                echoMessage(renderWritten(target.path.toString()))
             }
 
             is FileOutputOption.Stdout -> echo(content)

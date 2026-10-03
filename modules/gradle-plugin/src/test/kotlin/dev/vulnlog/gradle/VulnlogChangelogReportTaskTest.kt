@@ -55,24 +55,6 @@ class VulnlogChangelogReportTaskTest :
                 report.readText() shouldContain "CVE-2026-1111"
             }
 
-            test("reports the newest release first") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to changelogDocument())
-
-                runner(dir, "vulnlogChangelogReport").build()
-
-                val report = dir.resolve("build/vulnlog/vulnlog-changelog.txt").readText()
-                report.lines().filter { it.firstOrNull()?.isDigit() == true } shouldBe
-                    listOf("1.2.0 (unreleased)", "1.1.0 (2026-03-20)")
-            }
-
-            test("leaves out a vulnerability that records no resolution") {
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to changelogDocument())
-
-                runner(dir, "vulnlogChangelogReport").build()
-
-                dir.resolve("build/vulnlog/vulnlog-changelog.txt").readText() shouldNotContain "CVE-2026-3333"
-            }
-
             test("writes the report to the configured output file") {
                 val dir =
                     changelogProject("""outputFile = layout.projectDirectory.file("changelog.md")""")

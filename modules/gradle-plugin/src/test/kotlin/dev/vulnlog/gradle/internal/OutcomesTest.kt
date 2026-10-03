@@ -3,7 +3,9 @@
 
 package dev.vulnlog.gradle.internal
 
+import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
@@ -51,15 +53,19 @@ class OutcomesTest :
             exception.message shouldStartWith "Invalid reporter: bogus. Supported reporters: "
         }
 
-        test("differing projects are still a plain GradleException, worded in sentences") {
-            val failed = ProjectsDiffer(listOf(Project("Acme", "App", "Team"), Project("Other", "App", "Team")))
+        test("differing projects are still a plain GradleException in both reports, worded in sentences") {
+            val differ = ProjectsDiffer(listOf(Project("Acme", "App", "Team"), Project("Other", "App", "Team")))
+            val impact: ImpactReportOutcome.Failed = differ
+            val changelog: ChangelogOutcome.Failed = differ
 
-            val exception = failure(failed)
+            val exceptions = listOf(failure(impact), failure(changelog))
 
-            exception::class shouldBe GradleException::class
-            exception.message shouldBe
-                "All input files must share the same project metadata, found 2 different ones. " +
-                "Give every input the same project block, or report each project on its own."
+            exceptions.map { it::class } shouldContainExactly List(2) { GradleException::class }
+            exceptions.map { it.message }.distinct() shouldContainExactly
+                listOf(
+                    "All input files must share the same project metadata, found 2 different ones. " +
+                        "Give every input the same project block, or report each project on its own.",
+                )
         }
 
         test("an unreadable baseline is configuration to fix") {

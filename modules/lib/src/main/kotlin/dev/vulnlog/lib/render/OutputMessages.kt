@@ -14,3 +14,6 @@ fun renderWriteFailure(failed: OutputWrite.Failed): Failure {
         }
     return Failure("cannot write ${failed.target}: $reason", hint)
 }
+
+/** For outputs whose content needs no summary; suppression and OpenVEX add theirs. */
+fun renderWritten(target: String): Message = Message.Verbose("wrote $target")

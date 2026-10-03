@@ -3,6 +3,7 @@
 
 package dev.vulnlog.cli.shell
 
+import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
@@ -27,6 +28,12 @@ fun exitCode(failed: SuppressionOutcome.Failed): ExitCode =
     }
 
 fun exitCode(failed: ImpactReportOutcome.Failed): ExitCode =
+    when (failed) {
+        is ProjectsDiffer -> ExitCode.VALIDATION_ERROR
+        is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
+    }
+
+fun exitCode(failed: ChangelogOutcome.Failed): ExitCode =
     when (failed) {
         is ProjectsDiffer -> ExitCode.VALIDATION_ERROR
         is FilterRejected -> ExitCode.INVALID_FLAG_VALUE

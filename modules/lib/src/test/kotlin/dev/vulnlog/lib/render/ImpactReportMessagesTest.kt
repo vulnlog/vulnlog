@@ -92,10 +92,4 @@ class ImpactReportMessagesTest :
 
             failures shouldBe renderFilterProblems(problems)
         }
-
-        test("renderImpactReportWritten names the target") {
-            val message = renderImpactReportWritten("out/report.html")
-
-            message shouldBe Message.Verbose("wrote out/report.html")
-        }
     })

@@ -30,4 +30,10 @@ class OutputMessagesTest :
                     Failure("cannot write out/report.html: Read-only file system", "pass a writable file path"),
                 )
         }
+
+        test("renderWritten names the target") {
+            val message = renderWritten("out/report.html")
+
+            message shouldBe Message.Verbose("wrote out/report.html")
+        }
     })

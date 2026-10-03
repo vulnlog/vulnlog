@@ -9,4 +9,5 @@ data class FilterRejected(
     val problems: List<FilterProblem>,
 ) : OpenVexOutcome.Failed,
     SuppressionOutcome.Failed,
-    ImpactReportOutcome.Failed
+    ImpactReportOutcome.Failed,
+    ChangelogOutcome.Failed

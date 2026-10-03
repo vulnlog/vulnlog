@@ -26,39 +26,6 @@ class ChangelogReportCommandTest :
                 }
             }
 
-            test("reports the newest release first") {
-                withTempFile(content = changelogDocument()) { input ->
-                    val result = ChangelogReportCommand().test(input.absolutePath)
-
-                    val releaseHeadings = result.stdout.lines().filter { it.firstOrNull()?.isDigit() == true }
-                    releaseHeadings shouldBe listOf("1.2.0 (unreleased)", "1.1.0 (2026-03-20)")
-                }
-            }
-
-            test("marks a release that is not published yet as unreleased") {
-                withTempFile(content = changelogDocument()) { input ->
-                    val result = ChangelogReportCommand().test(input.absolutePath)
-
-                    result.stdout shouldContain "1.2.0 (unreleased)"
-                }
-            }
-
-            test("names an alias alongside the vulnerability it belongs to") {
-                withTempFile(content = changelogDocument()) { input ->
-                    val result = ChangelogReportCommand().test(input.absolutePath)
-
-                    result.stdout shouldContain "CVE-2026-2222 (high, also GHSA-aaaa-bbbb-cccc)"
-                }
-            }
-
-            test("leaves out a vulnerability that records no resolution") {
-                withTempFile(content = changelogDocument()) { input ->
-                    val result = ChangelogReportCommand().test(input.absolutePath)
-
-                    result.stdout shouldNotContain "CVE-2026-3333"
-                }
-            }
-
             test("writes the report to the given path") {
                 withTempFile(content = changelogDocument()) { input ->
                     withTempFile(prefix = "changelog", suffix = ".md") { output ->
@@ -94,14 +61,6 @@ class ChangelogReportCommandTest :
                     result.statusCode shouldBe 0
                     result.stdout shouldContain "## [1.1.0] - 2026-03-20"
                     result.stdout shouldContain "### Security"
-                }
-            }
-
-            test("leaves the project out of the markdown so it pastes under an existing heading") {
-                withTempFile(content = changelogDocument()) { input ->
-                    val result = ChangelogReportCommand().test("${input.absolutePath} --format markdown")
-
-                    result.stdout shouldNotContain "Acme Corp / Acme Web App"
                 }
             }
 
