@@ -17,21 +17,16 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 
-data class CopyOutcome(
-    val copied: List<VulnId>,
-    val newContent: String,
-)
-
 /**
  * Rewrites the whole document canonically, as [addVulnerabilityToFile] does. An entry the destination already has
  * keeps its place and its own values and only gains what it lacks, so a copy never overwrites the destination's
  * analysis. Every copied entry points at the destination's last release; the source's releases mean nothing there.
  */
-fun copyVulnerabilities(
+fun copyVulnerabilitiesToFile(
     source: VulnlogFile,
     destination: ValidVulnlogProject,
     vulnIds: Set<VulnId>,
-): CopyOutcome {
+): String {
     val destinationFile = destination.vulnlogProjectFile
     val release =
         destinationFile.releases
@@ -50,13 +45,9 @@ fun copyVulnerabilities(
                 }
         }
 
-    return CopyOutcome(
-        copied = sourceEntries.map { it.id },
-        newContent =
-            YamlWriter.renderCanonicalDocument(
-                newDto,
-                includeSchemaHeader = hasSchemaHeader(destination.nodeTree.rootNode),
-            ),
+    return YamlWriter.renderCanonicalDocument(
+        newDto,
+        includeSchemaHeader = hasSchemaHeader(destination.nodeTree.rootNode),
     )
 }
 
@@ -123,8 +114,3 @@ private fun mergeReports(
     }
     return byReporter.values.toList()
 }
-
-fun findNonExistingVulnIds(
-    vulnerabilities: List<VulnerabilityEntry>,
-    vulnIds: Set<VulnId>,
-): Set<VulnId> = vulnIds - vulnerabilities.map { it.id }.toSet()

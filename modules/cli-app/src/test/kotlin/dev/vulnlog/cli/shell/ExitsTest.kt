@@ -5,6 +5,7 @@ package dev.vulnlog.cli.shell
 
 import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
+import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
@@ -56,6 +57,15 @@ class ExitsTest :
         test("unknown references in add are a general error") {
             val document = InputDocument("---\n", "a.vl.yaml")
             val failed: AddOutcome.Failed = AddOutcome.UnknownReferences(document, emptyList(), emptyList())
+
+            val code = exitCode(failed)
+
+            code shouldBe ExitCode.GENERAL_ERROR
+        }
+
+        test("ids the copy source lacks are a general error") {
+            val source = InputDocument("---\n", "a.vl.yaml")
+            val failed: CopyOutcome.Failed = CopyOutcome.IdsNotInSource(source, emptyList())
 
             val code = exitCode(failed)
 

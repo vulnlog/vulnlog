@@ -5,6 +5,7 @@ package dev.vulnlog.cli.shell
 
 import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
+import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
@@ -44,6 +45,11 @@ fun exitCode(failed: ChangelogOutcome.Failed): ExitCode =
 fun exitCode(failed: AddOutcome.Failed): ExitCode =
     when (failed) {
         is AddOutcome.UnknownReferences -> ExitCode.GENERAL_ERROR
+    }
+
+fun exitCode(failed: CopyOutcome.Failed): ExitCode =
+    when (failed) {
+        is CopyOutcome.IdsNotInSource -> ExitCode.GENERAL_ERROR
     }
 
 fun exitCode(failed: InitOutcome.Failed): ExitCode =

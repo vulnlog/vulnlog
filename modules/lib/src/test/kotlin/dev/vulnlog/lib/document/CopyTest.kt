@@ -18,7 +18,6 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -70,8 +69,8 @@ private fun copy(
     source: VulnlogFile,
     destination: VulnlogFile,
     vulnIds: Set<VulnId>,
-): CopyOutcome =
-    copyVulnerabilities(validated(render(source)).vulnlogProjectFile, validated(render(destination)), vulnIds)
+): String =
+    copyVulnerabilitiesToFile(validated(render(source)).vulnlogProjectFile, validated(render(destination)), vulnIds)
 
 private fun entriesOf(content: String): List<VulnerabilityEntry> =
     mapToDomain(parsed(content).validatedDto)
@@ -82,16 +81,7 @@ private fun entriesOf(content: String): List<VulnerabilityEntry> =
 class CopyTest :
     FunSpec({
 
-        test("findNonExistingVulnIds returns the requested ids the entries lack") {
-            val entries = listOf(vulnerability(id = cve1), vulnerability(id = cve2))
-            val requests = listOf(setOf(cve1, ghsa1), setOf(cve1, cve2))
-
-            val missing = requests.map { findNonExistingVulnIds(entries, it) }
-
-            missing shouldBe listOf(setOf(ghsa1), emptySet())
-        }
-
-        context("copyVulnerabilities") {
+        context("copyVulnerabilitiesToFile") {
 
             test("inserts a missing entry at the top, pointing at the destination's last release") {
                 val source =
@@ -102,10 +92,9 @@ class CopyTest :
                         vulnerabilities = listOf(vulnerability(id = cve1)),
                     )
 
-                val outcome = copy(source, destination, setOf(cve2))
+                val content = copy(source, destination, setOf(cve2))
 
-                val entries = entriesOf(outcome.newContent)
-                outcome.copied shouldBe listOf(cve2)
+                val entries = entriesOf(content)
                 entries.map { it.id } shouldBe listOf(cve2, cve1)
                 entries.first().releases shouldBe listOf(lastRelease)
                 entries.first().description shouldBe "from source"
@@ -114,10 +103,9 @@ class CopyTest :
             test("copies every requested entry in one pass") {
                 val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1), vulnerability(id = cve2)))
 
-                val outcome = copy(source, vulnlogFile(), setOf(cve1, cve2))
+                val content = copy(source, vulnlogFile(), setOf(cve1, cve2))
 
-                outcome.copied shouldBe listOf(cve1, cve2)
-                entriesOf(outcome.newContent).map { it.id } shouldContainExactlyInAnyOrder listOf(cve1, cve2)
+                entriesOf(content).map { it.id } shouldContainExactlyInAnyOrder listOf(cve1, cve2)
             }
 
             test("keeps an existing entry's values, fills the ones it lacks and points it at the last release") {
@@ -138,9 +126,9 @@ class CopyTest :
                         vulnerabilities = listOf(vulnerability(description = "existing description")),
                     )
 
-                val outcome = copy(source, destination, setOf(cve1))
+                val content = copy(source, destination, setOf(cve1))
 
-                val merged = entriesOf(outcome.newContent).single()
+                val merged = entriesOf(content).single()
                 merged.description shouldBe "existing description"
                 merged.verdict shouldBe Verdict.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH)
                 merged.analysis shouldBe "source analysis"
@@ -159,9 +147,9 @@ class CopyTest :
                 val destination =
                     vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve2, name = "Spring4Shell")))
 
-                val outcome = copy(source, destination, setOf(cve1, cve2))
+                val content = copy(source, destination, setOf(cve1, cve2))
 
-                entriesOf(outcome.newContent).associate { it.id to it.name } shouldBe
+                entriesOf(content).associate { it.id to it.name } shouldBe
                     mapOf(cve1 to "Log4Shell", cve2 to "Spring4Shell")
             }
 
@@ -177,9 +165,9 @@ class CopyTest :
                 val destination =
                     vulnlogFile(vulnerabilities = listOf(vulnerability(packages = listOf(destinationOnly, shared))))
 
-                val outcome = copy(source, destination, setOf(cve1))
+                val content = copy(source, destination, setOf(cve1))
 
-                val merged = entriesOf(outcome.newContent).single()
+                val merged = entriesOf(content).single()
                 merged.aliases shouldBe listOf(ghsa1)
                 merged.packages shouldBe listOf(destinationOnly, shared, sourceOnly)
             }
@@ -204,9 +192,9 @@ class CopyTest :
                 val source = vulnlogFile(vulnerabilities = listOf(vulnerability(reports = sourceReports)))
                 val destination = vulnlogFile(vulnerabilities = listOf(vulnerability(reports = listOf(existingReport))))
 
-                val outcome = copy(source, destination, setOf(cve1))
+                val content = copy(source, destination, setOf(cve1))
 
-                entriesOf(outcome.newContent).single().reports shouldBe
+                entriesOf(content).single().reports shouldBe
                     listOf(
                         existingReport.copy(
                             source = "nightly scan",
@@ -214,15 +202,6 @@ class CopyTest :
                         ),
                         ReportEntry(reporter = ReporterType.SNYK),
                     )
-            }
-
-            test("ignores requested ids the source lacks") {
-                val source = vulnlogFile(vulnerabilities = listOf(vulnerability(id = cve1)))
-
-                val outcome = copy(source, vulnlogFile(), setOf(cve2))
-
-                outcome.copied.shouldBeEmpty()
-                entriesOf(outcome.newContent).shouldBeEmpty()
             }
 
             test("rewrites a destination in any layout canonically, so fmt changes nothing") {
@@ -247,23 +226,21 @@ class CopyTest :
                     |  justification: vulnerable code not in execute path
                     """.trimMargin() + "\n"
 
-                val outcome = copyVulnerabilities(source, validated(column0Destination), setOf(cve2))
+                val content = copyVulnerabilitiesToFile(source, validated(column0Destination), setOf(cve2))
 
-                entriesOf(outcome.newContent).map { it.id } shouldBe listOf(cve2, cve1)
-                formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
+                entriesOf(content).map { it.id } shouldBe listOf(cve2, cve1)
+                formatYaml(parsed(content)) shouldBe content
             }
 
             test("keeps the schema header only where the destination has one") {
                 val source = vulnlogFile(vulnerabilities = listOf(vulnerability()))
                 val withHeader = render(vulnlogFile())
-                val withoutHeader = withHeader.substringAfter('\n')
+                val destinations = listOf(withHeader, withHeader.substringAfter('\n')).map(::validated)
 
-                val firstLines =
-                    listOf(withHeader, withoutHeader).map { destination ->
-                        copyVulnerabilities(source, validated(destination), setOf(cve1)).newContent.lines().first()
-                    }
+                val contents = destinations.map { copyVulnerabilitiesToFile(source, it, setOf(cve1)) }
 
-                firstLines shouldBe listOf("# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json", "---")
+                contents.map { it.lines().first() } shouldBe
+                    listOf("# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json", "---")
             }
         }
     })
