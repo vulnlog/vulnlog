@@ -1,10 +1,8 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.codec.changelog
 
-import dev.vulnlog.lib.core.reporting.formatChangelogMarkdown
-import dev.vulnlog.lib.core.reporting.formatChangelogText
 import dev.vulnlog.lib.core.reporting.summarize
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.ghsa
@@ -59,7 +57,7 @@ private fun report(
         ),
 )
 
-class ReportingChangelogFormatterTest :
+class ChangelogEncoderTest :
     FunSpec({
 
         context("text") {

@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core.reporting
+package dev.vulnlog.lib.codec.changelog
 
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.model.reporting.ChangelogDetail

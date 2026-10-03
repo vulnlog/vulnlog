@@ -1,12 +1,8 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.core.reporting
 
-import dev.vulnlog.lib.core.reporting.collectChangelogReleases
-import dev.vulnlog.lib.core.reporting.declaredReleases
-import dev.vulnlog.lib.core.reporting.selectFixedVulnerabilities
-import dev.vulnlog.lib.core.reporting.summarize
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.release
@@ -81,7 +77,7 @@ private fun affectedEntry(
     severity: Severity = Severity.HIGH,
 ) = ReportingChangelogEntry(primaryId = id, impact = Impact.Affected(severity))
 
-class ReportingChangelogTest :
+class ChangelogTest :
     FunSpec({
 
         context("declared releases") {
