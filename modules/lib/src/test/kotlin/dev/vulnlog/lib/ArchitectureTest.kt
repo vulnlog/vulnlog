@@ -8,15 +8,16 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import java.io.File
 
 /**
- * Enforces the package layers of the target architecture by scanning the imports of lib's main sources, and keeps the
- * pure layers free of the clock, randomness, the environment and the file system. No extra dependency.
+ * Enforces the package layers of the target architecture by scanning the imports and the fully qualified references of
+ * lib's main sources, and keeps the pure layers free of the clock, randomness, the environment and the file system. No
+ * extra dependency.
  *
  * Packages in [strictPackages] already follow the rules and fail the build on a violation. Every other package is only
  * reported while the migration is in progress. A package that no layer names is not checked.
  */
 class ArchitectureTest :
     FunSpec({
-        test("lib packages only import the layers they may use") {
+        test("lib packages only reach the layers they may use") {
             check(sources(), ::layerViolations)
         }
 
@@ -103,13 +104,23 @@ private fun sources(): List<Source> =
             Source(file.name, pkg, withoutComments(text))
         }.toList()
 
+private val importLine = Regex("^import (\\S+)", RegexOption.MULTILINE)
+
+/** A name written out in the code, such as `dev.vulnlog.lib.render.Message.Status(...)`, needs no import. */
+private val qualifiedLibName = Regex("""\bdev\.vulnlog\.lib(?:\.\w+)+""")
+
 private fun layerViolations(source: Source): List<String> {
     val layer = layerOf(source.pkg) ?: return emptyList()
-    return Regex("^import (\\S+)", RegexOption.MULTILINE)
-        .findAll(source.code)
-        .map { it.groupValues[1] }
-        .filterNot { import -> isAllowed(layer, import) }
-        .map { import -> "${source.name}: ${source.pkg} imports $import" }
+    val body =
+        source.code
+            .lineSequence()
+            .filterNot { line -> line.startsWith("package ") || line.startsWith("import ") }
+            .joinToString("\n")
+    val imports = importLine.findAll(source.code).map { "imports" to it.groupValues[1] }
+    val references = qualifiedLibName.findAll(body).map { "references" to it.value }
+    return (imports + references)
+        .filterNot { (_, name) -> isAllowed(layer, name) }
+        .map { (how, name) -> "${source.name}: ${source.pkg} $how $name" }
         .toList()
 }
 
@@ -125,12 +136,12 @@ private fun layerOf(pkg: String): String? = allowed.keys.firstOrNull { isWithin(
 
 private fun isAllowed(
     layer: String,
-    import: String,
+    name: String,
 ): Boolean =
-    if (import.startsWith("$LIB.")) {
-        allowed.getValue(layer).any { import.startsWith("$it.") }
+    if (name.startsWith("$LIB.")) {
+        allowed.getValue(layer).any { name.startsWith("$it.") }
     } else {
-        externalAllowed[layer]?.any { import.startsWith(it) } ?: true
+        externalAllowed[layer]?.any { name.startsWith(it) } ?: true
     }
 
 /** The code without its comments, so a KDoc that names a forbidden call does not count as one. */
