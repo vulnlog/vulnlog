@@ -1,9 +1,8 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.codec.changelog
 
-import dev.vulnlog.lib.core.reporting.formatChangelogMarkdown
 import dev.vulnlog.lib.core.reporting.summarize
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
@@ -23,7 +22,7 @@ import java.time.LocalDate
 private const val GOLDEN_RESOURCE = "/report/golden-changelog.md"
 private val GOLDEN_SOURCE: Path = Path.of("src/test/resources/report/golden-changelog.md")
 
-class ReportingChangelogGoldenTest :
+class ChangelogGoldenTest :
     FunSpec({
         test("matches golden Markdown snapshot") {
             val actual = formatChangelogMarkdown(goldenFixture(), ChangelogDetail.FULL)
@@ -36,7 +35,7 @@ class ReportingChangelogGoldenTest :
             }
 
             val expected =
-                ReportingChangelogGoldenTest::class.java
+                ChangelogGoldenTest::class.java
                     .getResourceAsStream(GOLDEN_RESOURCE)
                     ?.bufferedReader()
                     ?.use { it.readText() }

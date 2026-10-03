@@ -10,14 +10,14 @@ import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.reporting.sharedProjectOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.app.ChangelogFormatRequest
+import dev.vulnlog.lib.codec.changelog.formatChangelogMarkdown
+import dev.vulnlog.lib.codec.changelog.formatChangelogText
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.applyFilter
 import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.reporting.collectChangelogReleases
-import dev.vulnlog.lib.core.reporting.formatChangelogMarkdown
-import dev.vulnlog.lib.core.reporting.formatChangelogText
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.writeOutput
