@@ -14,15 +14,15 @@ import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.document.FormatOutcome
 import dev.vulnlog.lib.document.checkFormat
-import dev.vulnlog.lib.document.formatCommentsDroppedWarning
 import dev.vulnlog.lib.document.formatYamlOutcome
-import dev.vulnlog.lib.document.renderFormatFinding
 import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
 import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.DiagnosticLevel
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
+import dev.vulnlog.lib.render.formatCommentsDroppedWarning
+import dev.vulnlog.lib.render.renderFormatFinding
 
 class FmtCommand : CliktCommand(name = "fmt") {
     override fun help(context: Context): String =

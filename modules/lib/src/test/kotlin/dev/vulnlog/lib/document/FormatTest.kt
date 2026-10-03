@@ -236,12 +236,4 @@ class FormatTest :
 
             outcomes shouldBe listOf(FormatOutcome.Unchanged, FormatOutcome.Reformatted(canonical))
         }
-
-        test("the comments-dropped warning names the file and the fields to use instead") {
-            val warning = formatCommentsDroppedWarning("web-app.vl.yaml")
-
-            warning shouldBe
-                "warning: web-app.vl.yaml: contains YAML comments; they are removed on write\n" +
-                "  hint: record notes in schema fields (e.g. comment, analysis)"
-        }
     })

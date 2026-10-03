@@ -42,12 +42,6 @@ fun checkFormat(parsedVulnlogProject: ParsedVulnlogProject): List<FormatFinding>
     return findings.ifEmpty { layoutCatchAll(parsedVulnlogProject) }
 }
 
-fun renderFormatFinding(finding: FormatFinding): String {
-    val ruleName = finding.rule.name
-    val id = ruleName.lowercase().replace('_', '-')
-    return if (finding.path.isEmpty()) "[$id] ${finding.message}" else "[$id] ${finding.path}: ${finding.message}"
-}
-
 private data class FormatCheckContext(
     val source: FormatSource,
     val nodes: List<LocatedNode>,

@@ -193,20 +193,4 @@ class FormatCheckTest :
                 findings.first().message shouldBe "YAML comments are removed on write."
             }
         }
-
-        test("renderFormatFinding tags a finding with its rule id and names the path when there is one") {
-            val findings =
-                listOf(
-                    FormatFinding(FormatRule.NON_CANONICAL_ARRAY_STYLE, "vulnerabilities[CVE-2026-0001].releases", "m"),
-                    FormatFinding(FormatRule.COMMENTS_NOT_PRESERVED, "", "m"),
-                )
-
-            val rendered = findings.map(::renderFormatFinding)
-
-            rendered shouldBe
-                listOf(
-                    "[non-canonical-array-style] vulnerabilities[CVE-2026-0001].releases: m",
-                    "[comments-not-preserved] m",
-                )
-        }
     })
