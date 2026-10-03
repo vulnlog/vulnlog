@@ -6,8 +6,12 @@ package dev.vulnlog.lib.document.validation
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.model.VulnlogFile
 
-/** Passed the domain rules too; commands that read the vulnerabilities, not the layout, need this stage. */
-data class ValidVulnlogProject(
+/**
+ * Passed the domain rules too; commands that read the vulnerabilities, not the layout, need this stage. Only the load
+ * step builds it, so a use case that takes it never sees an unchecked file.
+ */
+@ConsistentCopyVisibility
+data class ValidVulnlogProject internal constructor(
     val parsedVulnlogProject: ParsedVulnlogProject,
     val vulnlogProjectFile: VulnlogFile,
 ) {

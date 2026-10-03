@@ -69,7 +69,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val inputFile = singleVulnlogFileInput(name, files.files)
-        val vulnlogFile = validateInputOrFail(inputFile).project.vulnlogProjectFile
+        val project = validateInputOrFail(inputFile).project
         val out = outputFile.get().asFile
         val request =
             OpenVexRequest(
@@ -82,7 +82,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
                 formatVersion = FORMAT_VERSION,
             )
 
-        val outcome = generateOpenVex(vulnlogFile, request)
+        val outcome = generateOpenVex(project, request)
         renderOpenVexMessages(outcome).forEach(logger::log)
         when (outcome) {
             is OpenVexOutcome.Failed -> throw failure(outcome, baseline.orNull?.asFile?.path ?: "")

@@ -14,7 +14,7 @@ import dev.vulnlog.lib.core.vex.openvex.collectOpenVexStatements
 import dev.vulnlog.lib.core.vex.openvex.openVexEmptyReason
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexIdentity
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexScope
-import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
@@ -74,9 +74,10 @@ sealed interface OpenVexOutcome {
 }
 
 fun generateOpenVex(
-    vulnlogFile: VulnlogFile,
+    project: ValidVulnlogProject,
     request: OpenVexRequest,
 ): OpenVexOutcome {
+    val vulnlogFile = project.vulnlogProjectFile
     val scope =
         when (val result = resolveOpenVexScope(request.release, request.tags, vulnlogFile)) {
             is OpenVexScopeResult.Resolved -> result.scope
