@@ -319,7 +319,9 @@ class CopyCommandTest :
                             )
 
                         result.statusCode shouldBe ExitCode.GENERAL_ERROR.code
-                        result.stderr shouldContain "not found in source"
+                        result.stderr shouldContain
+                            "error: vulnerability IDs not found in ${source.toPath()}: CVE-9999-0000"
+                        target.readText() shouldBe TARGET_YAML
                     }
                 }
             }

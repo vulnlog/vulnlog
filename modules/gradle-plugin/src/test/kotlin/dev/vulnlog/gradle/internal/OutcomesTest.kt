@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
+import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -16,6 +17,7 @@ import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.Project
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
@@ -80,6 +82,17 @@ class OutcomesTest :
             exception::class shouldBe GradleException::class
             exception.message shouldBe
                 "Some Vulnlog files are not formatted: a.vl.yaml, b.vl.yaml. Run the vulnlogFormat task to fix them."
+        }
+
+        test("ids the copy source lacks are still a plain GradleException, worded in sentences") {
+            val source = InputDocument("---\n", "source.vl.yaml")
+            val failed = CopyOutcome.IdsNotInSource(source, listOf(VulnId.Cve("CVE-2026-0000")))
+
+            val exception = failure(failed)
+
+            exception::class shouldBe GradleException::class
+            exception.message shouldBe
+                "Vulnerability IDs not found in source.vl.yaml: CVE-2026-0000. Copy only IDs the source file records."
         }
 
         test("an init target that exists is still a plain GradleException, worded in sentences") {

@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
+import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -15,6 +16,7 @@ import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
+import dev.vulnlog.lib.render.renderCopyFailure
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderInputFailure
@@ -66,6 +68,13 @@ fun failure(failed: ChangelogOutcome.Failed): GradleException =
 fun failure(notCanonical: List<FormatOutcome.NotCanonical>): GradleException {
     val failed = renderNotFormatted(notCanonical.map { it.document.source }, "run the vulnlogFormat task to fix them")
     return GradleException(formatFailureMessage(listOf(failed)))
+}
+
+fun failure(failed: CopyOutcome.Failed): GradleException {
+    val message = formatFailureMessage(renderCopyFailure(failed))
+    return when (failed) {
+        is CopyOutcome.IdsNotInSource -> GradleException(message)
+    }
 }
 
 fun failure(

@@ -3,26 +3,33 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.CopiedFile
+import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.pluralize
-import dev.vulnlog.lib.finding.FindingSeverity
-import dev.vulnlog.lib.model.VulnId
-import java.nio.file.Path
 
-fun formatVulnIdsNotInSourceMessage(missing: Set<VulnId>): String =
-    formatMessage(
-        FindingSeverity.ERROR,
-        "vulnerability IDs not found in source file: ${missing.joinToString(", ") { it.id }}",
+/** Before the write; [renderCopied] follows it. */
+fun renderCopyMessages(file: CopiedFile): List<Message> =
+    listOfNotNull(renderCommentsDropped(file.document.source).takeIf { file.commentsDropped })
+
+fun renderCopied(file: CopiedFile): List<Message> {
+    val target = file.document.source
+    return listOf(
+        Message.Verbose("copied to $target: ${file.ids.joinToString(", ") { it.id }}"),
+        Message.Status(formatStatus(StatusVerb.COPIED, "${pluralize(file.ids.size, "entry", "entries")} to $target")),
     )
+}
 
-fun formatCopiedMessage(
-    destinationPath: Path,
-    ids: List<VulnId>,
-): String =
-    if (ids.isEmpty()) {
-        formatStatus(StatusVerb.UNCHANGED, "$destinationPath: no new vulnerabilities")
-    } else {
-        formatStatus(StatusVerb.COPIED, "${pluralize(ids.size, "entry", "entries")} to $destinationPath")
+fun renderCopyFailure(failed: CopyOutcome.Failed): List<Failure> =
+    when (failed) {
+        is CopyOutcome.IdsNotInSource -> {
+            val ids = failed.ids.joinToString(", ") { it.id }
+            listOf(
+                Failure(
+                    "vulnerability IDs not found in ${failed.source.source}: $ids",
+                    "copy only IDs the source file records",
+                ),
+            )
+        }
     }
