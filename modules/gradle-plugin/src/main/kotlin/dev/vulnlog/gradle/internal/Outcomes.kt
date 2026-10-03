@@ -5,6 +5,7 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
@@ -15,6 +16,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInputFailure
+import dev.vulnlog.lib.render.renderNotFormatted
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderProjectsDiffer
@@ -58,6 +60,11 @@ fun failure(failed: ChangelogOutcome.Failed): GradleException =
         is ProjectsDiffer -> GradleException(formatFailureMessage(listOf(renderProjectsDiffer(failed))))
         is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
     }
+
+fun failure(notCanonical: List<FormatOutcome.NotCanonical>): GradleException {
+    val failed = renderNotFormatted(notCanonical.map { it.document.source }, "run the vulnlogFormat task to fix them")
+    return GradleException(formatFailureMessage(listOf(failed)))
+}
 
 fun failure(
     unreadable: OpenVexBaselineRead.Unreadable,
