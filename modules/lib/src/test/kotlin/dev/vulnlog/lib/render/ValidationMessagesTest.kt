@@ -3,6 +3,8 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.ValidationOutcome
+import dev.vulnlog.lib.document.validated
 import dev.vulnlog.lib.finding.FailureLocation
 import dev.vulnlog.lib.finding.FindingSeverity.ERROR
 import dev.vulnlog.lib.finding.FindingSeverity.INFO
@@ -13,6 +15,7 @@ import dev.vulnlog.lib.fixtures.finding
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnerability
+import dev.vulnlog.lib.fixtures.vulnlogDocument
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -78,17 +81,27 @@ class ValidationMessagesTest :
                 )
         }
 
-        test("renderValidationSummary counts every finding, including those the output holds back") {
+        test("renderValidationMessages counts every finding, held back or not, then states the file is valid") {
+            val project = validated(vulnlogDocument())
             val findingLists =
                 listOf(emptyList(), listOf(finding(ERROR), finding(WARNING), finding(WARNING)), listOf(finding(INFO)))
 
-            val rendered = findingLists.map { renderValidationSummary("vulnlog.yaml", it) }
+            val rendered = findingLists.map { renderValidationMessages(ValidationOutcome.Ok(project, it)) }
 
             rendered shouldBe
                 listOf(
-                    "validated vulnlog.yaml: no findings",
-                    "validated vulnlog.yaml: 1 error, 2 warnings",
-                    "validated vulnlog.yaml: 1 info",
+                    listOf(
+                        Message.Verbose("validated test.vl.yaml: no findings"),
+                        Message.Status("Validated: test.vl.yaml"),
+                    ),
+                    listOf(
+                        Message.Verbose("validated test.vl.yaml: 1 error, 2 warnings"),
+                        Message.Status("Validated: test.vl.yaml"),
+                    ),
+                    listOf(
+                        Message.Verbose("validated test.vl.yaml: 1 info"),
+                        Message.Status("Validated: test.vl.yaml"),
+                    ),
                 )
         }
 
@@ -109,6 +122,6 @@ class ValidationMessagesTest :
                 listOf(
                     "parsed vulnlog.yaml: schema version 1, releases: 2, tags: 1, vulnerabilities: 1",
                     "parsed vulnlog.yaml: schema version 1, releases: 0, tags: 0, vulnerabilities: 0",
-                )
+                ).map(Message::Verbose)
         }
     })

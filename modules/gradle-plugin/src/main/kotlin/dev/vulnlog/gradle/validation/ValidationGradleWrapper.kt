@@ -3,8 +3,8 @@
 
 package dev.vulnlog.gradle.validation
 
-import dev.vulnlog.gradle.internal.diagnosticSink
 import dev.vulnlog.gradle.internal.failure
+import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.lib.app.InputRejected
 import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
@@ -25,7 +25,7 @@ import org.gradle.api.GradleException
 
 private const val VALIDATION_FAILED = "Vulnlog validation failed."
 
-/** Reads [input] to DTO and validates on DTO-level. Any finding is reported to the corresponding Gradle log level. Fails the Gradle build on any finding. */
+/** Stops at the DTO, so a file whose domain rules fail still loads: for the tasks that only touch the layout. */
 fun DefaultTask.parseInputOrFail(
     input: FileInputOption,
     validationRequest: ValidationRequest = ValidationRequest(),
@@ -34,14 +34,13 @@ fun DefaultTask.parseInputOrFail(
     return unwrap(parseDocument(document, validationRequest.config), document, validationRequest.reportedSeverities)
 }
 
-/** Reads [input] to Domain and validates on domain-level. */
 fun DefaultTask.validateInputOrFail(
     input: FileInputOption,
     request: ValidationRequest = ValidationRequest(),
 ): ValidationOutcome.Ok<ValidVulnlogProject> {
     val document = readOrFail(input)
     val ok = unwrap(validateDocument(document, request.config), document, request.reportedSeverities)
-    diagnosticSink().verbose(renderParsedProject(document.filename, ok.project.vulnlogProjectFile))
+    logger.log(renderParsedProject(document.filename, ok.project.vulnlogProjectFile))
     return ok
 }
 

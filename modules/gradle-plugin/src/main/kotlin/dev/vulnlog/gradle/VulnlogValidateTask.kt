@@ -3,17 +3,13 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.validation.validateInputOrFail
 import dev.vulnlog.lib.app.ValidationConfig
-import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.ALL_SEVERITIES
-import dev.vulnlog.lib.render.renderValidationSummary
+import dev.vulnlog.lib.render.renderValidationMessages
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.provider.Property
@@ -38,12 +34,6 @@ abstract class VulnlogValidateTask : DefaultTask() {
         val request = ValidationRequest(ValidationConfig(strict.get()), ALL_SEVERITIES)
         vulnlogFileInputs(files.files)
             .map { input -> validateInputOrFail(input, request) }
-            .forEach(::printSummary)
-    }
-
-    private fun printSummary(validated: ValidationOutcome.Ok<ValidVulnlogProject>) {
-        val filename = validated.project.inputDocument.filename
-        diagnosticSink().verbose(renderValidationSummary(filename, validated.findings))
-        logger.lifecycle(formatStatus(StatusVerb.VALIDATED, filename))
+            .forEach { validated -> renderValidationMessages(validated).forEach(logger::log) }
     }
 }

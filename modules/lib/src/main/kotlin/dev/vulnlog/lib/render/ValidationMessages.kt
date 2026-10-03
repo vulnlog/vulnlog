@@ -3,9 +3,13 @@
 
 package dev.vulnlog.lib.render
 
+import dev.vulnlog.lib.app.ValidationOutcome
+import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatFinding
+import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.formatSummary
 import dev.vulnlog.lib.core.shortenSchemaVersion
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.finding.ParseFailure
 import dev.vulnlog.lib.finding.ValidationFinding
@@ -36,19 +40,24 @@ fun renderProblem(
     return formatFinding(FindingSeverity.ERROR, filename, position, problem.message)
 }
 
-/** Counts every finding, including those the output held back. */
-fun renderValidationSummary(
-    filename: String,
-    findings: List<ValidationFinding>,
-): String = "validated $filename: ${summaryOf(findings).ifEmpty { "no findings" }}"
+/** The summary counts every finding, including those the output held back. */
+fun renderValidationMessages(validated: ValidationOutcome.Ok<ValidVulnlogProject>): List<Message> {
+    val filename = validated.project.inputDocument.filename
+    return listOf(
+        Message.Verbose("validated $filename: ${summaryOf(validated.findings).ifEmpty { "no findings" }}"),
+        Message.Status(formatStatus(StatusVerb.VALIDATED, filename)),
+    )
+}
 
 fun renderParsedProject(
     filename: String,
     vulnlogProjectFile: VulnlogFile,
-): String =
-    "parsed $filename: schema version ${shortenSchemaVersion(vulnlogProjectFile.schemaVersion)}, " +
-        "releases: ${vulnlogProjectFile.releases.size}, tags: ${vulnlogProjectFile.tags.size}, " +
-        "vulnerabilities: ${vulnlogProjectFile.vulnerabilities.size}"
+): Message =
+    Message.Verbose(
+        "parsed $filename: schema version ${shortenSchemaVersion(vulnlogProjectFile.schemaVersion)}, " +
+            "releases: ${vulnlogProjectFile.releases.size}, tags: ${vulnlogProjectFile.tags.size}, " +
+            "vulnerabilities: ${vulnlogProjectFile.vulnerabilities.size}",
+    )
 
 private fun summaryOf(findings: List<ValidationFinding>): String =
     formatSummary(

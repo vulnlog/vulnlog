@@ -9,14 +9,10 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.app.ValidationConfig
-import dev.vulnlog.lib.app.ValidationOutcome
 import dev.vulnlog.lib.app.ValidationRequest
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.ALL_SEVERITIES
 import dev.vulnlog.lib.io.FileInputOption
-import dev.vulnlog.lib.render.renderValidationSummary
+import dev.vulnlog.lib.render.renderValidationMessages
 
 class ValidateCommand : CliktCommand(name = "validate") {
     override fun help(context: Context): String = "Validate Vulnlog YAML files and report issues."
@@ -30,12 +26,6 @@ class ValidateCommand : CliktCommand(name = "validate") {
         val validationRequest = ValidationRequest(ValidationConfig(strict), ALL_SEVERITIES)
         inputs
             .map { input -> validateInputOrFail(input, validationRequest) }
-            .forEach(::printSummary)
-    }
-
-    private fun printSummary(validated: ValidationOutcome.Ok<ValidVulnlogProject>) {
-        val filename = validated.project.inputDocument.filename
-        diagnosticSink().verbose(renderValidationSummary(filename, validated.findings))
-        echoStatus(formatStatus(StatusVerb.VALIDATED, filename))
+            .forEach { validated -> renderValidationMessages(validated).forEach(::echoMessage) }
     }
 }
