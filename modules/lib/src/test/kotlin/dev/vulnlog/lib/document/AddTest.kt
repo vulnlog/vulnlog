@@ -14,7 +14,6 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.TagEntry
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
@@ -150,36 +149,36 @@ class AddTest :
             test("gives a new entry without a release the latest release of the file") {
                 val destination = validated(content(releases = TWO_RELEASES))
 
-                val outcome = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
+                val edit = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
 
-                outcome.updated shouldBe false
-                outcome.newContent shouldContain "releases: [2.0.0]"
+                edit.updated shouldBe false
+                edit.newContent shouldContain "releases: [2.0.0]"
             }
 
             test("gives a new entry the release it names") {
                 val destination = validated(content(releases = TWO_RELEASES))
 
-                val outcome =
+                val edit =
                     addVulnerabilityToFile(destination, DEFAULT_OPTIONS.copy(releases = setOf(Release("1.0.0"))), TODAY)
 
-                outcome.newContent shouldContain "releases: [1.0.0]"
+                edit.newContent shouldContain "releases: [1.0.0]"
             }
 
             test("leaves a new entry without a release when the file declares none") {
                 val destination = validated(content(releases = emptyList()))
 
-                val outcome = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
+                val edit = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
 
-                outcome.newContent.substringAfter("- id: CVE-2026-1234") shouldContain "releases: []"
+                edit.newContent.substringAfter("- id: CVE-2026-1234") shouldContain "releases: []"
             }
 
             test("attaches a tag the file declares") {
                 val destination = validated(content(tags = listOf(TagEntry(Tag("frontend")))))
 
-                val outcome =
+                val edit =
                     addVulnerabilityToFile(destination, DEFAULT_OPTIONS.copy(tags = setOf(Tag("frontend"))), TODAY)
 
-                outcome.newContent shouldContain "tags: [frontend]"
+                edit.newContent shouldContain "tags: [frontend]"
             }
 
             test("dates an existing reporter's report today and adds a report for a new one") {
@@ -199,13 +198,13 @@ class AddTest :
                     )
                 val options = DEFAULT_OPTIONS.copy(reporters = setOf(ReporterType.TRIVY, ReporterType.SNYK))
 
-                val outcome = addVulnerabilityToFile(destination, options, TODAY)
+                val edit = addVulnerabilityToFile(destination, options, TODAY)
 
-                outcome.updated shouldBe true
-                outcome.newContent shouldContain "reporter: trivy"
-                outcome.newContent shouldContain "reporter: snyk"
-                occurrences(outcome.newContent, "at: 2026-05-04") shouldBe 2
-                outcome.newContent shouldNotContain "2026-01-10"
+                edit.updated shouldBe true
+                edit.newContent shouldContain "reporter: trivy"
+                edit.newContent shouldContain "reporter: snyk"
+                occurrences(edit.newContent, "at: 2026-05-04") shouldBe 2
+                edit.newContent shouldNotContain "2026-01-10"
             }
 
             test("rewrites a document in any layout canonically, so fmt changes nothing") {
@@ -228,20 +227,20 @@ class AddTest :
                         """.trimMargin() + "\n",
                     )
 
-                val outcome = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
+                val edit = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
 
-                outcome.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-1234"
-                outcome.newContent shouldContain "releases:\n  - id: 1.0.0"
-                occurrences(outcome.newContent, "CVE-2026-0001") shouldBe 1
-                formatYaml(parsed(outcome.newContent)) shouldBe outcome.newContent
+                edit.newContent shouldContain "vulnerabilities:\n\n  - id: CVE-2026-1234"
+                edit.newContent shouldContain "releases:\n  - id: 1.0.0"
+                occurrences(edit.newContent, "CVE-2026-0001") shouldBe 1
+                formatYaml(parsed(edit.newContent)) shouldBe edit.newContent
             }
 
             test("keeps the schema header when the destination has one") {
                 val destination = validated(content())
 
-                val outcome = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
+                val edit = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
 
-                outcome.newContent shouldStartWith "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---"
+                edit.newContent shouldStartWith "# \$schema: https://vulnlog.dev/schema/vulnlog-v1.json\n---"
             }
 
             test("adds no schema header when the destination has none") {
@@ -258,10 +257,10 @@ class AddTest :
                         ),
                     )
 
-                val outcome = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
+                val edit = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
 
-                outcome.newContent shouldStartWith "---"
-                outcome.newContent shouldNotContain "# \$schema:"
+                edit.newContent shouldStartWith "---"
+                edit.newContent shouldNotContain "# \$schema:"
             }
 
             test("adds to the lists of an existing entry and keeps its other fields") {
@@ -291,17 +290,17 @@ class AddTest :
                         packages = setOf(Purl.Npm("pkg:npm/new-lib@2.0.0"), Purl.Npm("pkg:npm/old-lib@1.0.0")),
                     )
 
-                val outcome = addVulnerabilityToFile(destination, options, TODAY)
+                val edit = addVulnerabilityToFile(destination, options, TODAY)
 
-                outcome.updated shouldBe true
-                outcome.newContent shouldContain "pkg:npm/new-lib@2.0.0"
-                occurrences(outcome.newContent, "pkg:npm/old-lib@1.0.0") shouldBe 1
-                outcome.newContent shouldContain "Existing Name"
-                outcome.newContent shouldContain "Existing description."
-                outcome.newContent shouldContain "frontend"
-                outcome.newContent shouldContain "verdict: affected"
-                outcome.newContent shouldContain "severity: high"
-                outcome.newContent shouldContain "Existing comment."
+                edit.updated shouldBe true
+                edit.newContent shouldContain "pkg:npm/new-lib@2.0.0"
+                occurrences(edit.newContent, "pkg:npm/old-lib@1.0.0") shouldBe 1
+                edit.newContent shouldContain "Existing Name"
+                edit.newContent shouldContain "Existing description."
+                edit.newContent shouldContain "frontend"
+                edit.newContent shouldContain "verdict: affected"
+                edit.newContent shouldContain "severity: high"
+                edit.newContent shouldContain "Existing comment."
             }
 
             test("overwrites the values it is given on an existing entry") {
@@ -322,9 +321,9 @@ class AddTest :
                     )
                 val options = DEFAULT_OPTIONS.copy(description = "New description.", severity = "low")
 
-                val outcome = addVulnerabilityToFile(destination, options, TODAY)
+                val edit = addVulnerabilityToFile(destination, options, TODAY)
 
-                val entry = outcome.newContent.substringAfter("- id: CVE-2026-1234")
+                val entry = edit.newContent.substringAfter("- id: CVE-2026-1234")
                 entry shouldContain "description: New description."
                 entry shouldContain "verdict: affected"
                 entry shouldContain "severity: low"
@@ -359,10 +358,10 @@ class AddTest :
                         """.trimMargin(),
                     )
 
-                val outcome = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
+                val edit = addVulnerabilityToFile(destination, DEFAULT_OPTIONS, TODAY)
 
-                val entry = outcome.newContent.substringAfter("- id: CVE-2026-1234")
-                outcome.updated shouldBe true
+                val entry = edit.newContent.substringAfter("- id: CVE-2026-1234")
+                edit.updated shouldBe true
                 entry shouldContain "releases: [1.0.0]"
                 entry shouldNotContain "2.0.0"
             }
@@ -388,11 +387,11 @@ class AddTest :
                     )
                 val options = DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/lib@1.0.0")))
 
-                val outcome = addVulnerabilityToFile(destination, options, TODAY)
+                val edit = addVulnerabilityToFile(destination, options, TODAY)
 
-                outcome.newContent.indexOf("CVE-2026-0001") shouldBeLessThan outcome.newContent.indexOf("CVE-2026-1234")
-                occurrences(outcome.newContent, "CVE-2026-0001") shouldBe 1
-                occurrences(outcome.newContent, "CVE-2026-1234") shouldBe 1
+                edit.newContent.indexOf("CVE-2026-0001") shouldBeLessThan edit.newContent.indexOf("CVE-2026-1234")
+                occurrences(edit.newContent, "CVE-2026-0001") shouldBe 1
+                occurrences(edit.newContent, "CVE-2026-1234") shouldBe 1
             }
 
             test("writes a multi-line description of an updated entry as a literal block") {
@@ -413,30 +412,10 @@ class AddTest :
                     )
                 val options = DEFAULT_OPTIONS.copy(packages = setOf(Purl.Npm("pkg:npm/lib@1.0.0")))
 
-                val outcome = addVulnerabilityToFile(destination, options, TODAY)
+                val edit = addVulnerabilityToFile(destination, options, TODAY)
 
-                outcome.newContent shouldContain "description: |-"
-                outcome.newContent shouldNotContain "description: >"
-            }
-
-            test("rejects a release the file does not declare") {
-                val destination = validated(content())
-                val options = DEFAULT_OPTIONS.copy(releases = setOf(Release("9.9.9")))
-
-                val failure =
-                    shouldThrow<IllegalArgumentException> { addVulnerabilityToFile(destination, options, TODAY) }
-
-                failure.message shouldBe "Releases not defined in file: 9.9.9"
-            }
-
-            test("rejects a tag the file does not declare") {
-                val destination = validated(content(tags = listOf(TagEntry(Tag("frontend")))))
-                val options = DEFAULT_OPTIONS.copy(tags = setOf(Tag("unknown")))
-
-                val failure =
-                    shouldThrow<IllegalArgumentException> { addVulnerabilityToFile(destination, options, TODAY) }
-
-                failure.message shouldBe "Tags not defined in file: unknown"
+                edit.newContent shouldContain "description: |-"
+                edit.newContent shouldNotContain "description: >"
             }
         }
     })

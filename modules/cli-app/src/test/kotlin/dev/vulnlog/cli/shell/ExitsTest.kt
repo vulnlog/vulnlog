@@ -3,6 +3,7 @@
 
 package dev.vulnlog.cli.shell
 
+import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -10,6 +11,7 @@ import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.ReporterType
@@ -49,6 +51,15 @@ class ExitsTest :
                     ExitCode.VALIDATION_ERROR,
                     ExitCode.INVALID_FLAG_VALUE,
                 )
+        }
+
+        test("unknown references in add are a general error") {
+            val document = InputDocument("---\n", "a.vl.yaml")
+            val failed: AddOutcome.Failed = AddOutcome.UnknownReferences(document, emptyList(), emptyList())
+
+            val code = exitCode(failed)
+
+            code shouldBe ExitCode.GENERAL_ERROR
         }
 
         test("an init target that exists is a general error") {

@@ -5,7 +5,6 @@ package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.arguments.ArgumentTransformContext
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
@@ -18,16 +17,14 @@ import com.github.ajalt.clikt.parameters.options.unique
 import com.github.ajalt.clikt.parameters.types.choice
 import com.github.packageurl.PackageURL
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
-import dev.vulnlog.lib.core.formatFinding
+import dev.vulnlog.lib.app.AddOutcome
+import dev.vulnlog.lib.app.AddRequest
+import dev.vulnlog.lib.app.addVulnerability
+import dev.vulnlog.lib.app.newVulnerabilityEntry
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.document.AddVulnerabilityOptions
-import dev.vulnlog.lib.document.addVulnerabilityToFile
-import dev.vulnlog.lib.document.createVulnerabilityEntry
-import dev.vulnlog.lib.document.validation.ValidVulnlogProject
-import dev.vulnlog.lib.document.yaml.hasYamlComments
-import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.Purl
@@ -35,8 +32,10 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.render.formatAddOutcomeMessage
-import dev.vulnlog.lib.render.renderCommentsDropped
+import dev.vulnlog.lib.render.renderAddFailure
+import dev.vulnlog.lib.render.renderAddMessages
+import dev.vulnlog.lib.render.renderAddStatus
+import dev.vulnlog.lib.render.renderWritten
 import java.time.LocalDate
 
 class AddCommand : CliktCommand(name = "add") {
@@ -150,7 +149,7 @@ class AddCommand : CliktCommand(name = "add") {
     )
 
     override fun run() {
-        val commandOption =
+        val entry =
             AddVulnerabilityOptions(
                 vulnId = vulnId,
                 name = name,
@@ -168,37 +167,25 @@ class AddCommand : CliktCommand(name = "add") {
                 justification = justification,
                 comment = comment,
             )
+        val request = AddRequest(entry, LocalDate.now())
 
         if (destinations.isEmpty()) {
-            echo(createVulnerabilityEntry(commandOption, LocalDate.now()))
+            echo(newVulnerabilityEntry(request))
             return
         }
 
-        val validated: List<ValidVulnlogProject> =
-            destinations.map { input -> validateInputOrFail(input).project }
+        val outcomes = destinations.map { input -> addVulnerability(validateInputOrFail(input).project, request) }
+        // Every destination is decided before the first write, so a refusal leaves all files as they were.
+        val failed = outcomes.filterIsInstance<AddOutcome.Failed>()
+        if (failed.isNotEmpty()) failWith(failed.flatMap(::renderAddFailure), exitCode(failed.first()))
+        outcomes.filterIsInstance<AddOutcome.Written>().forEach(::write)
+    }
 
-        for (validDestination in validated) {
-            val outcome =
-                try {
-                    addVulnerabilityToFile(validDestination, commandOption, LocalDate.now())
-                } catch (e: IllegalArgumentException) {
-                    echoMessage(
-                        formatFinding(
-                            FindingSeverity.ERROR,
-                            validDestination.inputDocument.filename,
-                            message = e.message.orEmpty(),
-                        ),
-                    )
-                    throw ProgramResult(ExitCode.GENERAL_ERROR.code)
-                }
-            if (hasYamlComments(validDestination.nodeTree.rootNode)) {
-                echoMessage(renderCommentsDropped(validDestination.inputDocument.filename))
-            }
-            val destinationPath =
-                requireNotNull(validDestination.inputDocument.path) { "add destinations are always files" }
-            writeOrFail(writeOutput(destinationPath, outcome.newContent))
-            diagnosticSink().verbose("wrote $destinationPath")
-            echoStatus(formatAddOutcomeMessage(destinationPath, outcome))
-        }
+    private fun write(outcome: AddOutcome.Written) {
+        renderAddMessages(outcome).forEach(::echoMessage)
+        val path = requireNotNull(outcome.document.path) { "add destinations are always files" }
+        writeOrFail(writeOutput(path, outcome.content))
+        echoMessage(renderWritten(outcome.document.source))
+        echoMessage(renderAddStatus(outcome))
     }
 }

@@ -3,6 +3,7 @@
 
 package dev.vulnlog.cli.shell
 
+import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -38,6 +39,11 @@ fun exitCode(failed: ChangelogOutcome.Failed): ExitCode =
     when (failed) {
         is ProjectsDiffer -> ExitCode.VALIDATION_ERROR
         is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
+    }
+
+fun exitCode(failed: AddOutcome.Failed): ExitCode =
+    when (failed) {
+        is AddOutcome.UnknownReferences -> ExitCode.GENERAL_ERROR
     }
 
 fun exitCode(failed: InitOutcome.Failed): ExitCode =
