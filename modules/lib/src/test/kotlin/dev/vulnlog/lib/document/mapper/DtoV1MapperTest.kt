@@ -6,6 +6,7 @@ package dev.vulnlog.lib.document.mapper
 import dev.vulnlog.lib.document.DomainMappingResult
 import dev.vulnlog.lib.document.dto.ProjectDto
 import dev.vulnlog.lib.document.dto.ReleaseEntryDto
+import dev.vulnlog.lib.document.dto.ReleasePurlEntryDto
 import dev.vulnlog.lib.document.dto.ReportEntryDto
 import dev.vulnlog.lib.document.dto.ResolutionDto
 import dev.vulnlog.lib.document.dto.SuppressionDto
@@ -203,8 +204,8 @@ class DtoV1MapperTest :
             }
         }
 
-        // Copy and the reports read entries through the domain model, so a value it drops is lost (issue #192).
-        test("keeps every value of a vulnerability entry through toDomain and vulnerabilityToDto") {
+        // Copy, the reports and `init` go through the domain model, so a value it drops is lost (issue #192).
+        test("keeps every value of a file through toDomain and toDto") {
             val entries =
                 listOf(
                     VulnerabilityEntryDto(
@@ -243,9 +244,24 @@ class DtoV1MapperTest :
                         .copy(justification = "vulnerable code not present"),
                 )
 
-            val file = toDomain(v1Dto(vulnerabilities = entries))
-            val written = file.vulnerabilities.map(DtoV1Mapper::vulnerabilityToDto)
+            val dto =
+                v1Dto(
+                    project = ProjectDto("acme", "widget", "alice", "alice@example.com"),
+                    tags = listOf(TagEntryDto("backend", "Backend services")),
+                    releases =
+                        listOf(
+                            ReleaseEntryDto(
+                                id = "v1.0",
+                                publishedAt = LocalDate.of(2021, 12, 1),
+                                purls = listOf(ReleasePurlEntryDto("pkg:maven/com.acme/widget@1.0", listOf("backend"))),
+                            ),
+                            ReleaseEntryDto("v2.0"),
+                        ),
+                    vulnerabilities = entries,
+                )
 
-            written shouldBe entries
+            val written = DtoV1Mapper.toDto(toDomain(dto))
+
+            written shouldBe dto
         }
     })
