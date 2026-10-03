@@ -7,6 +7,7 @@ import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
+import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
@@ -79,6 +80,13 @@ class OutcomesTest :
             exception::class shouldBe GradleException::class
             exception.message shouldBe
                 "Some Vulnlog files are not formatted: a.vl.yaml, b.vl.yaml. Run the vulnlogFormat task to fix them."
+        }
+
+        test("an init target that exists is still a plain GradleException, worded in sentences") {
+            val exception = failure(InitOutcome.AlreadyExists, "vulnlog.yaml")
+
+            exception::class shouldBe GradleException::class
+            exception.message shouldBe "The file vulnlog.yaml already exists. Pass --force to replace it."
         }
 
         test("an unreadable baseline is configuration to fix") {

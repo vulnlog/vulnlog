@@ -7,6 +7,7 @@ import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
+import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
@@ -15,6 +16,7 @@ import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderFilterProblems
+import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderNotFormatted
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
@@ -64,6 +66,16 @@ fun failure(failed: ChangelogOutcome.Failed): GradleException =
 fun failure(notCanonical: List<FormatOutcome.NotCanonical>): GradleException {
     val failed = renderNotFormatted(notCanonical.map { it.document.source }, "run the vulnlogFormat task to fix them")
     return GradleException(formatFailureMessage(listOf(failed)))
+}
+
+fun failure(
+    failed: InitOutcome.Failed,
+    target: String,
+): GradleException {
+    val message = formatFailureMessage(listOf(renderInitFailure(failed, target, "--force")))
+    return when (failed) {
+        InitOutcome.AlreadyExists -> GradleException(message)
+    }
 }
 
 fun failure(

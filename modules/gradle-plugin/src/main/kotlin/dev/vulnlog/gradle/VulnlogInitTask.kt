@@ -3,16 +3,18 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.gradle.internal.diagnosticSink
+import dev.vulnlog.gradle.internal.failure
+import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.writeOrFail
+import dev.vulnlog.lib.app.InitOutcome
+import dev.vulnlog.lib.app.InitRequest
+import dev.vulnlog.lib.app.initDocument
 import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.init
-import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.model.SchemaVersion
+import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.renderWritten
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
@@ -44,13 +46,23 @@ abstract class VulnlogInitTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val file = outputFile.get().asFile
-        if (!force.getOrElse(false) && file.exists()) {
-            throw GradleException("The file ${file.path} already exists. Pass --force to replace it.")
+        val request =
+            InitRequest(
+                organization = organization.get(),
+                name = projectName.get(),
+                author = author.get(),
+                targetExists = file.exists(),
+                force = force.getOrElse(false),
+            )
+
+        when (val outcome = initDocument(request)) {
+            is InitOutcome.Failed -> throw failure(outcome, file.path)
+
+            is InitOutcome.Created -> {
+                writeOrFail(writeOutput(file.toPath(), outcome.content))
+                logger.log(renderWritten(file.path))
+                logger.log(Message.Status(formatStatus(StatusVerb.CREATED, file.absolutePath)))
+            }
         }
-        val vulnlogFile = init(SchemaVersion.V1, organization.get(), projectName.get(), author.get())
-        val content = YamlWriter.write(vulnlogFile)
-        writeOrFail(writeOutput(file.toPath(), content))
-        diagnosticSink().verbose("wrote ${file.path}")
-        logger.lifecycle(formatStatus(StatusVerb.CREATED, file.absolutePath))
     }
 }
