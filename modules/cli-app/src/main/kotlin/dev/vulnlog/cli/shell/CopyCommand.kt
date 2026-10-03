@@ -25,7 +25,7 @@ import dev.vulnlog.lib.document.yaml.hasYamlComments
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.render.formatCommentsDroppedWarning
+import dev.vulnlog.lib.render.renderCommentsDropped
 
 class CopyCommand : CliktCommand(name = "copy") {
     override fun help(context: Context): String =
@@ -69,7 +69,7 @@ class CopyCommand : CliktCommand(name = "copy") {
                 )
             val source = validDestination.inputDocument.source
             if (hasYamlComments(validDestination.nodeTree.rootNode)) {
-                echoMessage(formatCommentsDroppedWarning(source))
+                echoMessage(renderCommentsDropped(source))
             }
             val destinationPath =
                 requireNotNull(validDestination.inputDocument.path) { "copy destinations are always files" }

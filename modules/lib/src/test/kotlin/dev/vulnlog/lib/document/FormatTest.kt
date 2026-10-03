@@ -224,16 +224,8 @@ class FormatTest :
         }
 
         test("keeps the deprecated risk acceptable verdict as written") {
-            val outcome = formatYamlOutcome(parsed(CANONICAL_LEGACY_VERDICT_YAML))
+            val result = formatYaml(parsed(CANONICAL_LEGACY_VERDICT_YAML))
 
-            outcome shouldBe FormatOutcome.Unchanged
-        }
-
-        test("formatYamlOutcome tells canonical content from content it reformats") {
-            val canonical = formatYaml(parsed(COLUMN0_YAML))
-
-            val outcomes = listOf(canonical, COLUMN0_YAML).map { formatYamlOutcome(parsed(it)) }
-
-            outcomes shouldBe listOf(FormatOutcome.Unchanged, FormatOutcome.Reformatted(canonical))
+            result shouldBe CANONICAL_LEGACY_VERDICT_YAML
         }
     })

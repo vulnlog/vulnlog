@@ -16,20 +16,3 @@ fun formatYaml(parsedVulnlogProject: ParsedVulnlogProject): String {
         }
     return YamlWriter.renderCanonicalDocument(dto, hasSchemaHeader(parsedVulnlogProject.nodeTree.rootNode))
 }
-
-sealed interface FormatOutcome {
-    data object Unchanged : FormatOutcome
-
-    data class Reformatted(
-        val formatted: String,
-    ) : FormatOutcome
-}
-
-fun formatYamlOutcome(parsedVulnlogProject: ParsedVulnlogProject): FormatOutcome {
-    val formatted = formatYaml(parsedVulnlogProject)
-    return if (formatted == parsedVulnlogProject.inputDocument.content) {
-        FormatOutcome.Unchanged
-    } else {
-        FormatOutcome.Reformatted(formatted)
-    }
-}

@@ -5,11 +5,13 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.core.filter.FilterProblem
+import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.Project
@@ -66,6 +68,17 @@ class OutcomesTest :
                     "All input files must share the same project metadata, found 2 different ones. " +
                         "Give every input the same project block, or report each project on its own.",
                 )
+        }
+
+        test("files that are not formatted are still a plain GradleException naming them and the task to run") {
+            val documents = listOf("a.vl.yaml", "b.vl.yaml").map { name -> InputDocument("---\n", name) }
+            val notCanonical = documents.map { document -> FormatOutcome.NotCanonical(document, emptyList()) }
+
+            val exception = failure(notCanonical)
+
+            exception::class shouldBe GradleException::class
+            exception.message shouldBe
+                "Some Vulnlog files are not formatted: a.vl.yaml, b.vl.yaml. Run the vulnlogFormat task to fix them."
         }
 
         test("an unreadable baseline is configuration to fix") {

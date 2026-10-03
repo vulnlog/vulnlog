@@ -36,7 +36,7 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
-import dev.vulnlog.lib.render.formatCommentsDroppedWarning
+import dev.vulnlog.lib.render.renderCommentsDropped
 import java.time.LocalDate
 
 class AddCommand : CliktCommand(name = "add") {
@@ -192,7 +192,7 @@ class AddCommand : CliktCommand(name = "add") {
                     throw ProgramResult(ExitCode.GENERAL_ERROR.code)
                 }
             if (hasYamlComments(validDestination.nodeTree.rootNode)) {
-                echoMessage(formatCommentsDroppedWarning(validDestination.inputDocument.filename))
+                echoMessage(renderCommentsDropped(validDestination.inputDocument.filename))
             }
             val destinationPath =
                 requireNotNull(validDestination.inputDocument.path) { "add destinations are always files" }

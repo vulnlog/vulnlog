@@ -9,20 +9,17 @@ import com.github.ajalt.clikt.core.ProgramResult
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import dev.vulnlog.cli.shell.validation.parseInputOrFail
+import dev.vulnlog.lib.app.FormatOutcome
+import dev.vulnlog.lib.app.FormatRequest
+import dev.vulnlog.lib.app.formatDocument
 import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatFinding
 import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.document.FormatOutcome
-import dev.vulnlog.lib.document.checkFormat
-import dev.vulnlog.lib.document.formatYamlOutcome
-import dev.vulnlog.lib.document.validation.ParsedVulnlogProject
-import dev.vulnlog.lib.document.yaml.hasYamlComments
-import dev.vulnlog.lib.finding.FindingSeverity
-import dev.vulnlog.lib.io.DiagnosticLevel
+import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.render.formatCommentsDroppedWarning
-import dev.vulnlog.lib.render.renderFormatFinding
+import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.renderFormatMessages
+import dev.vulnlog.lib.render.renderWritten
 
 class FmtCommand : CliktCommand(name = "fmt") {
     override fun help(context: Context): String =
@@ -44,79 +41,45 @@ class FmtCommand : CliktCommand(name = "fmt") {
             """.trimMargin(),
     ).flag(default = false)
 
-    /**
-     * Formatting rewrites the document as written, so it stops after the DTO stage: a file whose
-     * domain rules do not hold is still formattable, and often needs formatting to be readable.
-     */
     override fun run() {
-        val parsed: List<ParsedVulnlogProject> =
-            inputs.map { input -> parseInputOrFail(input).project }
+        val projects = inputs.map { input -> parseInputOrFail(input).project }
+        val request = FormatRequest(check = isCheck)
 
-        var anyUnformatted = false
-        for (parsedInput in parsed) {
-            val source = parsedInput.inputDocument.source
-            when (val outcome = formatYamlOutcome(parsedInput)) {
-                is FormatOutcome.Unchanged -> reportUnchanged(parsedInput, source)
-
-                is FormatOutcome.Reformatted -> {
-                    anyUnformatted = true
-                    if (isCheck) {
-                        echoFormatCheckFindings(parsedInput, source)
-                    } else {
-                        writeReformatted(parsedInput, source, outcome.formatted)
-                    }
-                }
+        val outcomes = projects.map { project -> formatDocument(project, request) }
+        outcomes.forEach { outcome ->
+            renderFormatMessages(outcome).forEach(::echoMessage)
+            when (outcome) {
+                is FormatOutcome.Unchanged -> reportUnchanged(outcome.document)
+                is FormatOutcome.Reformatted -> write(outcome.document, outcome.formatted)
+                is FormatOutcome.NotCanonical -> Unit
             }
         }
 
-        if (isCheck && anyUnformatted) {
+        if (outcomes.any { it is FormatOutcome.NotCanonical }) {
             throw ProgramResult(ExitCode.FORMAT_ERROR.code)
         }
     }
 
-    private fun reportUnchanged(
-        parsedInput: ParsedVulnlogProject,
-        source: String,
-    ) {
-        when (parsedInput.inputDocument.path) {
-            null -> if (!isCheck) echo(parsedInput.inputDocument.content, trailingNewline = false)
-            else -> echoStatus(formatStatus(StatusVerb.UNCHANGED, source))
+    /** Standard input has no file to leave alone, so its content goes to standard output as the result. */
+    private fun reportUnchanged(document: InputDocument) {
+        when (document.path) {
+            null -> if (!isCheck) echo(document.content, trailingNewline = false)
+            else -> echoMessage(Message.Status(formatStatus(StatusVerb.UNCHANGED, document.source)))
         }
     }
 
-    private fun writeReformatted(
-        parsedInput: ParsedVulnlogProject,
-        source: String,
+    private fun write(
+        document: InputDocument,
         formatted: String,
     ) {
-        if (hasYamlComments(parsedInput.nodeTree.rootNode)) {
-            echoMessage(formatCommentsDroppedWarning(source))
-        }
-        debugFormatFindings(parsedInput)
-        when (val path = parsedInput.inputDocument.path) {
+        when (val path = document.path) {
             null -> echo(formatted, trailingNewline = false)
+
             else -> {
                 writeOrFail(writeOutput(path, formatted))
-                diagnosticSink().verbose("wrote $source")
-                echoStatus(formatStatus(StatusVerb.FORMATTED, source))
+                echoMessage(renderWritten(document.source))
+                echoMessage(Message.Status(formatStatus(StatusVerb.FORMATTED, document.source)))
             }
-        }
-    }
-
-    private fun echoFormatCheckFindings(
-        parsedInput: ParsedVulnlogProject,
-        source: String,
-    ) {
-        echoMessage(formatFinding(FindingSeverity.WARNING, source, message = "not canonically formatted"))
-        checkFormat(parsedInput).forEach { finding ->
-            echoMessage("  ${renderFormatFinding(finding)}")
-        }
-    }
-
-    private fun debugFormatFindings(parsedInput: ParsedVulnlogProject) {
-        if (!diagnostics().verbosity.enables(DiagnosticLevel.DEBUG)) return
-        checkFormat(parsedInput).forEach { finding ->
-            diagnosticSink().debug(renderFormatFinding(finding))
         }
     }
 }
