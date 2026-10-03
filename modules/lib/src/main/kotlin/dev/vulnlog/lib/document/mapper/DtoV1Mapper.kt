@@ -60,10 +60,14 @@ object DtoV1Mapper {
     private fun Project.toDto(): ProjectDto = ProjectDto(organization, name, author, contact)
 
     private fun releasesToDto(releases: List<ReleaseEntry>): List<ReleaseEntryDto> =
-        releases.map {
+        releases.map { release ->
             ReleaseEntryDto(
-                id = it.id.value,
-                publishedAt = it.publicationDate,
+                id = release.id.value,
+                publishedAt = release.publicationDate,
+                purls =
+                    release.purls
+                        .map { entry -> ReleasePurlEntryDto(entry.purl.value, entry.tags.map { it.value }) }
+                        .takeIf { it.isNotEmpty() },
             )
         }
 
