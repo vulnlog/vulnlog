@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.codec.impact.dto
 
-data class FilterDataDto(
+data class FilterDto(
     val asOf: String?,
     val tags: List<String>,
     val reporter: String?,

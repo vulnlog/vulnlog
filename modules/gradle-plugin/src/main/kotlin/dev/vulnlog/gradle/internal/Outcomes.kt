@@ -4,7 +4,9 @@
 package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.FilterRejected
+import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
+import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
@@ -14,6 +16,7 @@ import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
+import dev.vulnlog.lib.render.renderProjectsDiffer
 import dev.vulnlog.lib.render.renderWriteFailure
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
@@ -41,6 +44,13 @@ fun failure(failed: SuppressionOutcome.Failed): GradleException =
 
         // The task writes one file per reporter, so it never asks for a single file.
         is SuppressionOutcome.SeveralReporters -> error("vulnlogSuppress never targets a single file")
+    }
+
+/** Plain [GradleException]s here, unlike in OpenVEX: the types are not settled yet. */
+fun failure(failed: ImpactReportOutcome.Failed): GradleException =
+    when (failed) {
+        is ProjectsDiffer -> GradleException(formatFailureMessage(listOf(renderProjectsDiffer(failed))))
+        is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
     }
 
 fun failure(

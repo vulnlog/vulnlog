@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.codec.impact.dto
 
-data class ProjectDataDto(
+data class ProjectDto(
     val organization: String,
     val name: String,
     val author: String,

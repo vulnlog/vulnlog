@@ -90,25 +90,25 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.codec.impact.dto.FilterDataDto",
+    "name": "dev.vulnlog.lib.codec.impact.dto.FilterDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.codec.impact.dto.ProjectDataDto",
+    "name": "dev.vulnlog.lib.codec.impact.dto.ProjectDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.codec.impact.dto.ReportDataDto",
+    "name": "dev.vulnlog.lib.codec.impact.dto.ImpactReportDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.codec.impact.dto.ReportEntryDataDto",
+    "name": "dev.vulnlog.lib.codec.impact.dto.ImpactEntryDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true

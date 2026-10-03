@@ -3,15 +3,18 @@
 
 package dev.vulnlog.lib.codec.impact
 
-import dev.vulnlog.lib.codec.impact.HtmlReportMapper.toDto
-import dev.vulnlog.lib.codec.impact.dto.FilterDataDto
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.Tag
+import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Impact
-import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeStrictlyIncreasing
@@ -23,15 +26,6 @@ import java.time.Instant
 private val defaultProject = Project("Acme Corp", "Acme Web App", "Security Team")
 private val defaultInstant: Instant = Instant.parse("2026-01-15T10:30:00Z")
 private const val DEFAULT_VERSION = "1.2.3"
-private val emptyFilter =
-    FilterDataDto(
-        asOf = null,
-        tags = emptyList(),
-        reporter = null,
-        states = emptyList(),
-        verdicts = emptyList(),
-        dispositions = emptyList(),
-    )
 
 private fun entry(
     primaryId: VulnId = VulnId.Cve("CVE-2026-1234"),
@@ -43,7 +37,7 @@ private fun entry(
     releases: Set<Release> = setOf(Release("1.0.0")),
     fixedIn: Set<Release> = emptySet(),
     description: String? = "RCE in example-lib",
-) = ReportingEntry(
+) = ImpactEntry(
     primaryId = primaryId,
     state = state,
     ids = ids,
@@ -56,24 +50,26 @@ private fun entry(
 )
 
 private fun render(
-    entries: List<ReportingEntry>,
+    entries: List<ImpactEntry>,
     generatedAt: Instant = defaultInstant,
     vulnlogVersion: String = DEFAULT_VERSION,
     inputs: List<String> = listOf("vulnlog.vl"),
-    filter: FilterDataDto = emptyFilter,
+    filter: ResolvedFilter = ResolvedFilter(),
+    asOf: Release? = null,
 ): String =
-    HtmlReportEncoder.encode(
-        toDto(
+    ImpactReportEncoder.encode(
+        ImpactReport(
             project = defaultProject,
             entries = entries,
             generatedAt = generatedAt,
             vulnlogVersion = vulnlogVersion,
             inputs = inputs,
             filter = filter,
+            asOf = asOf,
         ),
     )
 
-class HtmlReportEncoderTest :
+class ImpactReportEncoderTest :
     FunSpec({
 
         test("fills the template, Content-Security-Policy included, with the report data") {
@@ -89,7 +85,7 @@ class HtmlReportEncoderTest :
         }
 
         test("renders a report without entries") {
-            val entries = emptyList<ReportingEntry>()
+            val entries = emptyList<ImpactEntry>()
 
             val html = render(entries)
 
@@ -149,25 +145,23 @@ class HtmlReportEncoderTest :
             html shouldContain "2026-05-02T08:15:30Z"
         }
 
-        test("serializes the applied filter") {
+        test("names the applied filter under its canonical tokens, in the order Vulnlog declares them") {
             val filter =
-                FilterDataDto(
-                    asOf = "1.2.0",
-                    tags = listOf("frontend", "production"),
-                    reporter = "trivy",
-                    states = listOf("open"),
-                    verdicts = listOf("affected"),
-                    dispositions = listOf("will fix"),
+                ResolvedFilter(
+                    reporter = ReporterType.CARGO_AUDIT,
+                    releases = setOf(Release("1.1.0"), Release("1.2.0")),
+                    tags = setOf(Tag("production"), Tag("frontend")),
+                    states = setOf(WorkState.NOT_APPLICABLE, WorkState.OPEN),
+                    verdicts = setOf(VerdictKind.AFFECTED),
+                    dispositions = setOf(Disposition.WONT_FIX, Disposition.WILL_FIX),
                 )
 
-            val html = render(listOf(entry()), filter = filter)
+            val html = render(listOf(entry()), filter = filter, asOf = Release("1.2.0"))
 
-            html shouldContain "1.2.0"
-            html shouldContain "frontend"
-            html shouldContain "trivy"
-            html shouldContain "\"states\":[\"open\"]"
-            html shouldContain "\"verdicts\":[\"affected\"]"
-            html shouldContain "\"dispositions\":[\"will fix\"]"
+            html shouldContain
+                "\"filter\":{\"asOf\":\"1.2.0\",\"tags\":[\"frontend\",\"production\"],\"reporter\":\"cargo-audit\"," +
+                "\"states\":[\"open\",\"not applicable\"],\"verdicts\":[\"affected\"]," +
+                "\"dispositions\":[\"will fix\",\"wont fix\"]}"
         }
 
         // Retired with issue #161; the report must not bring it back as a label.

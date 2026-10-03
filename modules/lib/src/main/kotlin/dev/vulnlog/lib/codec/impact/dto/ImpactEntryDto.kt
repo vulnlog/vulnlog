@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.codec.impact.dto
 
-data class ReportEntryDataDto(
+data class ImpactEntryDto(
     val primaryId: String,
     val ids: List<String>,
     val state: String,

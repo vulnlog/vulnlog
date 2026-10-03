@@ -4,39 +4,25 @@
 package dev.vulnlog.lib.core.reporting
 
 import dev.vulnlog.lib.core.findDisposition
+import dev.vulnlog.lib.core.findWorkState
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Project
-import dev.vulnlog.lib.model.Resolution
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.Impact
-import dev.vulnlog.lib.model.reporting.ReportingEntry
+import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 
-/**
- * Validates that all provided Vulnlog files share the same project metadata.
- *
- * @return the shared [Project] if all files match, or null if the projects differ.
- */
-fun validateSharedProject(files: Collection<VulnlogFile>): Project? {
-    val projects = files.map { it.project }.distinct()
-    return if (projects.size == 1) projects.first() else null
-}
+/** The project every file declares, or null when they differ: a report merges files of one project only. */
+fun sharedProject(files: Collection<VulnlogFile>): Project? = files.map { it.project }.distinct().singleOrNull()
 
-/**
- * Collects reporting entries based on the vulnerabilities present in the given Vulnlog file
- * and applies the specified filter to refine the results.
- *
- * @param vulnlogFile The Vulnlog file containing vulnerability definitions and related metadata.
- * @return A set of reporting entries representing the filtered and processed vulnerabilities from the Vulnlog file.
- */
-fun collectReportingEntries(vulnlogFile: VulnlogFile): Set<ReportingEntry> =
+fun collectImpactEntries(vulnlogFile: VulnlogFile): Set<ImpactEntry> =
     vulnlogFile.vulnerabilities
         .asSequence()
         .map { vuln ->
-            ReportingEntry(
+            ImpactEntry(
                 state = findWorkState(vuln),
                 primaryId = vuln.id,
                 ids = vuln.aliases.toSet(),
@@ -50,13 +36,10 @@ fun collectReportingEntries(vulnlogFile: VulnlogFile): Set<ReportingEntry> =
         }.toSet()
 
 /**
- * Merges reporting entries from multiple sources by primary vulnerability ID.
- *
- * Entries with the same primary ID, state, impact, and analysis are merged by unioning
- * their alias IDs, releases, and fix releases. Entries with the same primary ID but
- * conflicting verdict or analysis are kept as separate rows.
+ * The same vulnerability from several files becomes one row. Entries that disagree on state, impact, disposition or
+ * analysis stay separate rows, so the report does not hide the disagreement.
  */
-fun mergeReportingEntries(entries: List<ReportingEntry>): List<ReportingEntry> =
+fun mergeImpactEntries(entries: List<ImpactEntry>): List<ImpactEntry> =
     entries
         .groupBy { it.primaryId }
         .flatMap { (_, group) ->
@@ -73,36 +56,15 @@ private data class MergeKey(
 )
 
 private fun mergeTwo(
-    a: ReportingEntry,
-    b: ReportingEntry,
-): ReportingEntry =
+    a: ImpactEntry,
+    b: ImpactEntry,
+): ImpactEntry =
     a.copy(
         ids = a.ids + b.ids,
         shortDescription = a.shortDescription ?: b.shortDescription,
         reportFor = a.reportFor + b.reportFor,
         fixedIn = a.fixedIn + b.fixedIn,
     )
-
-/** Resolve the [WorkState] of a given [VulnerabilityEntry]. The state is calculated based on the verdict and the resolution of a [vulnEntry].  */
-fun findWorkState(vulnEntry: VulnerabilityEntry): WorkState =
-    when (val verdict = vulnEntry.verdict) {
-        Verdict.UnderInvestigation -> WorkState.UNDER_INVESTIGATION
-        is Verdict.Affected -> findAffectedWorkState(vulnEntry.resolution, verdict)
-        is Verdict.NotAffected -> findNotAffectedWorkState(vulnEntry.resolution)
-    }
-
-private fun findAffectedWorkState(
-    resolution: Resolution?,
-    verdict: Verdict.Affected,
-): WorkState =
-    when {
-        resolution != null -> WorkState.RESOLVED
-        verdict.disposition == Disposition.WONT_FIX -> WorkState.ACCEPTED
-        else -> WorkState.OPEN
-    }
-
-private fun findNotAffectedWorkState(resolution: Resolution?): WorkState =
-    if (resolution != null) WorkState.RESOLVED else WorkState.NOT_APPLICABLE
 
 internal fun severityOf(impact: Impact): Severity? =
     when (impact) {
