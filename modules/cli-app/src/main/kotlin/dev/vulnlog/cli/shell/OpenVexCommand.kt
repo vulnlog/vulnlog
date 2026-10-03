@@ -115,7 +115,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     private val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST
 
     override fun run() {
-        val vulnlogFile = validateInputOrFail(input).project.vulnlogProjectFile
+        val project = validateInputOrFail(input).project
         val request =
             OpenVexRequest(
                 release = releaseRequest,
@@ -127,7 +127,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 formatVersion = formatVersion,
             )
 
-        val outcome = generateOpenVex(vulnlogFile, request)
+        val outcome = generateOpenVex(project, request)
         renderOpenVexMessages(outcome).forEach(::echoMessage)
         when (outcome) {
             is OpenVexOutcome.Failed -> {

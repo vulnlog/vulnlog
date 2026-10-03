@@ -4,11 +4,15 @@
 package dev.vulnlog.lib.app
 
 import dev.vulnlog.lib.core.filter.FilterProblem
+import dev.vulnlog.lib.document.validated
+import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.document.yaml.YamlWriter
 import dev.vulnlog.lib.fixtures.cve
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
+import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Verdict
@@ -35,6 +39,7 @@ private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-39
 
 private fun fileWith(vararg releases: String): VulnlogFile =
     vulnlogFile(
+        tags = listOf(tagEntry("app")),
         releases =
             releases.map { id ->
                 releaseEntry(id, purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@$id", tags = listOf("app"))))
@@ -44,6 +49,9 @@ private fun fileWith(vararg releases: String): VulnlogFile =
                 vulnerability(id = cve("CVE-2026-1111"), releases = releases.map(::release), tags = listOf(tag("app"))),
             ),
     )
+
+/** Through YAML and the load step, as a driver hands it over: only the load step builds a [ValidVulnlogProject]. */
+private fun loaded(file: VulnlogFile): ValidVulnlogProject = validated(YamlWriter.write(file))
 
 private fun request(
     baseline: String? = null,
@@ -56,7 +64,7 @@ private fun revised(
     baseline: String? = null,
     now: Instant = ISSUED_AT,
     release: String? = null,
-): OpenVexOutcome.Revised = generateOpenVex(file, request(baseline, now, release)).shouldBeInstanceOf()
+): OpenVexOutcome.Revised = generateOpenVex(loaded(file), request(baseline, now, release)).shouldBeInstanceOf()
 
 class GenerateOpenVexTest :
     FunSpec({
@@ -73,7 +81,7 @@ class GenerateOpenVexTest :
         test("a rerun over an unchanged file keeps the baseline bytes and version") {
             val first = revised(fileWith("1.0.0"))
 
-            val outcome = generateOpenVex(fileWith("1.0.0"), request(first.content, UPDATED_AT))
+            val outcome = generateOpenVex(loaded(fileWith("1.0.0")), request(first.content, UPDATED_AT))
 
             outcome shouldBe OpenVexOutcome.Unchanged(first.collection, OpenVexDocumentVersion.FIRST, first.content)
         }
@@ -111,7 +119,7 @@ class GenerateOpenVexTest :
         test("a scope the file does not define is rejected") {
             val file = fileWith("1.0.0")
 
-            val outcome = generateOpenVex(file, request(release = "9.9.9"))
+            val outcome = generateOpenVex(loaded(file), request(release = "9.9.9"))
 
             outcome shouldBe
                 FilterRejected(listOf(FilterProblem.UnknownRelease(release("9.9.9"), listOf(release("1.0.0")))))
@@ -120,7 +128,7 @@ class GenerateOpenVexTest :
         test("a baseline that cannot be continued is rejected") {
             val baseline = """{"bomFormat": "CycloneDX"}"""
 
-            val outcome = generateOpenVex(fileWith("1.0.0"), request(baseline = baseline))
+            val outcome = generateOpenVex(loaded(fileWith("1.0.0")), request(baseline = baseline))
 
             outcome shouldBe OpenVexOutcome.BaselineRejected(OpenVexBaselineProblem.NotOpenVex)
         }
@@ -128,7 +136,7 @@ class GenerateOpenVexTest :
         test("a file without an anchoring release yields no document") {
             val bare = vulnlogFile(releases = listOf(releaseEntry("1.0.0")))
 
-            val outcome = generateOpenVex(bare, request())
+            val outcome = generateOpenVex(loaded(bare), request())
 
             outcome.shouldBeInstanceOf<OpenVexOutcome.NoStatementApplies>().reason shouldBe
                 OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
