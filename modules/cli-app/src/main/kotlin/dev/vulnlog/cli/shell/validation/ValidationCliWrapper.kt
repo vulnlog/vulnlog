@@ -6,7 +6,6 @@ package dev.vulnlog.cli.shell.validation
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.ProgramResult
 import dev.vulnlog.cli.shell.ExitCode
-import dev.vulnlog.cli.shell.diagnosticSink
 import dev.vulnlog.cli.shell.echoHelpHint
 import dev.vulnlog.cli.shell.echoMessage
 import dev.vulnlog.cli.shell.exitCode
@@ -28,7 +27,7 @@ import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderParsedProject
 import dev.vulnlog.lib.render.renderProblem
 
-/** Reads [input] to DTO and validates on DTO-level. Any finding is reported to stderr. Fails with [ExitCode.VALIDATION_ERROR] on any finding. */
+/** Stops at the DTO, so a file whose domain rules fail still loads: for the commands that only touch the layout. */
 fun CliktCommand.parseInputOrFail(
     input: FileInputOption,
     request: ValidationRequest = ValidationRequest(),
@@ -37,7 +36,6 @@ fun CliktCommand.parseInputOrFail(
     return unwrap(parseDocument(document, request.config), document, request.reportedSeverities)
 }
 
-/** Reads [input] to Domain and validates on domain-level. */
 fun CliktCommand.validateInputOrFail(
     input: FileInputOption,
     validationRequest: ValidationRequest = ValidationRequest(),
@@ -45,7 +43,7 @@ fun CliktCommand.validateInputOrFail(
     val document = readOrFail(input)
     val ok =
         unwrap(validateDocument(document, validationRequest.config), document, validationRequest.reportedSeverities)
-    diagnosticSink().verbose(renderParsedProject(document.filename, ok.project.vulnlogProjectFile))
+    echoMessage(renderParsedProject(document.filename, ok.project.vulnlogProjectFile))
     return ok
 }
 
