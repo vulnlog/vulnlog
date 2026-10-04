@@ -8,11 +8,13 @@ import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.render.Message
 import dev.vulnlog.lib.render.formatMessage
 
-/** Mirrors [log] for the CLI */
-fun CliktCommand.echoMessage(message: Message) =
+/** Mirrors `Logger.log` in the Gradle plugin, with `-q`, `-v` and `-vv` in place of Gradle's log levels. */
+fun CliktCommand.echoMessage(message: Message) {
+    val diagnostics = diagnostics()
     when (message) {
-        is Message.Status -> echoStatus(message.text)
+        is Message.Status -> if (diagnostics.verbosity.statusEnabled) echoMessage(message.text)
         is Message.Warning -> echoMessage(formatMessage(FindingSeverity.WARNING, message.text))
-        is Message.Verbose -> diagnosticSink().verbose(message.text)
-        is Message.Debug -> diagnosticSink().debug(message.text)
+        is Message.Verbose -> diagnostics.echoDiagnostic(DiagnosticLevel.VERBOSE, message.text)
+        is Message.Debug -> diagnostics.echoDiagnostic(DiagnosticLevel.DEBUG, message.text)
     }
+}
