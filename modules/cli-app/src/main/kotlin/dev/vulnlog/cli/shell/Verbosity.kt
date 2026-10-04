@@ -3,8 +3,6 @@
 
 package dev.vulnlog.cli.shell
 
-import dev.vulnlog.lib.io.DiagnosticLevel
-
 data class Verbosity(
     val level: Int = 0,
     val quiet: Boolean = false,

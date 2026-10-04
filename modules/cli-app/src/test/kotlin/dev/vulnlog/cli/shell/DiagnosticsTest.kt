@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.io
+package dev.vulnlog.cli.shell
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

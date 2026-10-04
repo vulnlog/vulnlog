@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.io
+package dev.vulnlog.cli.shell
 
 /** Each driver installs a sink that filters by its verbosity and writes to its own channel. */
 fun interface DiagnosticSink {
