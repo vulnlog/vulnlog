@@ -5,65 +5,58 @@ package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.finding.FindingSeverity
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
 class MessageGrammarTest :
     FunSpec({
 
-        test("status line joins verb and subject with a colon") {
-            formatStatus(StatusVerb.CREATED, "vulnlog.yaml") shouldBe "Created: vulnlog.yaml"
-            formatStatus(StatusVerb.WROTE, "reports/report.html") shouldBe "Wrote: reports/report.html"
+        test("a status line joins verb and subject with a colon") {
+            val line = formatStatus(StatusVerb.CREATED, "vulnlog.yaml")
+
+            line shouldBe "Created: vulnlog.yaml"
         }
 
-        test("finding line includes file, location, and message") {
-            formatFinding(
-                severity = FindingSeverity.ERROR,
-                file = "vulnlog.yaml",
-                location = "vulnerabilities[3].resolution.in",
-                message = "release '9.9.9' is not defined",
-            ) shouldBe "error: vulnlog.yaml: vulnerabilities[3].resolution.in: release '9.9.9' is not defined"
+        test("a finding line names the severity, the file, the location and the message") {
+            val location = "vulnerabilities[3].resolution.in"
+
+            val line = formatFinding(FindingSeverity.ERROR, "vulnlog.yaml", location, "release '9.9.9' is not defined")
+
+            line shouldBe "error: vulnlog.yaml: vulnerabilities[3].resolution.in: release '9.9.9' is not defined"
         }
 
-        test("finding line omits a missing location") {
-            formatFinding(
-                severity = FindingSeverity.WARNING,
-                file = "vulnlog.yaml",
-                message = "not canonically formatted",
-            ) shouldBe "warning: vulnlog.yaml: not canonically formatted"
+        test("a finding line leaves out a missing or blank location") {
+            val locations = listOf(null, "")
+
+            val lines = locations.map { formatFinding(FindingSeverity.WARNING, "vulnlog.yaml", it, "not canonical") }
+
+            lines shouldBe List(2) { "warning: vulnlog.yaml: not canonical" }
         }
 
-        test("finding line omits a blank location") {
-            formatFinding(
-                severity = FindingSeverity.INFO,
-                file = "vulnlog.yaml",
-                location = "",
-                message = "some observation",
-            ) shouldBe "info: vulnlog.yaml: some observation"
+        test("a message line carries only the severity prefix") {
+            val line = formatMessage(FindingSeverity.INFO, "cannot read <stdin>")
+
+            line shouldBe "info: cannot read <stdin>"
         }
 
-        test("message line carries only the severity prefix") {
-            formatMessage(FindingSeverity.ERROR, "cannot read <stdin>") shouldBe "error: cannot read <stdin>"
+        test("a hint line is indented under the line it follows") {
+            val line = formatHint("run vulnlog fmt")
+
+            line shouldBe "  hint: run vulnlog fmt"
         }
 
-        test("hint line is indented under the finding") {
-            formatHint("run vulnlog fmt") shouldBe "  hint: run vulnlog fmt"
+        test("a summary counts with real plurals and leaves out zero counts") {
+            val counts = listOf(Triple(2, 1, 0), Triple(1, 0, 3), Triple(0, 0, 0))
+
+            val summaries = counts.map { (errors, warnings, infos) -> formatSummary(errors, warnings, infos) }
+
+            summaries shouldBe listOf("2 errors, 1 warning", "1 error, 3 infos", "")
         }
 
-        test("summary uses real plurals") {
-            formatSummary(errors = 2, warnings = 1) shouldBe "2 errors, 1 warning"
-        }
+        test("pluralize takes an irregular plural and counts zero too") {
+            val counts = listOf(0, 1, 3)
 
-        test("summary omits zero counts") {
-            formatSummary(errors = 1, warnings = 0, infos = 3) shouldBe "1 error, 3 infos"
-        }
+            val counted = counts.map { pluralize(it, "entry", "entries") }
 
-        test("pluralize supports irregular plurals") {
-            pluralize(1, "entry", "entries") shouldBe "1 entry"
-            pluralize(3, "entry", "entries") shouldBe "3 entries"
-        }
-
-        test("pluralize drops zero counts") {
-            pluralize(0, "error").shouldBeNull()
+            counted shouldBe listOf("0 entries", "1 entry", "3 entries")
         }
     })

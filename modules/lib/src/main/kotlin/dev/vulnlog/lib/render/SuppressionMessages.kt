@@ -50,8 +50,10 @@ fun renderSuppressionFailure(
 fun renderSuppressionWritten(
     target: String,
     file: SuppressionFile,
-): Message =
-    Message.Verbose("wrote $target: ${formatName(file.list.format)} format, ${entries(file.list.entries.size)}")
+): Message {
+    val entries = pluralize(file.list.entries.size, "entry", "entries")
+    return Message.Verbose("wrote $target: ${formatName(file.list.format)} format, $entries")
+}
 
 private fun collectedMessages(outcome: SuppressionOutcome.Collected): List<Message> =
     renderFilterResolution(outcome.filter) +
@@ -104,5 +106,3 @@ private fun idTypeName(type: KClass<out VulnId>): String =
         VulnId.Snyk::class -> "SNYK"
         else -> type.simpleName ?: "unknown"
     }
-
-private fun entries(count: Int): String = if (count == 1) "1 entry" else "$count entries"

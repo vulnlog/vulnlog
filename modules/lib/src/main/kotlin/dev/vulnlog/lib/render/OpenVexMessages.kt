@@ -157,8 +157,3 @@ private fun countMessage(collection: OpenVexCollection): Message {
     val detail = byStatus.entries.sortedBy { it.key }.joinToString(", ") { "${it.value} ${it.key}" }
     return Message.Verbose("collected ${pluralize(collection.statements.size, "statement")}: $detail")
 }
-
-private fun pluralize(
-    count: Int,
-    noun: String,
-): String = if (count == 1) "1 $noun" else "$count ${noun}s"
