@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib
 
-import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.document.dto.VulnlogFileV1Dto
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import java.nio.file.Files
@@ -52,7 +52,7 @@ private fun registeredClassNames(): Set<String> {
 private fun dtoClassNames(): List<String> {
     val location =
         Path.of(
-            VulnlogFile::class.java.protectionDomain.codeSource.location
+            VulnlogFileV1Dto::class.java.protectionDomain.codeSource.location
                 .toURI(),
         )
     val classFiles = if (location.isDirectory()) classFilesIn(location) else classFilesIn(ZipFile(location.toFile()))
