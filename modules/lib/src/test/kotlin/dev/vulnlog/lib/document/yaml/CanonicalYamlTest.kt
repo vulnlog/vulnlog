@@ -107,6 +107,17 @@ class CanonicalYamlTest :
             yaml shouldContain "description: padded\n"
         }
 
+        test("renderEntryListItem indents the entry as one list item and leaves out empty lists") {
+            val minimal = entry().copy(aliases = emptyList(), tags = emptyList())
+
+            val yaml = CanonicalYaml.renderEntryListItem(minimal)
+
+            yaml shouldContain "  - id: CVE-2026-0001\n    releases:"
+            yaml shouldNotContain "---"
+            yaml shouldNotContain "aliases:"
+            yaml shouldNotContain "tags:"
+        }
+
         context("decision functions") {
 
             test("canonicalScalarStyle picks the style by the value alone") {

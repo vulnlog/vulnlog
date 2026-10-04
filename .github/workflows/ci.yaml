@@ -81,6 +81,7 @@ jobs:
               - 'modules/lib/src/main/kotlin/dev/vulnlog/lib/codec/**'
               - 'modules/cli-app/**'
               - 'modules/lib/build.gradle.kts'
+              - 'modules/lib-domain/build.gradle.kts'
               - 'gradle/libs.versions.toml'
               - 'buildSrc/**'
 

@@ -62,14 +62,15 @@ debug: [non-canonical-array-style] vulnerabilities[0].releases: Line 12: canonic
 
 ## Architecture
 
-- `core` never logs. It returns data that carries the facts worth reporting, for example `SuppressionExclusion` or
-  `SuppressionCollectionResult`.
-- Shared `render*` functions in `modules/lib` turn that data into the exact message text, so the CLI and the Gradle
-  plugin cannot drift apart.
-- Shells emit through `DiagnosticSink` (`modules/lib/.../shell/Diagnostics.kt`). The CLI sink filters by `Verbosity` and
-  prefixes `verbose:`/`debug:` on stderr; the Gradle sink forwards to `logger.info`/`logger.debug`.
-- If producing a debug message costs real work, guard the call site: `verbosity.enables(DiagnosticLevel.DEBUG)` in the
-  CLI, `logger.isDebugEnabled` in Gradle.
+- The domain (`modules/lib-domain`) and the use cases (`app` in `modules/lib`) never log. They return data that carries
+  the facts worth reporting, for example the `SuppressionExclusion` list of a `SuppressionCollection`.
+- The `render*` functions in `modules/lib` turn that data into `Message` and `Failure` values with the exact text, so
+  the CLI and the Gradle plugin cannot drift apart.
+- Each driver routes a `Message` in one place. The CLI's `echoMessage` filters by `Verbosity` and prefixes
+  `verbose:`/`debug:` on stderr; the Gradle plugin's `Logger.log` maps the levels to lifecycle, warn, info and debug.
+  A `Failure` becomes `error:` lines in the CLI and the exception message in Gradle.
+- The `render*` functions build every message whether its level is shown or not, so a debug message must stay cheap to
+  produce.
 
 ## Message style
 
