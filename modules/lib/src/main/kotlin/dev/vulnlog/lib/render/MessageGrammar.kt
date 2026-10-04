@@ -5,10 +5,7 @@ package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.finding.FindingSeverity
 
-/**
- * The verbs allowed on status lines. One vocabulary for every surface, so the CLI and the
- * Gradle plugin word the same event identically.
- */
+/** One vocabulary for both drivers, so the CLI and the Gradle plugin word the same event identically. */
 enum class StatusVerb(
     val display: String,
 ) {
@@ -22,13 +19,13 @@ enum class StatusVerb(
     VALIDATED("Validated"),
 }
 
-/** Status line for a successful action: `Created: vulnlog.yaml`. */
+/** `Created: vulnlog.yaml` */
 fun formatStatus(
     verb: StatusVerb,
     subject: String,
 ): String = "${verb.display}: $subject"
 
-/** Finding line: `error: vulnlog.yaml: vulnerabilities[3].resolution.in: release '9.9.9' is not defined`. */
+/** `error: vulnlog.yaml: vulnerabilities[3].resolution.in: release '9.9.9' is not defined` */
 fun formatFinding(
     severity: FindingSeverity,
     file: String,
@@ -39,40 +36,33 @@ fun formatFinding(
     return "${severityLabel(severity)}: $file: $locationPart$message"
 }
 
-/** Severity-prefixed message without a file anchor: `error: <message>`. */
+/** `error: <message>` */
 fun formatMessage(
     severity: FindingSeverity,
     message: String,
 ): String = "${severityLabel(severity)}: $message"
 
-/** Hint line following a finding, stating the next step: `  hint: run vulnlog fmt`. */
+/** `  hint: run vulnlog fmt`, indented under the line it follows. */
 fun formatHint(nextStep: String): String = "  hint: $nextStep"
 
-/** Summary line after findings with real plurals: `2 errors, 1 warning`. Zero counts are omitted. */
+/** `2 errors, 1 warning`; a count of zero is left out. */
 fun formatSummary(
     errors: Int,
     warnings: Int,
     infos: Int = 0,
 ): String =
-    listOf(
-        pluralize(errors, "error"),
-        pluralize(warnings, "warning"),
-        pluralize(infos, "info"),
-    ).filterNotNull().joinToString(", ")
+    listOf(errors to "error", warnings to "warning", infos to "info")
+        .filter { (count, _) -> count > 0 }
+        .joinToString(", ") { (count, noun) -> pluralize(count, noun) }
 
-/** Counted noun with a real plural: `1 entry`, `3 entries`. Returns null for a zero count. */
+/** `1 entry`, `0 entries`, `3 entries` */
 fun pluralize(
     count: Int,
     singular: String,
     plural: String = singular + "s",
-): String? =
-    when {
-        count == 0 -> null
-        count == 1 -> "$count $singular"
-        else -> "$count $plural"
-    }
+): String = if (count == 1) "1 $singular" else "$count $plural"
 
-fun severityLabel(severity: FindingSeverity): String =
+private fun severityLabel(severity: FindingSeverity): String =
     when (severity) {
         FindingSeverity.ERROR -> "error"
         FindingSeverity.WARNING -> "warning"
