@@ -9,8 +9,9 @@ import java.io.File
 
 /**
  * Enforces the package layers of the target architecture by scanning the imports and the fully qualified references of
- * lib's main sources, and keeps the pure layers free of the clock, randomness, the environment and the file system. No
- * extra dependency.
+ * the main sources of lib and lib-domain, and keeps the pure layers free of the clock, randomness, the environment and
+ * the file system. No extra dependency. The module boundary already keeps the domain from the outer layers; the rules
+ * inside each module stay this test's job.
  *
  * Packages in [strictPackages] already follow the rules and fail the build on a violation. Every other package is only
  * reported while the migration is in progress. A package that no layer names is not checked.
@@ -90,10 +91,13 @@ private data class Source(
     val code: String,
 )
 
+/** A missing root would yield no file and pass silently, so both must exist. */
+private val sourceRoots = listOf(File("src/main/kotlin"), File("../lib-domain/src/main/kotlin"))
+
 private fun sources(): List<Source> =
-    File("src/main/kotlin")
-        .walkTopDown()
-        .filter { it.extension == "kt" }
+    sourceRoots
+        .onEach { root -> check(root.isDirectory) { "Source root not found: $root" } }
+        .flatMap { root -> root.walkTopDown().filter { it.extension == "kt" }.toList() }
         .map { file ->
             val text = file.readText()
             val pkg =
@@ -103,7 +107,7 @@ private fun sources(): List<Source> =
                     ?.get(1)
                     .orEmpty()
             Source(file.name, pkg, withoutComments(text))
-        }.toList()
+        }
 
 private val importLine = Regex("^import (\\S+)", RegexOption.MULTILINE)
 

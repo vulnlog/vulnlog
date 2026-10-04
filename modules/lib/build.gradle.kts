@@ -3,7 +3,7 @@ plugins {
     `java-library`
 }
 
-description = "Vulnlog core library"
+description = "Vulnlog library: the use cases, the document, the codecs, the messages and the file access"
 
 group = "dev.vulnlog"
 
