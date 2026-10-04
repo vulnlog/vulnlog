@@ -6,9 +6,7 @@ package dev.vulnlog.lib.render
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.SuppressionFile
 import dev.vulnlog.lib.app.SuppressionOutcome
-import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.canonical
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.core.suppression.suppressionFileName
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId

@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.finding.FindingSeverity
 

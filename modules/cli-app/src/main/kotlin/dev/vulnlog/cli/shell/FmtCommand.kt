@@ -12,12 +12,12 @@ import dev.vulnlog.cli.shell.validation.parseInputOrFail
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.FormatRequest
 import dev.vulnlog.lib.app.formatDocument
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderFormatMessages
 import dev.vulnlog.lib.render.renderWritten
 

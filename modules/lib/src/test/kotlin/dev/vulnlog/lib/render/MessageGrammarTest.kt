@@ -1,14 +1,14 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.core
+package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.finding.FindingSeverity
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 
-class MessagesTest :
+class MessageGrammarTest :
     FunSpec({
 
         test("status line joins verb and subject with a colon") {

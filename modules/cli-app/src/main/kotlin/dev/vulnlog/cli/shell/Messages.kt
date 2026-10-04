@@ -4,9 +4,9 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.core.CliktCommand
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.formatMessage
 
 /** Mirrors [log] for the CLI */
 fun CliktCommand.echoMessage(message: Message) =

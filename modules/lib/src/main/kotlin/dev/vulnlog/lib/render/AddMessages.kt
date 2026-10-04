@@ -4,8 +4,6 @@
 package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.app.AddOutcome
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
 
 /** Before the write; [renderAddStatus] follows it. */
 fun renderAddMessages(outcome: AddOutcome.Written): List<Message> =

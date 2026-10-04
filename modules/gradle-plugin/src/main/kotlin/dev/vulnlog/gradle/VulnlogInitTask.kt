@@ -9,10 +9,10 @@ import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.InitRequest
 import dev.vulnlog.lib.app.initDocument
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderWritten
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty

@@ -16,10 +16,10 @@ import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.versionOption
 import dev.vulnlog.cli.BuildInfo
-import dev.vulnlog.lib.core.formatHint
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.isVulnlogFileName
+import dev.vulnlog.lib.render.formatHint
+import dev.vulnlog.lib.render.formatMessage
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {

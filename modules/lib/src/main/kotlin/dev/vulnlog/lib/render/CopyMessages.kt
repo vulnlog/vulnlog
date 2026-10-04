@@ -5,9 +5,6 @@ package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.app.CopiedFile
 import dev.vulnlog.lib.app.CopyOutcome
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.pluralize
 
 /** Before the write; [renderCopied] follows it. */
 fun renderCopyMessages(file: CopiedFile): List<Message> =
