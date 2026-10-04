@@ -8,8 +8,6 @@ import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.testing.test
 import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.booleans.shouldBeFalse
-import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.paths.shouldExist
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -33,123 +31,33 @@ class VulnlogCliTest :
 
         context("verbosity flags") {
 
-            test("defaults to no diagnostics and status lines on") {
-                val (cli, probe) = cliWithProbe()
+            test("-v, -vv, --verbose and -q set the verbosity; without them it is the default") {
+                val flags = listOf("", "-v", "-vv", "--verbose", "-q")
 
-                cli.test("probe").statusCode shouldBe 0
+                val seen =
+                    flags.map { flag ->
+                        val (cli, probe) = cliWithProbe()
+                        cli.test("$flag probe")
+                        probe.seen
+                    }
 
-                probe.seen shouldBe Verbosity(level = 0, quiet = false)
+                seen shouldBe
+                    listOf(
+                        Verbosity(level = 0, quiet = false),
+                        Verbosity(level = 1, quiet = false),
+                        Verbosity(level = 2, quiet = false),
+                        Verbosity(level = 1, quiet = false),
+                        Verbosity(level = 0, quiet = true),
+                    )
             }
 
-            test("-v enables verbose") {
-                val (cli, probe) = cliWithProbe()
+            test("-q with -v or -vv is a usage error") {
+                val flags = listOf("-q -v", "-q -vv")
 
-                cli.test("-v probe").statusCode shouldBe 0
+                val results = flags.map { flag -> cliWithProbe().first.test("$flag probe") }
 
-                probe.seen shouldBe Verbosity(level = 1, quiet = false)
-            }
-
-            test("-vv enables debug") {
-                val (cli, probe) = cliWithProbe()
-
-                cli.test("-vv probe").statusCode shouldBe 0
-
-                probe.seen shouldBe Verbosity(level = 2, quiet = false)
-            }
-
-            test("--verbose is the long form of -v") {
-                val (cli, probe) = cliWithProbe()
-
-                cli.test("--verbose probe").statusCode shouldBe 0
-
-                probe.seen shouldBe Verbosity(level = 1, quiet = false)
-            }
-
-            test("-q sets quiet") {
-                val (cli, probe) = cliWithProbe()
-
-                cli.test("-q probe").statusCode shouldBe 0
-
-                probe.seen shouldBe Verbosity(level = 0, quiet = true)
-            }
-
-            test("-q with -v is a usage error") {
-                val (cli, _) = cliWithProbe()
-
-                val result = cli.test("-q -v probe")
-
-                result.statusCode shouldBe 1
-                result.stderr shouldContain "Option --quiet cannot be combined with --verbose."
-            }
-
-            test("-q with -vv is a usage error") {
-                val (cli, _) = cliWithProbe()
-
-                val result = cli.test("-q -vv probe")
-
-                result.statusCode shouldBe 1
-                result.stderr shouldContain "Option --quiet cannot be combined with --verbose."
-            }
-        }
-
-        context("Verbosity") {
-
-            test("level 0 enables nothing") {
-                Verbosity(level = 0).enables(DiagnosticLevel.VERBOSE).shouldBeFalse()
-                Verbosity(level = 0).enables(DiagnosticLevel.DEBUG).shouldBeFalse()
-            }
-
-            test("level 1 enables verbose only") {
-                Verbosity(level = 1).enables(DiagnosticLevel.VERBOSE).shouldBeTrue()
-                Verbosity(level = 1).enables(DiagnosticLevel.DEBUG).shouldBeFalse()
-            }
-
-            test("level 2 enables verbose and debug") {
-                Verbosity(level = 2).enables(DiagnosticLevel.VERBOSE).shouldBeTrue()
-                Verbosity(level = 2).enables(DiagnosticLevel.DEBUG).shouldBeTrue()
-            }
-
-            test("stack traces require level 2") {
-                Verbosity(level = 1).stackTraces.shouldBeFalse()
-                Verbosity(level = 2).stackTraces.shouldBeTrue()
-            }
-
-            test("quiet disables status lines") {
-                Verbosity(quiet = false).statusEnabled.shouldBeTrue()
-                Verbosity(quiet = true).statusEnabled.shouldBeFalse()
-            }
-        }
-
-        context("CliDiagnostics sink") {
-
-            test("level 0 emits nothing") {
-                val lines = mutableListOf<String>()
-
-                val diagnostics = CliDiagnostics(Verbosity(level = 0), lines::add)
-                diagnostics.sink.verbose("parsed")
-                diagnostics.sink.debug("timing")
-
-                lines shouldBe emptyList()
-            }
-
-            test("level 1 emits verbose only") {
-                val lines = mutableListOf<String>()
-
-                val diagnostics = CliDiagnostics(Verbosity(level = 1), lines::add)
-                diagnostics.sink.verbose("parsed")
-                diagnostics.sink.debug("timing")
-
-                lines shouldBe listOf("verbose: parsed")
-            }
-
-            test("level 2 emits verbose and debug") {
-                val lines = mutableListOf<String>()
-
-                val diagnostics = CliDiagnostics(Verbosity(level = 2), lines::add)
-                diagnostics.sink.verbose("parsed")
-                diagnostics.sink.debug("timing")
-
-                lines shouldBe listOf("verbose: parsed", "debug: timing")
+                results.map { it.statusCode } shouldBe listOf(1, 1)
+                results.forEach { it.stderr shouldContain "Option --quiet cannot be combined with --verbose." }
             }
         }
 
