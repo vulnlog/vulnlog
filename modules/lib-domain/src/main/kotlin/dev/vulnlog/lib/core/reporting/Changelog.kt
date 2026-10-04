@@ -106,7 +106,7 @@ private fun mergeTwoChangelogEntries(
         ref = a.ref ?: b.ref,
     )
 
-internal fun summarize(entries: List<ChangelogEntry>): ChangelogSummary =
+fun summarize(entries: List<ChangelogEntry>): ChangelogSummary =
     ChangelogSummary(
         total = entries.size,
         bySeverity =

@@ -66,7 +66,7 @@ private fun mergeTwo(
         fixedIn = a.fixedIn + b.fixedIn,
     )
 
-internal fun severityOf(impact: Impact): Severity? =
+fun severityOf(impact: Impact): Severity? =
     when (impact) {
         is Impact.Affected -> impact.severity
         is Impact.NotAffected, Impact.Unknown -> null

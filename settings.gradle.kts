@@ -6,8 +6,10 @@ rootProject.name = "vulnlog"
 
 include(":cli-app")
 include(":lib")
+include(":lib-domain")
 include(":gradle-plugin")
 
 project(":cli-app").projectDir = file("modules/cli-app")
 project(":lib").projectDir = file("modules/lib")
+project(":lib-domain").projectDir = file("modules/lib-domain")
 project(":gradle-plugin").projectDir = file("modules/gradle-plugin")
