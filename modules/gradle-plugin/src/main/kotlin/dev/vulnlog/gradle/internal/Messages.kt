@@ -3,9 +3,9 @@
 
 package dev.vulnlog.gradle.internal
 
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.formatMessage
 import org.gradle.api.logging.Logger
 
 /**

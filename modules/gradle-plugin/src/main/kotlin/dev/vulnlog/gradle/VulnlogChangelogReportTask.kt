@@ -12,12 +12,12 @@ import dev.vulnlog.lib.app.ChangelogFormatRequest
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.ChangelogRequest
 import dev.vulnlog.lib.app.generateChangelog
-import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterRequest
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderChangelogMessages
 import dev.vulnlog.lib.render.renderWritten
 import org.gradle.api.DefaultTask

@@ -3,8 +3,6 @@
 
 package dev.vulnlog.lib.render
 
-import dev.vulnlog.lib.core.formatHint
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
 
 data class Failure(

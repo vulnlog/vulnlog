@@ -4,10 +4,6 @@
 package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.app.ValidationOutcome
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatFinding
-import dev.vulnlog.lib.core.formatStatus
-import dev.vulnlog.lib.core.formatSummary
 import dev.vulnlog.lib.core.shortenSchemaVersion
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.finding.FindingSeverity

@@ -15,13 +15,13 @@ import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.ImpactReportRequest
 import dev.vulnlog.lib.app.generateImpactReport
-import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterRequest
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderImpactReportFailure
 import dev.vulnlog.lib.render.renderImpactReportMessages
 import dev.vulnlog.lib.render.renderWritten

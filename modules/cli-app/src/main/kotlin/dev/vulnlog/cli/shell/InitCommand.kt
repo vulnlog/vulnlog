@@ -13,11 +13,11 @@ import com.github.ajalt.clikt.parameters.options.required
 import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.InitRequest
 import dev.vulnlog.lib.app.initDocument
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderWritten
 import kotlin.io.path.exists

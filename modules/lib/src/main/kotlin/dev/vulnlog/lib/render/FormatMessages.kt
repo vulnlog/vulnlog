@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.app.FormatOutcome
-import dev.vulnlog.lib.core.formatHint
 import dev.vulnlog.lib.finding.FormatFinding
 
 /**

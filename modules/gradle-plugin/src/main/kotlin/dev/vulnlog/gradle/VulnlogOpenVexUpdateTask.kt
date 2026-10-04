@@ -5,11 +5,11 @@ package dev.vulnlog.gradle
 
 import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.writeOrFail
-import dev.vulnlog.lib.core.StatusVerb
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.writeOutputIfChanged
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile

@@ -23,15 +23,15 @@ import dev.vulnlog.lib.app.SuppressionFormatRequest
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.app.SuppressionRequest
 import dev.vulnlog.lib.app.generateSuppressions
-import dev.vulnlog.lib.core.StatusVerb
 import dev.vulnlog.lib.core.filter.FilterRequest
-import dev.vulnlog.lib.core.formatStatus
 import dev.vulnlog.lib.io.DirectoryOutputOption
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
 import dev.vulnlog.lib.io.OutputOption
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message
+import dev.vulnlog.lib.render.StatusVerb
+import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderSuppressionFailure
 import dev.vulnlog.lib.render.renderSuppressionMessages
 import dev.vulnlog.lib.render.renderSuppressionWritten

@@ -6,7 +6,7 @@ package dev.vulnlog.cli.shell
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.mordant.rendering.TextColors
 import com.github.ajalt.mordant.rendering.TextStyles
-import dev.vulnlog.lib.core.StatusVerb
+import dev.vulnlog.lib.render.StatusVerb
 
 private val errorStyle = TextColors.red + TextStyles.bold
 private val warningStyle = TextColors.yellow

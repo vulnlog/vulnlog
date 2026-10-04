@@ -6,7 +6,6 @@ package dev.vulnlog.lib.render
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ProjectsDiffer
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
 
 fun renderChangelogMessages(outcome: ChangelogOutcome): List<Message> =

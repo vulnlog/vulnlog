@@ -12,8 +12,6 @@ import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
-import dev.vulnlog.lib.core.formatHint
-import dev.vulnlog.lib.core.formatMessage
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.io.DirectoryOutputOption
 import dev.vulnlog.lib.io.FileInputOption
@@ -25,6 +23,8 @@ import dev.vulnlog.lib.io.validateInputSelection
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.render.Failure
 import dev.vulnlog.lib.render.formatFailureLines
+import dev.vulnlog.lib.render.formatHint
+import dev.vulnlog.lib.render.formatMessage
 import dev.vulnlog.lib.render.renderWriteFailure
 import java.nio.file.Path
 import kotlin.io.path.exists
