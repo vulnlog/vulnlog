@@ -51,7 +51,7 @@ releases:
     purls:
       - purl: "pkg:maven/com.acme/acme-web-app@1.2.0"
         tags: [ library ]
-      - purl: "pkg:oci/acme-web-app?repository_url=ghcr.io/acme/web-app"
+      - purl: "pkg:oci/acme-web-app@sha256:9b2a7c41e0d35f68a1c4e7b2d90f3a5c86e1b4d7f2a09c3e5b8d6f1a4c7e2b90?repository_url=ghcr.io/acme/web-app"
         tags: [ container ]
 
 vulnerabilities:
@@ -69,7 +69,7 @@ Declare the purl your users' scanner matches:
 | Artifact | Release purl | Matched by
 
 | Container image
-| `pkg:oci/<name>?repository_url=<registry>/<repo>`
+| `pkg:oci/<name>@sha256:<digest>?repository_url=<registry>/<repo>`
 | Trivy, Grype
 
 | Library or plugin
@@ -84,6 +84,10 @@ Declare the purl your users' scanner matches:
 | `pkg:generic/<name>@<version>`
 | No scanner filters on it yet.
 |===
+
+Every release purl carries the version of the artifact in that release.
+A purl without a version matches every version, so its statements would apply to every release you ever shipped; `vulnlog validate` warns about it.
+For a container image the version is the digest of the pushed image, because Trivy does not match an image tag in its place.
 
 A release without `purls` is left out of the document and named in a `warning:` line; `vulnlog validate` warns about it as well.
 

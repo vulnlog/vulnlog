@@ -73,6 +73,7 @@ A release artifact identified by its https://github.com/package-url/purl-spec[Pa
 | String (Package URL)
 | Yes
 | The versioned Package URL for this artifact in this release.
+Validation warns about a purl without a version, because VEX statements for it would apply to every version of the artifact.
 
 | `tags`
 | Array of String
