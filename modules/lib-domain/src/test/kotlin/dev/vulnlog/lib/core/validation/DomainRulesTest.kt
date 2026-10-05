@@ -689,6 +689,36 @@ class DomainRulesTest :
             }
         }
 
+        context("release purls without a version") {
+
+            test("warns for each release purl without a version, since it matches every version of the artifact") {
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry(
+                                    "1.0.0",
+                                    purls =
+                                        listOf(
+                                            mavenPurlEntry("pkg:maven/com.acme/app@1.0.0"),
+                                            mavenPurlEntry("pkg:maven/com.acme/app"),
+                                        ),
+                                ),
+                            ),
+                        vulnerabilities =
+                            listOf(
+                                vulnerability(cve("CVE-2026-0001"), releases = listOf(release("1.0.0"))),
+                            ),
+                    )
+
+                val findings = applyV1Rules(file).filter { it.rule == Rule.RELEASE_PURL_WITHOUT_VERSION }
+
+                findings.map { it.path } shouldContainExactly listOf("releases[1.0.0].purls[pkg:maven/com.acme/app]")
+                findings.single().severity shouldBe FindingSeverity.WARNING
+                findings.single().message shouldContain "has no version"
+            }
+        }
+
         context("vulnerabilities without a date") {
 
             val purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("app")))

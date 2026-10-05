@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.validation
 
+import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.vex.filterReleasePurlsMatchingVulnerabilityEntryTags
 import dev.vulnlog.lib.core.vex.releaseStatuses
@@ -10,6 +11,7 @@ import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.finding.Rule
 import dev.vulnlog.lib.finding.ValidationFinding
 import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.ReleaseEntry
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
@@ -35,6 +37,7 @@ val v1DomainRules =
         ::validateNoAcceptedCriticalRisk,
         ::validateReleasesAreDeclaredInPublicationOrder,
         ::validateReleasesDeclarePurls,
+        ::validateReleasePurlsAreVersioned,
         ::validateVulnerabilitiesAreDated,
     )
 
@@ -328,6 +331,24 @@ private fun validateReleasesDeclarePurls(file: VulnlogFile): List<ValidationFind
             )
         }
 }
+
+private fun validateReleasePurlsAreVersioned(file: VulnlogFile): List<ValidationFinding> =
+    file.releases.flatMap { release ->
+        release.purls
+            .filterNot { entry -> entry.purl.hasVersion() }
+            .map { entry ->
+                ValidationFinding(
+                    severity = FindingSeverity.WARNING,
+                    rule = Rule.RELEASE_PURL_WITHOUT_VERSION,
+                    path = "releases[${release.id.value}].purls[${entry.purl.value}]",
+                    message =
+                        "Release purl '${entry.purl.value}' has no version, " +
+                            "so its VEX statements apply to every version of the artifact.",
+                )
+            }
+    }
+
+private fun Purl.hasVersion(): Boolean = !PackageURL(value).version.isNullOrEmpty()
 
 private fun validateVulnerabilitiesAreDated(file: VulnlogFile): List<ValidationFinding> {
     if (file.releases.none { release -> release.purls.isNotEmpty() }) return emptyList()
