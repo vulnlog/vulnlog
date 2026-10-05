@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
+import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 
 fun renderOpenVexMessages(outcome: OpenVexOutcome): List<Message> =
@@ -26,6 +27,7 @@ fun renderOpenVexFailure(
     failed: OpenVexOutcome.Failed,
     baseline: String,
     baselineOption: String,
+    releaseOption: String,
 ): List<Failure> =
     when (failed) {
         is FilterRejected -> renderFilterProblems(failed.problems)
@@ -33,7 +35,8 @@ fun renderOpenVexFailure(
         is OpenVexOutcome.BaselineRejected ->
             listOf(Failure(baselineProblem(baseline, failed.problem), omitHint(baselineOption)))
 
-        is OpenVexOutcome.NoStatementApplies -> listOf(Failure("no statement applies", emptyHint(failed.reason)))
+        is OpenVexOutcome.NoStatementApplies ->
+            listOf(Failure("no statement applies", emptyHint(failed.reason, releaseOption)))
     }
 
 fun renderOpenVexBaselineFailure(
@@ -88,9 +91,15 @@ private fun baselineProblem(
         }
     }
 
-private fun emptyHint(reason: OpenVexEmptyReason): String =
+private fun emptyHint(
+    reason: OpenVexEmptyReason,
+    releaseOption: String,
+): String =
     when (reason) {
         OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS -> "declare 'purls' on the releases you want the document to cover"
+        OpenVexEmptyReason.NO_PUBLISHED_RELEASE_DECLARES_PURLS ->
+            "set 'published_at' on the releases you shipped, or name an unpublished release with $releaseOption"
+
         OpenVexEmptyReason.NO_ENTRY_MATCHES_RELEASE_PURL_TAGS ->
             "tag the vulnerability entries with the tags of the release purls they apply to"
 
@@ -105,6 +114,7 @@ private fun emptyHint(reason: OpenVexEmptyReason): String =
 private fun collectionMessages(collection: OpenVexCollection): List<Message> =
     scopeLines(collection).map(Message::Verbose) +
         listOfNotNull(
+            unpublishedReleasesLine(collection)?.let(Message::Verbose),
             skippedReleasesLine(collection)?.let(Message::Warning),
             anchorsLine(collection)?.let(Message::Verbose),
         ) +
@@ -115,13 +125,20 @@ private fun collectionMessages(collection: OpenVexCollection): List<Message> =
 
 private fun scopeLines(collection: OpenVexCollection): List<String> =
     listOfNotNull(
-        collection.scope.releases
-            .takeIf { it.isNotEmpty() }
-            ?.let { releases -> "release scope: ${releases.joinToString(", ") { it.value }}" },
+        (collection.scope.release as? OpenVexReleaseScope.Named)?.let { named ->
+            "release scope: ${named.release.value}"
+        },
         collection.scope.tags
             .takeIf { it.isNotEmpty() }
             ?.let { tags -> "tag scope matched tags: ${tags.joinToString(", ") { it.value }}" },
     )
+
+/** Not a warning: leaving out what has not shipped is the default. */
+private fun unpublishedReleasesLine(collection: OpenVexCollection): String? {
+    if (collection.unpublishedReleases.isEmpty()) return null
+    val names = collection.unpublishedReleases.joinToString(", ") { "'${it.value}'" }
+    return "releases without published_at are not part of the document: $names"
+}
 
 /** A warning, because a release without purls drops out of the document without any other trace. */
 private fun skippedReleasesLine(collection: OpenVexCollection): String? {

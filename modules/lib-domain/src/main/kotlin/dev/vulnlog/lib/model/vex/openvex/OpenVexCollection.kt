@@ -8,17 +8,27 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VulnId
 
-/** An empty set means the dimension is not restricted. */
 data class OpenVexScope(
-    val releases: Set<Release> = emptySet(),
+    val release: OpenVexReleaseScope = OpenVexReleaseScope.Published,
+    /** An empty set means the dimension is not restricted. */
     val tags: Set<Tag> = emptySet(),
 )
+
+sealed interface OpenVexReleaseScope {
+    /** Consumers act on what they can install, so an unpublished release is only written when named. */
+    data object Published : OpenVexReleaseScope
+
+    data class Named(
+        val release: Release,
+    ) : OpenVexReleaseScope
+}
 
 data class OpenVexCollection(
     val scope: OpenVexScope,
     /** Sorted, so the same input always writes the same bytes. */
     val statements: List<OpenVexStatement>,
     val anchors: Map<Release, List<Purl>>,
+    val unpublishedReleases: List<Release>,
     val skippedReleases: List<Release>,
     val skippedEntries: List<OpenVexSkippedEntry>,
 )
@@ -45,6 +55,7 @@ sealed interface OpenVexSkippedEntry {
 
 enum class OpenVexEmptyReason {
     NO_RELEASE_DECLARES_PURLS,
+    NO_PUBLISHED_RELEASE_DECLARES_PURLS,
     NO_ENTRY_MATCHES_RELEASE_PURL_TAGS,
     NO_ENTRY_IN_TAG_SCOPE,
     NO_ENTRY_IN_RELEASE_SCOPE,

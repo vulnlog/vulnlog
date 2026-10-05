@@ -26,6 +26,7 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
           - purl: "pkg:maven/com.acme/acme-web-app@1.0.0"
             tags: [ app ]
       - id: 1.0.1
+        published_at: 2026-02-01
 
     vulnerabilities:
 
@@ -45,8 +46,8 @@ fun openVexDocument(projectName: String = "Acme Web App"): String =
     """.trimIndent()
 
 /**
- * 1.0.5 is reached only through the range of the entries reported for 1.0.0, 1.2.0 has no purls, and no entry reaches
- * 0.9.0, so its `legacy` tag leaves the document empty.
+ * 1.0.5 is reached only through the range of the entries reported for 1.0.0, 1.2.0 is not published yet, and no entry
+ * reaches 0.9.0, so its `legacy` tag leaves the document empty.
  */
 fun openVexScopedDocument(): String =
     """
@@ -91,6 +92,9 @@ fun openVexScopedDocument(): String =
           - purl: "pkg:docker/acme/web-app@1.1.0"
             tags: [ container ]
       - id: 1.2.0
+        purls:
+          - purl: "pkg:docker/acme/web-app@1.2.0"
+            tags: [ container ]
 
     vulnerabilities:
 

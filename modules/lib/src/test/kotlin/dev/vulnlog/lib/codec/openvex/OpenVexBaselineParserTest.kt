@@ -75,7 +75,14 @@ private fun appPurl(purl: String): PurlEntry = mavenPurlEntry(purl, tags = listO
 
 private val fileWithOneStatement: VulnlogFile =
     vulnlogFile(
-        releases = listOf(releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0")))),
+        releases =
+            listOf(
+                releaseEntry(
+                    "1.0.0",
+                    purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0")),
+                    publishedAt = LocalDate.of(2026, 4, 20),
+                ),
+            ),
         vulnerabilities =
             listOf(vulnerability(id = cve("CVE-2026-1111"), releases = listOf(release("1.0.0")), tags = listOf(APP))),
     )
@@ -194,7 +201,7 @@ class OpenVexBaselineParserTest :
             test("key order and formatting do not count as a change") {
                 val reordered =
                     """{"statements": [{"supplier": "org", "status": "under_investigation", """ +
-                        """"timestamp": "2026-04-25T00:00:00Z", """ +
+                        """"timestamp": "2026-04-20T00:00:00Z", """ +
                         """"products": [{"identifiers": {"purl": "pkg:maven/com.acme/app@1.0.0"}, """ +
                         """"@id": "pkg:maven/com.acme/app@1.0.0"}], """ +
                         """"vulnerability": {"name": "CVE-2026-1111", """ +
@@ -286,8 +293,16 @@ private fun everyStatusFile(): VulnlogFile {
     val oci = parsePurl(PackageURL("pkg:oci/app?repository_url=ghcr.io/acme/app&tag=1.0.0"))
     val releases =
         listOf(
-            releaseEntry("1.0.0", purls = listOf(PurlEntry(oci, listOf(APP)), appPurl("pkg:maven/com.acme/app@1.0.0"))),
-            releaseEntry("1.1.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.1.0"))),
+            releaseEntry(
+                "1.0.0",
+                purls = listOf(PurlEntry(oci, listOf(APP)), appPurl("pkg:maven/com.acme/app@1.0.0")),
+                publishedAt = LocalDate.of(2026, 3, 2),
+            ),
+            releaseEntry(
+                "1.1.0",
+                purls = listOf(appPurl("pkg:maven/com.acme/app@1.1.0")),
+                publishedAt = LocalDate.of(2026, 4, 21),
+            ),
         )
     val packages = listOf(Purl.Npm("pkg:npm/example-lib@2.3.0"))
     return vulnlogFile(

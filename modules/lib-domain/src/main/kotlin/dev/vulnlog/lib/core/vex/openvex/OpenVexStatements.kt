@@ -18,6 +18,7 @@ import dev.vulnlog.lib.model.vex.ReleaseStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
+import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
@@ -50,6 +51,7 @@ fun collectOpenVexStatements(
         scope = scope,
         statements = statements,
         anchors = anchors,
+        unpublishedReleases = unpublishedReleases(vulnlogFile, scope),
         skippedReleases = skippedReleases(vulnlogFile, scope, statuses.values.flatten(), anchors.keys),
         skippedEntries =
             statuses.mapNotNull { (vulnEntry, releaseStatuses) ->
@@ -64,12 +66,16 @@ fun openVexEmptyReason(
 ): OpenVexEmptyReason =
     when {
         vulnlogFile.releases.none { it.purls.isNotEmpty() } -> OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
+        collection.scope.release == OpenVexReleaseScope.Published &&
+            vulnlogFile.releases.none { it.publicationDate != null && it.purls.isNotEmpty() } ->
+            OpenVexEmptyReason.NO_PUBLISHED_RELEASE_DECLARES_PURLS
+
         collection.skippedEntries.any {
             it is OpenVexSkippedEntry.NoTags || it is OpenVexSkippedEntry.NoMatchingReleasePurl
         } -> OpenVexEmptyReason.NO_ENTRY_MATCHES_RELEASE_PURL_TAGS
 
         collection.scope.tags.isNotEmpty() -> OpenVexEmptyReason.NO_ENTRY_IN_TAG_SCOPE
-        collection.scope.releases.isNotEmpty() -> OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE
+        collection.scope.release is OpenVexReleaseScope.Named -> OpenVexEmptyReason.NO_ENTRY_IN_RELEASE_SCOPE
         else -> OpenVexEmptyReason.NO_ENTRY_ON_ANCHORED_RELEASE
     }
 
@@ -100,7 +106,11 @@ private fun OpenVexStatementTime.statedDate(): LocalDate? =
         is OpenVexStatementTime.Carried, OpenVexStatementTime.Issued -> null
     }
 
-private fun OpenVexScope.covers(release: Release): Boolean = releases.isEmpty() || release in releases
+private fun OpenVexScope.covers(release: ReleaseEntry): Boolean =
+    when (val scoped = this.release) {
+        OpenVexReleaseScope.Published -> release.publicationDate != null
+        is OpenVexReleaseScope.Named -> release.id == scoped.release
+    }
 
 private fun OpenVexScope.coversAnyOf(tags: List<Tag>): Boolean = this.tags.isEmpty() || tags.any { it in this.tags }
 
@@ -109,7 +119,7 @@ private fun anchorsOf(
     scope: OpenVexScope,
 ): Map<Release, List<Purl>> =
     vulnlogFile.releases
-        .filter { release -> scope.covers(release.id) }
+        .filter { release -> scope.covers(release) }
         .associateBy(ReleaseEntry::id) { release -> scopedPurls(release.purls, scope) }
         .filterValues { purls -> purls.isNotEmpty() }
 
@@ -119,7 +129,7 @@ private fun matchingReleasePurlsOf(
     scope: OpenVexScope,
 ): Map<Release, List<Purl>> =
     vulnlogFile.releases
-        .filter { release -> scope.covers(release.id) }
+        .filter { release -> scope.covers(release) }
         .associateBy(ReleaseEntry::id) { release ->
             scopedPurls(filterReleasePurlsMatchingVulnerabilityEntryTags(release, vulnEntry), scope)
         }.filterValues { purls -> purls.isNotEmpty() }
@@ -155,6 +165,17 @@ private fun statementsOf(
         }
     }
 
+private fun unpublishedReleases(
+    vulnlogFile: VulnlogFile,
+    scope: OpenVexScope,
+): List<Release> =
+    when (scope.release) {
+        OpenVexReleaseScope.Published ->
+            vulnlogFile.releases.filter { release -> release.publicationDate == null }.map(ReleaseEntry::id)
+
+        is OpenVexReleaseScope.Named -> emptyList()
+    }
+
 private fun skippedReleases(
     vulnlogFile: VulnlogFile,
     scope: OpenVexScope,
@@ -163,8 +184,8 @@ private fun skippedReleases(
 ): List<Release> {
     val covered = releaseStatuses.map(ReleaseStatus::release).toSet()
     return vulnlogFile.releases
+        .filter { release -> release.id in covered && scope.covers(release) && release.id !in anchoring }
         .map(ReleaseEntry::id)
-        .filter { release -> release in covered && scope.covers(release) && release !in anchoring }
 }
 
 private fun skippedEntry(
