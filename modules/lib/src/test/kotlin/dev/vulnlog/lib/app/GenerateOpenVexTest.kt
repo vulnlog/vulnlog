@@ -37,12 +37,16 @@ private val ISSUED_AT = Instant.parse("2026-04-25T00:00:00Z")
 private val UPDATED_AT = Instant.parse("2026-05-02T00:00:00Z")
 private val DOCUMENT_ID = OpenVexDocumentId("https://vulnlog.dev/vex/3e671687-395b-41f5-a30f-a58921a69b79")
 
-private fun fileWith(vararg releases: String): VulnlogFile =
+private fun fileWith(
+    vararg releases: String,
+    publishedAt: LocalDate? = LocalDate.of(2026, 4, 1),
+): VulnlogFile =
     vulnlogFile(
         tags = listOf(tagEntry("app")),
         releases =
             releases.map { id ->
-                releaseEntry(id, purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@$id", tags = listOf("app"))))
+                val purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@$id", tags = listOf("app")))
+                releaseEntry(id, purls = purls, publishedAt = publishedAt)
             },
         vulnerabilities =
             listOf(
@@ -95,8 +99,8 @@ class GenerateOpenVexTest :
         }
 
         test("an undated statement keeps its time when another entry changes the document") {
-            val file = fileWith("1.0.0")
-            val first = revised(file)
+            val file = fileWith("1.0.0", publishedAt = null)
+            val first = revised(file, release = "1.0.0")
             val added =
                 vulnerability(
                     id = cve("CVE-2026-2222"),
@@ -106,7 +110,8 @@ class GenerateOpenVexTest :
                     tags = listOf(tag("app")),
                 )
 
-            val second = revised(file.copy(vulnerabilities = file.vulnerabilities + added), first.content, UPDATED_AT)
+            val second =
+                revised(file.copy(vulnerabilities = file.vulnerabilities + added), first.content, UPDATED_AT, "1.0.0")
 
             second.document.statements.map { it.vulnerability.id to it.timestamp } shouldContainExactly
                 listOf(

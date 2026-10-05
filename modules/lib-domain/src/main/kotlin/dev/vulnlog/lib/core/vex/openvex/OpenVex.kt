@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
+import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
@@ -59,5 +60,6 @@ fun resolveOpenVexScope(
     val scopeTags = resolveTags(tags, files)
     val problems = releases.problems + scopeTags.problems
     if (problems.isNotEmpty()) return OpenVexScopeResult.Rejected(problems)
-    return OpenVexScopeResult.Resolved(OpenVexScope(releases = setOfNotNull(releases.value), tags = scopeTags.value))
+    val releaseScope = releases.value?.let(OpenVexReleaseScope::Named) ?: OpenVexReleaseScope.Published
+    return OpenVexScopeResult.Resolved(OpenVexScope(release = releaseScope, tags = scopeTags.value))
 }

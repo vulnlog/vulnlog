@@ -30,13 +30,14 @@ import org.gradle.api.InvalidUserDataException
 import org.gradle.api.tasks.VerificationException
 
 private const val BASELINE_OPTION = "'baseline'"
+private const val RELEASE_OPTION = "'release'"
 
 /** Mirrors `exitCode` in the CLI's `Exits.kt` for the Gradle plugin. */
 fun failure(
     failed: OpenVexOutcome.Failed,
     baseline: String,
 ): GradleException {
-    val message = formatFailureMessage(renderOpenVexFailure(failed, baseline, BASELINE_OPTION))
+    val message = formatFailureMessage(renderOpenVexFailure(failed, baseline, BASELINE_OPTION, RELEASE_OPTION))
     return when (failed) {
         is FilterRejected -> InvalidUserDataException(message)
         is OpenVexOutcome.BaselineRejected -> InvalidUserDataException(message)

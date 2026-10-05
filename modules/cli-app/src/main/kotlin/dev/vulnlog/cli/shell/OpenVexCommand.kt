@@ -40,6 +40,7 @@ import java.time.Instant
 import java.util.UUID
 
 private const val BASELINE_OPTION = "--baseline"
+private const val RELEASE_OPTION = "--release"
 
 class OpenVexCommand : CliktCommand(name = "openvex") {
     override fun help(context: Context): String = "Generate OpenVEX files from Vulnlog files. (Incubating feature)"
@@ -70,12 +71,12 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
     ).convert(conversion = ArgumentTransformContext::toInputFileOption)
 
     val releaseRequest: String? by option(
-        "--release",
+        RELEASE_OPTION,
         metavar = "<release-id>",
         help =
             """
-            Write the document for this release only.
-            Without it the document covers every release that declares purls.
+            Write the document for this release only, even one without published_at.
+            Without it the document covers every published release that declares purls.
             """.trimIndent(),
     )
 
@@ -129,7 +130,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
         when (outcome) {
             is OpenVexOutcome.Failed -> {
                 val baseline = baselineRequest?.toString().orEmpty()
-                failWith(renderOpenVexFailure(outcome, baseline, BASELINE_OPTION), exitCode(outcome))
+                failWith(renderOpenVexFailure(outcome, baseline, BASELINE_OPTION, RELEASE_OPTION), exitCode(outcome))
             }
 
             is OpenVexOutcome.Generated -> write(outcome)

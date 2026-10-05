@@ -20,10 +20,12 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
+import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import java.time.LocalDate
 
 private val file =
     vulnlogFile(
@@ -32,8 +34,13 @@ private val file =
                 releaseEntry(
                     "1.0.0",
                     purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("app"))),
+                    publishedAt = LocalDate.of(2026, 1, 15),
                 ),
-                releaseEntry("1.0.1"),
+                releaseEntry("1.0.1", publishedAt = LocalDate.of(2026, 2, 1)),
+                releaseEntry(
+                    "1.1.0",
+                    purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.1.0", tags = listOf("app"))),
+                ),
             ),
         vulnerabilities =
             listOf(
@@ -64,10 +71,12 @@ private val taggedFile =
                 releaseEntry(
                     "1.0.0",
                     purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("container"))),
+                    publishedAt = LocalDate.of(2026, 1, 15),
                 ),
                 releaseEntry(
                     "1.0.1",
                     purls = listOf(mavenPurlEntry("pkg:maven/com.acme/lib@1.0.1", tags = listOf("library"))),
+                    publishedAt = LocalDate.of(2026, 2, 1),
                 ),
             ),
         vulnerabilities =
@@ -86,7 +95,8 @@ class OpenVexMessagesTest :
         context("renderOpenVexMessages") {
 
             test("reports the scope, what is left out, the anchors and the counts, in print order") {
-                val scope = OpenVexScope(releases = setOf(release("1.0.0")), tags = setOf(tag("container")))
+                val scope =
+                    OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.0")), tags = setOf(tag("container")))
                 val collection = collectOpenVexStatements(taggedFile, scope)
                 val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
 
@@ -101,7 +111,7 @@ class OpenVexMessagesTest :
                     )
             }
 
-            test("warns about releases without purls and states why each entry is left out") {
+            test("names the left-out releases, warns about those without purls and states why each entry is left out") {
                 val collection = collectOpenVexStatements(file)
                 val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
 
@@ -109,6 +119,7 @@ class OpenVexMessagesTest :
 
                 messages shouldContainExactly
                     listOf(
+                        Message.Verbose("releases without published_at are not part of the document: '1.1.0'"),
                         Message.Warning("releases without purls are not part of the document: '1.0.1'"),
                         Message.Verbose("anchored on 1 release with purls: '1.0.0' (1 purl)"),
                         Message.Debug("skipped CVE-2026-2222: no release it applies to declares purls in scope"),
@@ -162,7 +173,7 @@ class OpenVexMessagesTest :
         test("renderOpenVexFailure words every filter problem of a rejected scope") {
             val problem = FilterProblem.UnknownTags(listOf(tag("binary")), listOf(tag("app")))
 
-            val failures = renderOpenVexFailure(FilterRejected(listOf(problem)), "", "--baseline")
+            val failures = renderOpenVexFailure(FilterRejected(listOf(problem)), "", "--baseline", "--release")
 
             failures shouldContainExactly listOf(Failure("Tag not found: binary", "Known tags: app"))
         }
@@ -177,7 +188,7 @@ class OpenVexMessagesTest :
                     OpenVexBaselineProblem.InvalidIdentity(OpenVexIdentityField.VERSION, "0"),
                 ).map(OpenVexOutcome::BaselineRejected)
 
-            val failures = outcomes.flatMap { renderOpenVexFailure(it, "vex.json", "--baseline") }
+            val failures = outcomes.flatMap { renderOpenVexFailure(it, "vex.json", "--baseline", "--release") }
 
             failures shouldContainExactly
                 listOf(
@@ -214,11 +225,12 @@ class OpenVexMessagesTest :
             val collection = collectOpenVexStatements(file)
             val outcomes = OpenVexEmptyReason.entries.map { OpenVexOutcome.NoStatementApplies(collection, it) }
 
-            val failures = outcomes.flatMap { renderOpenVexFailure(it, "", "--baseline") }
+            val failures = outcomes.flatMap { renderOpenVexFailure(it, "", "--baseline", "--release") }
 
             failures shouldContainExactly
                 listOf(
                     "declare 'purls' on the releases you want the document to cover",
+                    "set 'published_at' on the releases you shipped, or name an unpublished release with --release",
                     "tag the vulnerability entries with the tags of the release purls they apply to",
                     "no vulnerability entry and release purl in scope share one of the requested tags",
                     "no vulnerability entry applies to the release in scope",
