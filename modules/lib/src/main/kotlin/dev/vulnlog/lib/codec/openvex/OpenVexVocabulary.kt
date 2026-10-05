@@ -28,6 +28,7 @@ private const val VULNLOG_SITE = "https://vulnlog.dev/"
 private const val RISK_ACCEPTED = "The risk is accepted. No fix is planned."
 private const val RISK_ACCEPTED_FIX_PREFIX = "The risk is accepted for this release. A fix ships with release "
 private const val FIX_PLANNED = "A fix is planned but not yet available."
+private const val FIX_PLANNED_PREFIX = "A fix is planned for release "
 private const val UPDATE_PREFIX = "Update to release "
 private const val NONE_AVAILABLE = "No remediation is available yet."
 
@@ -94,7 +95,9 @@ internal fun openVexActionStatement(remediation: Remediation): String =
         is Remediation.RiskAccepted ->
             remediation.fixIn?.let { release -> "$RISK_ACCEPTED_FIX_PREFIX${release.value}." } ?: RISK_ACCEPTED
 
-        Remediation.FixPlanned -> FIX_PLANNED
+        is Remediation.FixPlanned ->
+            remediation.fixIn?.let { release -> "$FIX_PLANNED_PREFIX${release.value}." } ?: FIX_PLANNED
+
         is Remediation.UpdateTo -> "$UPDATE_PREFIX${remediation.release.value}."
         Remediation.NoneAvailable -> NONE_AVAILABLE
     }
@@ -103,10 +106,11 @@ internal fun openVexActionStatement(remediation: Remediation): String =
 internal fun openVexRemediation(actionStatement: String): Remediation? =
     when (actionStatement) {
         RISK_ACCEPTED -> Remediation.RiskAccepted(null)
-        FIX_PLANNED -> Remediation.FixPlanned
+        FIX_PLANNED -> Remediation.FixPlanned(null)
         NONE_AVAILABLE -> Remediation.NoneAvailable
         else ->
             releaseAfter(RISK_ACCEPTED_FIX_PREFIX, actionStatement)?.let(Remediation::RiskAccepted)
+                ?: releaseAfter(FIX_PLANNED_PREFIX, actionStatement)?.let(Remediation::FixPlanned)
                 ?: releaseAfter(UPDATE_PREFIX, actionStatement)?.let(Remediation::UpdateTo)
     }
 
