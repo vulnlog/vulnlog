@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-10-09
+
+### ⚠ BREAKING CHANGES
+
+* **init:** refuse to overwrite an existing file in `vulnlog init` and `vulnlogInit` unless `--force` is passed ([#271](https://github.com/vulnlog/vulnlog/pull/271))
+* **validate:** warn about releases without purls, purls without a version and undated vulnerabilities in files that declare release purls, so `validate --strict` can fail for a file that passed with 0.17.0 ([#296](https://github.com/vulnlog/vulnlog/pull/296), [#322](https://github.com/vulnlog/vulnlog/pull/322))
+* **validate:** report a blank project field as an error, which previously passed validation ([#296](https://github.com/vulnlog/vulnlog/pull/296))
+
+### Features
+
+* **openvex:** add the incubating `vulnlog vex openvex` command and the `vulnlogOpenVex` and `vulnlogOpenVexUpdate` Gradle tasks, which write an OpenVEX document for the published releases that declare purls, scoped by `--release` and `--tag` and continued from a `--baseline` ([#281](https://github.com/vulnlog/vulnlog/pull/281), [#296](https://github.com/vulnlog/vulnlog/pull/296), [#322](https://github.com/vulnlog/vulnlog/pull/322))
+* **container:** base the container image on Alpine instead of Debian slim, which more than halves its size ([#285](https://github.com/vulnlog/vulnlog/pull/285))
+* **docs:** document the `vulnlog/setup-vulnlog` GitHub Action, which installs the CLI on a GitHub Actions runner ([#280](https://github.com/vulnlog/vulnlog/pull/280))
+
+### Bug Fixes
+
+* **copy:** keep the vulnerability `name` in entries copied with `modify copy` or `VulnlogCopyTask`, and show it in `report changelog` ([#307](https://github.com/vulnlog/vulnlog/pull/307))
+* **report:** escape the data embedded in the HTML impact report so that file content cannot inject a script ([#323](https://github.com/vulnlog/vulnlog/pull/323))
+* **cli:** name the cause and a fix when an input file cannot be read or an output file cannot be written, on the CLI and in the Gradle tasks ([#311](https://github.com/vulnlog/vulnlog/pull/311), [#312](https://github.com/vulnlog/vulnlog/pull/312))
+
+### New Contributors
+
+* @VedantMadane made their first contribution in [#271](https://github.com/vulnlog/vulnlog/pull/271)
+
 ## [0.17.0] - 2026-08-24
 
 ### Added
@@ -495,6 +519,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.18.0]: https://github.com/vulnlog/vulnlog/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/vulnlog/vulnlog/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/vulnlog/vulnlog/compare/v0.15.1...v0.16.0
 [0.15.1]: https://github.com/vulnlog/vulnlog/compare/v0.15.0...v0.15.1
