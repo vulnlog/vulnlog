@@ -3,8 +3,8 @@
   "@id": "https://vulnlog.dev/vex/bb0af4a6-415b-4fc7-b436-ce81e0e07b7e",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-10-10T12:37:08Z",
-  "version": 2,
+  "timestamp": "2026-10-10T12:59:47Z",
+  "version": 3,
   "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
   "statements": [
     {
@@ -287,6 +287,443 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
       "impact_statement": "OpenSSL sits in the image as a Debian base package; the Vulnlog binary links only libc and libz, so libssl is never loaded. Vulnlog is an offline CLI that reads and writes local files, opens no sockets, and therefore runs no QUIC listener that an attacker could flood with Initial packets.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `Path`.",
       "supplier": "Vulnlog"
     },
     {
@@ -1065,6 +1502,1317 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-8376",
         "name": "CVE-2026-8376",
         "description": "Heap buffer overflow in Perl regex compilation of repeated fixed strings on 32-bit builds."
@@ -1437,6 +3185,1485 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
       "impact_statement": "PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-09-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it parses its input from files and strings.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-09-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-09-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.",
       "supplier": "Vulnlog"
     },
     {
