@@ -106,8 +106,453 @@ releases:
 
 vulnerabilities:
 
+  - id: CVE-2026-68497
+    description: >-
+      jackson-databind parses unbounded numbers when deserializing `Duration` and `XMLGregorianCalendar`, which exhausts CPU.
+    aliases: [GHSA-q4xh-88c3-wmh7]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-09-28
+        vuln_ids: [GHSA-q4xh-88c3-wmh7]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-89425
+    description: >-
+      jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.
+    aliases: [GHSA-7hhh-6rmp-j9qf]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-10-01
+        vuln_ids: [GHSA-7hhh-6rmp-j9qf]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-91777
+    description: jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.
+    aliases: [GHSA-cxp5-3px4-pw24]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-09-30
+        vuln_ids: [GHSA-cxp5-3px4-pw24]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-91776
+    description: >-
+      jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.
+    aliases: [GHSA-wv8q-qhhj-9h54]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-09-30
+        vuln_ids: [GHSA-wv8q-qhhj-9h54]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-83557
+    description: jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.
+    aliases: [GHSA-gx83-3vf8-gh7j]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-09-28
+        vuln_ids: [GHSA-gx83-3vf8-gh7j]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-19032
+    description: >-
+      jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.
+    aliases: [GHSA-wjgm-6hv5-3cvf]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-09-28
+        vuln_ids: [GHSA-wjgm-6hv5-3cvf]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-77310
+    description: >-
+      jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.
+    aliases: [GHSA-vvgp-rfg2-7rr6]
+    releases: [0.14.0]
+    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-09-28
+        vuln_ids: [GHSA-vvgp-rfg2-7rr6]
+    tags: [dev dependency]
+    analysis: >-
+      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
+      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
+      and the repository has no `package.json`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
+  - id: CVE-2026-85091
+    description: >-
+      Heap buffer overflow in zlib `gz_vacate()` when `gzprintf()` follows a stalled non-blocking `gzwrite()`.
+    releases: [0.17.0]
+    packages:
+      - "pkg:deb/debian/zlib1g@1.3.dfsg+really1.3.1-1+b1"
+      - "pkg:apk/alpine/zlib@1.3.2-r0"
+    reports:
+      - reporter: trivy
+        at: 2026-10-10
+    tags: [container]
+    analysis: >-
+      The Vulnlog binary links zlib, but imports only the `inflate`, `deflate` and `crc32` routines behind `java.util.zip` and
+      no `gz*` function. The overflow needs `gzprintf()` or `gzvprintf()` after a stalled non-blocking `gzwrite()`, which Vulnlog
+      never calls.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Alpine ships the fix in zlib 1.3.2-r1; the next base image bump picks it up.
+
+  - id: CVE-2026-84782
+    description: OpenSSL DTLS handshake retransmission can leak heap memory to the peer or crash.
+    releases: [0.17.0]
+    packages:
+      - "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2"
+      - "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2"
+      - "pkg:apk/alpine/libssl3@3.5.8-r0"
+      - "pkg:apk/alpine/libcrypto3@3.5.8-r0"
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      OpenSSL sits in the image as a base package; the Vulnlog binary links only libc and libz, so libssl is never loaded. Vulnlog
+      is an offline CLI that opens no sockets and speaks no DTLS.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    comment: Upstream fixed it after OpenSSL 3.5.8, the version the 0.18.0 image ships.
+
+  - id: CVE-2026-103111
+    description: Out-of-bounds write in PCRE2 JIT matching with an attacker-controlled regular expression.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc
+      and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no PCRE2.
+
+  - id: CVE-2026-86145
+    description: Out-of-bounds write in PCRE2 `pcre2_dfa_match()` when it reuses a cached workspace block.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc
+      and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no PCRE2.
+
+  - id: CVE-2026-89157
+    description: Out-of-bounds write in PCRE2 `pcre2_pattern_convert()` on 32-bit platforms.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      PCRE2 enters the image through the Debian base only; the Vulnlog native binary links just libc and libz and never loads
+      libpcre2. The overflow also needs a 32-bit platform, and the image is amd64.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no PCRE2.
+
+  - id: CVE-2026-89161
+    description: Incorrect free in PCRE2 `pcre2_jit_match()` when a copied subject is passed as match context.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc
+      and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no PCRE2.
+
+  - id: CVE-2026-11822
+    description: Memory corruption in the SQLite FTS5 extension when reading a crafted database.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/libsqlite3-0@3.46.1-7+deb13u1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      SQLite enters the image through the Debian base only, without the `sqlite3` binary; the Vulnlog native binary links just
+      libc and libz. Vulnlog never opens an SQLite database, let alone one with crafted FTS5 data.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no SQLite.
+
+  - id: CVE-2026-11824
+    description: Heap buffer overflow in SQLite FTS5 `fts5ChunkIterate()` via crafted page metadata.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/libsqlite3-0@3.46.1-7+deb13u1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      SQLite enters the image through the Debian base only, without the `sqlite3` binary; the Vulnlog native binary links just
+      libc and libz. Vulnlog never opens an SQLite database, let alone one with crafted FTS5 data.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no SQLite.
+
+  - id: CVE-2026-41992
+    description: Global buffer overflow in GNU gzip LZH decompression after an LZW file in the same run.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/gzip@1.13-1"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      GNU gzip enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which never runs `gzip`
+      or any other program. Vulnlog reads YAML files and never decompresses archives.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no GNU gzip; BusyBox provides gzip instead.
+
+  - id: CVE-2026-13221
+    description: Perl matches incorrectly when an alternation of more than 65535 fixed strings is compiled into a trie.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Perl enters the image through the Debian base only (`perl-base`); the entrypoint is the Vulnlog native binary, which links
+      just libc and libz and never starts `perl`. No process in the container runs Perl code.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
+  - id: CVE-2026-8376
+    description: Heap buffer overflow in Perl regex compilation of repeated fixed strings on 32-bit builds.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Perl enters the image through the Debian base only (`perl-base`); the entrypoint is the Vulnlog native binary, which never
+      starts `perl`. The overflow also needs a 32-bit build, and the image is amd64.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
+  - id: CVE-2026-57432
+    description: Integer overflow in Perl `pack` and `unpack` templates leads to an out-of-bounds heap read.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Perl enters the image through the Debian base only (`perl-base`); the entrypoint is the Vulnlog native binary, which links
+      just libc and libz and never starts `perl`. No process in the container runs Perl code.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
+  - id: CVE-2026-42496
+    description: "Perl Archive::Tar extracts symlinks whose targets point outside the extraction directory."
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship Archive::Tar.
+      The entrypoint is the Vulnlog native binary, which never starts `perl`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
+  - id: CVE-2026-42497
+    description: "Perl Archive::Tar extracts hardlinks to paths outside the extraction directory."
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship Archive::Tar.
+      The entrypoint is the Vulnlog native binary, which never starts `perl`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
+  - id: CVE-2026-48962
+    description: "Perl IO::Compress `File::GlobMapper` evaluates an attacker-controlled output glob as code."
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship IO::Compress.
+      The entrypoint is the Vulnlog native binary, which never starts `perl`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
+  - id: CVE-2026-57433
+    description: Signed integer overflow in Perl Storable when thawing a crafted `SX_HOOK` record.
+    releases: [0.17.0]
+    packages: ["pkg:deb/debian/perl-base@5.40.1-6"]
+    reports:
+      - reporter: trivy
+        at: 2026-10-09
+    tags: [container]
+    analysis: >-
+      Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship Storable. The
+      entrypoint is the Vulnlog native binary, which never starts `perl`.
+    analyzed_at: 2026-10-10
+    verdict: not affected
+    justification: vulnerable code not present
+    resolution:
+      in: 0.18.0
+      at: 2026-09-12
+      note: The Alpine base image carries no Perl.
+
   - id: CVE-2026-53612
-    description: Time-of-check-time-of-use flaw in util-linux `mount(8)` when it applies post-mount ownership or mode changes.
+    description: >-
+      Time-of-check-time-of-use flaw in util-linux `mount(8)` when it applies post-mount ownership or mode changes.
     releases: [0.17.0]
     packages:
       - "pkg:deb/debian/util-linux@2.41-5"
@@ -136,7 +581,8 @@ vulnerabilities:
       note: The Alpine base image carries no util-linux; BusyBox provides mount instead.
 
   - id: CVE-2026-53613
-    description: Time-of-check-time-of-use flaw in util-linux `mount(8)` allowing an ancestor directory swap on the target path.
+    description: >-
+      Time-of-check-time-of-use flaw in util-linux `mount(8)` allowing an ancestor directory swap on the target path.
     releases: [0.17.0]
     packages:
       - "pkg:deb/debian/util-linux@2.41-5"
@@ -183,8 +629,8 @@ vulnerabilities:
     tags: [container]
     analysis: >-
       util-linux enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just
-      libc and libz and never invokes `mount(8)`. An unprivileged user reaches the SUID binary only through an `/etc/fstab`
-      entry, which the image does not have, and a default container holds no `CAP_SYS_ADMIN` to mount with either.
+      libc and libz and never invokes `mount(8)`. An unprivileged user reaches the SUID binary only through an `/etc/fstab` entry,
+      which the image does not have, and a default container holds no `CAP_SYS_ADMIN` to mount with either.
     analyzed_at: 2026-09-12
     verdict: not affected
     justification: vulnerable code not in execute path
@@ -204,15 +650,17 @@ vulnerabilities:
         at: 2026-09-12
     tags: [container]
     analysis: >-
-      OpenSSL sits in the image as a Debian base package; the Vulnlog binary links only libc and libz, so libssl is never
-      loaded. Vulnlog is an offline CLI that reads and writes local files, opens no sockets, and therefore runs no QUIC
-      listener that an attacker could flood with Initial packets.
+      OpenSSL sits in the image as a Debian base package; the Vulnlog binary links only libc and libz, so libssl is never loaded.
+      Vulnlog is an offline CLI that reads and writes local files, opens no sockets, and therefore runs no QUIC listener that
+      an attacker could flood with Initial packets.
     analyzed_at: 2026-09-12
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: >-
-      Fixed in OpenSSL 3.5.7. The Alpine base image of 0.18.0 still ships OpenSSL as libssl3/libcrypto3 and remains flagged
-      until the pinned base image digest is bumped.
+    resolution:
+      in: 0.18.0
+      at: 2026-09-29
+      note: The Alpine base image ships OpenSSL 3.5.8, which contains the fix.
+    comment: Fixed in OpenSSL 3.5.7.
 
   - id: SNYK-JAVA-CHQOSLOGBACK-17675449
     description: Deserialization of untrusted data vulnerability in `HardenedObjectInputStream` of `logback-core`.
