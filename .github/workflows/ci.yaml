@@ -94,7 +94,7 @@ jobs:
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Check
-        run: ./gradlew check
+        run: ./gradlew check :buildSrc:check
       - name: Check VEX documents are up to date
         run: |
           ./gradlew updateVexDocuments

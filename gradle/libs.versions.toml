@@ -2,6 +2,7 @@
 # Disable until fully supported in JDK 25 with Kotlin 2.3.0
 #detektVersion = "1.23.7"
 cliktVersion = "5.1.0"
+cyclonedxVersion = "3.5.1"
 graalvmNativeBuildToolsVersion = "1.1.14"
 jacksonVersion = "3.2.3"
 kotestVersion = "6.2.5"
@@ -14,6 +15,7 @@ spotlessVersion = "8.10.3"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
+cyclonedxGradlePlugin = { module = "org.cyclonedx:cyclonedx-gradle-plugin", version.ref = "cyclonedxVersion" }
 graalvmNativeGradlePlugin = { module = "org.graalvm.buildtools:native-gradle-plugin", version.ref = "graalvmNativeBuildToolsVersion" }
 # detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion" }
 jacksonKotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jacksonVersion"}
