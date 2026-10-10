@@ -3,17 +3,233 @@
   "@id": "https://vulnlog.dev/vex/bb0af4a6-415b-4fc7-b436-ce81e0e07b7e",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-10-10T08:59:48Z",
-  "version": 1,
+  "timestamp": "2026-10-10T09:50:19Z",
+  "version": 2,
   "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
   "statements": [
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-103111",
+        "name": "CVE-2026-103111",
+        "description": "Out-of-bounds write in PCRE2 JIT matching with an attacker-controlled regular expression."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-103111",
+        "name": "CVE-2026-103111",
+        "description": "Out-of-bounds write in PCRE2 JIT matching with an attacker-controlled regular expression."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-11822",
+        "name": "CVE-2026-11822",
+        "description": "Memory corruption in the SQLite FTS5 extension when reading a crafted database."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-11822",
+        "name": "CVE-2026-11822",
+        "description": "Memory corruption in the SQLite FTS5 extension when reading a crafted database."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "SQLite enters the image through the Debian base only, without the `sqlite3` binary; the Vulnlog native binary links just libc and libz. Vulnlog never opens an SQLite database, let alone one with crafted FTS5 data.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-11824",
+        "name": "CVE-2026-11824",
+        "description": "Heap buffer overflow in SQLite FTS5 `fts5ChunkIterate()` via crafted page metadata."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-11824",
+        "name": "CVE-2026-11824",
+        "description": "Heap buffer overflow in SQLite FTS5 `fts5ChunkIterate()` via crafted page metadata."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libsqlite3-0@3.46.1-7%2Bdeb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "SQLite enters the image through the Debian base only, without the `sqlite3` binary; the Vulnlog native binary links just libc and libz. Vulnlog never opens an SQLite database, let alone one with crafted FTS5 data.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-13221",
+        "name": "CVE-2026-13221",
+        "description": "Perl matches incorrectly when an alternation of more than 65535 fixed strings is compiled into a trie."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-13221",
+        "name": "CVE-2026-13221",
+        "description": "Perl matches incorrectly when an alternation of more than 65535 fixed strings is compiled into a trie."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Perl enters the image through the Debian base only (`perl-base`); the entrypoint is the Vulnlog native binary, which links just libc and libz and never starts `perl`. No process in the container runs Perl code.",
+      "supplier": "Vulnlog"
+    },
     {
       "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-14456",
         "name": "CVE-2026-14456",
         "description": "Unbounded memory growth in the OpenSSL QUIC server listener enables a remote denial of service."
       },
-      "timestamp": "2026-09-12T00:00:00Z",
+      "timestamp": "2026-09-29T00:00:00Z",
       "products": [
         {
           "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
@@ -36,9 +252,7 @@
           ]
         }
       ],
-      "status": "not_affected",
-      "justification": "vulnerable_code_not_in_execute_path",
-      "impact_statement": "OpenSSL sits in the image as a Debian base package; the Vulnlog binary links only libc and libz, so libssl is never loaded. Vulnlog is an offline CLI that reads and writes local files, opens no sockets, and therefore runs no QUIC listener that an attacker could flood with Initial packets.",
+      "status": "fixed",
       "supplier": "Vulnlog"
     },
     {
@@ -73,6 +287,222 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
       "impact_statement": "OpenSSL sits in the image as a Debian base package; the Vulnlog binary links only libc and libz, so libssl is never loaded. Vulnlog is an offline CLI that reads and writes local files, opens no sockets, and therefore runs no QUIC listener that an attacker could flood with Initial packets.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-41992",
+        "name": "CVE-2026-41992",
+        "description": "Global buffer overflow in GNU gzip LZH decompression after an LZW file in the same run."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/gzip@1.13-1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/gzip@1.13-1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-41992",
+        "name": "CVE-2026-41992",
+        "description": "Global buffer overflow in GNU gzip LZH decompression after an LZW file in the same run."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/gzip@1.13-1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/gzip@1.13-1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "GNU gzip enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which never runs `gzip` or any other program. Vulnlog reads YAML files and never decompresses archives.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-42496",
+        "name": "CVE-2026-42496",
+        "description": "Perl Archive::Tar extracts symlinks whose targets point outside the extraction directory."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-42496",
+        "name": "CVE-2026-42496",
+        "description": "Perl Archive::Tar extracts symlinks whose targets point outside the extraction directory."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship Archive::Tar. The entrypoint is the Vulnlog native binary, which never starts `perl`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-42497",
+        "name": "CVE-2026-42497",
+        "description": "Perl Archive::Tar extracts hardlinks to paths outside the extraction directory."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-42497",
+        "name": "CVE-2026-42497",
+        "description": "Perl Archive::Tar extracts hardlinks to paths outside the extraction directory."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship Archive::Tar. The entrypoint is the Vulnlog native binary, which never starts `perl`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-48962",
+        "name": "CVE-2026-48962",
+        "description": "Perl IO::Compress `File::GlobMapper` evaluates an attacker-controlled output glob as code."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-48962",
+        "name": "CVE-2026-48962",
+        "description": "Perl IO::Compress `File::GlobMapper` evaluates an attacker-controlled output glob as code."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship IO::Compress. The entrypoint is the Vulnlog native binary, which never starts `perl`.",
       "supplier": "Vulnlog"
     },
     {
@@ -523,6 +953,490 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
       "impact_statement": "util-linux enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never invokes `mount(8)`. An unprivileged user reaches the SUID binary only through an `/etc/fstab` entry, which the image does not have, and a default container holds no `CAP_SYS_ADMIN` to mount with either.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-57432",
+        "name": "CVE-2026-57432",
+        "description": "Integer overflow in Perl `pack` and `unpack` templates leads to an out-of-bounds heap read."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-57432",
+        "name": "CVE-2026-57432",
+        "description": "Integer overflow in Perl `pack` and `unpack` templates leads to an out-of-bounds heap read."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Perl enters the image through the Debian base only (`perl-base`); the entrypoint is the Vulnlog native binary, which links just libc and libz and never starts `perl`. No process in the container runs Perl code.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-57433",
+        "name": "CVE-2026-57433",
+        "description": "Signed integer overflow in Perl Storable when thawing a crafted `SX_HOOK` record."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-57433",
+        "name": "CVE-2026-57433",
+        "description": "Signed integer overflow in Perl Storable when thawing a crafted `SX_HOOK` record."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Trivy matches the Debian `perl` source package, but the image installs only `perl-base`, which does not ship Storable. The entrypoint is the Vulnlog native binary, which never starts `perl`.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-8376",
+        "name": "CVE-2026-8376",
+        "description": "Heap buffer overflow in Perl regex compilation of repeated fixed strings on 32-bit builds."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-8376",
+        "name": "CVE-2026-8376",
+        "description": "Heap buffer overflow in Perl regex compilation of repeated fixed strings on 32-bit builds."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/perl-base@5.40.1-6",
+              "identifiers": {
+                "purl": "pkg:deb/debian/perl-base@5.40.1-6"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Perl enters the image through the Debian base only (`perl-base`); the entrypoint is the Vulnlog native binary, which never starts `perl`. The overflow also needs a 32-bit build, and the image is amd64.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-84782",
+        "name": "CVE-2026-84782",
+        "description": "OpenSSL DTLS handshake retransmission can leak heap memory to the peer or crash."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/alpine/libcrypto3@3.5.8-r0",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/libcrypto3@3.5.8-r0"
+              }
+            },
+            {
+              "@id": "pkg:apk/alpine/libssl3@3.5.8-r0",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/libssl3@3.5.8-r0"
+              }
+            },
+            {
+              "@id": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2"
+              }
+            },
+            {
+              "@id": "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2",
+              "identifiers": {
+                "purl": "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "OpenSSL sits in the image as a base package; the Vulnlog binary links only libc and libz, so libssl is never loaded. Vulnlog is an offline CLI that opens no sockets and speaks no DTLS.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-84782",
+        "name": "CVE-2026-84782",
+        "description": "OpenSSL DTLS handshake retransmission can leak heap memory to the peer or crash."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/alpine/libcrypto3@3.5.8-r0",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/libcrypto3@3.5.8-r0"
+              }
+            },
+            {
+              "@id": "pkg:apk/alpine/libssl3@3.5.8-r0",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/libssl3@3.5.8-r0"
+              }
+            },
+            {
+              "@id": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libssl3t64@3.5.6-1~deb13u2"
+              }
+            },
+            {
+              "@id": "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2",
+              "identifiers": {
+                "purl": "pkg:deb/debian/openssl-provider-legacy@3.5.6-1~deb13u2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "OpenSSL sits in the image as a base package; the Vulnlog binary links only libc and libz, so libssl is never loaded. Vulnlog is an offline CLI that opens no sockets and speaks no DTLS.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-85091",
+        "name": "CVE-2026-85091",
+        "description": "Heap buffer overflow in zlib `gz_vacate()` when `gzprintf()` follows a stalled non-blocking `gzwrite()`."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/alpine/zlib@1.3.2-r0",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/zlib@1.3.2-r0"
+              }
+            },
+            {
+              "@id": "pkg:deb/debian/zlib1g@1.3.dfsg%2Breally1.3.1-1%2Bb1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/zlib1g@1.3.dfsg%2Breally1.3.1-1%2Bb1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The Vulnlog binary links zlib, but imports only the `inflate`, `deflate` and `crc32` routines behind `java.util.zip` and no `gz*` function. The overflow needs `gzprintf()` or `gzvprintf()` after a stalled non-blocking `gzwrite()`, which Vulnlog never calls.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-85091",
+        "name": "CVE-2026-85091",
+        "description": "Heap buffer overflow in zlib `gz_vacate()` when `gzprintf()` follows a stalled non-blocking `gzwrite()`."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/alpine/zlib@1.3.2-r0",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/zlib@1.3.2-r0"
+              }
+            },
+            {
+              "@id": "pkg:deb/debian/zlib1g@1.3.dfsg%2Breally1.3.1-1%2Bb1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/zlib1g@1.3.dfsg%2Breally1.3.1-1%2Bb1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The Vulnlog binary links zlib, but imports only the `inflate`, `deflate` and `crc32` routines behind `java.util.zip` and no `gz*` function. The overflow needs `gzprintf()` or `gzvprintf()` after a stalled non-blocking `gzwrite()`, which Vulnlog never calls.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-86145",
+        "name": "CVE-2026-86145",
+        "description": "Out-of-bounds write in PCRE2 `pcre2_dfa_match()` when it reuses a cached workspace block."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-86145",
+        "name": "CVE-2026-86145",
+        "description": "Out-of-bounds write in PCRE2 `pcre2_dfa_match()` when it reuses a cached workspace block."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89157",
+        "name": "CVE-2026-89157",
+        "description": "Out-of-bounds write in PCRE2 `pcre2_pattern_convert()` on 32-bit platforms."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89157",
+        "name": "CVE-2026-89157",
+        "description": "Out-of-bounds write in PCRE2 `pcre2_pattern_convert()` on 32-bit platforms."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "PCRE2 enters the image through the Debian base only; the Vulnlog native binary links just libc and libz and never loads libpcre2. The overflow also needs a 32-bit platform, and the image is amd64.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89161",
+        "name": "CVE-2026-89161",
+        "description": "Incorrect free in PCRE2 `pcre2_jit_match()` when a copied subject is passed as match context."
+      },
+      "timestamp": "2026-09-12T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89161",
+        "name": "CVE-2026-89161",
+        "description": "Incorrect free in PCRE2 `pcre2_jit_match()` when a copied subject is passed as match context."
+      },
+      "timestamp": "2026-10-10T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1",
+              "identifiers": {
+                "purl": "pkg:deb/debian/libpcre2-8-0@10.46-1~deb13u1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.",
       "supplier": "Vulnlog"
     }
   ]
