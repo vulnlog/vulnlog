@@ -20,21 +20,89 @@ tags:
 releases:
   - id: 0.11.0
     published_at: 2026-04-06
+    purls:
+      - purl: "pkg:generic/vulnlog@0.11.0"
+        tags: [cli]
+      - purl: "pkg:oci/vulnlog@sha256:baaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.12.0
     published_at: 2026-04-19
+    purls:
+      - purl: "pkg:generic/vulnlog@0.12.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.12.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.13.0
     published_at: 2026-05-03
+    purls:
+      - purl: "pkg:generic/vulnlog@0.13.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.13.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.14.0
     published_at: 2026-05-19
+    purls:
+      - purl: "pkg:generic/vulnlog@0.14.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.14.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.15.0
     published_at: 2026-06-22
+    purls:
+      - purl: "pkg:generic/vulnlog@0.15.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.15.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:fa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.15.1
     published_at: 2026-06-29
+    purls:
+      - purl: "pkg:generic/vulnlog@0.15.1"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.15.1"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.16.0
     published_at: 2026-07-16
+    purls:
+      - purl: "pkg:generic/vulnlog@0.16.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.16.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.17.0
     published_at: 2026-08-24
+    purls:
+      - purl: "pkg:generic/vulnlog@0.17.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.17.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
   - id: 0.18.0
+    published_at: 2026-10-09
+    purls:
+      - purl: "pkg:generic/vulnlog@0.18.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
+  - id: 0.19.0
+    purls:
+      - purl: "pkg:generic/vulnlog@0.19.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+        tags: [gradle plugin]
 
 vulnerabilities:
 

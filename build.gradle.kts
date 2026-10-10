@@ -1,7 +1,7 @@
 import com.github.gradle.node.npm.task.NpxTask
 
 plugins {
-    id("dev.vulnlog.plugin") version "0.17.0"
+    id("dev.vulnlog.plugin") version "0.18.0"
     id("com.github.node-gradle.node") version "7.1.0"
 }
 
