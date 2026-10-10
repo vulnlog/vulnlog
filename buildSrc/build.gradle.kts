@@ -26,10 +26,18 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.cyclonedxGradlePlugin)
     implementation(libs.graalvmNativeGradlePlugin)
 // Disable until fully supported in JDK 25 with Kotlin 2.3.0
 //    implementation(libs.detektGradlePlugin)
     implementation(libs.kotlinGradlePlugin)
     implementation(libs.ktlintGradle)
     implementation(libs.spotlessGradlePlugin)
+
+    testImplementation(libs.kotestAssertionsCoreJvm)
+    testImplementation(libs.kotestRunnerJunit5Jvm)
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }

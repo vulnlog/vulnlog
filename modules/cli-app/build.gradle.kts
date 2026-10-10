@@ -1,5 +1,8 @@
+import org.cyclonedx.model.Component
+
 plugins {
     id("vulnlog.app-convention")
+    id("vulnlog.sbom-convention")
 }
 
 description = "Next generation Vulnlog CLI application"
@@ -52,4 +55,14 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+}
+
+sbom {
+    rootPurl = "pkg:generic/vulnlog"
+}
+
+tasks.cyclonedxDirectBom {
+    projectType = Component.Type.APPLICATION
+    componentName = "vulnlog"
+    jsonOutput = layout.buildDirectory.file("sbom/vulnlog-$version.cdx.json")
 }
