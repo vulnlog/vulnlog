@@ -108,141 +108,236 @@ vulnerabilities:
 
   - id: CVE-2026-68497
     description: >-
-      jackson-databind parses unbounded numbers when deserializing `Duration` and `XMLGregorianCalendar`, which exhausts CPU.
+      jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar`
+      values, which exhausts CPU.
     aliases: [GHSA-q4xh-88c3-wmh7]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
     reports:
       - reporter: github-dependabot
         at: 2026-09-28
         vuln_ids: [GHSA-q4xh-88c3-wmh7]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      Vulnlog binds its input only to its own DTOs, whose fields are strings, dates, lists, maps and nested DTOs. None is a
+      `javax.xml.datatype` `Duration` or `XMLGregorianCalendar`, so the vulnerable deserializer never runs.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.17.0
+      at: 2026-08-23
+      ref: "https://github.com/vulnlog/vulnlog/pull/264"
+      note: Updated Jackson 3 from 3.2.0 to 3.2.2.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-89425
     description: >-
       jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.
     aliases: [GHSA-7hhh-6rmp-j9qf]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-core@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
     reports:
       - reporter: github-dependabot
         at: 2026-10-01
         vuln_ids: [GHSA-7hhh-6rmp-j9qf]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      The flaw sits in the parser Jackson creates for a `java.io.DataInput` source. Vulnlog never reads from a `DataInput`; it
+      parses its input from files and strings.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.18.0
+      at: 2026-09-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/297"
+      note: Updated Jackson 3 from 3.2.2 to 3.2.3.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-91777
-    description: jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.
+    description: >-
+      jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.
     aliases: [GHSA-cxp5-3px4-pw24]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
     reports:
       - reporter: github-dependabot
         at: 2026-09-30
         vuln_ids: [GHSA-cxp5-3px4-pw24]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      The quadratic work needs a collection or map of `@JsonIdentityInfo` objects. No Vulnlog type uses `@JsonIdentityInfo`.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.18.0
+      at: 2026-09-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/297"
+      note: Updated Jackson 3 from 3.2.2 to 3.2.3.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-91776
     description: >-
       jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.
     aliases: [GHSA-wv8q-qhhj-9h54]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
     reports:
       - reporter: github-dependabot
         at: 2026-09-30
         vuln_ids: [GHSA-wv8q-qhhj-9h54]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      The growth needs name-based polymorphic typing with a default implementation. Vulnlog's DTOs use no `@JsonTypeInfo`.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.18.0
+      at: 2026-09-29
+      ref: "https://github.com/vulnlog/vulnlog/pull/297"
+      note: Updated Jackson 3 from 3.2.2 to 3.2.3.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-83557
-    description: jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.
+    description: >-
+      jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.
     aliases: [GHSA-gx83-3vf8-gh7j]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
     reports:
       - reporter: github-dependabot
         at: 2026-09-28
         vuln_ids: [GHSA-gx83-3vf8-gh7j]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      The validator only runs for polymorphic typing. Vulnlog's DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default
+      typing.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.17.0
+      at: 2026-08-23
+      ref: "https://github.com/vulnlog/vulnlog/pull/264"
+      note: Updated Jackson 3 from 3.2.0 to 3.2.2.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-19032
     description: >-
       jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.
     aliases: [GHSA-wjgm-6hv5-3cvf]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
     reports:
       - reporter: github-dependabot
         at: 2026-09-28
         vuln_ids: [GHSA-wjgm-6hv5-3cvf]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      The flaw needs a `java.nio.file.Path` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields
+      are strings, dates, lists, maps and nested DTOs. None is a `Path`.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.17.0
+      at: 2026-08-23
+      ref: "https://github.com/vulnlog/vulnlog/pull/264"
+      note: Updated Jackson 3 from 3.2.0 to 3.2.2.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-77310
     description: >-
       jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.
     aliases: [GHSA-vvgp-rfg2-7rr6]
-    releases: [0.14.0]
-    packages: ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.14.2"]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
     reports:
       - reporter: github-dependabot
         at: 2026-09-28
         vuln_ids: [GHSA-vvgp-rfg2-7rr6]
-    tags: [dev dependency]
+    tags:
+      - cli
+      - gradle plugin
+      - container
     analysis: >-
-      Jackson 2.14.2 enters only the build classpath, through the Gradle Node plugin that runs the local docs build, and no release
-      artifact ships it. The plugin calls Jackson only to read `package.json` metadata on request, which this build never does,
-      and the repository has no `package.json`.
+      The DNS lookup needs an `InetAddress` value bound from input. Vulnlog binds its input only to its own DTOs, whose fields
+      are strings, dates, lists, maps and nested DTOs. None is an `InetAddress`.
     analyzed_at: 2026-10-10
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: Waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    resolution:
+      in: 0.17.0
+      at: 2026-08-23
+      ref: "https://github.com/vulnlog/vulnlog/pull/264"
+      note: Updated Jackson 3 from 3.2.0 to 3.2.2.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
   - id: CVE-2026-85091
     description: >-
