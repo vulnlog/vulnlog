@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  VULNLOG_VERSION: "0.17.0"
+  VULNLOG_VERSION: "0.18.0"
 
 jobs:
   vulnlog:
