@@ -3,7 +3,7 @@
   "@id": "https://vulnlog.dev/vex/bb0af4a6-415b-4fc7-b436-ce81e0e07b7e",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-10-10T09:50:19Z",
+  "timestamp": "2026-10-10T12:37:08Z",
   "version": 2,
   "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
   "statements": [
@@ -1437,6 +1437,1333 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
       "impact_statement": "PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A169f86f00c2c6373d479ceb0debdcb1619d959c708c0ed11c4cd8f251a248fc4?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A54085cd0ec9c2257200b762ed68fbbd130be7f2d299a4052b0a968c5c9a83b41?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A98461f4b895233dbbdd8aa5d67325111712bf7d0bb8072a35649dac44ee8848e?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-06T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Abaaa2d71447adbd68669cb9f7084f0e332d4b123f8cc76e547461c9da7e19d90?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The affected `StreamReadConstraints` is not used in the application.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
+        "aliases": [
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
+        "aliases": [
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
+        "aliases": [
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
+        "aliases": [
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
+        "aliases": [
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the affected class is not used.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
+        "aliases": [
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
+        "aliases": [
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
+        "aliases": [
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
+        "aliases": [
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
+        "aliases": [
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the method in question is not used.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
+        "aliases": [
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
+        "aliases": [
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
+        "aliases": [
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
+        "aliases": [
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
+        "aliases": [
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the method in question is not used.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
+        "aliases": [
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
+        "aliases": [
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
+        "aliases": [
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
+        "aliases": [
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
+        "aliases": [
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the method in question is not used.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
+        "aliases": [
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
+        "aliases": [
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
+        "aliases": [
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
+        "aliases": [
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
+        "aliases": [
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the method in question is not used.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
+        "aliases": [
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
+        "aliases": [
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
+        "aliases": [
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
+        "aliases": [
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
+        "aliases": [
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the method in question is not used.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
+        "aliases": [
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A3a911cd4945bde7944370fc6e2efda8b3465b00ba01a71e34219b57b864ce1d8?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
+        "aliases": [
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
+        "aliases": [
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A70ce779bbf62c66553991b4964aea0098cc4a2a4fbc19b0692d1cdc6a8f83b1c?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
+        "aliases": [
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A749cfdeb11cedcf7f71a37d63b9dd10490fd94e2e08d293cd30cd2095b8fd32b?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
+        "aliases": [
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3Afa679bf55d8b48697af6dc731c8e7d3d310e22521b4617c6a6debe38fee8db89?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_present",
+      "impact_statement": "Vulnlog uses Jackson for de-/serialization but the method in question is not used.",
       "supplier": "Vulnlog"
     }
   ]

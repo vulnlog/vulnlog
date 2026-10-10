@@ -3,17 +3,281 @@
   "@id": "https://vulnlog.dev/vex/70ac58cc-9c88-4a3a-ad78-4768ed3a42ba",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-10-10T08:59:48Z",
-  "version": 1,
+  "timestamp": "2026-10-10T12:37:08Z",
+  "version": 2,
   "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
   "statements": [
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-06T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.11.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.11.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The affected `StreamReadConstraints` is not used in the application.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.12.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.12.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.13.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.13.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.14.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.14.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.15.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.15.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.15.1",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.15.1"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.16.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.16.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.17.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.17.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-15907550",
+        "description": "Allocation of resources without limits or throttling vulnerability in Jackson",
+        "aliases": [
+          "GHSA-2m67-wjpj-xhg9"
+        ]
+      },
+      "timestamp": "2026-04-07T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:generic/vulnlog@0.18.0",
+          "identifiers": {
+            "purl": "pkg:generic/vulnlog@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
     {
       "vulnerability": {
         "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
         "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
         "aliases": [
-          "CVE-2026-54514"
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -44,7 +308,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
         "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
         "aliases": [
-          "CVE-2026-54514"
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -73,7 +338,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
         "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
         "aliases": [
-          "CVE-2026-54514"
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -102,7 +368,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
         "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
         "aliases": [
-          "CVE-2026-54514"
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -131,7 +398,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
         "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
         "aliases": [
-          "CVE-2026-54514"
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -160,7 +428,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
         "aliases": [
-          "CVE-2026-54517"
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -191,7 +460,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
         "aliases": [
-          "CVE-2026-54517"
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -220,7 +490,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
         "aliases": [
-          "CVE-2026-54517"
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -249,7 +520,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
         "aliases": [
-          "CVE-2026-54517"
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -278,7 +550,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
         "aliases": [
-          "CVE-2026-54517"
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -307,7 +580,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
         "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
         "aliases": [
-          "CVE-2026-54518"
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -338,7 +612,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
         "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
         "aliases": [
-          "CVE-2026-54518"
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -367,7 +642,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
         "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
         "aliases": [
-          "CVE-2026-54518"
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -396,7 +672,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
         "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
         "aliases": [
-          "CVE-2026-54518"
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -425,7 +702,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
         "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
         "aliases": [
-          "CVE-2026-54518"
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -454,7 +732,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
         "aliases": [
-          "CVE-2026-54513"
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -485,7 +764,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
         "aliases": [
-          "CVE-2026-54513"
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -514,7 +794,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
         "aliases": [
-          "CVE-2026-54513"
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -543,7 +824,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
         "aliases": [
-          "CVE-2026-54513"
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -572,7 +854,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
         "aliases": [
-          "CVE-2026-54513"
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -601,7 +884,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
         "aliases": [
-          "CVE-2026-54512"
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -632,7 +916,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
         "aliases": [
-          "CVE-2026-54512"
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -661,7 +946,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
         "aliases": [
-          "CVE-2026-54512"
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -690,7 +976,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
         "aliases": [
-          "CVE-2026-54512"
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -719,7 +1006,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
         "aliases": [
-          "CVE-2026-54512"
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -748,7 +1036,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
         "aliases": [
-          "CVE-2026-54516"
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -779,7 +1068,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
         "aliases": [
-          "CVE-2026-54516"
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -808,7 +1098,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
         "aliases": [
-          "CVE-2026-54516"
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -837,7 +1128,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
         "aliases": [
-          "CVE-2026-54516"
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -866,7 +1158,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
         "aliases": [
-          "CVE-2026-54516"
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -895,7 +1188,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
         "aliases": [
-          "CVE-2026-54515"
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -926,7 +1220,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
         "aliases": [
-          "CVE-2026-54515"
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -955,7 +1250,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
         "aliases": [
-          "CVE-2026-54515"
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -984,7 +1280,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
         "aliases": [
-          "CVE-2026-54515"
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",
@@ -1013,7 +1310,8 @@
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
         "aliases": [
-          "CVE-2026-54515"
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
         ]
       },
       "timestamp": "2026-06-29T00:00:00Z",

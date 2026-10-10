@@ -732,7 +732,7 @@ vulnerabilities:
     description: >-
       Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()`
       method.
-    aliases: [CVE-2026-54515]
+    aliases: [CVE-2026-54515, GHSA-5jmj-h7xm-6q6v]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -744,6 +744,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -757,7 +758,7 @@ vulnerabilities:
     description: >-
       Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()`
       and `BeanDeserializerFactory.addBeanProps()` methods.
-    aliases: [CVE-2026-54516]
+    aliases: [CVE-2026-54516, GHSA-9fxm-vc8v-hj55]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -769,6 +770,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -781,7 +783,7 @@ vulnerabilities:
   - id: SNYK-JAVA-TOOLSJACKSONCORE-17440359
     description: >-
       Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.
-    aliases: [CVE-2026-54518]
+    aliases: [CVE-2026-54518, GHSA-rcqc-6cw3-h962]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -793,6 +795,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -804,7 +807,7 @@ vulnerabilities:
 
   - id: SNYK-JAVA-TOOLSJACKSONCORE-17440306
     description: Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.
-    aliases: [CVE-2026-54517]
+    aliases: [CVE-2026-54517, GHSA-5hh8-q8hv-fr38]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -816,6 +819,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -827,7 +831,7 @@ vulnerabilities:
 
   - id: SNYK-JAVA-TOOLSJACKSONCORE-17434789
     description: Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.
-    aliases: [CVE-2026-54514]
+    aliases: [CVE-2026-54514, GHSA-hgj6-7826-r7m5]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -839,6 +843,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the affected class is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -851,7 +856,7 @@ vulnerabilities:
   - id: SNYK-JAVA-TOOLSJACKSONCORE-17440365
     description: >-
       Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.
-    aliases: [CVE-2026-54513]
+    aliases: [CVE-2026-54513, GHSA-rmj7-2vxq-3g9f]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -863,6 +868,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -874,7 +880,7 @@ vulnerabilities:
 
   - id: SNYK-JAVA-TOOLSJACKSONCORE-17440597
     description: Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.
-    aliases: [CVE-2026-54512]
+    aliases: [CVE-2026-54512, GHSA-j3rv-43j4-c7qm]
     releases: [0.15.0]
     packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.1.1"]
     reports:
@@ -886,6 +892,7 @@ vulnerabilities:
     tags:
       - cli
       - gradle plugin
+      - container
     analysis: Vulnlog uses Jackson for de-/serialization but the method in question is not used.
     verdict: not affected
     justification: vulnerable code not present
@@ -906,6 +913,7 @@ vulnerabilities:
       - reporter: trivy
         at: 2026-04-06
         vuln_ids: [GHSA-2m67-wjpj-xhg9]
+    tags: [cli, container]
     analysis: The affected `StreamReadConstraints` is not used in the application.
     verdict: not affected
     justification: vulnerable code not in execute path
