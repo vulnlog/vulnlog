@@ -1,4 +1,6 @@
 import com.github.gradle.node.npm.task.NpxTask
+import dev.vulnlog.gradle.VulnlogOpenVexTask
+import dev.vulnlog.gradle.VulnlogOpenVexUpdateTask
 
 plugins {
     id("dev.vulnlog.plugin") version "0.18.0"
@@ -77,4 +79,34 @@ vulnlog {
             format = "markdown"
         }
     }
+}
+
+// VEX Hub crawls .vex/ and serves one document per package, so each artifact gets one covering all published releases.
+val vexArtifactTaskSuffixByTag = mapOf("cli" to "Cli", "container" to "Container", "gradle plugin" to "GradlePlugin")
+
+val vexDocumentUpdates = vexArtifactTaskSuffixByTag.map { (tag, taskSuffix) ->
+    val fileName = "vulnlog-${tag.replace(' ', '-')}.openvex.json"
+    val baselineFile = layout.projectDirectory.file(".vex/$fileName")
+
+    val openVex = tasks.register<VulnlogOpenVexTask>("vulnlogOpenVex$taskSuffix") {
+        group = "vulnlog"
+        description = "Generates the OpenVEX document of the $tag artifact"
+        files.from("vulnlog.yaml")
+        tags = setOf(tag)
+        baseline = baselineFile
+        outputFile = layout.buildDirectory.file("vulnlog/vex/$fileName")
+    }
+
+    tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVex${taskSuffix}Update") {
+        group = "vulnlog"
+        description = "Updates the committed OpenVEX document of the $tag artifact"
+        generatedFile = openVex.flatMap { it.outputFile }
+        baseline = baselineFile
+    }
+}
+
+tasks.register("updateVexDocuments") {
+    group = "vulnlog"
+    description = "Updates the committed VEX documents in .vex/ of all artifacts"
+    dependsOn(vexDocumentUpdates)
 }
