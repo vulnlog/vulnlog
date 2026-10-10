@@ -95,6 +95,11 @@ jobs:
         with:
           pattern: vulnlog-*
           path: native-images
+      - name: Download native image SBOM
+        uses: actions/download-artifact@v8
+        with:
+          name: sbom-vulnlog-linux-amd64
+          path: modules/cli-app/build/sbom
       - name: Package native images
         run: |
           for dir in native-images/vulnlog-*/; do

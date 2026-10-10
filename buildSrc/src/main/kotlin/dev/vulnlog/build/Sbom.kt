@@ -30,7 +30,19 @@ fun Bom.licenseRootAs(spdxId: String) {
     metadata.component.licenses = LicenseChoice().apply { addLicense(License().apply { id = spdxId }) }
 }
 
-// SHA-256 alone identifies a file, the seven other algorithms only bloat the document.
+// SHA-256 alone identifies a file; the seven other algorithms only bloat the document.
 fun Bom.keepSha256HashesOnly() {
     components.forEach { it.hashes = it.hashes?.filter { hash -> hash.algorithm == "SHA-256" } }
+}
+
+// The binary also holds GraalVM's JDK and runtime; Native Image misnames the libraries it derives from manifests.
+fun Bom.addGraalVmComponentsOf(nativeImageBom: Bom) {
+    val graalVm =
+        nativeImageBom.components.filter { it.group == "com.oracle" || it.group?.startsWith("org.graalvm.") == true }
+    val rootDependency = dependencies.single { it.ref == metadata.component.bomRef }
+    graalVm.forEach { component ->
+        components.add(component)
+        dependencies.add(Dependency(component.bomRef))
+        rootDependency.addDependency(Dependency(component.bomRef))
+    }
 }
