@@ -35,7 +35,8 @@ class OutcomesTest :
     FunSpec({
 
         test("a bad scope or baseline is configuration to fix, an empty document is a verdict") {
-            val empty = OpenVexCollection(OpenVexScope(), emptyList(), emptyMap(), emptyList(), emptyList())
+            val empty =
+                OpenVexCollection(OpenVexScope(), emptyList(), emptyMap(), emptyList(), emptyList(), emptyList())
             val failures =
                 listOf(
                     FilterRejected(emptyList()),

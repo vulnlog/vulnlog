@@ -9,12 +9,15 @@ import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.mavenPurlEntry
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
+import dev.vulnlog.lib.fixtures.report
 import dev.vulnlog.lib.fixtures.resolution
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.PurlEntry
+import dev.vulnlog.lib.model.ReleaseEntry
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
@@ -26,6 +29,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
+import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
@@ -44,6 +48,11 @@ import java.time.LocalDate
 private val APP = tag("app")
 
 private fun appPurl(purl: String): PurlEntry = mavenPurlEntry(purl, tags = listOf(APP.value))
+
+private fun published(
+    id: String,
+    at: LocalDate,
+): ReleaseEntry = releaseEntry(id, purls = listOf(appPurl("pkg:maven/com.acme/app@$id")), publishedAt = at)
 
 private val affectedInV1 =
     vulnerability(
@@ -65,13 +74,29 @@ private val taggedFile =
                             mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("container")),
                             mavenPurlEntry("pkg:maven/com.acme/lib@1.0.0", tags = listOf("library")),
                         ),
+                    publishedAt = LocalDate.of(2026, 1, 15),
                 ),
                 releaseEntry(
                     "1.0.1",
                     purls = listOf(mavenPurlEntry("pkg:maven/com.acme/app@1.0.1", tags = listOf("container"))),
+                    publishedAt = LocalDate.of(2026, 2, 1),
                 ),
             ),
         vulnerabilities = listOf(affectedInV1.copy(tags = listOf(tag("container"), tag("library")))),
+    )
+
+private val unpublishedFix =
+    vulnlogFile(
+        releases =
+            listOf(
+                releaseEntry(
+                    "1.0.0",
+                    purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0")),
+                    publishedAt = LocalDate.of(2026, 1, 15),
+                ),
+                releaseEntry("1.0.1", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.1"))),
+            ),
+        vulnerabilities = listOf(affectedInV1),
     )
 
 class OpenVexStatementsTest :
@@ -90,7 +115,11 @@ class OpenVexStatementsTest :
             test("a release without purls produces no statement and is reported") {
                 val file =
                     vulnlogFile(
-                        releases = listOf(releaseEntry("1.0.0"), releaseEntry("1.0.1")),
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", publishedAt = LocalDate.of(2026, 1, 15)),
+                                releaseEntry("1.0.1", publishedAt = LocalDate.of(2026, 2, 1)),
+                            ),
                         vulnerabilities = listOf(affectedInV1),
                     )
 
@@ -103,7 +132,7 @@ class OpenVexStatementsTest :
             test("reports why each left-out entry names no product") {
                 val file =
                     taggedFile.copy(
-                        releases = taggedFile.releases + releaseEntry("1.1.0"),
+                        releases = taggedFile.releases + releaseEntry("1.1.0", publishedAt = LocalDate.of(2026, 3, 1)),
                         vulnerabilities =
                             listOf(
                                 vulnerability(id = cve("CVE-2026-0001")),
@@ -133,10 +162,10 @@ class OpenVexStatementsTest :
                     vulnlogFile(
                         releases =
                             listOf(
-                                releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0"))),
-                                releaseEntry("1.0.5", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.5"))),
-                                releaseEntry("1.0.1", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.1"))),
-                                releaseEntry("1.1.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.1.0"))),
+                                published("1.0.0", LocalDate.of(2026, 1, 15)),
+                                published("1.0.5", LocalDate.of(2026, 1, 20)),
+                                published("1.0.1", LocalDate.of(2026, 2, 1)),
+                                published("1.1.0", LocalDate.of(2026, 3, 1)),
                             ),
                         vulnerabilities = listOf(affectedInV1),
                     )
@@ -158,14 +187,15 @@ class OpenVexStatementsTest :
                     vulnlogFile(
                         releases =
                             listOf(
-                                releaseEntry("1.0.0", purls = listOf(shared)),
-                                releaseEntry("1.0.1", purls = listOf(shared)),
+                                releaseEntry("1.0.0", purls = listOf(shared), publishedAt = LocalDate.of(2026, 1, 15)),
+                                releaseEntry("1.0.1", purls = listOf(shared), publishedAt = LocalDate.of(2026, 2, 1)),
                             ),
                         vulnerabilities =
                             listOf(
                                 vulnerability(
                                     id = cve("CVE-2026-1234"),
                                     releases = listOf(release("1.0.0"), release("1.0.1")),
+                                    reports = listOf(report(ReporterType.TRIVY, at = LocalDate.of(2026, 1, 20))),
                                     tags = listOf(APP),
                                 ),
                             ),
@@ -191,8 +221,37 @@ class OpenVexStatementsTest :
 
         context("release scope") {
 
+            test("an unpublished release gets no statement and is named, so an unshipped fix is not stated as fixed") {
+                val collection = collectOpenVexStatements(unpublishedFix)
+
+                collection.statements.map { vexStatusKind(it.status) } shouldContainExactly
+                    listOf(VexStatusKind.AFFECTED)
+                collection.unpublishedReleases shouldContainExactly listOf(release("1.0.1"))
+            }
+
+            test("an unpublished release without purls is not reported as missing purls") {
+                val file =
+                    vulnlogFile(
+                        releases = listOf(published("1.0.0", LocalDate.of(2026, 1, 15)), releaseEntry("1.0.1")),
+                        vulnerabilities = listOf(affectedInV1),
+                    )
+
+                val collection = collectOpenVexStatements(file)
+
+                collection.skippedReleases.shouldBeEmpty()
+            }
+
+            test("a named release gets its statement even without published_at") {
+                val scope = OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.1")))
+
+                val collection = collectOpenVexStatements(unpublishedFix, scope)
+
+                collection.statements.single().status shouldBe VexStatus.Fixed
+                collection.unpublishedReleases.shouldBeEmpty()
+            }
+
             test("only a release in scope anchors a statement, and a fix outside it still drives the remediation") {
-                val scope = OpenVexScope(releases = setOf(release("1.0.0")))
+                val scope = OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.0")))
 
                 val statement = collectOpenVexStatements(taggedFile, scope).statements.single()
 
@@ -203,7 +262,7 @@ class OpenVexStatementsTest :
             }
 
             test("a release the entry does not list is covered by the range") {
-                val scope = OpenVexScope(releases = setOf(release("1.0.1")))
+                val scope = OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.1")))
 
                 val statements = collectOpenVexStatements(taggedFile, scope).statements
 
@@ -222,7 +281,7 @@ class OpenVexStatementsTest :
                             ),
                         vulnerabilities = listOf(affectedInV1),
                     )
-                val scope = OpenVexScope(releases = setOf(release("1.0.0")))
+                val scope = OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.0")))
 
                 val collection = collectOpenVexStatements(file, scope)
 
@@ -253,7 +312,10 @@ class OpenVexStatementsTest :
                 val shared = mavenPurlEntry("pkg:maven/com.acme/app@1.0.0", tags = listOf("container", "library"))
                 val file =
                     vulnlogFile(
-                        releases = listOf(releaseEntry("1.0.0", purls = listOf(shared))),
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(shared), publishedAt = LocalDate.of(2026, 1, 15)),
+                            ),
                         vulnerabilities = listOf(affectedInV1.copy(tags = listOf(tag("library")))),
                     )
 
@@ -266,7 +328,7 @@ class OpenVexStatementsTest :
 
         context("statement fields") {
 
-            val anchored = listOf(releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0"))))
+            val anchored = listOf(published("1.0.0", LocalDate.of(2026, 1, 15)))
 
             fun statementOf(entry: VulnerabilityEntry) =
                 collectOpenVexStatements(
@@ -295,11 +357,20 @@ class OpenVexStatementsTest :
                 statement.status shouldBe VexStatus.UnderInvestigation("not reachable")
             }
 
-            test("is left to the revision to date when neither the entry nor its release is dated") {
+            test("is left to the revision to date when neither the entry nor its named, unpublished release is dated") {
                 val entry =
                     vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.0.0")), tags = listOf(APP))
+                val file =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0"))),
+                            ),
+                        vulnerabilities = listOf(entry),
+                    )
+                val scope = OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.0")))
 
-                val statement = statementOf(entry)
+                val statement = collectOpenVexStatements(file, scope).statements.single()
 
                 statement.timestamp shouldBe OpenVexStatementTime.Issued
             }
@@ -313,6 +384,21 @@ class OpenVexStatementsTest :
                 val reason = openVexEmptyReason(bare, collectOpenVexStatements(bare))
 
                 reason shouldBe OpenVexEmptyReason.NO_RELEASE_DECLARES_PURLS
+            }
+
+            test("asks for publication dates when only unpublished releases declare purls") {
+                val unpublished =
+                    vulnlogFile(
+                        releases =
+                            listOf(
+                                releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0"))),
+                            ),
+                        vulnerabilities = listOf(affectedInV1),
+                    )
+
+                val reason = openVexEmptyReason(unpublished, collectOpenVexStatements(unpublished))
+
+                reason shouldBe OpenVexEmptyReason.NO_PUBLISHED_RELEASE_DECLARES_PURLS
             }
 
             test("asks for tags when an entry reaches release purls without matching tags") {
@@ -334,7 +420,8 @@ class OpenVexStatementsTest :
             test("blames the release scope when one is active") {
                 val later = affectedInV1.copy(releases = listOf(release("1.0.1")), tags = listOf(tag("container")))
                 val file = taggedFile.copy(vulnerabilities = listOf(later))
-                val collection = collectOpenVexStatements(file, OpenVexScope(releases = setOf(release("1.0.0"))))
+                val scope = OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.0")))
+                val collection = collectOpenVexStatements(file, scope)
 
                 val reason = openVexEmptyReason(file, collection)
 
@@ -346,7 +433,7 @@ class OpenVexStatementsTest :
                     vulnlogFile(
                         releases =
                             listOf(
-                                releaseEntry("1.0.0", purls = listOf(appPurl("pkg:maven/com.acme/app@1.0.0"))),
+                                published("1.0.0", LocalDate.of(2026, 1, 15)),
                                 releaseEntry("1.0.1"),
                             ),
                         vulnerabilities = listOf(affectedInV1.copy(releases = listOf(release("1.0.1")))),

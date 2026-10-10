@@ -275,18 +275,30 @@ class VexTest :
             val cases =
                 listOf(
                     affectedIn(listOf("1.0.0")) to Remediation.NoneAvailable,
-                    affectedIn(listOf("1.0.0"), fixedIn = "1.0.1", note = "Bumped log4j.") to
-                        Remediation.UpdateTo(release("1.0.1")),
-                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX) to Remediation.FixPlanned,
-                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX, fixedIn = "1.0.1") to
-                        Remediation.UpdateTo(release("1.0.1")),
+                    affectedIn(listOf("1.0.0"), fixedIn = "1.2.0", note = "Bumped log4j.") to
+                        Remediation.UpdateTo(release("1.2.0")),
+                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX) to Remediation.FixPlanned(fixIn = null),
+                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX, fixedIn = "1.2.0") to
+                        Remediation.UpdateTo(release("1.2.0")),
                     affectedIn(listOf("1.0.0"), Disposition.WONT_FIX) to Remediation.RiskAccepted(fixIn = null),
-                    affectedIn(listOf("1.0.0"), Disposition.WONT_FIX, fixedIn = "1.0.1") to
-                        Remediation.RiskAccepted(fixIn = release("1.0.1")),
+                    affectedIn(listOf("1.0.0"), Disposition.WONT_FIX, fixedIn = "1.3.0") to
+                        Remediation.RiskAccepted(fixIn = release("1.3.0")),
                 )
 
-            val remediations = cases.map { (entry, _) -> remediationOf(entry) }
+            val remediations = cases.map { (entry, _) -> remediationOf(entry, file.releases) }
 
             remediations shouldContainExactly cases.map { (_, expected) -> expected }
+        }
+
+        test("remediationOf only plans a fix whose release is not published, since nobody can update to it yet") {
+            val entries =
+                listOf(
+                    affectedIn(listOf("1.0.0"), fixedIn = "1.3.0"),
+                    affectedIn(listOf("1.0.0"), Disposition.WILL_FIX, fixedIn = "1.3.0"),
+                )
+
+            val remediations = entries.map { entry -> remediationOf(entry, file.releases) }
+
+            remediations shouldContainExactly List(2) { Remediation.FixPlanned(fixIn = release("1.3.0")) }
         }
     })

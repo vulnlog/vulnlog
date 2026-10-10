@@ -52,7 +52,7 @@ Validation warns when two releases carrying `published_at` are declared out of o
 | `published_at`
 | String (date, `YYYY-MM-DD`)
 | No
-| Publication date of the release. Absence indicates the release is not yet published.
+| Publication date of the release. Absence indicates the release is not yet published, and leaves it out of VEX documents unless `--release` names it.
 
 | `purls`
 | Array of <<purl-entry,PURL entries>>
@@ -73,6 +73,7 @@ A release artifact identified by its https://github.com/package-url/purl-spec[Pa
 | String (Package URL)
 | Yes
 | The versioned Package URL for this artifact in this release.
+Validation warns about a purl without a version, because VEX statements for it would apply to every version of the artifact.
 
 | `tags`
 | Array of String

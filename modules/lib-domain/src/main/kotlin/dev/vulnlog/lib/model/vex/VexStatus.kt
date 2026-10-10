@@ -48,7 +48,10 @@ sealed interface Remediation {
         val fixIn: Release?,
     ) : Remediation
 
-    data object FixPlanned : Remediation
+    /** [fixIn] is the release a recorded fix ships with, as long as it is not published. */
+    data class FixPlanned(
+        val fixIn: Release?,
+    ) : Remediation
 
     data class UpdateTo(
         val release: Release,

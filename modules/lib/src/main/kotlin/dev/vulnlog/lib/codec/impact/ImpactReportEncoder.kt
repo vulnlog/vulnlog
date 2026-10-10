@@ -16,8 +16,16 @@ object ImpactReportEncoder {
     fun encode(report: ImpactReport): String {
         val template = loadTemplate()
         val json = serializeToJson(ImpactReportMapper.toDto(report))
-        return template.replace(DATA_PLACEHOLDER, json)
+        return template.replace(DATA_PLACEHOLDER, escapeForScript(json))
     }
+
+    private fun escapeForScript(json: String): String =
+        json
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("&", "\\u0026")
+            .replace("\u2028", "\\u2028")
+            .replace("\u2029", "\\u2029")
 
     private fun loadTemplate(): String {
         val classLoader = Thread.currentThread().contextClassLoader

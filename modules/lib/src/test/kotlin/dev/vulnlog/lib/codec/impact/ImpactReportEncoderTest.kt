@@ -17,10 +17,13 @@ import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldBeStrictlyIncreasing
 import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
 
 private val defaultProject = Project("Acme Corp", "Acme Web App", "Security Team")
@@ -69,6 +72,8 @@ private fun render(
         ),
     )
 
+private fun String.embeddedData(): String = substringAfter("var VULNLOG_DATA = ").substringBefore(";\n")
+
 class ImpactReportEncoderTest :
     FunSpec({
 
@@ -82,6 +87,15 @@ class ImpactReportEncoderTest :
             html shouldContain "Acme Web App"
             html shouldContain "CVE-2026-1234"
             html shouldNotContain "VULNLOG_DATA_PLACEHOLDER"
+        }
+
+        test("keeps text from ending the script element, and the text reads back unchanged") {
+            val hostile = "</script><script>alert(1)</script><!-- & > \u2028 \u2029"
+
+            val data = render(listOf(entry(analysis = hostile))).embeddedData()
+
+            listOf("<", ">", "&", "\u2028", "\u2029").filter(data::contains).shouldBeEmpty()
+            JsonMapper.shared().readTree(data)["entries"][0]["analysis"].stringValue() shouldBe hostile
         }
 
         test("renders a report without entries") {
