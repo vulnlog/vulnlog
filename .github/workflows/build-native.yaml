@@ -41,14 +41,26 @@ jobs:
           APP_VERSION_INPUT: ${{ inputs.app-version }}
         run: |
           VERSION="${APP_VERSION_INPUT#v}"
+          TASKS=(:cli-app:nativeCompile)
+          # One SBOM covers all platforms: the binaries share the lockfile and the GraalVM release.
+          if [ "$RUNNER_OS" = Linux ]; then
+            TASKS+=(:cli-app:cyclonedxNativeBom)
+          fi
           if [ -n "$VERSION" ]; then
-            ./gradlew :cli-app:nativeCompile --no-configuration-cache -PappVersion="$VERSION"
+            ./gradlew "${TASKS[@]}" --no-configuration-cache -PappVersion="$VERSION"
           else
-            ./gradlew :cli-app:nativeCompile --no-configuration-cache
+            ./gradlew "${TASKS[@]}" --no-configuration-cache
           fi
       - name: Upload native image
         uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.artifact-name }}
           path: modules/cli-app/build/native/nativeCompile/vulnlog${{ runner.os == 'Windows' && '.exe' || '' }}
+          retention-days: ${{ inputs.retention-days }}
+      - name: Upload native image SBOM
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sbom-${{ inputs.artifact-name }}
+          path: modules/cli-app/build/sbom/vulnlog-native-*.cdx.json
           retention-days: ${{ inputs.retention-days }}

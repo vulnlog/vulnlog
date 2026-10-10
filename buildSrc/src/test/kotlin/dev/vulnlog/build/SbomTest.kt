@@ -36,6 +36,16 @@ private fun bom(vararg components: Component): Bom =
 private fun component(vararg algorithms: String): Component =
     Component().apply { hashes = algorithms.map { Hash(it, "digest") } }
 
+private fun component(
+    group: String,
+    name: String,
+): Component =
+    Component().apply {
+        this.group = group
+        this.name = name
+        bomRef = "$group:$name"
+    }
+
 class SbomTest :
     FunSpec({
 
@@ -74,5 +84,25 @@ class SbomTest :
 
             bom.components.first().hashes.map { it.algorithm } shouldBe listOf("SHA-256")
             bom.components.last().hashes.shouldBeEmpty()
+        }
+
+        test("addGraalVmComponentsOf adds only GraalVM's components and makes the root depend on them") {
+            val bom = bom()
+            val nativeImageBom =
+                Bom().apply {
+                    components =
+                        mutableListOf(
+                            component("com.oracle", "Oracle GraalVM"),
+                            component("org.graalvm.nativeimage", "svm"),
+                            component("kotlin.jvm", "internal"),
+                        )
+                }
+
+            bom.addGraalVmComponentsOf(nativeImageBom)
+
+            val graalVmRefs = listOf("com.oracle:Oracle GraalVM", "org.graalvm.nativeimage:svm")
+            bom.components.map { it.bomRef } shouldBe graalVmRefs
+            bom.dependencies.map { it.ref } shouldBe listOf(GENERATED_REF, LIBRARY_REF) + graalVmRefs
+            bom.dependencies.first().dependencies.map { it.ref } shouldBe listOf(LIBRARY_REF) + graalVmRefs
         }
     })
