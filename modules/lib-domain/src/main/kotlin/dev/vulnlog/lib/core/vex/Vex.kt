@@ -31,7 +31,7 @@ fun releaseStatuses(
             .minOrNull() ?: return emptyList()
     val fix = vulnEntry.resolution?.let { resolution -> order.indexOf(resolution.release) }?.takeIf { it >= 0 }
     val fixedOn = fix?.let { vulnEntry.resolution.at ?: declared[it].publicationDate }
-    val unresolved = unresolvedStatus(vulnEntry)
+    val unresolved = unresolvedStatus(vulnEntry, declared)
     val unresolvedOn = unresolvedOn(vulnEntry)
     return declared.mapIndexedNotNull { index, entry ->
         when {
@@ -47,13 +47,20 @@ fun filterReleasePurlsMatchingVulnerabilityEntryTags(
     vulnEntry: VulnerabilityEntry,
 ): List<PurlEntry> = release.purls.filter { purlEntry -> purlEntry.tags.any { tag -> tag in vulnEntry.tags } }
 
-/** Never derived from the analysis or the resolution note: both are written for the team, not for consumers. */
-fun remediationOf(vulnEntry: VulnerabilityEntry): Remediation {
+fun remediationOf(
+    vulnEntry: VulnerabilityEntry,
+    releases: List<ReleaseEntry>,
+): Remediation {
     val fixRelease = vulnEntry.resolution?.release
+    val shipped = releases.any { release -> release.id == fixRelease && release.publicationDate != null }
+    val fix =
+        fixRelease?.let { release ->
+            if (shipped) Remediation.UpdateTo(release) else Remediation.FixPlanned(release)
+        }
     return when (findDisposition(vulnEntry.verdict)) {
         Disposition.WONT_FIX -> Remediation.RiskAccepted(fixRelease)
-        Disposition.WILL_FIX -> fixRelease?.let(Remediation::UpdateTo) ?: Remediation.FixPlanned
-        null -> fixRelease?.let(Remediation::UpdateTo) ?: Remediation.NoneAvailable
+        Disposition.WILL_FIX -> fix ?: Remediation.FixPlanned(null)
+        null -> fix ?: Remediation.NoneAvailable
     }
 }
 
@@ -65,12 +72,15 @@ fun vexStatusKind(status: VexStatus): VexStatusKind =
         is VexStatus.UnderInvestigation -> VexStatusKind.UNDER_INVESTIGATION
     }
 
-private fun unresolvedStatus(vulnEntry: VulnerabilityEntry): VexStatus {
+private fun unresolvedStatus(
+    vulnEntry: VulnerabilityEntry,
+    releases: List<ReleaseEntry>,
+): VexStatus {
     val analysis = vulnEntry.analysis?.takeIf(String::isNotBlank)
     return when (val verdict = vulnEntry.verdict) {
         Verdict.UnderInvestigation -> VexStatus.UnderInvestigation(analysis)
         is Verdict.NotAffected -> VexStatus.NotAffected(verdict.justification, analysis)
-        is Verdict.Affected -> VexStatus.Affected(remediationOf(vulnEntry), analysis)
+        is Verdict.Affected -> VexStatus.Affected(remediationOf(vulnEntry, releases), analysis)
     }
 }
 

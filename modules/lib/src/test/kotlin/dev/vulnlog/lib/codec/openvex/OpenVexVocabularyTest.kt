@@ -22,7 +22,8 @@ private val everyRemediation =
     listOf(
         Remediation.RiskAccepted(fixIn = null),
         Remediation.RiskAccepted(fixIn = release("1.0.1")),
-        Remediation.FixPlanned,
+        Remediation.FixPlanned(fixIn = null),
+        Remediation.FixPlanned(fixIn = release("1.0.1")),
         Remediation.UpdateTo(release("1.0.1")),
         Remediation.NoneAvailable,
     )
@@ -70,6 +71,7 @@ class OpenVexVocabularyTest :
                         "The risk is accepted. No fix is planned.",
                         "The risk is accepted for this release. A fix ships with release 1.0.1.",
                         "A fix is planned but not yet available.",
+                        "A fix is planned for release 1.0.1.",
                         "Update to release 1.0.1.",
                         "No remediation is available yet.",
                     )

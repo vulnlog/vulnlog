@@ -1,11 +1,15 @@
 name: Deploy website and docs to GitHub Pages
 
-# Single implementation of the Pages deploy. Invoked three ways:
+# Single implementation of the Pages deploy. Invoked four ways:
 # - workflow_call from release.yaml on final release tags
 # - workflow_dispatch for manual deploys from main
 # - workflow_run after the weekly security scan, to refresh the bundled reports
+# - push to main changing .vex/, so updated VEX documents go live without waiting for the next scan
 
 on:
+  push:
+    branches: [main]
+    paths: ['.vex/**']
   workflow_call:
     inputs:
       version:
@@ -90,10 +94,11 @@ jobs:
           if [ -z "$VERSION" ]; then
             VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
           fi
-          mkdir -p _site/docs _site/schema
+          mkdir -p _site/docs _site/schema _site/vex
           cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
           cp -r build/docs/* _site/docs/
           cp schema/*.json _site/schema/
+          cp .vex/*.json _site/vex/
           if [ -f _report/vulnlog-impact-report.html ]; then
             cp _report/vulnlog-impact-report.html _site/security-report.html
           else

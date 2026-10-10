@@ -15,6 +15,7 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
+import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import io.kotest.core.spec.style.FunSpec
@@ -73,14 +74,20 @@ class OpenVexTest :
 
                 result shouldBe
                     OpenVexScopeResult.Resolved(
-                        OpenVexScope(releases = setOf(release("1.0.1")), tags = setOf(tag("container"))),
+                        OpenVexScope(
+                            release = OpenVexReleaseScope.Named(release("1.0.1")),
+                            tags = setOf(tag("container")),
+                        ),
                     )
             }
 
-            test("covers every release and purl without a release or tags") {
+            test("covers the published releases and every purl without a release or tags") {
                 val result = resolveOpenVexScope(null, emptySet(), taggedFile)
 
-                result shouldBe OpenVexScopeResult.Resolved(OpenVexScope())
+                result shouldBe
+                    OpenVexScopeResult.Resolved(
+                        OpenVexScope(release = OpenVexReleaseScope.Published, tags = emptySet()),
+                    )
             }
 
             test("rejects an unknown release and an unknown tag together") {

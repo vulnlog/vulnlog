@@ -372,7 +372,7 @@ vulnlog {
 
 | `release`
 | _(none)_
-| Write the document for this release only. See xref:reference/cli-vex-openvex.adoc#scoping[One document per release and artifact].
+| Write the document for this release only, even one without `published_at`. Without it the document covers every published release that declares `purls`. See xref:reference/cli-vex-openvex.adoc#scoping[One document per release and artifact].
 
 | `tags`
 | _(empty)_

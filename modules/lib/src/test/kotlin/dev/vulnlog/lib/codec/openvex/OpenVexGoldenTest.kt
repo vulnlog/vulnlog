@@ -54,10 +54,12 @@ private val file: VulnlogFile =
                             mavenPurlEntry("pkg:maven/com.acme/acme-web-app@1.0.0", tags = listOf("app")),
                             mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.0.0", tags = listOf("app")),
                         ),
+                    publishedAt = LocalDate.of(2026, 3, 2),
                 ),
                 releaseEntry(
                     "1.0.1",
                     purls = listOf(mavenPurlEntry("pkg:maven/com.acme/acme-cli@1.0.1", tags = listOf("app"))),
+                    publishedAt = LocalDate.of(2026, 4, 21),
                 ),
                 releaseEntry(
                     "1.1.0",

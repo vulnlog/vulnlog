@@ -64,6 +64,20 @@ class OpenVexCommandTest :
 
         context("--release") {
 
+            test("without it, an unpublished release is left out") {
+                val document = documentOf(openVexScopedDocument())
+
+                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.1.0\""
+                document shouldNotContain "pkg:docker/acme/web-app@1.2.0"
+            }
+
+            test("names an unpublished release to cover it") {
+                val document = documentOf(openVexScopedDocument(), "--release 1.2.0")
+
+                document shouldContain "\"@id\": \"pkg:docker/acme/web-app@1.2.0\""
+                document shouldNotContain "pkg:docker/acme/web-app@1.1.0"
+            }
+
             test("covers only the named release") {
                 val document = documentOf(openVexScopedDocument(), "--release 1.0.0")
 
@@ -179,6 +193,17 @@ class OpenVexCommandTest :
                     result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                     result.stderr shouldContain "error: no statement applies"
                     result.stderr shouldContain "declare 'purls' on the releases"
+                }
+            }
+
+            test("fails and points to --release when only unpublished releases declare purls") {
+                val yaml = openVexDocument().replace(Regex("""\n\s+published_at: .+"""), "")
+
+                withTempFile(content = yaml) { input ->
+                    val result = OpenVexCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
+                    result.stderr shouldContain "or name an unpublished release with --release"
                 }
             }
         }
