@@ -18,14 +18,18 @@ Releases are driven by version tags. Pushing a tag matching `v[0-9]+.[0-9]+.[0-9
 [`release.yaml`](../.github/workflows/release.yaml) pipeline. It publishes in stages, ordered
 so that nothing irreversible happens while an earlier stage can still fail:
 
-1. **Gate**: `./gradlew check` and the three native images (Linux, macOS, Windows) build in
-   parallel. If anything fails, nothing is published.
+1. **Gate**: `./gradlew check :buildSrc:check` and the three native images (Linux, macOS,
+   Windows) build in parallel. If anything fails, nothing is published.
 2. **GitHub release**: created as pre-release with the JVM distribution zip, the three native
-   image zips, and the install scripts attached. A GitHub release can still be edited or
-   deleted if something is wrong.
-3. **Docker image, website deploy, and Homebrew formula bump** run in parallel.
-4. **Gradle plugin**: published to the Gradle Plugin Portal last, because a Portal publication
-   cannot be retracted.
+   image zips, the SBOMs of the JVM distribution, the native images and the Gradle plugin, the
+   install scripts, and `SHA256SUMS` attached. Their build provenance and SBOM attestations are
+   signed before the release is created. A GitHub release can still be edited or deleted if
+   something is wrong; an attestation cannot be retracted.
+3. **Docker image, website deploy, and Homebrew formula bump** run in parallel. The Docker
+   stage also attests the image and its SBOM and attaches the container SBOM to the GitHub
+   release.
+4. **Gradle plugin**: the jar and its SBOM are attested, then the plugin is published to the
+   Gradle Plugin Portal last, because a Portal publication cannot be retracted.
 5. **Announcement**: a GitHub Discussions post, once everything else is out.
 
 The pipeline compares the pushed tag against all existing version tags. Only the highest
