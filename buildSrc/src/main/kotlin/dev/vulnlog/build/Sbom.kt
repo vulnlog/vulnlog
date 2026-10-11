@@ -5,16 +5,20 @@ package dev.vulnlog.build
 
 import com.github.packageurl.PackageURL
 import org.cyclonedx.model.Bom
+import org.cyclonedx.model.Component
 import org.cyclonedx.model.Dependency
 import org.cyclonedx.model.License
 import org.cyclonedx.model.LicenseChoice
+import java.util.TreeMap
 
 fun versionedPurl(
     purl: String,
     version: String,
 ): String {
     val unversioned = PackageURL(purl)
-    return PackageURL(unversioned.type, unversioned.namespace, unversioned.name, version, null, null).canonicalize()
+    val qualifiers = unversioned.qualifiers?.let { TreeMap(it) }
+    return PackageURL(unversioned.type, unversioned.namespace, unversioned.name, version, qualifiers, null)
+        .canonicalize()
 }
 
 fun Bom.identifyRootAs(purl: String) {
@@ -46,3 +50,17 @@ fun Bom.addGraalVmComponentsOf(nativeImageBom: Bom) {
         rootDependency.addDependency(Dependency(component.bomRef))
     }
 }
+
+// Syft reads the native binary's libraries and their graph from Native Image's embedded SBOM, which misnames them.
+fun Bom.replaceNativeImageComponentsWith(nativeBom: Bom) {
+    val misnamed = components.filter { it.foundBy() == "graalvm-native-image-cataloger" }.map { it.bomRef }.toSet()
+    components.removeIf { it.bomRef in misnamed }
+    dependencies.removeIf { it.ref in misnamed }
+    val application = nativeBom.metadata.component
+    components.add(application)
+    components.addAll(nativeBom.components)
+    dependencies.addAll(nativeBom.dependencies)
+    dependencies.add(Dependency(metadata.component.bomRef).apply { addDependency(Dependency(application.bomRef)) })
+}
+
+private fun Component.foundBy(): String? = properties?.find { it.name == "syft:package:foundBy" }?.value

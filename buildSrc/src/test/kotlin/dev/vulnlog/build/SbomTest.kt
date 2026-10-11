@@ -11,6 +11,7 @@ import org.cyclonedx.model.Component
 import org.cyclonedx.model.Dependency
 import org.cyclonedx.model.Hash
 import org.cyclonedx.model.Metadata
+import org.cyclonedx.model.Property
 
 private const val GENERATED_REF = "pkg:maven/dev.vulnlog/cli-app@1.0.0?project_path=%3Acli-app"
 private const val LIBRARY_REF = "pkg:maven/org.example/library@2.0.0?type=jar"
@@ -46,15 +47,34 @@ private fun component(
         bomRef = "$group:$name"
     }
 
+private fun scanned(
+    bomRef: String,
+    foundBy: String,
+): Component =
+    Component().apply {
+        this.bomRef = bomRef
+        properties = listOf(Property("syft:package:foundBy", foundBy))
+    }
+
 class SbomTest :
     FunSpec({
 
-        test("versionedPurl adds the version percent-encoded and keeps the namespace") {
-            val purls = listOf("pkg:generic/vulnlog" to "1.0.0", "pkg:maven/dev.vulnlog/gradle-plugin" to "1.0.0+abc")
+        test("versionedPurl adds the version percent-encoded and keeps the namespace and qualifiers") {
+            val purls =
+                listOf(
+                    "pkg:generic/vulnlog" to "1.0.0",
+                    "pkg:maven/dev.vulnlog/gradle-plugin" to "1.0.0+abc",
+                    "pkg:oci/vulnlog?repository_url=ghcr.io/vulnlog/vulnlog" to "sha256:abc",
+                )
 
             val versioned = purls.map { (purl, version) -> versionedPurl(purl, version) }
 
-            versioned shouldBe listOf("pkg:generic/vulnlog@1.0.0", "pkg:maven/dev.vulnlog/gradle-plugin@1.0.0%2Babc")
+            versioned shouldBe
+                listOf(
+                    "pkg:generic/vulnlog@1.0.0",
+                    "pkg:maven/dev.vulnlog/gradle-plugin@1.0.0%2Babc",
+                    "pkg:oci/vulnlog@sha256%3Aabc?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+                )
         }
 
         test("identifyRootAs replaces the root purl, bom-ref and dependency ref and keeps the graph") {
@@ -104,5 +124,24 @@ class SbomTest :
             bom.components.map { it.bomRef } shouldBe graalVmRefs
             bom.dependencies.map { it.ref } shouldBe listOf(GENERATED_REF, LIBRARY_REF) + graalVmRefs
             bom.dependencies.first().dependencies.map { it.ref } shouldBe listOf(LIBRARY_REF) + graalVmRefs
+        }
+
+        test("replaceNativeImageComponentsWith swaps Syft's Native Image components for the native SBOM") {
+            val scan =
+                Bom().apply {
+                    metadata = Metadata().apply { component = Component().apply { bomRef = "image" } }
+                    components =
+                        mutableListOf(
+                            scanned("apk", "apk-db-cataloger"),
+                            scanned("misnamed", "graalvm-native-image-cataloger"),
+                        )
+                    dependencies = mutableListOf(Dependency("apk"), Dependency("misnamed"))
+                }
+
+            scan.replaceNativeImageComponentsWith(bom(Component().apply { bomRef = LIBRARY_REF }))
+
+            scan.components.map { it.bomRef } shouldBe listOf("apk", GENERATED_REF, LIBRARY_REF)
+            scan.dependencies.map { it.ref } shouldBe listOf("apk", GENERATED_REF, LIBRARY_REF, "image")
+            scan.dependencies.last().dependencies.map { it.ref } shouldBe listOf(GENERATED_REF)
         }
     })
