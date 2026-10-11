@@ -64,6 +64,7 @@ updates:
       build-plugins:
         patterns:
           - "org.graalvm.buildtools*"
+          - "org.cyclonedx*"
           - "com.gradleup.shadow*"
           - "com.diffplug.spotless*"
           - "org.jlleitschuh.gradle*"

@@ -74,12 +74,13 @@ private fun File.withProducts(vararg purls: String): File =
 class SbomTest :
     FunSpec({
 
-        test("versionedPurl adds the version percent-encoded and keeps the namespace and qualifiers") {
+        test("versionedPurl sets the version percent-encoded and keeps the namespace and qualifiers") {
             val purls =
                 listOf(
                     "pkg:generic/vulnlog" to "1.0.0",
                     "pkg:maven/dev.vulnlog/gradle-plugin" to "1.0.0+abc",
                     "pkg:oci/vulnlog?repository_url=ghcr.io/vulnlog/vulnlog" to "sha256:abc",
+                    "pkg:generic/vulnlog@1.0.0" to null,
                 )
 
             val versioned = purls.map { (purl, version) -> versionedPurl(purl, version) }
@@ -89,6 +90,7 @@ class SbomTest :
                     "pkg:generic/vulnlog@1.0.0",
                     "pkg:maven/dev.vulnlog/gradle-plugin@1.0.0%2Babc",
                     "pkg:oci/vulnlog@sha256%3Aabc?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+                    "pkg:generic/vulnlog",
                 )
         }
 

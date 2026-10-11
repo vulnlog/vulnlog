@@ -18,13 +18,11 @@ import java.util.TreeMap
 
 fun versionedPurl(
     purl: String,
-    version: String,
-): String {
-    val unversioned = PackageURL(purl)
-    val qualifiers = unversioned.qualifiers?.let { TreeMap(it) }
-    return PackageURL(unversioned.type, unversioned.namespace, unversioned.name, version, qualifiers, null)
+    version: String?,
+): String =
+    PackageURL(purl)
+        .run { PackageURL(type, namespace, name, version, qualifiers?.let { TreeMap(it) }, subpath) }
         .canonicalize()
-}
 
 fun Bom.identifyRootAs(purl: String) {
     val root = metadata.component
@@ -43,15 +41,10 @@ fun Bom.checkRootMatchesProductsOf(vexDocument: File) {
             .readTree(vexDocument)["statements"]
             .flatMap { it["products"] }
             .map { it["identifiers"]["purl"].asText() }
-            .filter { it.withoutVersion() != root.withoutVersion() }
+            .filter { versionedPurl(it, null) != versionedPurl(root, null) }
             .distinct()
     check(mismatched.isEmpty()) { "The products $mismatched of ${vexDocument.name} do not match the root purl $root" }
 }
-
-private fun String.withoutVersion(): String =
-    PackageURL(this)
-        .run { PackageURL(type, namespace, name, null, qualifiers?.let { TreeMap(it) }, subpath) }
-        .canonicalize()
 
 fun File.writeBom(
     bom: Bom,
