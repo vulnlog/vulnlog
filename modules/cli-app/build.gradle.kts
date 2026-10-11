@@ -59,7 +59,9 @@ tasks.withType<Test>().configureEach {
 
 sbom {
     rootPurl = "pkg:generic/vulnlog"
+    vexDocument = layout.settingsDirectory.file(".vex/vulnlog-cli.openvex.json")
     containerPurl = "pkg:oci/vulnlog?repository_url=ghcr.io/vulnlog/vulnlog"
+    containerVexDocument = layout.settingsDirectory.file(".vex/vulnlog-container.openvex.json")
 }
 
 tasks.cyclonedxDirectBom {

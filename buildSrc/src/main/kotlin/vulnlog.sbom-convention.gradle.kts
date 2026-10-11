@@ -1,17 +1,19 @@
 
 import dev.vulnlog.build.SbomExtension
 import dev.vulnlog.build.addGraalVmComponentsOf
+import dev.vulnlog.build.checkRootMatchesProductsOf
 import dev.vulnlog.build.identifyRootAs
 import dev.vulnlog.build.keepSha256HashesOnly
 import dev.vulnlog.build.licenseRootAs
 import dev.vulnlog.build.replaceNativeImageComponentsWith
 import dev.vulnlog.build.versionedPurl
+import dev.vulnlog.build.writeBom
 import org.cyclonedx.Version
-import org.cyclonedx.generators.BomGeneratorFactory
 import org.cyclonedx.parsers.JsonParser
 import org.graalvm.buildtools.gradle.tasks.BuildNativeImageTask
 
 plugins {
+    base
     id("org.cyclonedx.bom")
 }
 
@@ -24,15 +26,22 @@ tasks.cyclonedxDirectBom {
     xmlOutput.unsetConvention()
     val projectVersion = version.toString()
     val rootPurl = sbom.rootPurl.map { versionedPurl(it, projectVersion) }
+    val vexDocument = sbom.vexDocument
     inputs.property("rootPurl", rootPurl)
+    inputs.file(vexDocument)
     doLast {
         val bomFile = jsonOutput.get().asFile
         val bom = JsonParser().parse(bomFile)
         bom.identifyRootAs(rootPurl.get())
+        bom.checkRootMatchesProductsOf(vexDocument.get().asFile)
         bom.licenseRootAs("Apache-2.0")
         bom.keepSha256HashesOnly()
-        bomFile.writeText(BomGeneratorFactory.createJson(schemaVersion.get(), bom).toJsonString())
+        bomFile.writeBom(bom, schemaVersion.get())
     }
+}
+
+tasks.check {
+    dependsOn(tasks.cyclonedxDirectBom)
 }
 
 pluginManager.withPlugin("org.graalvm.buildtools.native") {
@@ -53,17 +62,19 @@ pluginManager.withPlugin("org.graalvm.buildtools.native") {
             doLast {
                 val bom = JsonParser().parse(jvmBomFile.get().asFile)
                 bom.addGraalVmComponentsOf(JsonParser().parse(nativeImageBomFile.get().asFile))
-                nativeBomFile.get().asFile.writeText(BomGeneratorFactory.createJson(schema.get(), bom).toJsonString())
+                nativeBomFile.get().asFile.writeBom(bom, schema.get())
             }
         }
     tasks.register("cyclonedxContainerBom") {
         description = "Generates the CycloneDX SBOM of the container image from its Syft scan and the native SBOM."
         val imagePurl = sbom.containerPurl.zip(providers.gradleProperty("imageDigest"), ::versionedPurl)
+        val vexDocument = sbom.containerVexDocument
         val scanFile = layout.buildDirectory.file("sbom/syft-container.cdx.json")
         val containerBomFile =
             layout.buildDirectory.file(imageName.map { "sbom/$it-container-$projectVersion.cdx.json" })
         mustRunAfter(cyclonedxNativeBom)
         inputs.property("imagePurl", imagePurl)
+        inputs.file(vexDocument)
         inputs.file(scanFile)
         inputs.file(nativeBomFile)
         outputs.file(containerBomFile)
@@ -71,7 +82,8 @@ pluginManager.withPlugin("org.graalvm.buildtools.native") {
             val bom = JsonParser().parse(scanFile.get().asFile)
             bom.replaceNativeImageComponentsWith(JsonParser().parse(nativeBomFile.get().asFile))
             bom.identifyRootAs(imagePurl.get())
-            containerBomFile.get().asFile.writeText(BomGeneratorFactory.createJson(schema.get(), bom).toJsonString())
+            bom.checkRootMatchesProductsOf(vexDocument.get().asFile)
+            containerBomFile.get().asFile.writeBom(bom, schema.get())
         }
     }
     gradle.taskGraph.whenReady {
