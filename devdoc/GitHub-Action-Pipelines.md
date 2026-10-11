@@ -44,11 +44,14 @@ flowchart TD
   `modules/lib/src/main/kotlin/dev/vulnlog/lib/document/**`,
   `modules/lib/src/main/kotlin/dev/vulnlog/lib/codec/**`, `modules/cli-app/**`,
   `modules/lib/build.gradle.kts`, `modules/lib-domain/build.gradle.kts`, `gradle/libs.versions.toml`, `buildSrc/**`.
-- **check**: runs `./gradlew check` (compile, lint, unit tests, JVM integration tests) on
-  Java 21 / Temurin via the [`setup-jvm`](../.github/actions/setup-jvm/action.yml) composite
-  action.
+- **check**: runs `./gradlew check :buildSrc:check` (compile, lint, unit tests, JVM integration
+  tests, build logic tests, SBOMs of the CLI and the Gradle plugin) on Java 21 / Temurin via the
+  [`setup-jvm`](../.github/actions/setup-jvm/action.yml) composite action. Every SBOM task
+  validates its output against the CycloneDX schema and fails when the root purl does not match
+  the products of the artifact's OpenVEX document in `.vex/`.
 - **native-image**: calls [`build-native.yaml`](../.github/workflows/build-native.yaml) with
-  default inputs; uploads the Linux binary as artifact `vulnlog-linux-amd64`.
+  default inputs; uploads the Linux binary as artifact `vulnlog-linux-amd64` and its SBOM as
+  `sbom-vulnlog-linux-amd64`.
 - **perf-test**: calls [`perf-test.yaml`](../.github/workflows/perf-test.yaml), which downloads
   `vulnlog-linux-amd64`, installs `hyperfine`, and runs
   [`perf/perf-test.sh`](../perf/perf-test.sh): 1 warmup plus 3 runs against `perf/perf.vl.yaml`
@@ -90,20 +93,27 @@ flowchart TD
   release (`final=true`) or a release candidate (`-rcN` suffix), and whether it is the highest
   version tag overall (`latest=true`). All other jobs consume these outputs, so the RC and
   latest logic lives in one place.
-- **check**: same `./gradlew check` as in CI; part of the gate so a broken commit cannot be
-  released even if it was tagged by mistake.
+- **check**: same `./gradlew check :buildSrc:check` as in CI; part of the gate so a broken
+  commit cannot be released even if it was tagged by mistake.
 - **build-native-images**: matrix call of
   [`build-native.yaml`](../.github/workflows/build-native.yaml) for `ubuntu-latest`,
   `macos-latest`, and `windows-latest`.
-- **publish-release**: builds the JVM distribution zip, downloads and re-zips the three native
-  binaries, renders the install scripts, and creates a GitHub release marked
-  `prerelease: true`. The body is GitHub's auto-generated "What's Changed"
-  (`generate_release_notes: true`) plus a link to `CHANGELOG.md`; the maintainer refines it in
-  the UI before un-flagging the pre-release.
+- **publish-release**: builds the JVM distribution zip and the SBOMs of the CLI and the Gradle
+  plugin, re-zips the three native binaries, downloads the native image SBOM built on Linux,
+  and renders the install scripts. It writes `SHA256SUMS` for these assets, attests their
+  build provenance and the SBOMs of the JVM distribution and the native images, and creates a
+  GitHub release marked `prerelease: true`. The body is GitHub's auto-generated "What's
+  Changed" (`generate_release_notes: true`) plus a link to `CHANGELOG.md`; the maintainer
+  refines it in the UI before un-flagging the pre-release.
 - **publish-docker**: downloads the Linux native binary via the
   [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) composite action
   and pushes `ghcr.io/<repo>:<version>`; the floating `:latest` tag is added only when the
-  tag is the latest version.
+  tag is the latest version. `docker/metadata-action` sets the tags and the OCI labels such as
+  `org.opencontainers.image.source` and `org.opencontainers.image.revision`. The job attests
+  the image's build provenance, scans the pushed image with Syft, replaces the Java components
+  Syft reads from the binary with the native image SBOM (`:cli-app:cyclonedxContainerBom`),
+  attests that SBOM, and attaches it to the GitHub release. Both attestations are pushed to
+  GHCR as OCI referrers, so the version tag stays a single manifest.
 - **deploy-website**: calls [`deploy-website.yml`](../.github/workflows/deploy-website.yml)
   with the release version. Latest version only.
 - **notify-homebrew**: calls `POST /repos/vulnlog/homebrew-vulnlog/dispatches` with
@@ -111,10 +121,12 @@ flowchart TD
   `HOMEBREW_DISPATCH_TOKEN` secret). The tap's `bump-formula.yml` then recomputes the SHA256s,
   patches `vulnlog.rb`, and opens a bump PR. Depends on `publish-release` so the zip URLs are
   live before the tap fetches them. Latest version only.
-- **publish-gradle-plugin**: runs `:gradle-plugin:publishPlugins`. Depends on all other
-  publish jobs so the irreversible Portal publication happens only when everything else
-  succeeded; it still runs when the latest-only jobs were skipped for a bug fix release of an
-  older minor. The Gradle plugin's `:lib` dependency is shaded into the published jar (see
+- **publish-gradle-plugin**: builds the shadow jar, attests its build provenance and its SBOM
+  from the GitHub release, then runs `:gradle-plugin:publishPlugins`, which uploads the
+  attested jar. Depends on all other publish jobs so the irreversible Portal publication
+  happens only when everything else succeeded; it still runs when the latest-only jobs were
+  skipped for a bug fix release of an older minor. The Gradle plugin's `:lib` dependency is
+  shaded into the published jar (see
   [`modules/gradle-plugin/build.gradle.kts`](../modules/gradle-plugin/build.gradle.kts)) so no
   separate `:lib` artifact needs publishing. Final tags only.
 - **announce**: opens an Announcement discussion via `abirismyname/create-discussion` (pinned
@@ -172,13 +184,13 @@ Both scanner jobs require `security-events: write` to upload SARIF.
 Common steps are factored out so each pipeline references them by name instead of inlining
 their definitions.
 
-| File                                                                       | Kind              | Purpose                                                                                                                                                                                                                                |
-|----------------------------------------------------------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`build-native.yaml`](../.github/workflows/build-native.yaml)              | Reusable workflow | GraalVM 25 setup and `:cli-app:nativeCompile` build. Inputs: `os`, `artifact-name`, `app-version` (leading `v` stripped), `retention-days`. Used by `ci.yaml`, `release.yaml`, and `perf-test.yaml` (standalone mode).                 |
-| [`perf-test.yaml`](../.github/workflows/perf-test.yaml)                    | Reusable workflow | Runs `perf/perf-test.sh` (hyperfine) against the native binary. Inputs: `artifact-name`, `threshold-ms`. Also exposes `workflow_dispatch` for standalone runs, in which case it first calls `build-native.yaml` to produce the binary. |
-| [`deploy-website.yml`](../.github/workflows/deploy-website.yml)            | Reusable workflow | GitHub Pages deploy of website and docs. Input: `version` (defaults to `vulnlog-version` from `docs/antora.yml`). Used by `release.yaml` and standalone via `workflow_dispatch` and `workflow_run`.                                    |
-| [`setup-jvm`](../.github/actions/setup-jvm/action.yml)                     | Composite action  | Java 21 Temurin + Gradle setup. Used by the `check` jobs, `publish-release`, and `publish-gradle-plugin`.                                                                                                                              |
-| [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) | Composite action  | Downloads the native-image artifact and marks it executable. Input: `artifact-name` (default `vulnlog-linux-amd64`). Used by `publish-docker` and `perf-test.yaml`.                                                                    |
+| File                                                                       | Kind              | Purpose                                                                                                                                                                                                                                                                                                                          |
+|----------------------------------------------------------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`build-native.yaml`](../.github/workflows/build-native.yaml)              | Reusable workflow | GraalVM 25 setup and `:cli-app:nativeCompile`, uploaded as `<artifact-name>`; on Linux also `:cli-app:cyclonedxNativeBom`, uploaded as `sbom-<artifact-name>`. Inputs: `os`, `artifact-name`, `app-version` (leading `v` stripped), `retention-days`. Used by `ci.yaml`, `release.yaml`, and `perf-test.yaml` (standalone mode). |
+| [`perf-test.yaml`](../.github/workflows/perf-test.yaml)                    | Reusable workflow | Runs `perf/perf-test.sh` (hyperfine) against the native binary. Inputs: `artifact-name`, `threshold-ms`. Also exposes `workflow_dispatch` for standalone runs, in which case it first calls `build-native.yaml` to produce the binary.                                                                                           |
+| [`deploy-website.yml`](../.github/workflows/deploy-website.yml)            | Reusable workflow | GitHub Pages deploy of website and docs. Input: `version` (defaults to `vulnlog-version` from `docs/antora.yml`). Used by `release.yaml` and standalone via `workflow_dispatch` and `workflow_run`.                                                                                                                              |
+| [`setup-jvm`](../.github/actions/setup-jvm/action.yml)                     | Composite action  | Java 21 Temurin + Gradle setup. Used by the `check` jobs, `publish-release`, and `publish-gradle-plugin`.                                                                                                                                                                                                                        |
+| [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) | Composite action  | Downloads the native-image artifact and marks it executable. Input: `artifact-name` (default `vulnlog-linux-amd64`). Used by `publish-docker` and `perf-test.yaml`.                                                                                                                                                              |
 
 ### Running perf-test standalone
 
