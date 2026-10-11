@@ -5,7 +5,7 @@ plugins {
     id("vulnlog.sbom-convention")
 }
 
-description = "Next generation Vulnlog CLI application"
+description = "Vulnlog command-line interface"
 
 group = "dev.vulnlog"
 
