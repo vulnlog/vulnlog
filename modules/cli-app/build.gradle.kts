@@ -59,6 +59,7 @@ tasks.withType<Test>().configureEach {
 
 sbom {
     rootPurl = "pkg:generic/vulnlog"
+    containerPurl = "pkg:oci/vulnlog?repository_url=ghcr.io/vulnlog/vulnlog"
 }
 
 tasks.cyclonedxDirectBom {

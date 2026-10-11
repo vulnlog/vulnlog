@@ -134,6 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
+      contents: write
       packages: write
     steps:
       - name: Checkout
@@ -146,14 +147,46 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=${{ needs.version.outputs.version }}
+            type=raw,value=latest,enable=${{ needs.version.outputs.latest == 'true' }}
       - name: Build and push release image
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: modules/cli-app
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ needs.version.outputs.version }}
-            ${{ needs.version.outputs.latest == 'true' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Download native image SBOM
+        uses: actions/download-artifact@v8
+        with:
+          name: sbom-vulnlog-linux-amd64
+          path: modules/cli-app/build/sbom
+      - name: Scan image
+        uses: anchore/sbom-action@v0.24.3
+        env:
+          # Otherwise every file of the image becomes a component.
+          SYFT_FILE_METADATA_SELECTION: none
+        with:
+          image: ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: modules/cli-app/build/sbom/syft-container.cdx.json
+          upload-artifact: false
+      - name: Set up JVM toolchain
+        uses: ./.github/actions/setup-jvm
+      - name: Build and attach container SBOM
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./gradlew :cli-app:cyclonedxContainerBom -PappVersion="${{ needs.version.outputs.version }}" -PimageDigest="${{ steps.build.outputs.digest }}"
+          gh release upload --clobber "${{ github.ref_name }}" modules/cli-app/build/sbom/vulnlog-container-*.cdx.json
 
   deploy-website:
     name: Deploy website and docs
