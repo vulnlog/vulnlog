@@ -115,6 +115,7 @@ gradlePlugin {
 
 sbom {
     rootPurl = "pkg:maven/dev.vulnlog/gradle-plugin"
+    vexDocument = layout.settingsDirectory.file(".vex/vulnlog-gradle-plugin.openvex.json")
 }
 
 tasks.cyclonedxDirectBom {

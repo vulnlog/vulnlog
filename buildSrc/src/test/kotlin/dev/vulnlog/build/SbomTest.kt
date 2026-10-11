@@ -3,18 +3,26 @@
 
 package dev.vulnlog.build
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.engine.spec.tempfile
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import org.cyclonedx.Version
 import org.cyclonedx.model.Bom
 import org.cyclonedx.model.Component
 import org.cyclonedx.model.Dependency
 import org.cyclonedx.model.Hash
 import org.cyclonedx.model.Metadata
 import org.cyclonedx.model.Property
+import org.cyclonedx.parsers.JsonParser
+import java.io.File
 
 private const val GENERATED_REF = "pkg:maven/dev.vulnlog/cli-app@1.0.0?project_path=%3Acli-app"
 private const val LIBRARY_REF = "pkg:maven/org.example/library@2.0.0?type=jar"
+private const val IMAGE_PURL = "pkg:oci/vulnlog@sha256%3Accc?repository_url=ghcr.io/vulnlog"
 
 private fun bom(vararg components: Component): Bom =
     Bom().apply {
@@ -56,6 +64,13 @@ private fun scanned(
         properties = listOf(Property("syft:package:foundBy", foundBy))
     }
 
+private fun File.withProducts(vararg purls: String): File =
+    apply {
+        val statements =
+            purls.joinToString(",") { """{"products": [{"@id": "$it", "identifiers": {"purl": "$it"}}]}""" }
+        writeText("""{"statements": [$statements]}""")
+    }
+
 class SbomTest :
     FunSpec({
 
@@ -86,6 +101,61 @@ class SbomTest :
             bom.metadata.component.bomRef shouldBe "pkg:generic/vulnlog@1.0.0"
             bom.dependencies.map { it.ref } shouldBe listOf("pkg:generic/vulnlog@1.0.0", LIBRARY_REF)
             bom.dependencies.first().dependencies.map { it.ref } shouldBe listOf(LIBRARY_REF)
+        }
+
+        test("checkRootMatchesProductsOf accepts products that differ from the root purl in version only") {
+            val bom = bom().apply { metadata.component.purl = IMAGE_PURL }
+            val vexDocument =
+                tempfile().withProducts(
+                    "pkg:oci/vulnlog@sha256%3Aaaa?repository_url=ghcr.io%2Fvulnlog",
+                    "pkg:oci/vulnlog@sha256%3Abbb?repository_url=ghcr.io%2Fvulnlog",
+                )
+
+            shouldNotThrowAny { bom.checkRootMatchesProductsOf(vexDocument) }
+        }
+
+        test("checkRootMatchesProductsOf fails on products with another name or qualifier") {
+            val bom = bom().apply { metadata.component.purl = IMAGE_PURL }
+            val vexDocument =
+                tempfile().withProducts(
+                    "pkg:oci/vulnlog@sha256%3Aaaa?repository_url=ghcr.io%2Fvulnlog",
+                    "pkg:oci/vulnlog-cli@sha256%3Aaaa?repository_url=ghcr.io%2Fvulnlog",
+                    "pkg:oci/vulnlog@sha256%3Aaaa?repository_url=docker.io%2Fvulnlog",
+                )
+
+            val failure = shouldThrow<IllegalStateException> { bom.checkRootMatchesProductsOf(vexDocument) }
+
+            failure.message shouldContain "pkg:oci/vulnlog-cli@sha256%3Aaaa?repository_url=ghcr.io%2Fvulnlog"
+            failure.message shouldContain "pkg:oci/vulnlog@sha256%3Aaaa?repository_url=docker.io%2Fvulnlog"
+        }
+
+        test("writeBom writes a BOM that the CycloneDX schema accepts") {
+            val bom =
+                Bom().apply {
+                    metadata =
+                        Metadata().apply {
+                            component =
+                                Component().apply {
+                                    type = Component.Type.APPLICATION
+                                    name = "vulnlog"
+                                    purl = "pkg:generic/vulnlog@1.0.0"
+                                }
+                        }
+                }
+            val bomFile = tempfile()
+
+            bomFile.writeBom(bom, Version.VERSION_17)
+
+            JsonParser().parse(bomFile).metadata.component.purl shouldBe "pkg:generic/vulnlog@1.0.0"
+        }
+
+        test("writeBom fails on a BOM that violates the CycloneDX schema") {
+            val bom = bom(Component())
+            val bomFile = tempfile()
+
+            val failure = shouldThrow<IllegalStateException> { bomFile.writeBom(bom, Version.VERSION_17) }
+
+            failure.message shouldContain "violates the CycloneDX 1.7 schema"
         }
 
         test("licenseRootAs licenses the root component, not the document") {
@@ -126,6 +196,12 @@ class SbomTest :
             bom.dependencies.first().dependencies.map { it.ref } shouldBe listOf(LIBRARY_REF) + graalVmRefs
         }
 
+        test("addGraalVmComponentsOf fails when Native Image's SBOM lists no GraalVM components") {
+            val nativeImageBom = Bom().apply { components = mutableListOf(component("kotlin.jvm", "internal")) }
+
+            shouldThrow<IllegalStateException> { bom().addGraalVmComponentsOf(nativeImageBom) }
+        }
+
         test("replaceNativeImageComponentsWith swaps Syft's Native Image components for the native SBOM") {
             val scan =
                 Bom().apply {
@@ -143,5 +219,11 @@ class SbomTest :
             scan.components.map { it.bomRef } shouldBe listOf("apk", GENERATED_REF, LIBRARY_REF)
             scan.dependencies.map { it.ref } shouldBe listOf("apk", GENERATED_REF, LIBRARY_REF, "image")
             scan.dependencies.last().dependencies.map { it.ref } shouldBe listOf(GENERATED_REF)
+        }
+
+        test("replaceNativeImageComponentsWith fails when Syft found no Native Image components") {
+            val scan = Bom().apply { components = mutableListOf(scanned("apk", "apk-db-cataloger")) }
+
+            shouldThrow<IllegalStateException> { scan.replaceNativeImageComponentsWith(bom()) }
         }
     })
