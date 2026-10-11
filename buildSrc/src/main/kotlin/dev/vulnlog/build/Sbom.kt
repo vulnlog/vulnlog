@@ -12,8 +12,13 @@ import org.cyclonedx.model.Component
 import org.cyclonedx.model.Dependency
 import org.cyclonedx.model.License
 import org.cyclonedx.model.LicenseChoice
+import org.cyclonedx.model.LifecycleChoice
+import org.cyclonedx.model.Lifecycles
+import org.cyclonedx.model.OrganizationalEntity
+import org.cyclonedx.model.metadata.ToolInformation
 import org.cyclonedx.parsers.JsonParser
 import java.io.File
+import java.util.Date
 import java.util.TreeMap
 
 fun versionedPurl(
@@ -50,6 +55,8 @@ fun File.writeBom(
     bom: Bom,
     schema: Version,
 ) {
+    // The timestamp records the latest change to the SBOM data, and the post-processing changes it.
+    bom.metadata.timestamp = Date()
     writeText(BomGeneratorFactory.createJson(schema, bom).toJsonString())
     val violations = JsonParser().validate(this, schema)
     check(violations.isEmpty()) {
@@ -58,8 +65,27 @@ fun File.writeBom(
     }
 }
 
-fun Bom.licenseRootAs(spdxId: String) {
-    metadata.component.licenses = LicenseChoice().apply { addLicense(License().apply { id = spdxId }) }
+// The CISA minimum elements ask for the SBOM author, the generation context, and each component's producer, stated
+// as unknown when nothing names it. The CycloneDX plugin finds neither producer nor license for first-party components.
+fun Bom.attributeAuthorAndProducers(phase: LifecycleChoice.Phase) {
+    metadata.manufacturer = VULNLOG
+    metadata.lifecycles =
+        Lifecycles().apply { lifecycleChoice = listOf(LifecycleChoice().apply { this.phase = phase }) }
+    val root = metadata.component
+    val (firstParty, thirdParty) = components.partition { it.group != null && it.group == root.group }
+    (firstParty + root).forEach { component ->
+        component.manufacturer = VULNLOG
+        component.supplier = VULNLOG
+        component.licenses = LicenseChoice().apply { addLicense(License().apply { id = LICENSE }) }
+    }
+    thirdParty.filter { it.manufacturer == null }.forEach { it.manufacturer = UNKNOWN_PRODUCER }
+}
+
+// Syft leaves the image's packages unconnected to the image; a consumer walking the graph from the root misses them.
+fun Bom.connectOrphansToRoot() {
+    val dependedOn = dependencies.flatMap { it.dependencies.orEmpty() }.map { it.ref }.toSet()
+    val rootDependency = dependencies.single { it.ref == metadata.component.bomRef }
+    components.filter { it.bomRef !in dependedOn }.forEach { rootDependency.addDependency(Dependency(it.bomRef)) }
 }
 
 // SHA-256 alone identifies a file; the seven other algorithms only bloat the document.
@@ -78,6 +104,13 @@ fun Bom.addGraalVmComponentsOf(nativeImageBom: Bom) {
         dependencies.add(Dependency(component.bomRef))
         rootDependency.addDependency(Dependency(component.bomRef))
     }
+    addTools(
+        Component().apply {
+            type = Component.Type.APPLICATION
+            name = "Oracle GraalVM Native Image"
+            version = graalVm.single { it.group == "com.oracle" }.version
+        },
+    )
 }
 
 // Syft reads the native binary's libraries and their graph from Native Image's embedded SBOM, which misnames them.
@@ -91,7 +124,22 @@ fun Bom.replaceNativeImageComponentsWith(nativeBom: Bom) {
     components.addAll(nativeBom.components)
     dependencies.addAll(nativeBom.dependencies)
     dependencies.add(Dependency(metadata.component.bomRef).apply { addDependency(Dependency(application.bomRef)) })
+    addTools(*nativeBom.metadata.toolChoice?.components.orEmpty().toTypedArray())
 }
+
+private fun Bom.addTools(vararg tools: Component) {
+    metadata.toolChoice = (metadata.toolChoice ?: ToolInformation()).apply { components = components.orEmpty() + tools }
+}
+
+private const val LICENSE = "Apache-2.0"
+
+private val VULNLOG =
+    OrganizationalEntity().apply {
+        name = "Vulnlog"
+        urls = listOf("https://vulnlog.dev")
+    }
+
+private val UNKNOWN_PRODUCER = OrganizationalEntity().apply { name = "unknown" }
 
 private const val NATIVE_IMAGE_CATALOGER = "graalvm-native-image-cataloger"
 

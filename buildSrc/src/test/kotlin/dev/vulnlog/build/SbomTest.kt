@@ -9,14 +9,18 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.engine.spec.tempfile
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import org.cyclonedx.Version
 import org.cyclonedx.model.Bom
 import org.cyclonedx.model.Component
 import org.cyclonedx.model.Dependency
 import org.cyclonedx.model.Hash
+import org.cyclonedx.model.LifecycleChoice
 import org.cyclonedx.model.Metadata
+import org.cyclonedx.model.OrganizationalEntity
 import org.cyclonedx.model.Property
+import org.cyclonedx.model.metadata.ToolInformation
 import org.cyclonedx.parsers.JsonParser
 import java.io.File
 
@@ -148,7 +152,9 @@ class SbomTest :
 
             bomFile.writeBom(bom, Version.VERSION_17)
 
-            JsonParser().parse(bomFile).metadata.component.purl shouldBe "pkg:generic/vulnlog@1.0.0"
+            val written = JsonParser().parse(bomFile)
+            written.metadata.component.purl shouldBe "pkg:generic/vulnlog@1.0.0"
+            written.metadata.timestamp shouldNotBe null
         }
 
         test("writeBom fails on a BOM that violates the CycloneDX schema") {
@@ -160,13 +166,58 @@ class SbomTest :
             failure.message shouldContain "violates the CycloneDX 1.7 schema"
         }
 
-        test("licenseRootAs licenses the root component, not the document") {
+        test("attributeAuthorAndProducers names Vulnlog as SBOM author and records the lifecycle phase") {
             val bom = bom()
 
-            bom.licenseRootAs("Apache-2.0")
+            bom.attributeAuthorAndProducers(LifecycleChoice.Phase.BUILD)
 
-            bom.metadata.component.licenses.licenses.map { it.id } shouldBe listOf("Apache-2.0")
+            bom.metadata.manufacturer.name shouldBe "Vulnlog"
+            bom.metadata.manufacturer.urls shouldBe listOf("https://vulnlog.dev")
+            bom.metadata.lifecycles.lifecycleChoice.map { it.phase } shouldBe listOf(LifecycleChoice.Phase.BUILD)
+        }
+
+        test("attributeAuthorAndProducers makes Vulnlog producer, supplier and licensor of the root and its group") {
+            val bom = bom(component("dev.vulnlog", "lib"), component("org.example", "library"))
+            bom.metadata.component.group = "dev.vulnlog"
+
+            bom.attributeAuthorAndProducers(LifecycleChoice.Phase.BUILD)
+
+            val (lib, library) = bom.components
+            listOf(bom.metadata.component, lib).forEach {
+                it.manufacturer.name shouldBe "Vulnlog"
+                it.supplier.name shouldBe "Vulnlog"
+                it.licenses.licenses.map { license -> license.id } shouldBe listOf("Apache-2.0")
+            }
+            listOf(library.manufacturer.name, library.supplier, library.licenses) shouldBe listOf("unknown", null, null)
             bom.metadata.licenses shouldBe null
+        }
+
+        test("attributeAuthorAndProducers marks missing producers unknown and keeps named ones, like in Syft's scan") {
+            val graalVm = component("com.oracle", "Oracle GraalVM")
+            graalVm.manufacturer = OrganizationalEntity().apply { name = "Oracle" }
+            val scan = bom(scanned("apk", "apk-db-cataloger"), graalVm)
+
+            scan.attributeAuthorAndProducers(LifecycleChoice.Phase.POST_BUILD)
+
+            scan.metadata.component.manufacturer.name shouldBe "Vulnlog"
+            scan.components.map { it.manufacturer.name } shouldBe listOf("unknown", "Oracle")
+        }
+
+        test("connectOrphansToRoot makes the root depend on every component nothing else depends on") {
+            val scan =
+                Bom().apply {
+                    metadata = Metadata().apply { component = Component().apply { bomRef = "image" } }
+                    components = mutableListOf(scanned("apk-tools", "apk"), scanned("zlib", "apk"), scanned("os", "os"))
+                    dependencies =
+                        mutableListOf(
+                            Dependency("image"),
+                            Dependency("apk-tools").apply { addDependency(Dependency("zlib")) },
+                        )
+                }
+
+            scan.connectOrphansToRoot()
+
+            scan.dependencies.first().dependencies.map { it.ref } shouldBe listOf("apk-tools", "os")
         }
 
         test("keepSha256HashesOnly drops every other algorithm and keeps components without hashes") {
@@ -198,6 +249,19 @@ class SbomTest :
             bom.dependencies.first().dependencies.map { it.ref } shouldBe listOf(LIBRARY_REF) + graalVmRefs
         }
 
+        test("addGraalVmComponentsOf names Native Image with the GraalVM version as SBOM tool") {
+            val bom = bom()
+            val nativeImageBom =
+                Bom().apply {
+                    components = mutableListOf(component("com.oracle", "Oracle GraalVM").apply { version = "25.0.4" })
+                }
+
+            bom.addGraalVmComponentsOf(nativeImageBom)
+
+            bom.metadata.toolChoice.components.map { "${it.name} ${it.version}" } shouldBe
+                listOf("Oracle GraalVM Native Image 25.0.4")
+        }
+
         test("addGraalVmComponentsOf fails when Native Image's SBOM lists no GraalVM components") {
             val nativeImageBom = Bom().apply { components = mutableListOf(component("kotlin.jvm", "internal")) }
 
@@ -221,6 +285,26 @@ class SbomTest :
             scan.components.map { it.bomRef } shouldBe listOf("apk", GENERATED_REF, LIBRARY_REF)
             scan.dependencies.map { it.ref } shouldBe listOf("apk", GENERATED_REF, LIBRARY_REF, "image")
             scan.dependencies.last().dependencies.map { it.ref } shouldBe listOf(GENERATED_REF)
+        }
+
+        test("replaceNativeImageComponentsWith adds the native SBOM's tools to Syft's") {
+            fun tool(name: String) =
+                ToolInformation().apply { components = listOf(Component().apply { this.name = name }) }
+            val scan =
+                Bom().apply {
+                    metadata =
+                        Metadata().apply {
+                            component = Component().apply { bomRef = "image" }
+                            toolChoice = tool("syft")
+                        }
+                    components = mutableListOf(scanned("misnamed", "graalvm-native-image-cataloger"))
+                    dependencies = mutableListOf(Dependency("misnamed"))
+                }
+            val nativeBom = bom().apply { metadata.toolChoice = tool("cyclonedx-gradle-plugin") }
+
+            scan.replaceNativeImageComponentsWith(nativeBom)
+
+            scan.metadata.toolChoice.components.map { it.name } shouldBe listOf("syft", "cyclonedx-gradle-plugin")
         }
 
         test("replaceNativeImageComponentsWith fails when Syft found no Native Image components") {
