@@ -140,6 +140,36 @@ vulnerabilities:
       The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
       The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
 
+  - id: CVE-2026-89407
+    description: jackson-core `NumberInput.looksLikeValidNumber()` backtracks in quadratic time on long digit strings.
+    aliases: [GHSA-p6pp-m3f8-5c89]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+    reports:
+      - reporter: github-dependabot
+        at: 2026-10-12
+        vuln_ids: [GHSA-p6pp-m3f8-5c89]
+    tags:
+      - cli
+      - gradle plugin
+      - container
+    analysis: >-
+      The check runs only when jackson-databind turns a string into a number field or a `StringNode` into a number.
+      Vulnlog's DTOs have no number fields, and Vulnlog converts no tree node to a number.
+    analyzed_at: 2026-10-12
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.17.0
+      at: 2026-08-23
+      ref: "https://github.com/vulnlog/vulnlog/pull/264"
+      note: Updated Jackson 3 from 3.2.0 to 3.2.2.
+    comment: Build-only Jackson 2 (cyclonedx-gradle-plugin 2.22.2) awaits an upstream fix.
+
   - id: CVE-2026-89425
     description: >-
       jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.
@@ -170,9 +200,7 @@ vulnerabilities:
       at: 2026-09-29
       ref: "https://github.com/vulnlog/vulnlog/pull/297"
       note: Updated Jackson 3 from 3.2.2 to 3.2.3.
-    comment: >-
-      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
-      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    comment: Build-only Jackson 2 (gradle-node-plugin 2.14.2, cyclonedx-gradle-plugin 2.22.2) awaits upstream fixes.
 
   - id: CVE-2026-91777
     description: >-
@@ -203,9 +231,7 @@ vulnerabilities:
       at: 2026-09-29
       ref: "https://github.com/vulnlog/vulnlog/pull/297"
       note: Updated Jackson 3 from 3.2.2 to 3.2.3.
-    comment: >-
-      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
-      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    comment: Build-only Jackson 2 (gradle-node-plugin 2.14.2, cyclonedx-gradle-plugin 2.22.2) awaits upstream fixes.
 
   - id: CVE-2026-91776
     description: >-
@@ -236,9 +262,7 @@ vulnerabilities:
       at: 2026-09-29
       ref: "https://github.com/vulnlog/vulnlog/pull/297"
       note: Updated Jackson 3 from 3.2.2 to 3.2.3.
-    comment: >-
-      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
-      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+    comment: Build-only Jackson 2 (gradle-node-plugin 2.14.2, cyclonedx-gradle-plugin 2.22.2) awaits upstream fixes.
 
   - id: CVE-2026-83557
     description: >-
