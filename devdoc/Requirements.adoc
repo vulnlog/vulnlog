@@ -1,0 +1,21 @@
+=== Requirements
+
+==== Functional
+
+1. The system shall allow users to add newly reported vulnerabilities from any source, such as SCA scanners, security advisories or manual reports.
+2. The system shall compare recorded vulnerabilities with current scanner findings.
+3. The system shall allow users to record the analysis summary, verdict and justification of each reported software vulnerability.
+4. The system shall help users keep their analyses up to date, for example by pointing out decisions that need to be revisited.
+5. The system shall check its data for errors and inconsistencies.
+6. The system shall generate reports showing whether, and how, each vulnerability affects a release of the software project.
+7. The system shall generate suppression (ignore) files for vulnerability scanners.
+8. The system shall generate VEX documents from the recorded verdicts.
+9. The system shall allow data from several projects or products to be combined.
+10. The system shall provide machine-readable access to its data, so that other tools can read and update analyses.
+
+==== Non-Functional
+
+1. The system shall store its data in an open, human-readable format that is independent of any specific vulnerability scanner.
+2. The system shall be extensible with new formats and standards.
+3. The system shall integrate into developer workflows and continuous integration (CI) pipelines.
+4. The system shall be fast enough not to slow down developer workflows or CI pipelines.
