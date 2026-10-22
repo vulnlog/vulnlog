@@ -1,0 +1,129 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[section-building-block-view]]
+
+
+== Building Block View
+// Static decomposition of the system into building blocks and their relationships, presented
+// as a hierarchy of increasing detail (Level 1..n). Each level is a whitebox whose parts are
+// the black boxes detailed at the next level down.
+
+
+
+
+=== Whitebox Overall System
+// Level 1: the whole system shown as one whitebox. Show the top-level building blocks inside
+// the Vulnlog boundary, their responsibilities, and their relationships to each other and to
+// the external neighbours.
+
+image::Vulnlog-Building-Blocks.drawio.svg[alt="Whitebox of Vulnlog showing the cli-app, lib and gradle-plugin building blocks and the files they read and write."]
+
+Motivation::
+// Why this particular decomposition into building blocks? State the driving structure and rationale.
+Vulnlog is decomposed into three building blocks that mirror its build modules: `cli-app` (the command-line entry point used by engineers), `gradle-plugin` (the entry point for build tools and CI pipelines), and `lib` (the core library holding the analysis logic). Both entry points delegate to `lib`, which reads the Vulnlog YAML file (the single source of truth) and produces the generated artifacts: a vulnerability report, SCA suppression files and the planned VEX files. The internal structure of `lib` is detailed at Level 2.
+
+
+Contained Building Blocks::
+// One short black-box description per Level 1 building block (cli-app, gradle-plugin, lib).
+_<Description of contained building block (black boxes)>_
+
+Important Interfaces::
+// Interfaces between the building blocks and to the outside that are needed to understand the
+// system (e.g. the Vulnlog YAML file format, the CLI, the Gradle plugin API).
+_<Description of important interfaces>_
+
+
+
+
+==== <Name black box 1>
+// One subsection per contained building block: purpose/responsibility and interface(s), plus
+// optionally quality characteristics, code location, fulfilled requirements and open issues.
+
+
+
+
+_<Purpose/Responsibility>_
+
+_<Interface(s)>_
+
+_<(Optional) Quality/Performance Characteristics>_
+
+_<(Optional) Directory/File Location>_
+
+_<(Optional) Fulfilled Requirements>_
+
+_<(optional) Open Issues/Problems/Risks>_
+
+
+
+
+==== <Name black box 2>
+
+_<black box template>_
+
+==== <Name black box n>
+
+_<black box template>_
+
+
+==== <Name interface 1>
+
+...
+
+==== <Name interface m>
+
+
+
+=== Level 2
+// Open the Level 1 building blocks that need more detail as whiteboxes, showing their internal
+// parts. For Vulnlog this is mainly `lib` (e.g. parsing, analysis core, domain model,
+// generators). Only decompose what is architecturally relevant.
+
+
+
+
+==== White Box _<building block 1>_
+
+
+
+
+_<white box template>_
+
+==== White Box _<building block 2>_
+
+
+_<white box template>_
+
+...
+
+==== White Box _<building block m>_
+
+
+_<white box template>_
+
+
+
+=== Level 3
+// Further decomposition of selected Level 2 building blocks, only where the extra detail adds
+// real value.
+
+
+
+
+==== White Box <_building block x.1_>
+
+
+
+
+_<white box template>_
+
+
+==== White Box <_building block x.2_>
+
+_<white box template>_
+
+
+
+==== White Box <_building block y.1_>
+
+_<white box template>_
