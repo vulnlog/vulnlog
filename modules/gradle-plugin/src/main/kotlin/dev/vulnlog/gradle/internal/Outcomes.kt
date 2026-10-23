@@ -20,6 +20,7 @@ import dev.vulnlog.lib.render.renderCopyFailure
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderInputFailure
+import dev.vulnlog.lib.render.renderInvalidXmlNote
 import dev.vulnlog.lib.render.renderNotFormatted
 import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
@@ -45,10 +46,13 @@ fun failure(
     }
 }
 
-/** This and the report overloads keep their wrappers' plain [GradleException], unlike OpenVEX: the types are open. */
+/** XML representation errors are invalid input; existing filter failures keep their plain wrapper. */
 fun failure(failed: SuppressionOutcome.Failed): GradleException =
     when (failed) {
         is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
+
+        is SuppressionOutcome.InvalidXmlNote ->
+            InvalidUserDataException(formatFailureMessage(listOf(renderInvalidXmlNote(failed))))
 
         // The task writes one file per reporter, so it never asks for a single file.
         is SuppressionOutcome.SeveralReporters -> error("vulnlogSuppress never targets a single file")

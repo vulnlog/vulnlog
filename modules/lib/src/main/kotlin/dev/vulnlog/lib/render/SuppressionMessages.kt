@@ -17,7 +17,7 @@ import kotlin.reflect.KClass
 
 fun renderSuppressionMessages(outcome: SuppressionOutcome): List<Message> =
     when (outcome) {
-        is FilterRejected -> emptyList()
+        is FilterRejected, is SuppressionOutcome.InvalidXmlNote -> emptyList()
 
         is SuppressionOutcome.SeveralReporters, is SuppressionOutcome.Generated -> collectedMessages(outcome)
 
@@ -36,6 +36,8 @@ fun renderSuppressionFailure(
     when (failed) {
         is FilterRejected -> renderFilterProblems(failed.problems)
 
+        is SuppressionOutcome.InvalidXmlNote -> listOf(renderInvalidXmlNote(failed))
+
         is SuppressionOutcome.SeveralReporters -> {
             val names = failed.reporters.map { it.canonical() }.sorted()
             listOf(
@@ -46,6 +48,20 @@ fun renderSuppressionFailure(
             )
         }
     }
+
+fun renderInvalidXmlNote(failed: SuppressionOutcome.InvalidXmlNote): Failure {
+    val character =
+        "U+" +
+            failed.codePoint
+                .toString(16)
+                .uppercase()
+                .padStart(4, '0')
+    return Failure(
+        "cannot encode analysis for ${failed.id.canonical()} as Dependency-Check XML: " +
+            "character $character is not allowed in XML 1.0",
+        "replace the character in analysis, or select the generic suppression format",
+    )
+}
 
 fun renderSuppressionWritten(
     target: String,
@@ -93,6 +109,7 @@ private fun formatName(format: SuppressionFormat): String =
         SuppressionFormat.Trivy -> "trivy"
         SuppressionFormat.Snyk -> "snyk"
         SuppressionFormat.CargoAudit -> "cargo-audit"
+        SuppressionFormat.DependencyCheck -> "dependency-check"
     }
 
 private fun requiredIdTypes(format: SuppressionFormat): String =

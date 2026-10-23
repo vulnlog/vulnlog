@@ -27,6 +27,11 @@ sealed interface SuppressionFormat {
             get() = setOf(VulnId.Snyk::class)
     }
 
+    data object DependencyCheck : SuppressionFormat {
+        override val vulnIdTypes: Set<KClass<out VulnId>>
+            get() = setOf(VulnId.Cve::class)
+    }
+
     data object CargoAudit : SuppressionFormat {
         override val vulnIdTypes: Set<KClass<out VulnId>>
             get() = setOf(VulnId.RustSec::class)

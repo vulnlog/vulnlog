@@ -78,6 +78,21 @@ private fun SuppressionOutcome.files(): List<SuppressionFile> = shouldBeInstance
 class GenerateSuppressionsTest :
     FunSpec({
 
+        test("dependency-check auto generates native XML and generic still generates JSON") {
+            val file = fileWith(entry("CVE-2026-0001", report(ReporterType.DEPENDENCY_CHECK, expiresAt = TODAY)))
+
+            val native = generate(file).files().single()
+            val generic = generate(file, format = SuppressionFormatRequest.Generic).files().single()
+
+            native.fileName shouldBe "dependency-check-suppressions.xml"
+            native.content.contains("<cve>CVE-2026-0001</cve>") shouldBe true
+            native.content.contains("until=\"2026-04-03Z\"") shouldBe true
+            native.content.contains("<notes>not reachable</notes>") shouldBe true
+            generic.fileName shouldBe "dependency-check.generic.json"
+            generic.list.format shouldBe SuppressionFormat.Generic(ReporterType.DEPENDENCY_CHECK)
+            generic.content shouldBe SuppressionEncoder.encode(generic.list)
+        }
+
         test("writes one encoded file per reporter the input names") {
             val file = fileWith(entry("CVE-2026-0001", report(ReporterType.TRIVY), report(ReporterType.SNYK, SNYK_ID)))
 
