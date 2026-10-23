@@ -38,7 +38,7 @@ class SuppressionListsTest :
 
         context("formats") {
 
-            test("trivy, snyk and cargo-audit have a native format, other reporters none") {
+            test("supported scanners have a native format, other reporters none") {
                 val reporters = ReporterType.entries
 
                 val native = reporters.associateWith(::nativeSuppressionFormat).filterValues { it != null }
@@ -46,6 +46,7 @@ class SuppressionListsTest :
                 native shouldBe
                     mapOf(
                         ReporterType.CARGO_AUDIT to SuppressionFormat.CargoAudit,
+                        ReporterType.DEPENDENCY_CHECK to SuppressionFormat.DependencyCheck,
                         ReporterType.SNYK to SuppressionFormat.Snyk,
                         ReporterType.TRIVY to SuppressionFormat.Trivy,
                     )
@@ -65,13 +66,20 @@ class SuppressionListsTest :
                         SuppressionFormat.Trivy,
                         SuppressionFormat.Snyk,
                         SuppressionFormat.CargoAudit,
+                        SuppressionFormat.DependencyCheck,
                         SuppressionFormat.Generic(ReporterType.GITHUB_DEPENDABOT),
                     )
 
                 val names = formats.map(::suppressionFileName)
 
                 names shouldContainExactly
-                    listOf(".trivyignore.yaml", ".snyk", "audit.toml", "github-dependabot.generic.json")
+                    listOf(
+                        ".trivyignore.yaml",
+                        ".snyk",
+                        "audit.toml",
+                        "dependency-check-suppressions.xml",
+                        "github-dependabot.generic.json",
+                    )
             }
         }
 
@@ -133,6 +141,33 @@ class SuppressionListsTest :
                     buildSuppressionLists(included, mapOf(ReporterType.CARGO_AUDIT to SuppressionFormat.CargoAudit))
 
                 built.lists.single().entries shouldBe setOf(SuppressionEntry(rustSec))
+            }
+
+            test("dependency-check keeps CVE details and excludes every other id type") {
+                val ghsa = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")
+                val snyk = VulnId.Snyk("SNYK-JAVA-001")
+                val rustSec = VulnId.RustSec("RUSTSEC-2026-0001")
+                val included =
+                    mapOf(
+                        ReporterType.DEPENDENCY_CHECK to
+                            listOf(CVE, ghsa, snyk, rustSec).map {
+                                suppressed(it, ReporterType.DEPENDENCY_CHECK, EXPIRY, "reviewed")
+                            },
+                    )
+
+                val built =
+                    buildSuppressionLists(
+                        included,
+                        mapOf(
+                            ReporterType.DEPENDENCY_CHECK to SuppressionFormat.DependencyCheck,
+                        ),
+                    )
+
+                built.lists.single().entries shouldBe setOf(SuppressionEntry(CVE, EXPIRY, "reviewed"))
+                built.exclusions shouldContainExactly
+                    listOf(ghsa, snyk, rustSec).map {
+                        SuppressionExclusion.UnsupportedIdType(it, SuppressionFormat.DependencyCheck)
+                    }
             }
 
             test("an id the format cannot hold is left out and reported once") {

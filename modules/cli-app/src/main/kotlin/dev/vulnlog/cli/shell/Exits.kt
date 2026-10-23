@@ -28,6 +28,7 @@ fun exitCode(failed: SuppressionOutcome.Failed): ExitCode =
     when (failed) {
         is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
         is SuppressionOutcome.SeveralReporters -> ExitCode.GENERAL_ERROR
+        is SuppressionOutcome.InvalidXmlNote -> ExitCode.VALIDATION_ERROR
     }
 
 fun exitCode(failed: ImpactReportOutcome.Failed): ExitCode =
