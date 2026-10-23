@@ -26,6 +26,60 @@ class VulnlogSuppressTaskTest :
 
         context("happy path") {
 
+            test("invalid XML notes fail with a controlled diagnostic before writing a suppression file") {
+                val yaml =
+                    vulnlogDocument(reporter = "dependency-check")
+                        .replace("    verdict:", "    analysis: \"before\\uFFFFafter\"\n    verdict:")
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to yaml)
+
+                val result = runner(dir, "vulnlogSuppress").buildAndFail()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "character U+FFFF is not allowed in XML 1.0"
+                dir.resolve("build/vulnlog/suppressions/dependency-check-suppressions.xml").exists() shouldBe false
+            }
+
+            test("dependency-check writes native XML with the default format") {
+                val dir =
+                    gradleProject(
+                        FILES_FROM_TEST_YAML,
+                        "test.vl.yaml" to vulnlogDocument(reporter = "dependency-check"),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                val outputDir = dir.resolve("build/vulnlog/suppressions")
+                outputDir.resolve("dependency-check-suppressions.xml").readText() shouldContain
+                    "<cve>CVE-2026-1234</cve>"
+                outputDir.resolve("dependency-check.generic.json").exists() shouldBe false
+            }
+
+            test("dependency-check generic format still writes JSON") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                suppress {
+                                    format = "generic"
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(reporter = "dependency-check"),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                val outputDir = dir.resolve("build/vulnlog/suppressions")
+                outputDir.resolve("dependency-check.generic.json").readText() shouldContain
+                    "\"id\" : \"CVE-2026-1234\""
+                outputDir.resolve("dependency-check-suppressions.xml").exists() shouldBe false
+            }
+
             test("writes a suppression file to the default output directory") {
                 val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to vulnlogDocument())
 

@@ -17,6 +17,7 @@ fun nativeSuppressionFormat(reporter: ReporterType): SuppressionFormat? =
         ReporterType.TRIVY -> SuppressionFormat.Trivy
         ReporterType.SNYK -> SuppressionFormat.Snyk
         ReporterType.CARGO_AUDIT -> SuppressionFormat.CargoAudit
+        ReporterType.DEPENDENCY_CHECK -> SuppressionFormat.DependencyCheck
         else -> null
     }
 
@@ -31,6 +32,7 @@ fun suppressionFileName(format: SuppressionFormat): String =
         SuppressionFormat.Trivy -> ".trivyignore.yaml"
         SuppressionFormat.Snyk -> ".snyk"
         SuppressionFormat.CargoAudit -> "audit.toml"
+        SuppressionFormat.DependencyCheck -> "dependency-check-suppressions.xml"
     }
 
 /**
@@ -79,6 +81,9 @@ private fun entry(
 ): SuppressionEntry =
     when (format) {
         SuppressionFormat.CargoAudit -> SuppressionEntry(suppression.id)
-        is SuppressionFormat.Generic, SuppressionFormat.Trivy, SuppressionFormat.Snyk ->
-            SuppressionEntry(suppression.id, suppression.expiresAt, suppression.analysis)
+        is SuppressionFormat.Generic,
+        SuppressionFormat.Trivy,
+        SuppressionFormat.Snyk,
+        SuppressionFormat.DependencyCheck,
+        -> SuppressionEntry(suppression.id, suppression.expiresAt, suppression.analysis)
     }

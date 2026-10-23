@@ -23,12 +23,27 @@ private const val LONG_REASON =
         "so the deserialization gadget cannot be triggered."
 
 /**
- * Pins the bytes of the two YAML suppression formats. Both are emitted by
+ * Pins the bytes of the native suppression formats. The YAML formats are emitted by
  * [dev.vulnlog.lib.document.yaml.CanonicalYaml], so this also guards the canonical style against drift in
  * indentation, quoting and block folding.
  */
 class SuppressionGoldenTest :
     FunSpec({
+
+        test("Dependency-Check suppression file matches golden bytes") {
+            val list =
+                SuppressionList(
+                    SuppressionFormat.DependencyCheck,
+                    setOf(
+                        SuppressionEntry(VulnId.Cve("CVE-2026-1111"), EXPIRY, SHORT_REASON),
+                        SuppressionEntry(VulnId.Cve("CVE-2026-2222"), reason = "Used only for tests & build tooling."),
+                    ),
+                )
+
+            val actual = SuppressionEncoder.encode(list)
+
+            actual shouldBe golden("dependency-check-suppressions.xml", actual)
+        }
 
         test("Trivy suppression file matches golden bytes") {
             val list =

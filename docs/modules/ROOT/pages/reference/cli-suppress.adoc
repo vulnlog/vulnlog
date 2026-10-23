@@ -107,6 +107,26 @@ verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
 
 == Output examples
 
+.Generate native OWASP Dependency-Check suppressions (the default format is auto)
+[source]
+----
+vulnlog suppress full-example.vl.yaml --reporter dependency-check
+Wrote: /path/to/dependency-check-suppressions.xml
+----
+
+.Generated Dependency-Check suppression file
+[source,xml]
+----
+include::{examplesdir}/suppress/Dependency Check Suppression Example.xml[]
+----
+
+Dependency-Check output includes CVE identifiers only.
+The analysis is written as escaped XML text in `notes`; `suppress.expires_at` supplies the optional `until` date.
+If analysis contains a character XML 1.0 cannot represent (such as NUL), generation fails before writing any suppression files and identifies the character by code point.
+Replace that character in the analysis, or select the generic JSON format to preserve it.
+The `vulnlogSuppress` Gradle task generates the same XML file with its default `auto` format.
+Use `--format generic` to keep generating `dependency-check.generic.json` instead.
+
 .Generated Snyk suppression file
 [source,yaml]
 ----
