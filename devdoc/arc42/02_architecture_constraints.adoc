@@ -3,9 +3,10 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-architecture-constraints]]
 == Architecture Constraints
 
-Vulnlog shall be:
+[options="header",cols="1,2"]
+|===
+|Constraint |Background
 
-- platform-independent and should run on the major operating systems (Linux, macOS and Windows)
-- integrated with the Gradle build tool
-- runnable from the command line
-- developed under a liberal open-source license
+|External formats
+|The generated files follow formats defined by others, such as scanner suppression files and VEX. Vulnlog cannot change these formats.
+|===
