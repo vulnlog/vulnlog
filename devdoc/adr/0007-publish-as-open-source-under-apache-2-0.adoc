@@ -1,0 +1,19 @@
+[#adr-7]
+= ADR-7: Publish as Open Source under Apache 2.0
+
+Status:: Accepted
+
+Context:: Vulnlog is a community project and should be usable by everyone.
+
+Decision:: Vulnlog is open source under the Apache 2.0 licence.
+Apache 2.0 is the common licence in the JVM ecosystem.
+
+Alternatives::
+* MIT: equally suitable for Vulnlog, but less common in the JVM ecosystem.
+* GPL: restricts the use in commercial products.
+
+Positive Consequences::
+* Anyone can use Vulnlog, including in commercial projects.
+
+Negative Consequences::
+* All dependencies must have a compatible licence.

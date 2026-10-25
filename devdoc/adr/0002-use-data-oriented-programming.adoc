@@ -1,0 +1,18 @@
+[#adr-2]
+= ADR-2: Use Data-Oriented Programming
+
+Status:: Accepted
+
+Context:: Vulnlog reads one format and generates many others. New formats appear often.
+
+Decision:: Vulnlog follows a data-oriented programming (DOP) approach. A pure core is separated from the I/O shell.
+
+Alternatives::
+* Object-oriented domain model: behaviour and data are mixed, which makes the core harder to test in isolation.
+
+Positive Consequences::
+* The core is easy to unit test and to extend.
+* The same input always produces the same output.
+
+Negative Consequences::
+* Mapping code is needed between the file format and the domain model.

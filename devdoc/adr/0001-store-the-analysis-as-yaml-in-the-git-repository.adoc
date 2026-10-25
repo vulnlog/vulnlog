@@ -1,0 +1,23 @@
+[#adr-1]
+= ADR-1: Store the Analysis as YAML in the Git Repository
+
+Status:: Accepted
+
+Context:: The analysis of vulnerabilities needs a single source of truth. It must be close to the code and easy to review.
+
+Decision:: The analysis is stored in a YAML file in the Git repository of the software project.
+YAML is well known by developers and DevOps engineers from cloud and Kubernetes configuration.
+
+Alternatives::
+* A vulnerability management platform: needs a server and is separated from the code.
+* Scanner ignore files: bound to one scanner and cannot hold an analysis.
+* TOML: a good alternative, but less known among developers and DevOps engineers.
+* JSON: primarily a machine-to-machine format, not intended to be written by hand.
+
+Positive Consequences::
+* Changes are reviewed in pull requests and have a history.
+* No database or server is needed.
+
+Negative Consequences::
+* There is no graphical user interface. Users edit YAML by hand.
+* Large files can cause merge conflicts.

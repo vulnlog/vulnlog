@@ -2,3 +2,19 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-design-decisions]]
 == Architecture Decisions
+
+The decisions are ordered from the most to the least important.
+
+include::../adr/0001-store-the-analysis-as-yaml-in-the-git-repository.adoc[leveloffset=+2]
+
+include::../adr/0002-use-data-oriented-programming.adoc[leveloffset=+2]
+
+include::../adr/0003-provide-a-cli-tool-for-linux-macos-and-windows.adoc[leveloffset=+2]
+
+include::../adr/0004-compile-to-a-native-binary.adoc[leveloffset=+2]
+
+include::../adr/0005-provide-a-gradle-plugin.adoc[leveloffset=+2]
+
+include::../adr/0006-implement-in-kotlin-on-the-jvm.adoc[leveloffset=+2]
+
+include::../adr/0007-publish-as-open-source-under-apache-2-0.adoc[leveloffset=+2]

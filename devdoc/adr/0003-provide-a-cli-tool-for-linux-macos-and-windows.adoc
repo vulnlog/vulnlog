@@ -1,0 +1,20 @@
+[#adr-3]
+= ADR-3: Provide a CLI Tool for Linux, macOS and Windows
+
+Status:: Accepted
+
+Context:: Vulnlog runs on developer machines and in CI pipelines.
+
+Decision:: Vulnlog is a CLI tool that runs on the major operating systems.
+
+Alternatives::
+* A web service: needs hosting and operation.
+* A CI-specific integration only, such as a GitHub Action: excludes local use and other CI systems.
+
+Positive Consequences::
+* Vulnlog runs locally and in any CI pipeline.
+* No server is needed.
+
+Negative Consequences::
+* Every release is built for three operating systems.
+* There is no central view across several projects.
