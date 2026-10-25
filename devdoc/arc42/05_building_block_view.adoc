@@ -1,129 +1,82 @@
 ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-building-block-view]]
-
-
 == Building Block View
-// Static decomposition of the system into building blocks and their relationships, presented
-// as a hierarchy of increasing detail (Level 1..n). Each level is a whitebox whose parts are
-// the black boxes detailed at the next level down.
-
-
-
 
 === Whitebox Overall System
-// Level 1: the whole system shown as one whitebox. Show the top-level building blocks inside
-// the Vulnlog boundary, their responsibilities, and their relationships to each other and to
-// the external neighbours.
 
-image::Vulnlog-Building-Blocks.drawio.svg[alt="Whitebox of Vulnlog showing the cli-app, lib and gradle-plugin building blocks and the files they read and write."]
+image::Vulnlog-Building-Blocks.drawio.svg[alt="Whitebox of Vulnlog showing the cli-app, gradle-plugin, lib and lib-domain building blocks and the files they read and write."]
 
-Motivation::
-// Why this particular decomposition into building blocks? State the driving structure and rationale.
-Vulnlog is decomposed into three building blocks that mirror its build modules: `cli-app` (the command-line entry point used by engineers), `gradle-plugin` (the entry point for build tools and CI pipelines), and `lib` (the core library holding the analysis logic). Both entry points delegate to `lib`, which reads the Vulnlog YAML file (the single source of truth) and produces the generated artifacts: a vulnerability report, SCA suppression files and the planned VEX files. The internal structure of `lib` is detailed at Level 2.
+The building blocks mirror the Gradle modules.
+`cli-app` and `gradle-plugin` are thin entry points.
+Both delegate to `lib`.
+`lib` builds on `lib-domain`.
 
+[options="header",cols="1,3"]
+|===
+|Building Block |Responsibility
 
-Contained Building Blocks::
-// One short black-box description per Level 1 building block (cli-app, gradle-plugin, lib).
-_<Description of contained building block (black boxes)>_
+|`cli-app`
+|The command-line entry point for engineers.
 
-Important Interfaces::
-// Interfaces between the building blocks and to the outside that are needed to understand the
-// system (e.g. the Vulnlog YAML file format, the CLI, the Gradle plugin API).
-_<Description of important interfaces>_
+|`gradle-plugin`
+|The entry point for build tools and CI pipelines.
 
+|`lib`
+|The use cases, file I/O, parsing and the generation of all artefacts.
 
-
-
-==== <Name black box 1>
-// One subsection per contained building block: purpose/responsibility and interface(s), plus
-// optionally quality characteristics, code location, fulfilled requirements and open issues.
-
-
-
-
-_<Purpose/Responsibility>_
-
-_<Interface(s)>_
-
-_<(Optional) Quality/Performance Characteristics>_
-
-_<(Optional) Directory/File Location>_
-
-_<(Optional) Fulfilled Requirements>_
-
-_<(optional) Open Issues/Problems/Risks>_
-
-
-
-
-==== <Name black box 2>
-
-_<black box template>_
-
-==== <Name black box n>
-
-_<black box template>_
-
-
-==== <Name interface 1>
-
-...
-
-==== <Name interface m>
-
-
+|`lib-domain`
+|The domain model and the pure domain logic.
+|===
 
 === Level 2
-// Open the Level 1 building blocks that need more detail as whiteboxes, showing their internal
-// parts. For Vulnlog this is mainly `lib` (e.g. parsing, analysis core, domain model,
-// generators). Only decompose what is architecturally relevant.
 
+The project follows a data-oriented programming (DOP) approach.
 
+==== White Box `lib-domain`
 
+[options="header",cols="1,3"]
+|===
+|Package |Responsibility
 
-==== White Box _<building block 1>_
+|`core`
+|Contains pure functions. This code has a focus on clarity and should be free of side effects.
 
+|`model`
+|Contains data classes. These classes have no dependencies outside the module.
 
+|`finding`
+|Contains validation and format findings.
+|===
 
+==== White Box `lib`
 
-_<white box template>_
+[options="header",cols="1,3"]
+|===
+|Package |Responsibility
 
-==== White Box _<building block 2>_
+|`app`
+|Contains the use cases. Both entry points call them.
 
+|`document`
+|Contains the parsing, the DTOs and the mappings. It acts as a bridge between I/O operations and the `core` logic.
 
-_<white box template>_
+|`codec`
+|Contains one generator per output format.
 
-...
+|`io`
+|Reads input files and writes output files.
 
-==== White Box _<building block m>_
+|`render`
+|Turns results into messages for the CLI and the Gradle plugin.
+|===
 
+==== White Box `cli-app`
 
-_<white box template>_
+[options="header",cols="1,3"]
+|===
+|Package |Responsibility
 
-
-
-=== Level 3
-// Further decomposition of selected Level 2 building blocks, only where the extra detail adds
-// real value.
-
-
-
-
-==== White Box <_building block x.1_>
-
-
-
-
-_<white box template>_
-
-
-==== White Box <_building block x.2_>
-
-_<white box template>_
-
-
-
-==== White Box <_building block y.1_>
-
-_<white box template>_
+|`shell`
+|Contains the CLI commands and is responsible for I/O and exit codes.
+|===
