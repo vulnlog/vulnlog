@@ -1,0 +1,19 @@
+[#adr-5]
+= ADR-5: Provide a Gradle Plugin
+
+Status:: Accepted
+
+Context:: Many JVM projects build with Gradle.
+
+Decision:: Vulnlog provides a Gradle plugin next to the CLI tool.
+
+Alternatives::
+* Call the CLI tool from a Gradle task: works, but needs the binary on every machine.
+
+Positive Consequences::
+* Gradle users integrate Vulnlog without an extra installation.
+* Both entry points share the same core library.
+
+Negative Consequences::
+* A second entry point must be maintained.
+* The plugin depends on the Gradle plugin API and must follow its changes.

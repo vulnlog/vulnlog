@@ -1,3 +1,4 @@
 :toc-title: table of contents
 :toc:
 :imagesdir: ./images
+:adrdir: adr/

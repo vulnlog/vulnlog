@@ -1,0 +1,21 @@
+ifndef::adrdir[:adrdir:]
+
+[#adr-6]
+= ADR-6: Implement in Kotlin on the JVM
+
+Status:: Accepted
+
+Context:: Vulnlog is maintained in spare time, so the language must keep the maintainer productive. The Gradle plugin must run on the JVM.
+
+Decision:: Vulnlog is implemented in Kotlin on the JVM.
+
+Alternatives::
+* Java: more verbose.
+* Go or Rust: native binaries out of the box, but the Gradle plugin could not share the code.
+
+Positive Consequences::
+* The maintainer works in a preferred language.
+* The CLI tool and the Gradle plugin share one code base.
+
+Negative Consequences::
+* A fast start needs a native image (see xref:{adrdir}0004-compile-to-a-native-binary.adoc#adr-4[ADR-4]).

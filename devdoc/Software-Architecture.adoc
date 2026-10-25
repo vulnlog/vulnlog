@@ -43,10 +43,10 @@ include::arc42/05_building_block_view.adoc[]
 // // 8. Concepts
 // include::arc42/08_concepts.adoc[]
 //
-// <<<
+<<<
 // // 9. Architecture Decisions
-// include::arc42/09_architecture_decisions.adoc[]
-//
+include::arc42/09_architecture_decisions.adoc[]
+
 // <<<
 // // 10. Quality Requirements
 // include::arc42/10_quality_requirements.adoc[]

@@ -1,0 +1,19 @@
+[#adr-4]
+= ADR-4: Compile to a Native Binary
+
+Status:: Accepted
+
+Context:: Vulnlog is mainly used as a CLI tool. Users run it several times in a row to generate several artefacts. The startup time adds up with every run. It is not a long-running server, where the startup time matters less.
+
+Decision:: Vulnlog is compiled ahead-of-time to a native binary with GraalVM. A JVM distribution is still provided.
+
+Alternatives::
+* JVM distribution only: needs an installed JVM and starts slower.
+* Kotlin Multiplatform (Kotlin/Native): Vulnlog depends on JVM-only libraries such as Jackson and packageurl-java. The Gradle plugin needs the JVM anyway. GraalVM produces a native binary from the same JVM code base.
+
+Positive Consequences::
+* Vulnlog starts fast and runs without an installed JVM.
+
+Negative Consequences::
+* Each operating system needs its own build.
+* Reflection needs extra configuration for the native image.
