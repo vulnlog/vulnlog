@@ -27,10 +27,10 @@ include::arc42/01_introduction_and_goals.adoc[]
 // 4. Solution Strategy
 // include::arc42/04_solution_strategy.adoc[]
 
-// <<<
+<<<
 // // 5. Building Block View
-// include::arc42/05_building_block_view.adoc[]
-//
+include::arc42/05_building_block_view.adoc[]
+
 // <<<
 // // 6. Runtime View
 // include::arc42/06_runtime_view.adoc[]
