@@ -39,10 +39,10 @@ include::arc42/05_building_block_view.adoc[]
 // // 7. Deployment View
 // include::arc42/07_deployment_view.adoc[]
 //
-// <<<
+<<<
 // // 8. Concepts
-// include::arc42/08_concepts.adoc[]
-//
+include::arc42/08_concepts.adoc[]
+
 <<<
 // // 9. Architecture Decisions
 include::arc42/09_architecture_decisions.adoc[]

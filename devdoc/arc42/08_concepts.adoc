@@ -3,23 +3,47 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-concepts]]
 == Cross-cutting Concepts
 
+=== User Messages
 
+The domain and the use cases never log.
+They return data that carries the facts worth reporting.
+The `render` package turns this data into `Message` and `Failure` values with the exact text.
+The CLI and the Gradle plugin therefore show the same messages.
+Each entry point maps the messages to its own output in one place.
 
+Vulnlog writes no log file.
+stdout carries the command output only, such as YAML, HTML or suppression files.
+A redirect such as `vulnlog suppress -o - > .trivyignore.yaml` stays safe at any verbosity.
+stderr carries all other messages: status lines, warnings, errors and diagnostics.
 
+[options="header",cols="1,2,2"]
+|===
+|Level |CLI |Gradle
 
+|Status
+|Shown by default, hidden with `-q`
+|Lifecycle
 
-=== _<Concept 1>_
+|Warning
+|Always shown
+|Warn
 
-_<explanation>_
+|Error
+|Always shown
+|Exception message
 
+|Verbose
+|Shown with `-v`
+|Info (`--info`)
 
+|Debug
+|Shown with `-vv`
+|Debug (`--debug`)
+|===
 
-=== _<Concept 2>_
+Two hard rules apply:
 
-_<explanation>_
+- Every skip or drop decision and every file write must be visible at `-v`.
+- Vulnlog never logs whole file contents.
 
-...
-
-=== _<Concept n>_
-
-_<explanation>_
+The guidelines for writing a message are in the KDoc of `Message` and `Failure` in `modules/lib`.

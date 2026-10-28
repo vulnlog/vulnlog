@@ -5,6 +5,7 @@ package dev.vulnlog.lib.render
 
 import dev.vulnlog.lib.finding.FindingSeverity
 
+/** A failed step, reported once, with the reason and the file or id involved. */
 data class Failure(
     val message: String,
     val hint: String,
