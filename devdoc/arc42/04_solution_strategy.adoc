@@ -3,9 +3,22 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-solution-strategy]]
 == Solution Strategy
 
-- Implement Vulnlog in Kotlin on the Java Virtual Machine (JVM) as a CLI tool.
-- Compile Vulnlog ahead-of-time to a native binary so it starts fast and runs without an installed JVM.
-- Decompose the system into a thin CLI shell, a core library holding the analysis logic, and a Gradle plugin for build integration.
-- Keep the core functional, deterministic and clear and separated from the more imperative input/output shell, following data-oriented programming (DoP), so behaviour is easy to unit test and to extend.
-- Handle each scanner input format and each generated artifact (vulnerability report, suppression file, VEX) through its own interchangeable parser or generator.
-- Write files canonically and deterministically so every generated artifact is reproducible and reviewable.
+- Store the analysis as YAML in the Git repository of the software project (<<adr-1,ADR-1>>).
+- Separate a pure core from the I/O shell, following data-oriented programming (<<adr-2,ADR-2>>).
+- Provide a CLI tool for Linux, macOS and Windows (<<adr-3,ADR-3>>).
+- Compile the CLI tool to a native binary, so it starts fast (<<adr-4,ADR-4>>).
+- Provide a Gradle plugin as a second entry point (<<adr-5,ADR-5>>). Both entry points share one core library (see <<section-building-block-view>>).
+- Implement Vulnlog in Kotlin on the JVM (<<adr-6,ADR-6>>).
+- Write all files deterministically, so every artefact is reproducible and reviewable.
+
+The quality goals are reached as follows:
+
+[options="header",cols="1,2"]
+|===
+|Quality Goal |Approach
+
+|Input and output independence
+|The data model contains no scanner-specific analysis.
+Each output format has its own generator.
+A new scanner or consumer needs a new generator, not a change of the data model.
+|===

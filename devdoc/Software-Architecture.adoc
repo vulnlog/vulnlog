@@ -25,7 +25,7 @@ include::arc42/03_context_and_scope.adoc[]
 
 <<<
 // 4. Solution Strategy
-// include::arc42/04_solution_strategy.adoc[]
+include::arc42/04_solution_strategy.adoc[]
 
 <<<
 // // 5. Building Block View
