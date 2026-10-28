@@ -21,7 +21,7 @@ include::arc42/02_architecture_constraints.adoc[]
 
 <<<
 // 3. Context and Scope
-// include::arc42/03_context_and_scope.adoc[]
+include::arc42/03_context_and_scope.adoc[]
 
 <<<
 // 4. Solution Strategy
