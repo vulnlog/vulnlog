@@ -16,17 +16,18 @@ import io.kotest.matchers.string.shouldNotStartWith
 class SuppressCommandTest :
     FunSpec({
 
-        context("happy path") {
+        context("encoding validation") {
 
             test("invalid XML notes fail before any output is written and generic remains available") {
                 val yaml =
                     vulnlogDocument(reporter = "dependency-check")
-                        .replace("    verdict:", "    analysis: \"before\\0after\"\n    verdict:")
+                        .replace("    verdict:", "    analysis: \"before\\0\\uFFFFafter\"\n    verdict:")
                         .replace(
                             "      - reporter: dependency-check",
                             "      - reporter: dependency-check\n      - reporter: trivy",
                         )
-                withTempFile(content = yaml) { input ->
+                val second = yaml.substringAfter("vulnerabilities:\n").replace("CVE-2026-1234", "CVE-2026-5678")
+                withTempFile(content = yaml + second) { input ->
                     withTempDir(prefix = "invalid-xml-out") { outputDir ->
                         val target = outputDir.resolve("dependency-check-suppressions.xml").toFile()
                         target.writeText("previous content")
@@ -36,6 +37,9 @@ class SuppressCommandTest :
 
                         native.statusCode shouldBe ExitCode.VALIDATION_ERROR.code
                         native.stderr shouldContain "character U+0000 is not allowed in XML 1.0"
+                        native.stderr shouldContain "character U+FFFF is not allowed in XML 1.0"
+                        native.stderr shouldContain "cannot encode analysis for CVE-2026-1234"
+                        native.stderr shouldContain "cannot encode analysis for CVE-2026-5678"
                         target.readText() shouldBe "previous content"
                         outputDir.resolve(".trivyignore.yaml").toFile().exists() shouldBe false
 
@@ -43,10 +47,13 @@ class SuppressCommandTest :
 
                         generic.statusCode shouldBe 0
                         outputDir.resolve("dependency-check.generic.json").toFile().readText() shouldContain
-                            "before\\u0000after"
+                            "before\\u0000"
                     }
                 }
             }
+        }
+
+        context("happy path") {
 
             test("dependency-check auto writes XML and generic keeps JSON") {
                 withTempFile(content = vulnlogDocument(reporter = "dependency-check")) { input ->

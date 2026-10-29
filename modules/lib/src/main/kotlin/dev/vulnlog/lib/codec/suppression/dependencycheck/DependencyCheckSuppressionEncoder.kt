@@ -3,35 +3,36 @@
 
 package dev.vulnlog.lib.codec.suppression.dependencycheck
 
-import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.model.suppression.SuppressionList
+import java.time.LocalDate
 
 internal object DependencyCheckSuppressionEncoder {
-    data class InvalidNote(
-        val id: VulnId,
-        val codePoint: Int,
-    )
-
     /** XML 1.0 cannot represent these characters, even with numeric character references. */
-    fun invalidNote(list: SuppressionList): InvalidNote? =
-        list.entries.firstNotNullOfOrNull { entry ->
-            val invalid =
+    fun validate(list: SuppressionList): List<SuppressionEncodingProblem> =
+        list.entries.flatMap { entry ->
+            buildList {
                 entry.reason
                     ?.codePoints()
                     ?.filter { !isXmlCharacter(it) }
-                    ?.findFirst()
-                    ?.orElse(-1) ?: -1
-            if (invalid == -1) null else InvalidNote(entry.id, invalid)
+                    ?.distinct()
+                    ?.forEach { add(SuppressionEncodingProblem.UnencodableReason(list.format, entry.id, it)) }
+                entry.expiresAt?.takeIf { it == LocalDate.MAX }?.let {
+                    add(SuppressionEncodingProblem.UnencodableExpiry(list.format, entry.id, it))
+                }
+            }
         }
 
     fun encode(list: SuppressionList): String {
-        require(invalidNote(list) == null) { "Dependency-Check notes must contain only XML 1.0 characters" }
+        require(validate(list).isEmpty()) { "Entries cannot be represented as Dependency-Check XML" }
         return buildString {
             appendLine(
                 "<suppressions xmlns=\"https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd\">",
             )
             list.entries.forEach { entry ->
-                val until = entry.expiresAt?.let { " until=\"${it}Z\"" }.orEmpty()
+                // Vulnlog includes the expiry day; Dependency-Check stops at the start of `until`.
+                val until =
+                    entry.expiresAt?.let { " until=\"${it.plusDays(1).toString().removePrefix("+")}Z\"" }.orEmpty()
                 appendLine("    <suppress$until>")
                 entry.reason?.let { appendLine("        <notes>${escapeXml(it)}</notes>") }
                 appendLine("        <cve>${escapeXml(entry.id.id)}</cve>")

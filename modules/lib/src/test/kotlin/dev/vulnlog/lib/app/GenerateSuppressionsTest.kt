@@ -86,7 +86,7 @@ class GenerateSuppressionsTest :
 
             native.fileName shouldBe "dependency-check-suppressions.xml"
             native.content.contains("<cve>CVE-2026-0001</cve>") shouldBe true
-            native.content.contains("until=\"2026-04-03Z\"") shouldBe true
+            native.content.contains("until=\"2026-04-04Z\"") shouldBe true
             native.content.contains("<notes>not reachable</notes>") shouldBe true
             generic.fileName shouldBe "dependency-check.generic.json"
             generic.list.format shouldBe SuppressionFormat.Generic(ReporterType.DEPENDENCY_CHECK)
