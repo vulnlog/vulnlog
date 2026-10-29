@@ -11,6 +11,7 @@ import dev.vulnlog.lib.model.suppression.SuppressionList
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import org.w3c.dom.Document
@@ -25,8 +26,20 @@ import javax.xml.validation.SchemaFactory
 class DependencyCheckSuppressionEncoderTest :
     FunSpec({
 
-        test("direct encoding rejects unpaired UTF-16 surrogates") {
-            listOf(0xD800, 0xDFFF).forEach { codePoint ->
+        test("the largest representable exclusive cutoff is schema-valid without an ISO plus sign") {
+            val list =
+                SuppressionList(
+                    SuppressionFormat.DependencyCheck,
+                    setOf(SuppressionEntry(VulnId.Cve("CVE-2026-1111"), LocalDate.MAX.minusDays(1))),
+                )
+            val xml = SuppressionEncoder.encode(list)
+
+            validateSchema(xml)
+            xml shouldContain "until=\"999999999-12-31Z\""
+        }
+
+        listOf(0xD800, 0xDFFF).forEach { codePoint ->
+            test("direct encoding rejects unpaired UTF-16 surrogate U+${codePoint.toString(16).uppercase()}") {
                 val list =
                     SuppressionList(
                         SuppressionFormat.DependencyCheck,
@@ -63,7 +76,7 @@ class DependencyCheckSuppressionEncoderTest :
                 .attributes
                 .getNamedItem("until")
                 .nodeValue shouldBe
-                "2026-08-01Z"
+                "2026-08-02Z"
             document
                 .getElementsByTagName("suppress")
                 .item(1)

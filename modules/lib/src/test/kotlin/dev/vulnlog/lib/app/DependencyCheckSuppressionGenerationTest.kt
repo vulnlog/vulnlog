@@ -6,8 +6,10 @@ package dev.vulnlog.lib.app
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.document.validated
 import dev.vulnlog.lib.fixtures.vulnlogDocument
+import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.render.renderSuppressionFailure
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import org.xml.sax.InputSource
@@ -22,9 +24,52 @@ import javax.xml.validation.SchemaFactory
 class DependencyCheckSuppressionGenerationTest :
     FunSpec({
 
-        test("accepted YAML escapes incompatible with XML fail native output and survive generic JSON") {
-            val forbidden = (0..0x1F).filterNot { it in listOf(0x9, 0xA, 0xD) } + listOf(0xFFFE, 0xFFFF)
-            forbidden.forEach { codePoint ->
+        test("all unencodable entries and distinct characters are reported together") {
+            val first =
+                vulnlogDocument(reporter = "dependency-check")
+                    .replace("    verdict:", "    analysis: \"before\\0\\uFFFF\\0after\"\n    verdict:")
+            val second =
+                first
+                    .substringAfter("vulnerabilities:\n")
+                    .replace("CVE-2026-1234", "CVE-2026-5678")
+            val outcome =
+                generateSuppressions(
+                    validated(first + second),
+                    SuppressionRequest(FilterRequest(), SuppressionFormatRequest.Auto, LocalDate.of(2026, 4, 3), false),
+                ).shouldBeInstanceOf<SuppressionOutcome.Unencodable>()
+
+            outcome.problems.map { it.id.id } shouldContainExactly
+                listOf("CVE-2026-1234", "CVE-2026-1234", "CVE-2026-5678", "CVE-2026-5678")
+            outcome.problems.map { (it as SuppressionEncodingProblem.UnencodableReason).codePoint } shouldContainExactly
+                listOf(0, 0xFFFF, 0, 0xFFFF)
+            renderSuppressionFailure(outcome, "-o", "--reporter", "--output-dir").size shouldBe 4
+        }
+
+        test("maximum expiry is a controlled failure and remains available in generic JSON") {
+            val native =
+                generateFromYaml("reviewed", expiresAt = LocalDate.MAX)
+                    .shouldBeInstanceOf<SuppressionOutcome.Unencodable>()
+            val generic =
+                generateFromYaml("reviewed", SuppressionFormatRequest.Generic, LocalDate.MAX)
+                    .shouldBeInstanceOf<SuppressionOutcome.Generated>()
+                    .files
+                    .single()
+
+            native.problems
+                .single()
+                .shouldBeInstanceOf<SuppressionEncodingProblem.UnencodableExpiry>()
+                .expiresAt shouldBe LocalDate.MAX
+            renderSuppressionFailure(native, "-o", "--reporter", "--output-dir").single().message shouldBe
+                "cannot encode expiry +999999999-12-31 for CVE-2026-1234 as Dependency-Check XML: " +
+                "the exclusive cutoff requires a following day"
+            JsonMapper.shared().readTree(generic.content)["vulnerabilities"][0]["expires_at"].stringValue() shouldBe
+                LocalDate.MAX.toString()
+        }
+
+        val forbidden = (0..0x1F).filterNot { it in listOf(0x9, 0xA, 0xD) } + listOf(0xFFFE, 0xFFFF)
+        forbidden.forEach { codePoint ->
+            val character = "U+" + codePoint.toString(16).uppercase().padStart(4, '0')
+            test("YAML $character fails native output and survives generic JSON") {
                 val escaped = "before\\u${codePoint.toString(16).padStart(4, '0')}after"
 
                 val native = generateFromYaml(escaped)
@@ -35,7 +80,6 @@ class DependencyCheckSuppressionGenerationTest :
                         .single()
 
                 val failed = native.shouldBeInstanceOf<SuppressionOutcome.Failed>()
-                val character = "U+" + codePoint.toString(16).uppercase().padStart(4, '0')
                 renderSuppressionFailure(failed, "-o", "--reporter", "--output-dir").single().message shouldBe
                     "cannot encode analysis for CVE-2026-1234 as Dependency-Check XML: " +
                     "character $character is not allowed in XML 1.0"
@@ -76,10 +120,21 @@ class DependencyCheckSuppressionGenerationTest :
 private fun generateFromYaml(
     escapedAnalysis: String,
     format: SuppressionFormatRequest = SuppressionFormatRequest.Auto,
+    expiresAt: LocalDate? = null,
 ): SuppressionOutcome {
     val yaml =
         vulnlogDocument(reporter = "dependency-check")
             .replace("    verdict:", "    analysis: \"$escapedAnalysis\"\n    verdict:")
+            .let { yaml ->
+                if (expiresAt == null) {
+                    yaml
+                } else {
+                    yaml.replace(
+                        "      - reporter: dependency-check",
+                        "      - reporter: dependency-check\n        suppress: { expires_at: \"$expiresAt\" }",
+                    )
+                }
+            }
     val project = validated(yaml)
     return generateSuppressions(
         project,

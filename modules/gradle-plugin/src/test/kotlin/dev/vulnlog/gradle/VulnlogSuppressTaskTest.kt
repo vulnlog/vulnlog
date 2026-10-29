@@ -24,20 +24,27 @@ private val FILES_FROM_TEST_YAML =
 class VulnlogSuppressTaskTest :
     FunSpec({
 
-        context("happy path") {
+        context("encoding validation") {
 
             test("invalid XML notes fail with a controlled diagnostic before writing a suppression file") {
                 val yaml =
                     vulnlogDocument(reporter = "dependency-check")
-                        .replace("    verdict:", "    analysis: \"before\\uFFFFafter\"\n    verdict:")
-                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to yaml)
+                        .replace("    verdict:", "    analysis: \"before\\uFFFF\\0after\"\n    verdict:")
+                val second = yaml.substringAfter("vulnerabilities:\n").replace("CVE-2026-1234", "CVE-2026-5678")
+                val dir = gradleProject(FILES_FROM_TEST_YAML, "test.vl.yaml" to yaml + second)
 
                 val result = runner(dir, "vulnlogSuppress").buildAndFail()
 
                 result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.FAILED
                 result.output shouldContain "character U+FFFF is not allowed in XML 1.0"
+                result.output shouldContain "character U+0000 is not allowed in XML 1.0"
+                result.output shouldContain "Cannot encode analysis for CVE-2026-1234"
+                result.output shouldContain "Cannot encode analysis for CVE-2026-5678"
                 dir.resolve("build/vulnlog/suppressions/dependency-check-suppressions.xml").exists() shouldBe false
             }
+        }
+
+        context("happy path") {
 
             test("dependency-check writes native XML with the default format") {
                 val dir =

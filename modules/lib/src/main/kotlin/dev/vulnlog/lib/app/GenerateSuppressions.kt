@@ -4,7 +4,6 @@
 package dev.vulnlog.lib.app
 
 import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
-import dev.vulnlog.lib.codec.suppression.dependencycheck.DependencyCheckSuppressionEncoder
 import dev.vulnlog.lib.core.filter.FilterOutcome
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
@@ -16,9 +15,9 @@ import dev.vulnlog.lib.core.suppression.nativeSuppressionFormat
 import dev.vulnlog.lib.core.suppression.suppressionFileName
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.model.ReporterType
-import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.suppression.SuppressionCollection
+import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
 import dev.vulnlog.lib.model.suppression.SuppressionList
 import java.time.LocalDate
@@ -35,9 +34,8 @@ data class SuppressionRequest(
 sealed interface SuppressionOutcome {
     sealed interface Failed : SuppressionOutcome
 
-    data class InvalidXmlNote(
-        val id: VulnId,
-        val codePoint: Int,
+    data class Unencodable(
+        val problems: List<SuppressionEncodingProblem>,
     ) : Failed
 
     /** The run got past the filter, so the messages can tell what it collected, whether files follow or not. */
@@ -88,21 +86,14 @@ fun generateSuppressions(
     val collected = collectSuppressedVulnerabilities(vulnlogFile, filter, request.today)
     val built = buildSuppressionLists(collected.included, formats)
     val collection = SuppressionCollection(collected.included, collected.exclusions + built.exclusions)
-    val invalidNote =
-        built.lists.firstNotNullOfOrNull { list ->
-            if (list.format == SuppressionFormat.DependencyCheck) {
-                DependencyCheckSuppressionEncoder.invalidNote(list)
-            } else {
-                null
-            }
-        }
+    val encodingProblems = built.lists.flatMap(SuppressionEncoder::validate)
     return when {
         built.lists.isEmpty() -> SuppressionOutcome.NothingToSuppress(filter, collection)
 
         request.singleFile && built.lists.size > 1 ->
             SuppressionOutcome.SeveralReporters(filter, collection, formats.filterValues { it != null }.keys.toList())
 
-        invalidNote != null -> SuppressionOutcome.InvalidXmlNote(invalidNote.id, invalidNote.codePoint)
+        encodingProblems.isNotEmpty() -> SuppressionOutcome.Unencodable(encodingProblems)
 
         else ->
             SuppressionOutcome.Generated(
