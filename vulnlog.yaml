@@ -106,6 +106,63 @@ releases:
 
 vulnerabilities:
 
+  - id: CVE-2026-102554
+    description: >-
+      Guava `CompactHashMap`, `CompactHashSet` and `MapMakerInternalMap` size their arrays from an unchecked count during Java
+      deserialization, which exhausts memory.
+    aliases: [GHSA-xxph-c9ww-hj94]
+    releases: [0.19.0]
+    packages: ["pkg:maven/com.google.guava/guava@33.7.1-jre"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-10-27
+        vuln_ids: [GHSA-xxph-c9ww-hj94]
+    tags: [dev dependency]
+    analysis: >-
+      Guava reaches only the buildSrc classpath, through cyclonedx-gradle-plugin 3.5.1 and its maven-core 3.10.0, which write
+      the SBOMs. No release artifact ships it. The memory exhaustion needs `ObjectInputStream` to read an attacker-crafted
+      stream, and the build deserializes no Java stream from an untrusted source.
+    analyzed_at: 2026-10-30
+    verdict: not affected
+    justification: vulnerable code cannot be controlled by adversary
+    comment: >-
+      Fixed in Guava 33.7.2. The latest cyclonedx-gradle-plugin (3.5.1) still pulls 33.7.1 through maven-core 3.10.0; the
+      build waits for an upstream release that ships the fix.
+
+  - id: CVE-2026-59889
+    description: >-
+      jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets
+      properties outside the view.
+    aliases: [GHSA-5gvw-p9qm-jgwh]
+    releases: [0.11.0]
+    packages:
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+      - "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+    reports:
+      - reporter: github-dependabot
+        at: 2026-10-19
+        vuln_ids: [GHSA-5gvw-p9qm-jgwh]
+    tags:
+      - cli
+      - gradle plugin
+      - container
+    analysis: >-
+      The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog
+      type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.
+    analyzed_at: 2026-10-30
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.17.0
+      at: 2026-08-23
+      ref: "https://github.com/vulnlog/vulnlog/pull/264"
+      note: Updated Jackson 3 from 3.2.0 to 3.2.2.
+    comment: >-
+      The build also pulls Jackson 2.14.2 through gradle-node-plugin for the local docs build; no release artifact ships it.
+      The build waits for a gradle-node-plugin release that ships a fixed Jackson 2.
+
   - id: CVE-2026-68497
     description: >-
       jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar`

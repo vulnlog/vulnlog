@@ -3,8 +3,8 @@
   "@id": "https://vulnlog.dev/vex/849578f8-e757-4385-82a3-6aa017494e99",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-10-12T16:50:45Z",
-  "version": 4,
+  "timestamp": "2026-10-30T20:28:33Z",
+  "version": 5,
   "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
   "statements": [
     {
@@ -355,6 +355,394 @@
         "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
         "aliases": [
           "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-10-30T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.12.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.12.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-10-30T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.13.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.13.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-10-30T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.14.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.14.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-10-30T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.15.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.15.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-10-30T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.15.1",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.15.1"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-10-30T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.16.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.16.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "The bypass needs a property annotated with both `@JsonView` and `@JsonUnwrapped`, read under an active view. No Vulnlog type uses `@JsonView` or `@JsonUnwrapped`, and Vulnlog never reads with a view.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.17.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.17.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
         ]
       },
       "timestamp": "2026-08-23T00:00:00Z",
