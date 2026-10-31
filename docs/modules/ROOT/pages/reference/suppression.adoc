@@ -96,7 +96,7 @@ Every other reporter except `other` gets a file in the generic Vulnlog JSON form
 | `dependency-check`
 | OWASP Dependency-Check
 | `dependency-check-suppressions.xml`
-| CVE
+| CVE, GHSA
 
 | `cargo-audit`
 | cargo-audit
@@ -216,6 +216,10 @@ The generated `dependency-check-suppressions.xml`:
     </suppress>
 </suppressions>
 ----
+
+Dependency-Check matches CVE IDs with `cve` rules and GHSA IDs with exact `vulnerabilityName` rules.
+The `cve` rule accepts only CVE IDs, so GHSA IDs use `vulnerabilityName`.
+Each rule applies to the ID across all dependencies.
 
 The Log4Shell entry's Grype report has no `suppress` block, so `grype.generic.json` doesn't list it.
 The XZ Utils entry has only an `other` report, so no suppression file lists it.

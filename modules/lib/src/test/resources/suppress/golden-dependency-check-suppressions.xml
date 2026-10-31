@@ -8,4 +8,11 @@
         <notes>Used only for tests &amp; build tooling.</notes>
         <cve>CVE-2026-2222</cve>
     </suppress>
+    <suppress until="2026-08-02Z">
+        <notes>Vulnerable code not present.</notes>
+        <vulnerabilityName>GHSA-aaaa-bbbb-cccc</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <vulnerabilityName>GHSA-dddd-eeee-ffff</vulnerabilityName>
+    </suppress>
 </suppressions>

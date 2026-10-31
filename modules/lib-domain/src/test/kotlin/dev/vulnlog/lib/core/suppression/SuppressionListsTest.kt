@@ -143,7 +143,7 @@ class SuppressionListsTest :
                 built.lists.single().entries shouldBe setOf(SuppressionEntry(rustSec))
             }
 
-            test("dependency-check keeps CVE details and excludes every other id type") {
+            test("dependency-check keeps CVE and GHSA details and excludes other id types") {
                 val ghsa = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")
                 val snyk = VulnId.Snyk("SNYK-JAVA-001")
                 val rustSec = VulnId.RustSec("RUSTSEC-2026-0001")
@@ -163,9 +163,10 @@ class SuppressionListsTest :
                         ),
                     )
 
-                built.lists.single().entries shouldBe setOf(SuppressionEntry(CVE, EXPIRY, "reviewed"))
+                built.lists.single().entries shouldBe
+                    setOf(SuppressionEntry(CVE, EXPIRY, "reviewed"), SuppressionEntry(ghsa, EXPIRY, "reviewed"))
                 built.exclusions shouldContainExactly
-                    listOf(ghsa, snyk, rustSec).map {
+                    listOf(snyk, rustSec).map {
                         SuppressionExclusion.UnsupportedIdType(it, SuppressionFormat.DependencyCheck)
                     }
             }

@@ -55,6 +55,24 @@ class SuppressCommandTest :
 
         context("happy path") {
 
+            test("dependency-check auto writes a GHSA-only finding as XML") {
+                val yaml = vulnlogDocument(reporter = "dependency-check", vulnId = "GHSA-aaaa-bbbb-cccc")
+                withTempFile(content = yaml) { input ->
+                    withTempDir(prefix = "dependency-check-ghsa-out") { outputDir ->
+                        val result =
+                            SuppressCommand().test(
+                                "${input.absolutePath} --format auto --output-dir ${outputDir.toAbsolutePath()}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        val xml = outputDir.resolve("dependency-check-suppressions.xml").toFile().readText()
+                        xml shouldContain "<vulnerabilityName>GHSA-aaaa-bbbb-cccc</vulnerabilityName>"
+                        xml shouldNotContain "<cve>"
+                        result.stderr shouldNotContain "unsupported"
+                    }
+                }
+            }
+
             test("dependency-check auto writes XML and generic keeps JSON") {
                 withTempFile(content = vulnlogDocument(reporter = "dependency-check")) { input ->
                     withTempDir(prefix = "dependency-check-out") { outputDir ->
