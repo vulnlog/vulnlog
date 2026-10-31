@@ -37,6 +37,8 @@ class SuppressionGoldenTest :
                     setOf(
                         SuppressionEntry(VulnId.Cve("CVE-2026-1111"), EXPIRY, SHORT_REASON),
                         SuppressionEntry(VulnId.Cve("CVE-2026-2222"), reason = "Used only for tests & build tooling."),
+                        SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"), EXPIRY, SHORT_REASON),
+                        SuppressionEntry(VulnId.Ghsa("GHSA-dddd-eeee-ffff")),
                     ),
                 )
 
