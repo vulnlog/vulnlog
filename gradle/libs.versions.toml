@@ -4,13 +4,13 @@
 cliktVersion = "5.1.0"
 cyclonedxVersion = "3.5.1"
 graalvmNativeBuildToolsVersion = "1.1.14"
-jacksonVersion = "3.2.3"
+jacksonVersion = "3.2.4"
 kotestVersion = "6.2.5"
 kotlinVersion = "2.4.20"
 ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
 # The only YAML library: it parses every file Vulnlog reads and emits every file Vulnlog writes.
-snakeYamlEngineVersion = "3.1.1"
+snakeYamlEngineVersion = "3.2"
 spotlessVersion = "8.10.3"
 
 [libraries]
