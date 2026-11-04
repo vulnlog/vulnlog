@@ -106,6 +106,34 @@ releases:
 
 vulnerabilities:
 
+  - id: CVE-2026-110879
+    description: >-
+      jackson-databind does not validate the generic arguments of a class-name type ID, so input can instantiate any class.
+    aliases: [GHSA-m8xf-2cr7-77ph, SNYK-JAVA-TOOLSJACKSONCORE-21761838]
+    releases: [0.18.0]
+    packages: ["pkg:maven/tools.jackson.core/jackson-databind@3.2.3"]
+    reports:
+      - reporter: snyk
+        at: 2026-11-02
+        vuln_ids: [SNYK-JAVA-TOOLSJACKSONCORE-21761838]
+    tags:
+      - cli
+      - gradle plugin
+      - container
+    analysis: >-
+      The bypass needs class-name polymorphic typing, through `@JsonTypeInfo(use = Id.CLASS)` or default typing. Vulnlog's
+      DTOs use no `@JsonTypeInfo`, and Vulnlog never activates default typing. No input can make Jackson pick a class to
+      instantiate.
+    analyzed_at: 2026-11-04
+    verdict: not affected
+    justification: vulnerable code not in execute path
+    resolution:
+      in: 0.19.0
+      at: 2026-11-04
+      ref: "https://github.com/vulnlog/vulnlog/pull/348"
+      note: Updated Jackson 3 from 3.2.3 to 3.2.4.
+    comment: Build-only Jackson 2 (gradle-node-plugin, cyclonedx-gradle-plugin) awaits upstream fixes.
+
   - id: CVE-2026-102554
     description: >-
       Guava `CompactHashMap`, `CompactHashSet` and `MapMakerInternalMap` size their arrays from an unchecked count during Java
