@@ -134,9 +134,9 @@ flowchart TD
 
 ## Website deploy
 
-Single implementation of the GitHub Pages deploy. It builds the Antora docs, composes the
+Single implementation of the website deploy. It builds the Antora docs, composes the
 static site (website, docs, JSON schemas, install scripts, latest security report), and
-deploys to `vulnlog.dev`.
+uploads it to the Bunny storage zone behind `vulnlog.dev`.
 
 Invoked three ways:
 
@@ -188,7 +188,7 @@ their definitions.
 |----------------------------------------------------------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`build-native.yaml`](../.github/workflows/build-native.yaml)              | Reusable workflow | GraalVM 25 setup and `:cli-app:nativeCompile`, uploaded as `<artifact-name>`; on Linux also `:cli-app:cyclonedxNativeBom`, uploaded as `sbom-<artifact-name>`. Inputs: `os`, `artifact-name`, `app-version` (leading `v` stripped), `retention-days`. Used by `ci.yaml`, `release.yaml`, and `perf-test.yaml` (standalone mode). |
 | [`perf-test.yaml`](../.github/workflows/perf-test.yaml)                    | Reusable workflow | Runs `perf/perf-test.sh` (hyperfine) against the native binary. Inputs: `artifact-name`, `threshold-ms`. Also exposes `workflow_dispatch` for standalone runs, in which case it first calls `build-native.yaml` to produce the binary.                                                                                           |
-| [`deploy-website.yml`](../.github/workflows/deploy-website.yml)            | Reusable workflow | GitHub Pages deploy of website and docs. Input: `version` (defaults to `vulnlog-version` from `docs/antora.yml`). Used by `release.yaml` and standalone via `workflow_dispatch` and `workflow_run`.                                                                                                                              |
+| [`deploy-website.yml`](../.github/workflows/deploy-website.yml)            | Reusable workflow | Bunny Storage deploy of website and docs. Input: `version` (defaults to `vulnlog-version` from `docs/antora.yml`). Used by `release.yaml` and standalone via `workflow_dispatch` and `workflow_run`.                                                                                                                             |
 | [`setup-jvm`](../.github/actions/setup-jvm/action.yml)                     | Composite action  | Java 21 Temurin + Gradle setup. Used by the `check` jobs, `publish-release`, and `publish-gradle-plugin`.                                                                                                                                                                                                                        |
 | [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) | Composite action  | Downloads the native-image artifact and marks it executable. Input: `artifact-name` (default `vulnlog-linux-amd64`). Used by `publish-docker` and `perf-test.yaml`.                                                                                                                                                              |
 
