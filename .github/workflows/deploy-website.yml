@@ -1,6 +1,6 @@
-name: Deploy website and docs to GitHub Pages
+name: Deploy website and docs
 
-# Single implementation of the Pages deploy. Invoked four ways:
+# Single implementation of the website deploy. Invoked four ways:
 # - workflow_call from release.yaml on final release tags
 # - workflow_dispatch for manual deploys from main
 # - workflow_run after the weekly security scan, to refresh the bundled reports
@@ -24,8 +24,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
   actions: read
 
 jobs:
@@ -34,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      name: website
+      url: https://vulnlog.dev
     concurrency:
-      group: pages
+      group: website
       cancel-in-progress: false
     steps:
       - name: Checkout
@@ -95,8 +93,10 @@ jobs:
             VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
           fi
           mkdir -p _site/docs _site/schema _site/vex
-          cp -r website/index.html website/css website/favicon.ico website/robots.txt website/sitemap.xml website/.well-known _site/
+          cp -r website/index.html website/css website/favicon.ico website/img website/robots.txt website/sitemap.xml website/.well-known website/bunnycdn_errors _site/
           cp -r build/docs/* _site/docs/
+          # Also served at /docs, where the relative redirect would resolve against /.
+          sed -i 's|<meta charset="utf-8">|&<base href="/docs/">|' _site/docs/index.html
           cp schema/*.json _site/schema/
           cp .vex/*.json _site/vex/
           if [ -f _report/vulnlog-impact-report.html ]; then
@@ -113,12 +113,20 @@ jobs:
               install/install.sh.template > _site/install
           cp install/uninstall.sh.template _site/uninstall
           sed -i "s/VULNLOG_VERSION/${VERSION}/g" _site/index.html
-          echo 'vulnlog.dev' > _site/CNAME
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: _site
-          include-hidden-files: 'true'
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Upload site to Bunny Storage
+        env:
+          BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
+          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
+        working-directory: _site
+        run: |
+          set -euo pipefail
+          endpoint="${BUNNY_STORAGE_ZONE_REGION_ENDPOINT%/}"
+          find . -type f -print0 | while IFS= read -r -d '' file; do
+            path="${file#./}"
+            echo "Uploading ${path}"
+            curl --silent --show-error --fail-with-body \
+              --header "AccessKey: ${BUNNY_ACCESS_KEY}" \
+              --upload-file "${file}" \
+              "${endpoint}/${path}"
+            echo
+          done

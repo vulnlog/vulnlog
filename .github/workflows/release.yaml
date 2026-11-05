@@ -230,8 +230,6 @@ jobs:
     if: needs.version.outputs.latest == 'true'
     permissions:
       contents: read
-      pages: write
-      id-token: write
       actions: read
     uses: ./.github/workflows/deploy-website.yml
     with:
