@@ -1,0 +1,40 @@
+= Where Vulnlog fits
+:page-aliases: get-started/what-is-vulnlog.adoc
+
+Vulnlog suits projects with planned releases best.
+It works next to your scanners and vulnerability management platforms, and it replaces hand-written scanner ignore files.
+
+== Projects that benefit most
+
+Vulnlog is most useful when you can't fix and release every vulnerability straight away.
+If you ship planned releases, a vulnerability that affects you can stay in your software for weeks or months.
+During that time your team needs to know which releases are affected, and your customers want to know your plan.
+Vulnlog keeps both answers consistent, because they come from the same entry.
+
+If you fix and release continuously, a vulnerability rarely lives long enough to need that kind of communication.
+You might still use Vulnlog to record why a finding doesn't affect you, but you'll use less of it.
+
+The outputs also serve people who never open the Vulnlog file.
+A product manager reads the impact report without opening any YAML.
+A support engineer answers a customer's question from the analysis that's already written down.
+
+== Compared with scanner ignore files
+
+Most scanners let you silence a finding with an ignore file, such as `.trivyignore.yaml` or `.snyk`.
+An ignore file records that a finding is silenced.
+It doesn't say why, who assessed the finding, which releases are affected, or what you plan to do.
+Each scanner also has its own file, so with two scanners you keep two lists in step by hand.
+
+In Vulnlog, the ignore file becomes a generated suppression file.
+You write the analysis once, and Vulnlog writes the suppression file for each scanner from it.
+xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner] describes how this works day to day.
+
+== Compared with vulnerability management platforms
+
+Platforms such as OWASP Dependency-Track track the components and known vulnerabilities of many projects in one place.
+Vulnlog doesn't try to do that.
+It records the analysis for one project, in a file in the project's Git repository, and you can keep using a platform next to it.
+xref:concepts/why-git.adoc[Why your analysis lives in Git] explains why the analysis belongs in the repository.
+
+* xref:get-started/quickstart-triage.adoc[Triage your first finding]
+* xref:concepts/data-model.adoc[The data model]

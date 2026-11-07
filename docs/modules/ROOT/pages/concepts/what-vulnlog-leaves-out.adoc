@@ -1,33 +1,45 @@
 = What Vulnlog leaves out
 
-The Vulnlog schema has no field for CVSS scores, CWE classifications, or advisory descriptions.
-This page explains why that is a design decision, not a gap.
+The Vulnlog file has no field for a CVSS score, a CWE category, an advisory text, or the affected version ranges of a vulnerability.
+The file records what only your team knows, and leaves out what anyone can look up.
 
-== The file stores only what only you know
+== Public data has a home already
 
-Everything a vulnerability database can tell you (CVSS vectors, CWE categories, advisory texts, affected version ranges) is public knowledge, keyed by the vulnerability identifier.
-Copying it into the Vulnlog file would duplicate data that ages badly: scores get revised, advisories get updated, and every copy in every repository quietly becomes stale.
+Everything an advisory database tells you about a vulnerability is public, and you find it by the vulnerability's identifier.
+Scores get revised, advisories get updated, and new affected versions are added.
+A copy in your Vulnlog file would start to go out of date the day you made it, and nobody would notice.
 
-What no database can tell you is whether the vulnerability matters for your product.
-That analysis, the verdict, and the resolution exist only in your team's heads until they are written down.
-The Vulnlog file is reserved for exactly this: the identifier as the key, plus your decisions.
+So an entry keeps the identifier, any aliases, and a short `name` and `description` that help a reader recognise the vulnerability.
+The `id` of Log4Shell, CVE-2021-44228, and its alias, GHSA-jfh8-c2jp-5v3q, are enough to look up its advisories.
+Most scanners show the scores and advisory details as well.
 
-Anything the identifier can look up stays out of the file; outputs that need such data can join it at generation time.
+== What no database knows
 
-== Severity is your assessment, not CVSS
+No database can tell you whether a vulnerability matters for your software.
+Only your team can, after reading the code.
+That's what the file is for: your analysis, your verdict, your plan, and the release that fixes the vulnerability.
 
-The `severity` field is deliberately not a CVSS score.
-It records how severely the vulnerability impacts your product in its context, which is the number your prioritization actually needs.
-A CVSS 9.8 finding in a code path your product never executes can be `not affected`; a CVSS 5.0 finding in your authentication flow can be `critical`.
-When the CVSS score influenced your reasoning, cite it in the `analysis` text.
+The Text4Shell entry in Acme Shop shows the difference.
+The advisory describes a remote code execution in Apache Commons Text.
+The entry says something the advisory can't: Acme Shop never calls the vulnerable code, so it's `not affected`.
 
-== What this means in practice
+== Severity is your assessment
 
-* Entries stay short enough to review in a pull request.
-* Nothing in the file needs refreshing when an advisory changes; only your own decisions ever change.
-* The report shows your assessment of your product, not a repetition of what any scanner UI already shows.
+An entry with the verdict `affected` has a `severity`.
+It's your rating of how much the vulnerability harms your software, in the way you build and run it, and it can differ from the CVSS score.
+Acme Shop rates Spring4Shell `medium`, because the published exploit needs a WAR deployment on Apache Tomcat, and Acme Shop runs as an executable JAR.
+The advisory can't take that into account.
+When a public score influenced the rating, the analysis can say so.
 
-== Related
+== Workflow and history stay in other tools
 
-* xref:concepts/data-model.adoc[The Vulnlog data model] describes what the file does record.
-* xref:reference/vulnerabilities.adoc[Vulnerabilities] defines the entry fields.
+The file also has no assignee, due date, discussion thread, or change history.
+Who worked on an entry, and when, is in the Git history.
+Planning the work belongs in your issue tracker.
+
+Because an entry holds your reasoning and leaves the advisory where it is, it stays short enough to review in a pull request.
+It needs updating only when your own conclusions change, and an updated advisory leaves it as it is.
+
+* xref:guides/triage-a-finding.adoc[Triage a new scanner finding]
+* xref:reference/vulnerabilities.adoc[Vulnerabilities]
+* xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications]
