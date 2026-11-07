@@ -1,80 +1,74 @@
 = Vulnlog and your scanner
 :page-aliases: overview-suppress.adoc
 
-The Vulnlog CLI reads the Vulnlog YAML file and generates suppression files (also called ignore files) for SCA scanners.
+Your scanner finds vulnerabilities in your dependencies, and Vulnlog records what you concluded about them.
+The two meet in the suppression file: Vulnlog writes it, and your scanner reads it.
 
-Not every reported finding actually affects the project; false positives and findings already mitigated by the project are common.
-Suppression files tell the scanner to stop flagging them.
-Vulnlog generates one suppression file per scanner so only the reviewed findings are silenced.
+== What Vulnlog and the scanner each do
 
-image::vulnlog-suppressing.svg[alt="Vulnlog workflow: SCA scanners report findings, the engineer documents the verdict in vulnlog.yaml, and the Vulnlog CLI generates one ignore file per scanner that feeds back to the scanners"]
+Vulnlog doesn't scan anything.
+Your scanner keeps finding vulnerabilities, with its own database and its own rules, and you keep running it as you do today.
+When it reports something new, you analyse the finding and record the result in the Vulnlog file, with a report that names the scanner.
 
-== Supported reporters
+The scanner, in turn, knows nothing about your analysis.
+It only learns which findings to stay quiet about, from the suppression file Vulnlog generates for it.
+For scanners with a native format, such as Trivy, that's a file in the scanner's own format, under the file name the scanner looks for.
+For the other scanners, Vulnlog writes a generic JSON file that you can feed into your own tooling.
+xref:reference/suppression.adoc#supported-scanners[Supported scanners] lists the formats and file names.
 
-[#_cargo_audit]
-=== Cargo Audit
+== From one entry to the scanner
 
-Vulnlog supports the https://github.com/RustSec/rustsec/tree/main/cargo-audit[Cargo Audit TOML suppression file] format.
+Text4Shell in Acme Shop came from OWASP Dependency-Check.
+The team found that Acme Shop never calls the vulnerable code and recorded the verdict `not affected`.
+From that entry, Vulnlog generates `dependency-check-suppressions.xml`, which lists `CVE-2022-42889` with the analysis as the note.
+For the generated file, see xref:reference/suppression.adoc[Suppression].
 
-.Cargo Audit toml-based suppression file example.
-[source,toml]
-----
-include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
-----
+The next Dependency-Check run doesn't report Text4Shell again.
+Anyone who wonders why can read the note, or the entry in the Vulnlog file.
 
-[#_dependency_check]
-=== OWASP Dependency-Check
+When several scanners report the same vulnerability, the entry has one report for each of them, and each scanner's suppression file lists only the identifier types that the scanner accepts.
+If a scanner calls the vulnerability by its own identifier, you give that identifier on the scanner's report, and the scanner's file uses it.
+Snyk only accepts `SNYK-` IDs and cargo-audit only `RUSTSEC-` IDs.
+If the entry's `id` is a CVE and the report's `vuln_ids` has no such ID, the entry is left out of that scanner's file.
+For the identifier types of each scanner, see xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+When you add or replace a scanner, you add reports for it to the entries it flags, and Vulnlog generates its file.
+The analysis stays as it is.
 
-Vulnlog supports the https://dependency-check.github.io/DependencyCheck/general/suppression.html[OWASP Dependency-Check XML suppression file] format.
-With the default `--format auto`, `dependency-check` reports produce `dependency-check-suppressions.xml`.
-Only CVE identifiers are supported; other identifier types are skipped.
-The entry's analysis becomes `notes`, and `suppress.expires_at`, when set, becomes the exclusive `until` date on the following day.
-Each rule applies to the CVE across all dependencies; package and file matchers are not emitted.
+== Which findings stay quiet
 
-.Dependency-Check XML suppression file example.
-[source,xml]
-----
-include::{examplesdir}/suppress/Dependency Check Suppression Example.xml[]
-----
+Vulnlog decides from your entries which findings go into a suppression file.
 
-[#_snyk]
-=== Snyk
+An entry with the verdict `not affected` goes in, because the vulnerability can't harm your software and the scanner would only repeat itself.
+That's what happens with Text4Shell.
 
-Vulnlog supports the https://docs.snyk.io/manage-risk/policies/the-.snyk-file#use-the-.snyk-file-with-snyk-open-source[Snyk Open Source suppression file] format.
+An entry with the verdict `affected`, or one still `under investigation`, goes in only if you ask for it with a `suppress` block on the scanner's report.
+A vulnerability you haven't fixed is a real risk, so it stays visible until you decide otherwise.
+Spring4Shell in Acme Shop is `affected`, and the fix is planned for 4.4.0.
+Its Trivy report has a `suppress` block that expires on 2027-03-31, so Trivy stays quiet until then and starts reporting it again if the fix hasn't shipped.
+The lodash entry is an accepted risk, and its npm audit report has a `suppress` block without an expiry date.
+Because npm audit has no suppression format of its own, Vulnlog writes the entry to `npm-audit.generic.json`, which npm audit doesn't read.
+Your own tooling applies it.
 
-.Snyk yaml-based suppression file example.
-[source,yaml]
-----
-include::{examplesdir}/suppress/Snyk Suppression Example.yaml[lines=1..7]
-----
+A `resolved` entry never goes in, whatever the verdict.
+After Log4Shell was fixed in 4.3.0, no suppression file contains it, so the scanner confirms that the fix works.
+This applies as soon as you record the resolution, even if its release hasn't shipped yet.
+A scanner that checks the current release then reports the finding again, because that release still has the vulnerable package.
+With `--as-of` and the release the scanner checks, the resolution doesn't count yet, and a `suppress` block on the report still applies.
 
-[#_trivy]
-=== Trivy
+The exact rules, including expiry, are in xref:reference/suppression.adoc[Suppression].
 
-Vulnlog supports the https://trivy.dev/docs/latest/configuration/filtering/#trivyignoreyaml[Trivy YAML suppression file] format.
+== Generated files follow the Vulnlog file
 
-.Trivy yaml-based suppression file example.
-[source,yaml]
-----
-include::{examplesdir}/suppress/Trivy Suppression Example.yaml[lines=1..5]
-----
+Vulnlog writes a scanner's file even when it has nothing to suppress, so an outdated suppression can't stay behind after you resolve a vulnerability or a suppression expires.
+In Acme Shop, `grype.generic.json` is empty, because Grype only reported Log4Shell, which is resolved.
+If you remove the last report of a scanner from the file, Vulnlog stops writing that scanner's file, and you delete the old one yourself.
 
-[#_generic]
-=== Generic
+Reports from `other`, such as a customer inquiry, don't name a scanner, so they don't get a suppression file.
 
-Some scanners (such as Semgrep) have no suppression-file mechanism.
-Others (such as Grype) do, but Vulnlog does not yet emit their format.
-For both cases Vulnlog writes a generic JSON file that teams can wire into their own tool chain.
+Because suppression files are generated, an assessment changes in the Vulnlog file and reaches the scanner the next time Vulnlog writes the files.
+When the files are generated in the same pipeline that runs the scanners, each scan uses the assessments in the current version of the Vulnlog file.
 
-You can also request this format for any reporter with `--format generic`, which is useful when you prefer to post-process suppressions in scripts or other tooling rather than use the native format.
-
-.Generic json-based suppression file example.
-[source,json]
-----
-include::{examplesdir}/suppress/Generic Suppression Example.json[]
-----
-
-== See also
-
-- xref:reference/suppression.adoc[Suppression]
-- xref:reference/cli-suppress.adoc[CLI Suppress Command]
+* xref:guides/generate-suppression-files.adoc[Generate suppression files]
+* xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX]
+* xref:guides/run-in-ci.adoc[Run in CI pipelines]
+* xref:troubleshooting.adoc#finding-still-reported[The scanner still reports a finding]

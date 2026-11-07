@@ -1,0 +1,85 @@
+= Vulnlog and VEX
+
+Vulnlog turns your verdicts into two kinds of files that tools read: suppression files and OpenVEX documents.
+Both come from the same entries, but they're written for different readers and say different things.
+
+== What VEX is
+
+VEX (Vulnerability Exploitability eXchange) is a machine-readable statement from the supplier of a product about whether the product is affected by a vulnerability.
+A statement names the vulnerability, the product, and a status: `not_affected`, `affected`, `fixed`, or `under_investigation`.
+A `not_affected` statement also gives a justification, such as `vulnerable_code_not_in_execute_path`.
+
+A scanner that finds a vulnerable library in your product can't tell whether your product uses the vulnerable code.
+You can, and a VEX statement passes that knowledge on to everyone who scans your product.
+OpenVEX is one format for VEX statements, and the one Vulnlog generates.
+Vulnlog's OpenVEX support is incubating.
+
+== Two files for two readers
+
+A suppression file is for your own scanners.
+It lists vulnerability IDs that one scanner should skip, in that scanner's format, and it stays in your repository or pipeline.
+It doesn't name a product, because the scanner already knows what it scans.
+It can also hold findings you silence for a while although they affect you, such as Spring4Shell in Acme Shop until the fix ships.
+
+An OpenVEX document is for your customers and their tools.
+It doesn't depend on a particular scanner, and you publish it with your releases.
+It names each product by its package URL (PURL), and the vulnerable package in it.
+It covers entries with any verdict, including `affected` entries and entries still `under investigation`, because a customer needs to know about the risks as much as about the false alarms.
+A `suppress` block has no effect on it, so an entry you silence in your own scanner is still `affected` in the document.
+
+The table shows how an entry becomes an OpenVEX status:
+
+[cols="2,1"]
+|===
+| Entry | Status
+
+| No verdict
+| `under_investigation`
+
+| `not affected`
+| `not_affected`
+
+| `affected`
+| `affected`
+
+| A resolution, for its release and every later release
+| `fixed`
+|===
+
+== How a scanner uses the document
+
+A scanner such as Trivy reads an OpenVEX document next to its own findings.
+It leaves out a finding when a statement with the status `not_affected` or `fixed` matches it, and it keeps reporting `affected` and `under_investigation` findings.
+
+A statement matches when its product is what the scanner scans, and its subcomponent is a package the scanner found in it.
+Trivy identifies a Maven project by the coordinates in `pom.xml`, so a statement for `pkg:maven/com.acme/acme-shop-server@4.3.0` applies only to a project with those coordinates.
+Trivy identifies a container image by its digest, so the statement for an image names the digest.
+An image tag such as `4.3.0` doesn't match.
+This is why each release in the Vulnlog file lists the PURLs of its artifacts, and why the PURLs must be the ones your customers' tools see.
+Which artifacts Trivy can identify depends on the ecosystem.
+See xref:guides/add-and-publish-releases.adoc#choose-purls[Choose the PURL of each artifact].
+
+Tags decide which release PURLs an entry's statements name.
+The XZ Utils finding is about a Debian package in the Acme Shop container image, `pkg:oci/acme-shop`.
+The server JAR doesn't contain it, so the entry has only the tag `container`, and so does the container PURL of each release.
+An entry without a tag gets no statement.
+
+== Why the dates matter
+
+Each statement has a timestamp: the date its status became true.
+For a verdict, that's `analyzed_at`, and for `fixed`, it's `resolution.at` or the date the release was published.
+Without `analyzed_at`, Vulnlog uses the earliest report date instead.
+That's when you heard of the vulnerability, which can be long before you assessed it.
+A resolution without `at` in a release without `published_at` leaves the `fixed` statement without a date, and `vulnlog validate` warns about it.
+
+The document itself has an ID and a version.
+When you generate it again from the previous document, the ID stays and the version goes up, so your customers' tools can tell a newer document from an older one.
+
+== One entry, two outputs
+
+Because both files come from the same entry, a verdict you record reaches your scanners and your customers in the same form.
+Suppression files keep your own pipeline quiet, and the OpenVEX document gives your customers the same verdict for the releases you ship.
+
+* xref:get-started/quickstart-openvex.adoc[Share your analysis with OpenVEX]
+* xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents]
+* xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
