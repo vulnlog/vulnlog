@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.codec.suppression.dependencycheck
 
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.model.suppression.SuppressionList
 import java.time.LocalDate
@@ -35,7 +36,13 @@ internal object DependencyCheckSuppressionEncoder {
                     entry.expiresAt?.let { " until=\"${it.plusDays(1).toString().removePrefix("+")}Z\"" }.orEmpty()
                 appendLine("    <suppress$until>")
                 entry.reason?.let { appendLine("        <notes>${escapeXml(it)}</notes>") }
-                appendLine("        <cve>${escapeXml(entry.id.id)}</cve>")
+                val element =
+                    when (entry.id) {
+                        is VulnId.Cve -> "cve"
+                        is VulnId.Ghsa -> "vulnerabilityName"
+                        else -> error("Unsupported Dependency-Check vulnerability ID: ${entry.id.id}")
+                    }
+                appendLine("        <$element>${escapeXml(entry.id.id)}</$element>")
                 appendLine("    </suppress>")
             }
             appendLine("</suppressions>")

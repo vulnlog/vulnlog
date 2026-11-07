@@ -84,6 +84,40 @@ class DependencyCheckSuppressionEncoderTest :
                 .getNamedItem("until") shouldBe null
         }
 
+        test("GHSA entries use exact vulnerability names with notes and optional expiry") {
+            val reason = "Reviewed <code> & build tooling."
+            val xml =
+                SuppressionEncoder.encode(
+                    SuppressionList(
+                        SuppressionFormat.DependencyCheck,
+                        setOf(
+                            SuppressionEntry(VulnId.Cve("CVE-2026-1111")),
+                            SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"), LocalDate.of(2026, 8, 1), reason),
+                            SuppressionEntry(VulnId.Ghsa("GHSA-dddd-eeee-ffff")),
+                        ),
+                    ),
+                )
+
+            validateSchema(xml)
+            val document = parse(xml)
+            val names = document.getElementsByTagName("vulnerabilityName")
+            names.length shouldBe 2
+            names.item(0).textContent shouldBe "GHSA-aaaa-bbbb-cccc"
+            names.item(1).textContent shouldBe "GHSA-dddd-eeee-ffff"
+            names.item(0).attributes.length shouldBe 0
+            names
+                .item(0)
+                .parentNode.attributes
+                .getNamedItem("until")
+                .nodeValue shouldBe "2026-08-02Z"
+            names
+                .item(1)
+                .parentNode.attributes
+                .getNamedItem("until") shouldBe null
+            document.getElementsByTagName("notes").item(0).textContent shouldBe reason
+            document.getElementsByTagName("cve").length shouldBe 1
+        }
+
         test("an empty list remains a schema-valid XML document") {
             val xml = SuppressionEncoder.encode(SuppressionList(SuppressionFormat.DependencyCheck, emptySet()))
 

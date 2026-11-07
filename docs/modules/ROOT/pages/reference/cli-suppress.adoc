@@ -120,7 +120,8 @@ Wrote: /path/to/dependency-check-suppressions.xml
 include::{examplesdir}/suppress/Dependency Check Suppression Example.xml[]
 ----
 
-Dependency-Check output includes CVE identifiers only.
+Dependency-Check output includes CVE and GHSA identifiers.
+CVE IDs are written as `cve` elements, and GHSA IDs as exact `vulnerabilityName` matches; other identifier types are skipped.
 The analysis is written as escaped XML text in `notes`; `suppress.expires_at` supplies the optional exclusive `until` date on the following day, keeping suppression active throughout the expiry day.
 If analysis contains a character XML 1.0 cannot represent (such as NUL), generation fails before writing any suppression files and reports every affected entry and distinct invalid code point.
 An expiry with no representable following day is also rejected; choose an earlier expiry or use generic JSON.

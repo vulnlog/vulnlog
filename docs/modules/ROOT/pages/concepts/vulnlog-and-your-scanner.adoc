@@ -27,9 +27,10 @@ include::{examplesdir}/suppress/Cargo Audit Suppression Example.toml[]
 
 Vulnlog supports the https://dependency-check.github.io/DependencyCheck/general/suppression.html[OWASP Dependency-Check XML suppression file] format.
 With the default `--format auto`, `dependency-check` reports produce `dependency-check-suppressions.xml`.
-Only CVE identifiers are supported; other identifier types are skipped.
+CVE and GHSA identifiers are supported; other identifier types are skipped.
+CVE IDs use `cve`; GHSA IDs use an exact `vulnerabilityName` match.
 The entry's analysis becomes `notes`, and `suppress.expires_at`, when set, becomes the exclusive `until` date on the following day.
-Each rule applies to the CVE across all dependencies; package and file matchers are not emitted.
+Each rule applies to the vulnerability ID across all dependencies; package and file matchers are not emitted.
 
 .Dependency-Check XML suppression file example.
 [source,xml]
