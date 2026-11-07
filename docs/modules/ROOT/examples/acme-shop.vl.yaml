@@ -1,0 +1,162 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+  contact: security@acme.example
+
+tags:
+  - id: backend
+    description: Java server application
+  - id: frontend
+    description: Web user interface
+  - id: worker
+    description: Python report worker
+  - id: container
+    description: Container image that bundles all components
+
+releases:
+  - id: 4.2.0
+    published_at: 2026-03-02
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.2.0"
+        tags: [backend]
+      - purl: "pkg:oci/acme-shop@sha256:cf9066b0fcef66d545007bd33b5d8d59e7434e37c2a23d19a3075fdb6f0b48b9"
+        tags: [container]
+  - id: 4.3.0
+    published_at: 2026-06-15
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.3.0"
+        tags: [backend]
+      - purl: "pkg:oci/acme-shop@sha256:23a5bff22a95119dc4bcef9422a20038eb3c2fd355f03928b02791273ff1cc27"
+        tags: [container]
+  - id: 4.4.0
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.4.0"
+        tags: [backend]
+      - purl: "pkg:oci/acme-shop@sha256:350f97615163b67cbff8b015e60c77c2cbb954b4d9ffa9d48254e216e54899c8"
+        tags: [container]
+
+vulnerabilities:
+
+  - id: CVE-2023-32681
+    description: Proxy-Authorization header leak in requests
+    releases: [4.3.0]
+    packages: ["pkg:pypi/requests@2.28.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-07-14
+    tags:
+      - worker
+      - container
+
+  - id: CVE-2024-3094
+    name: XZ Utils backdoor
+    description: Backdoor in the liblzma library of XZ Utils
+    releases: [4.3.0]
+    packages: ["pkg:deb/debian/xz-utils@5.4.1"]
+    reports:
+      - reporter: other
+        at: 2026-07-02
+        source: Customer inquiry
+    tags: [container]
+    analysis: >-
+      The container image is based on Debian 12, which ships xz-utils 5.4.1. The backdoor is only in the upstream releases 5.6.0
+      and 5.6.1.
+    analyzed_at: 2026-07-02
+    verdict: not affected
+    justification: vulnerable code not present
+
+  - id: CVE-2022-42889
+    name: Text4Shell
+    description: Remote code execution through string interpolation in Apache Commons Text
+    releases:
+      - 4.2.0
+      - 4.3.0
+    packages: ["pkg:maven/org.apache.commons/commons-text@1.9"]
+    reports:
+      - reporter: dependency-check
+        at: 2026-05-20
+    tags:
+      - backend
+      - container
+    analysis: >-
+      Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable
+      interpolation.
+    analyzed_at: 2026-05-21
+    verdict: not affected
+    justification: vulnerable code not in execute path
+
+  - id: CVE-2022-22965
+    name: Spring4Shell
+    description: Remote code execution through data binding in Spring Framework
+    releases:
+      - 4.2.0
+      - 4.3.0
+    packages: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
+    reports:
+      - reporter: trivy
+        at: 2026-04-07
+        suppress:
+          expires_at: 2027-03-31
+    tags:
+      - backend
+      - container
+    analysis: >-
+      Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
+      but Spring advises all users to upgrade.
+    analyzed_at: 2026-04-08
+    verdict: affected
+    severity: medium
+    disposition: will fix
+    comment: Planned for 4.4.0 together with the Spring Boot update.
+
+  - id: CVE-2021-23337
+    description: Command injection through the template function in lodash
+    releases:
+      - 4.2.0
+      - 4.3.0
+    packages: ["pkg:npm/lodash@4.17.20"]
+    reports:
+      - reporter: npm-audit
+        at: 2026-03-10
+        suppress: {}
+    tags: [frontend]
+    analysis: >-
+      The template function is only used in the admin interface, with templates that administrators write. Administrators can
+      already change the shop configuration, so the injection gives them no additional access. The admin interface is removed
+      in Acme Shop 5.0.
+    analyzed_at: 2026-03-12
+    verdict: affected
+    severity: low
+    disposition: wont fix
+
+  - id: CVE-2021-44228
+    name: Log4Shell
+    description: Remote code execution through JNDI lookups in Apache Log4j
+    aliases: [GHSA-jfh8-c2jp-5v3q]
+    releases: [4.2.0]
+    packages: ["pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"]
+    reports:
+      - reporter: grype
+        at: 2026-03-10
+      - reporter: other
+        at: 2026-03-11
+        source: Customer support request
+    tags:
+      - backend
+      - container
+    analysis: >-
+      The server logs the User-Agent header with log4j-core 2.14.1. A crafted header triggers a JNDI lookup and runs attacker-controlled
+      code.
+    analyzed_at: 2026-03-11
+    verdict: affected
+    severity: critical
+    disposition: will fix
+    resolution:
+      in: 4.3.0
+      at: 2026-06-15
+      note: Updated log4j-core from 2.14.1 to 2.17.1

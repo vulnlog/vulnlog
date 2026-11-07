@@ -1,0 +1,229 @@
+= Share your analysis with OpenVEX
+
+In this tutorial, you tell a scanner that a vulnerability doesn't affect your release, without a suppression file.
+You record that Text4Shell (`CVE-2022-42889`) doesn't affect Acme Shop 4.3.0, generate an OpenVEX document from the Vulnlog file, and scan the project with Trivy and that document.
+It takes about 15 minutes.
+
+Your customers' scanners find the same vulnerabilities in what you ship, and you can't change their settings.
+An OpenVEX document is a file you publish with the release.
+It tells your customers' tools whether the release is affected by a vulnerability, and scanners such as Trivy read it.
+OpenVEX support in Vulnlog is incubating.
+
+== Before you start
+
+* Install the Vulnlog CLI.
+For instructions, see xref:get-started/install.adoc[Install Vulnlog].
+* Install Trivy.
+For instructions, see the https://trivy.dev/[Trivy documentation].
+* Make sure you have internet access.
+Trivy downloads its vulnerability database, and it reads the dependencies of the project from Maven Central.
+
+== Create the project
+
+Create an empty directory for the project:
+
+[source,bash]
+----
+mkdir acme-shop-server
+cd acme-shop-server
+----
+
+Run every command in this tutorial from this directory.
+
+Create a file named `pom.xml` with this content:
+
+[source,xml]
+----
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.acme</groupId>
+  <artifactId>acme-shop-server</artifactId>
+  <version>4.3.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.9</version>
+    </dependency>
+  </dependencies>
+</project>
+----
+
+This is the Maven build file of the Acme Shop server, version 4.3.0.
+It uses version 1.9 of Apache Commons Text, which has the Text4Shell vulnerability.
+You don't need Maven, because Trivy reads the file directly.
+
+== Scan the project
+
+Scan the project with Trivy:
+
+[source,bash]
+----
+trivy fs --scanners vuln .
+----
+
+The first scan takes a moment, because Trivy downloads its database.
+Trivy then lists the vulnerabilities it found in `pom.xml`.
+One of them is `CVE-2022-42889` in `org.apache.commons:commons-text` 1.9, with the severity `CRITICAL`.
+Depending on the current Trivy database, the list also contains other findings.
+
+== Create the Vulnlog file
+
+Create a Vulnlog file:
+
+[source,bash]
+----
+vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o vulnlog.yaml
+----
+
+[source]
+----
+Created: vulnlog.yaml
+----
+
+== Describe the release
+
+An OpenVEX statement is about a product, so the Vulnlog file needs to say what you ship.
+
+Open `vulnlog.yaml` in your editor.
+Replace the line `releases: []` with a tag and the release:
+
+[source,yaml]
+----
+tags:
+  - id: backend
+    description: Java server application
+
+releases:
+  - id: 4.3.0
+    published_at: 2026-06-15
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.3.0"
+        tags: [backend]
+----
+
+The `purls` list names the artifact of the release with a package URL (PURL), a standard way to name a package, its ecosystem, and its version in one string.
+This PURL names the same artifact as the `groupId`, `artifactId`, and `version` in `pom.xml`.
+
+The release PURL has the tag `backend`.
+You give the entry the same tag in the next step, and that tag connects the two.
+
+== Record your verdict
+
+Suppose you've analysed the finding.
+Text4Shell needs the `StringSubstitutor` class, and the Acme Shop server only uses `StringEscapeUtils`.
+
+Record the finding and your verdict in one command:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2022-42889 \
+  --name Text4Shell \
+  --description "Remote code execution through string interpolation in Apache Commons Text" \
+  --package "pkg:maven/org.apache.commons/commons-text@1.9" \
+  --reporter trivy --tag backend \
+  --analysis "Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation." \
+  --verdict "not affected" \
+  --justification "vulnerable code not in execute path"
+----
+
+[source]
+----
+Added: CVE-2022-42889 to vulnlog.yaml
+----
+
+Check the file:
+
+[source,bash]
+----
+vulnlog validate --strict vulnlog.yaml
+----
+
+[source]
+----
+Validated: vulnlog.yaml
+----
+
+== Generate the OpenVEX document
+
+Generate the document:
+
+[source,bash]
+----
+vulnlog vex openvex vulnlog.yaml
+----
+
+[source]
+----
+Wrote: vex.json
+----
+
+Open `vex.json`.
+It has one statement.
+These are its main parts:
+
+[source,json]
+----
+      "products": [
+        {
+          "@id": "pkg:maven/com.acme/acme-shop-server@4.3.0",
+          "identifiers": {
+            "purl": "pkg:maven/com.acme/acme-shop-server@4.3.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/org.apache.commons/commons-text@1.9",
+              "identifiers": {
+                "purl": "pkg:maven/org.apache.commons/commons-text@1.9"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation.",
+----
+
+The statement says that `CVE-2022-42889` in Commons Text 1.9 doesn't affect the Acme Shop server 4.3.0.
+The product is the release PURL, and the subcomponent is the package from the entry.
+Vulnlog wrote the statement for this release PURL because the entry and the PURL share the tag `backend`.
+Your analysis is the `impact_statement`.
+
+== Scan with the OpenVEX document
+
+Scan the project again, and pass the document to Trivy:
+
+[source,bash]
+----
+trivy fs --scanners vuln --vex vex.json .
+----
+
+`CVE-2022-42889` is no longer in the list.
+Trivy still reports any other findings, because the document says nothing about them.
+
+To see what Trivy left out and why, add `--show-suppressed`:
+
+[source,bash]
+----
+trivy fs --scanners vuln --vex vex.json --show-suppressed .
+----
+
+At the end of the output, the table Suppressed Vulnerabilities lists `CVE-2022-42889` with the status `not_affected`, the justification `vulnerable_code_not_in_execute_path`, and the source `vex.json`.
+
+Trivy applied the statement because it identifies the project in `pom.xml` as `pkg:maven/com.acme/acme-shop-server@4.3.0`, the same PURL as the product in the statement.
+A statement about a different PURL doesn't apply to this project.
+
+== What you've learned
+
+Now you can:
+
+* Describe a release with the PURL of its artifact.
+* Connect entries to release PURLs with tags.
+* Generate an OpenVEX document and check with a scanner that it applies.
+
+== Next steps
+
+* Publish the document with your releases and keep it up to date in xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents].
+* List the artifacts of all your releases in xref:guides/add-and-publish-releases.adoc[Add and publish releases].
+* Learn when to use OpenVEX and when suppression files in xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX].
