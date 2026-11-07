@@ -1,27 +1,69 @@
 = Vulnlog
 
-Vulnlog records your team's vulnerability triage decisions in a git-tracked YAML file and turns them into scanner suppression files and shareable reports.
-A decision is recorded once: the scanner stops flagging it, the report explains it, and git remembers who made it and when.
+Vulnlog is a declarative format and a set of tools for describing how vulnerabilities affect your software and what you plan to do about them.
+You record your assessment once, in a Vulnlog file in your Git repository.
+Vulnlog generates what your scanners, your team, and your customers need from it.
 
-New to Vulnlog?
-Start with xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?], then xref:get-started/install.adoc[install] the CLI.
+Vulnlog doesn't scan your software, and it doesn't analyse vulnerabilities for you.
+It works alongside your scanners and vulnerability management platforms and doesn't replace them.
 
-== Find your path
+== The problem
 
-Your scanner flagged a finding::
-Record the decision and unblock the build: xref:get-started/quickstart-triage.adoc[Quickstart: triage your first finding].
+Vulnerability reports reach your software from many sources: security scanners, security researchers, penetration tests and audits, and customers who scan your product.
+For each report, you analyse whether the vulnerability affects your software and, if it does, how severely.
 
-You prepare the next release::
-See which vulnerabilities affect a shipped release and which updates the next release must carry: xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release].
+Many vulnerabilities don't affect your software, but your scanners keep reporting them.
+Others do affect it, and you can't always fix them and release straight away.
+Until you do, your team needs to know which releases are affected, and your customers want to know what you plan to do.
 
-You need the impact picture::
-Read the report and state how the project is affected, without touching YAML or a build: xref:get-started/quickstart-report.adoc[Quickstart: read the impact report].
+== Why use Vulnlog
 
-Someone asks about a vulnerability::
-Answer a customer or user from the recorded decision instead of re-analysing: xref:get-started/quickstart-inquiry.adoc[Quickstart: answer a vulnerability inquiry].
+* You don't need a server, a cloud service, an account, or a subscription.
+Vulnlog is a YAML file and tools you run from the command line, in a Docker container, with the Gradle plugin, or in GitHub Actions.
+* You analyse a vulnerability next to the code it affects.
+You don't switch between your code and a wiki, a spreadsheet, an issue tracker, or a vulnerability management platform.
+* Because the Vulnlog file is in Git, you change an analysis in a pull request, and another person can review it.
+Your conclusions can change as you learn more about a vulnerability.
+Git shows what changed, who changed it, and when.
+* New team members can read earlier analyses and build on them.
+* Vulnlog generates suppression files from the current Vulnlog file.
+When you fix a vulnerability or a suppression expires, the next generated file no longer contains it, so outdated suppressions don't hide new risks.
+* Your analysis doesn't depend on a scanner or a vendor.
+When you switch to another scanner or add one, you note the new scanner on the vulnerabilities it flags, and Vulnlog writes its suppression file.
+* Vulnlog is free and open source under the https://github.com/vulnlog/vulnlog/blob/main/LICENSE[Apache 2.0 licence].
+If a feature you need is missing, you can propose it and contribute it.
 
-== Returning readers
+== How it works
 
-* Reference: xref:reference/file-format.adoc[The Vulnlog file format], xref:reference/cli.adoc[the CLI], xref:reference/gradle-plugin.adoc[the Gradle plugin], and xref:reference/github-action.adoc[the GitHub Action].
-* Concepts: xref:concepts/why-git.adoc[why decisions live in git], xref:concepts/data-model.adoc[the data model], and xref:concepts/vulnerability-states.adoc[vulnerability states].
-* Stuck? Ask in the https://github.com/vulnlog/vulnlog/discussions[GitHub discussions].
+=== Declare impact and plans
+
+You record each vulnerability as an entry in the Vulnlog file.
+An entry says which releases are affected, your verdict, the reasoning behind it, and what you plan to do.
+If the same vulnerability reaches you from several sources, it's still one entry, with a report for each source.
+In this example, a scanner and a customer reported the same vulnerability:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=137..158,indent=0]
+----
+
+When the fix ships, you add a `resolution` with the release that contains the fix.
+
+=== Generate what others need
+
+You don't write suppression files or reports yourself.
+From the entries in your Vulnlog file, Vulnlog generates:
+
+* Suppression files that your scanners read, in their native format or as a generic list
+* An impact report that shows which releases are affected and how severely
+* Release notes that list the vulnerabilities a release fixes
+* OpenVEX documents that tell your customers' tools whether a release is affected (incubating)
+
+For a list of scanners with a native format, see xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+== Get started
+
+xref:get-started/install.adoc[Install Vulnlog] and follow xref:get-started/quickstart-triage.adoc[Triage your first finding].
+If you don't maintain the Vulnlog file yourself, start with xref:get-started/quickstart-report.adoc[Read the impact report] or xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry].
+To find out whether Vulnlog suits your project, read xref:concepts/where-vulnlog-fits.adoc[Where Vulnlog fits].
+If you have questions, ask in https://github.com/vulnlog/vulnlog/discussions[GitHub Discussions].
