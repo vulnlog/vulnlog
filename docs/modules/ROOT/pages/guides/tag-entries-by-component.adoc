@@ -1,0 +1,58 @@
+= Tag entries by component
+
+Tag each entry with the components of your product that the vulnerability affects.
+You can then generate reports, suppression files, and OpenVEX documents for one component.
+OpenVEX documents tell your customers' tools whether a release is affected by a vulnerability.
+
+== Before you start
+
+* A Vulnlog file, for example `acme-shop.vl.yaml`.
+To create one, see xref:guides/create-a-vulnlog-file.adoc[Create a Vulnlog file].
+
+== Tag the entries
+
+. Define each tag once under `tags`, with an `id` and a `description`.
+Acme Shop has one tag per component:
++
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=11..19]
+----
+
+. Add the tags of the affected components to each entry:
++
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=149..151]
+----
+
+. Give each package URL (PURL) of a release the tags of the component it contains.
+OpenVEX documents list an entry only for release PURLs that share a tag with it.
+For the release PURLs, see xref:guides/add-and-publish-releases.adoc[Add and publish releases].
+
+For the rules, see xref:reference/tags.adoc[Tags].
+
+== Check the result
+
+. Validate the file:
++
+[source,console]
+----
+$ vulnlog validate acme-shop.vl.yaml
+----
++
+A tag that isn't defined is an error:
++
+----
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2021-23337].tags[web]: References undefined tags 'web'. Defined tags: backend, container, frontend, worker
+----
+
+. Generate a report for one component with `--tag`:
++
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --tag frontend -o frontend-report.html
+Wrote: frontend-report.html
+----
++
+For the commands that accept `--tag`, see xref:reference/cli.adoc#filters[Filter options].

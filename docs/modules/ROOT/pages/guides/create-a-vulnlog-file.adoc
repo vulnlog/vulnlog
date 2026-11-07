@@ -1,0 +1,96 @@
+= Create a Vulnlog file
+
+Create the Vulnlog file of your project, add the releases you support, and commit it next to your code.
+
+== Before you start
+
+* The Vulnlog CLI.
+See xref:get-started/install.adoc[Install Vulnlog].
+* The names of your organisation, your project, and the team that maintains the file.
+
+== Create the file
+
+. In the root of your repository, run `vulnlog init`:
++
+[source,console]
+----
+$ vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o acme-shop.vl.yaml
+Created: acme-shop.vl.yaml
+----
++
+Name the file `vulnlog.yaml`, or give it a name that ends in `.vl.yaml`.
+`init` writes any name, but the other commands only read these names and `.yml` variants.
+
+. Replace `releases: []` with the releases you support, oldest first:
++
+[source,yaml]
+----
+releases:
+  - id: 4.2.0
+    published_at: 2026-03-02
+  - id: 4.3.0
+    published_at: 2026-06-15
+----
++
+To list the artifacts of each release, see xref:guides/add-and-publish-releases.adoc[Add and publish releases].
+
+. Validate the file:
++
+[source,console]
+----
+$ vulnlog validate acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.2.0]: Unreferenced release ID '4.2.0'.
+info: acme-shop.vl.yaml: releases[4.3.0]: Unreferenced release ID '4.3.0'.
+2 infos
+Validated: acme-shop.vl.yaml
+----
++
+The `info` lines go away when entries refer to the releases.
+
+. Commit the file.
+
+== Variants
+
+=== If you use the Gradle plugin
+
+Run `vulnlogInit` with the values as project properties, and add the file to the `vulnlog` block:
+
+[source,console]
+----
+$ ./gradlew vulnlogInit -Pvulnlog.organization="Acme Corp" -Pvulnlog.name="Acme Shop" \
+    -Pvulnlog.author="Acme Product Security Team" -Pvulnlog.output=acme-shop.vl.yaml
+----
+
+[source,kotlin]
+----
+vulnlog {
+    files.from("acme-shop.vl.yaml")
+}
+----
+
+For the plugin setup, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+=== If you use Docker
+
+Mount the repository to `/work`:
+
+[source,console,subs="attributes+"]
+----
+$ docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} init \
+    --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o acme-shop.vl.yaml
+----
+
+For the user ID the container runs as, see xref:get-started/install.adoc[Install Vulnlog].
+
+=== If you support several release lines or products
+
+Keep one file per release line, and one file per product.
+See xref:guides/support-several-release-lines.adoc[Support several release lines].
+
+== Check the result
+
+* `vulnlog validate --strict acme-shop.vl.yaml` passes.
+* `vulnlog fmt --check acme-shop.vl.yaml` prints `Unchanged: acme-shop.vl.yaml`.
+
+To get validation and completion while you edit the file, see xref:guides/set-up-your-editor.adoc[Set up your editor].
+To record your first entry, see xref:guides/triage-a-finding.adoc[Triage a new scanner finding].

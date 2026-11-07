@@ -1,0 +1,164 @@
+= Support several release lines
+:page-aliases: branching-strategy.adoc, guides/organize-files-across-branches.adoc
+
+When you support several release lines of a product at once, keep one Vulnlog file per line.
+Each line then has its own releases, verdicts, and suppression files, and you can still report on all lines together.
+
+If each release replaces the one before and you only support the latest, you don't need this guide.
+Keep one Vulnlog file, for example `vulnlog.yaml`, and add each release to it.
+
+== Before you start
+
+* A Vulnlog file for your current release line.
+In this guide, that's `acme-shop.vl.yaml` with the 4.x releases of Acme Shop.
+* A second release line you still support.
+Acme Shop still ships security updates for 3.x.
+
+== Add a file for the second release line
+
+. Create a file for the older line next to the existing one, on your main branch.
+Name it `<project>-<line>.vl.yaml`, so Vulnlog recognises it and the name shows the line:
++
+----
+acme-shop.vl.yaml      4.x
+acme-shop-3.vl.yaml    3.x
+----
++
+For the file names Vulnlog accepts, see xref:reference/file-format.adoc[File format].
+
+. Copy `project` and the `tags` the line uses from the existing file, and list the releases of this line, oldest first.
+Use the same `project` values in every file, otherwise you can't combine the files in one report.
+See xref:reference/cli.adoc#input-files[Input files].
++
+[source,yaml]
+----
+include::example$release-lines/acme-shop-3.vl.yaml[lines=1..31]
+----
+
+. Record the vulnerabilities that affect this line.
+Acme Shop 3.9.0 shipped the vulnerable log4j-core, and 3.9.1 fixed it:
++
+[source,yaml]
+----
+include::example$release-lines/acme-shop-3.vl.yaml[lines=33..-1]
+----
+
+. Validate both files:
++
+[source,console]
+----
+$ vulnlog validate acme-shop.vl.yaml acme-shop-3.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+1 info
+Validated: acme-shop.vl.yaml
+Validated: acme-shop-3.vl.yaml
+----
++
+The `info` line only tells you that no entry refers to 4.4.0 yet.
+
+== Copy an entry to another release line
+
+When a vulnerability in one line also affects another, copy the entry instead of writing it again.
+Spring4Shell is recorded for 4.x and also affects 3.x:
+
+[source,console]
+----
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-3.vl.yaml --vuln-id CVE-2022-22965
+Copied: 1 entry to acme-shop-3.vl.yaml
+----
+
+The copy keeps the analysis, verdict, reports, and suppression.
+Its `releases` is set to the last release of the target file:
+
+[source,yaml]
+----
+  - id: CVE-2022-22965
+    name: Spring4Shell
+    description: Remote code execution through data binding in Spring Framework
+    releases: [3.9.1]
+    packages: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
+    reports:
+      - reporter: trivy
+        at: 2026-04-07
+        suppress:
+          expires_at: 2027-03-31
+    tags:
+      - backend
+      - container
+    analysis: >-
+      Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
+      but Spring advises all users to upgrade.
+    analyzed_at: 2026-04-08
+    verdict: affected
+    severity: medium
+    disposition: will fix
+    comment: Planned for 4.4.0 together with the Spring Boot update.
+----
+
+Review the copy before you commit it.
+Add earlier releases of the line to `releases` if they're affected too, and update text that only fits the other line, such as this `comment`.
+Name several targets to copy to more than one file, and repeat `--vuln-id` to copy several entries.
+For how `modify copy` merges an entry that already exists in the target, see xref:reference/cli-copy.adoc[vulnlog modify copy].
+
+== Variants
+
+=== If each release line has its own branch
+
+You can keep a `vulnlog.yaml` on each release branch instead, next to the code it describes.
+Each branch then records only its own releases.
+
+To copy an entry between branches, check out the other branch in a second directory with `git worktree`, and copy between the two files:
+
+[source,console]
+----
+$ git worktree add ../acme-shop-3 release/3.x
+$ vulnlog modify copy vulnlog.yaml ../acme-shop-3/vulnlog.yaml --vuln-id CVE-2022-22965
+Copied: 1 entry to ../acme-shop-3/vulnlog.yaml
+----
+
+Commit the change on each branch.
+
+=== If you use the Gradle plugin
+
+Add both files to the `vulnlog` block.
+Validation, formatting, and the reports then cover both lines.
+`vulnlogSuppress` reads one file only, so limit it to the main file and register a second task for the 3.x line:
+
+[source,kotlin]
+----
+import dev.vulnlog.gradle.VulnlogSuppressTask
+
+vulnlog {
+    files.from("acme-shop.vl.yaml", "acme-shop-3.vl.yaml")
+}
+
+tasks.named<VulnlogSuppressTask>("vulnlogSuppress") {
+    files.setFrom("acme-shop.vl.yaml")
+}
+
+tasks.register<VulnlogSuppressTask>("vulnlogSuppress3") {
+    group = "vulnlog"
+    files.from("acme-shop-3.vl.yaml")
+    outputDir = layout.buildDirectory.dir("vulnlog/suppressions-3")
+}
+----
+
+`vulnlogSuppress` writes to `build/vulnlog/suppressions`, and `vulnlogSuppress3` to `build/vulnlog/suppressions-3`.
+For the properties of a task you register yourself, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+=== If you maintain several products
+
+Give each product its own Vulnlog file with its own `project`.
+Generate the reports of each product from its own file.
+The report commands only combine files that share the same `project` values, and stop with an error for files of different products.
+
+== Check the result
+
+* `vulnlog validate` passes for every file.
+* Generate the suppression files of each line from its own file into its own directory, for example `vulnlog suppress acme-shop-3.vl.yaml --output-dir suppressions/3.x`.
+The directory must exist.
+In the same directory, the files of one line overwrite those of the other.
+See xref:guides/generate-suppression-files.adoc[Generate suppression files].
+* To see all lines in one report, pass all files to `vulnlog report impact` or `vulnlog report changelog`.
+See xref:guides/generate-reports.adoc[Generate reports].
+If the `project` values differ, the command stops with `all input files must share the same project metadata`.

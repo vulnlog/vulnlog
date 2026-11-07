@@ -8,21 +8,27 @@
 ** xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry]
 ** xref:get-started/quickstart-openvex.adoc[Share your analysis with OpenVEX]
 
-* Get started
-** xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?]
-** xref:get-started/install.adoc[Install]
-* Guides
+.How-to guides
+* How-to guides
+** xref:get-started/install.adoc[Install Vulnlog]
+** xref:guides/create-a-vulnlog-file.adoc[Create a Vulnlog file]
+** xref:guides/set-up-your-editor.adoc[Set up your editor]
+** xref:guides/migrate-from-ignore-files.adoc[Migrate from scanner ignore files]
+** xref:guides/add-and-publish-releases.adoc[Add and publish releases]
+** xref:guides/tag-entries-by-component.adoc[Tag entries by component]
+** xref:guides/support-several-release-lines.adoc[Support several release lines]
 ** xref:guides/triage-a-finding.adoc[Triage a new scanner finding]
 ** xref:guides/record-a-resolution.adoc[Record a resolution]
-** xref:guides/work-with-releases-and-tags.adoc[Work with releases and tags]
-** xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner]
-** xref:guides/validate-and-format.adoc[Validate and format Vulnlog files]
+** xref:guides/validate-and-format.adoc[Validate and format files]
+** xref:guides/generate-suppression-files.adoc[Generate suppression files]
 ** xref:guides/generate-reports.adoc[Generate reports]
+** xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents]
 ** xref:guides/find-what-affects-a-release.adoc[Find what affects a release]
 ** xref:guides/write-release-notes.adoc[Write release notes]
-** xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines]
-** xref:guides/organize-files-across-branches.adoc[Organize files across branches]
-** xref:guides/migrate-from-ignore-files.adoc[Migrate from scanner ignore files]
+** xref:guides/run-in-ci.adoc[Run in CI pipelines]
+
+* Get started
+** xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?]
 * Concepts
 ** xref:concepts/why-git.adoc[Why decisions live in git]
 ** xref:concepts/data-model.adoc[The Vulnlog data model]

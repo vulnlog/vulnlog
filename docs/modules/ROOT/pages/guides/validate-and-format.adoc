@@ -1,87 +1,129 @@
-= Validate and format Vulnlog files
+= Validate and format files
 
-Keep every Vulnlog file correct and canonically formatted, locally and in CI.
-At the end, validation runs on every change and formatting differences never reach review.
+Check that your Vulnlog files are valid and in the canonical style before you commit them.
 
-== Prerequisites
+== Before you start
 
-* One or more Vulnlog files.
+* One or more Vulnlog files, for example `acme-shop.vl.yaml`.
 
 == Validate
 
-xref:reference/cli-validate.adoc[`vulnlog validate`] parses each file and checks all validation rules:
-
-[source,bash]
+. Run `vulnlog validate` with one or more files:
++
+[source,console]
 ----
-vulnlog validate web-app-1.vl.yaml web-app-2.vl.yaml
-Validated: web-app-1.vl.yaml
-Validated: web-app-2.vl.yaml
+$ vulnlog validate acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+1 info
+Validated: acme-shop.vl.yaml
 ----
 
-Findings come in three severities: errors (the file would produce incorrect output), warnings (valid, but something is likely wrong), and infos (potential improvements).
-A failed validation prints one line per finding and exits with code 2:
-
-[source]
+. Read the messages.
+Each line names the level, the file, and the field it's about:
++
 ----
-vulnlog validate vulnlog.yaml
-error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
-1 error
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+info: acme-shop.vl.yaml: tags[frontend]: Unreferenced tag ID 'frontend'.
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2021-23337].tags[web]: References undefined tags 'web'. Defined tags: backend, container, frontend, worker
+1 error, 2 infos
+  hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
+----
++
+For what each level means, see xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].
+
+. Fix every `error:` line, then validate again.
+For what a message means, see xref:troubleshooting.adoc[Troubleshooting].
+
+To fail on warnings too, add `--strict`, and fix the `warning:` lines as well.
+In this copy of the file, the analysis date of CVE-2024-3094 is a day before its report date:
+
+[source,console]
+----
+$ vulnlog validate --strict acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+warning: acme-shop.vl.yaml: vulnerabilities[CVE-2024-3094].analyzed_at: Analyzed date '2026-07-01' is before earliest reported date '2026-07-02'.
+1 warning, 1 info
   hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
 ----
 
-In CI, add `--strict` to treat warnings as errors so problems surface before they grow.
-
 == Format
 
-xref:reference/cli-fmt.adoc[`vulnlog fmt`] rewrites files in the canonical style defined by the xref:reference/file-format.adoc[file format]:
+Every command that writes a Vulnlog file writes it in the canonical style.
+After you edit a file by hand, format it:
 
-[source,bash]
+[source,console]
 ----
-vulnlog fmt web-app-1.vl.yaml web-app-2.vl.yaml
-Formatted: web-app-1.vl.yaml
-Unchanged: web-app-2.vl.yaml
+$ vulnlog fmt acme-shop.vl.yaml
+Formatted: acme-shop.vl.yaml
 ----
 
-Every file-writing command produces the same canonical style, so `fmt` after `modify add` or `modify copy` is a no-op.
-YAML comments are not part of the format and are removed on writing; the command warns when it drops them.
+A file that's already canonical shows `Unchanged`.
 
-In CI, use `--check` to fail without writing changes:
+`fmt` removes YAML comments, except the `# $schema:` line at the top, and warns when it does:
 
-[source]
 ----
-vulnlog fmt --check vulnlog.yaml
-warning: vulnlog.yaml: not canonically formatted
-  [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
+warning: acme-shop.vl.yaml: contains YAML comments; they are removed on write
+  hint: record notes in schema fields (e.g. comment, analysis)
 ----
+
+Move such notes into `comment` or `analysis` before you format.
+
+To check the format without changing the file, add `--check`.
+It lists what isn't canonical.
+In this copy of the file, someone wrote the releases of Log4Shell as a block list:
+
+[source,console]
+----
+$ vulnlog fmt --check acme-shop.vl.yaml
+warning: acme-shop.vl.yaml: not canonically formatted
+  [non-canonical-array-style] vulnerabilities[CVE-2021-44228].releases: Line 142: canonical style for this list is a flow array, e.g. key: [value].
+----
+
+For the canonical style, see xref:reference/file-format.adoc[File format].
 
 == Variants
 
-=== From the Gradle build
+=== If you use the Gradle plugin
 
-[source,bash]
+Add your files to the `vulnlog` extension and run the tasks:
+
+[source,kotlin]
 ----
-./gradlew vulnlogValidate
-./gradlew vulnlogFormat --check
+vulnlog {
+    files.from("acme-shop.vl.yaml")
+    validate {
+        strict = true
+    }
+}
 ----
 
-The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents both tasks, including strict mode.
-
-=== From stdin
-
-Both commands read from stdin with `-`, which suits pipelines that hold the file content in a stream:
-
-[source,bash]
+[source,console]
 ----
-vulnlog validate - < vulnlog.yaml
+$ ./gradlew vulnlogValidate
+$ ./gradlew vulnlogFormat
+$ ./gradlew vulnlogFormat --check
+----
+
+For all task settings, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+=== If the file comes from another command
+
+Pass `-` to read the file from standard input.
+`fmt` then writes the formatted file to standard output:
+
+[source,console]
+----
+$ vulnlog validate - < acme-shop.vl.yaml
+info: <stdin>: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+1 info
 Validated: <stdin>
 ----
 
-== Verify
+== Check the result
 
-The exit code is the contract: `0` clean, `2` validation errors, `3` formatting errors.
-See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table and the machine-readable message shapes.
+Both commands end with exit code `0` when the files are fine.
+`validate` ends with `2` when a file has errors, or warnings with `--strict`.
+`fmt --check` ends with `3` when a file isn't canonical.
+For all exit codes, see xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].
 
-== Related
-
-* xref:reference/cli-validate.adoc[vulnlog validate] and xref:reference/cli-fmt.adoc[vulnlog fmt] document every flag.
-* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] places both commands in a pipeline.
+To run both checks on every pull request, see xref:guides/run-in-ci.adoc[Run in CI pipelines].

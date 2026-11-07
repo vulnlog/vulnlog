@@ -1,99 +1,145 @@
-= Run Vulnlog in CI pipelines
+= Run in CI pipelines
 :page-aliases: ci-integration.adoc
 
-The Vulnlog CLI runs on developer machines and in CI pipelines.
+Run Vulnlog in your pipeline to check the Vulnlog file on every change, generate the suppression files before your scanner runs, and keep a current impact report.
 
-A common pattern is dynamic suppression: generate suppression files in the CI pipeline just before the scanner runs, so they are always in sync with the Vulnlog file and never need to be committed.
-See xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner] for both approaches.
+== Before you start
 
-== Gradle
+* A Vulnlog file in your repository, for example `acme-shop.vl.yaml`.
+* For GitHub Actions, a workflow file in `.github/workflows`.
 
-For Gradle-based builds, the Vulnlog Gradle plugin wires `validate`, `suppress`, and `init` into your build.
-See xref:reference/gradle-plugin.adoc[Gradle Plugin] for details.
+== Set up a GitHub Actions workflow
 
-== GitHub Actions
+. Install the CLI with the Setup Vulnlog CLI action, and pin the version.
+Every later step can then call `vulnlog`.
+. Check the file with `validate --strict` and `fmt --check`.
+Both fail the job when there's a problem.
+. Generate the suppression file, then run the scanner with it.
+. Generate the impact report and upload it.
 
-The https://github.com/marketplace/actions/setup-vulnlog-cli[Setup Vulnlog CLI] action installs the CLI on the runner and puts it on `PATH`.
-Install it once per job, every later step calls `vulnlog` directly.
-
-Example workflow using dynamic suppression.
-The suppression file is generated, used by the scanner, and discarded after the pipeline completes:
-
-[source,yaml,subs="attributes"]
+[source,yaml,subs="attributes+"]
 ----
+name: Vulnerabilities
+
+on: [push, pull_request]
+
 jobs:
-  security-scan:
+  vulnlog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Vulnlog CLI
         uses: vulnlog/setup-vulnlog@v1
         with:
           version: {vulnlog-version}
 
-      - name: Generate suppression files
-        continue-on-error: true
-        run: vulnlog suppress --reporter trivy vulnlog.yaml
-
-      - name: Ensure suppression file exists
+      - name: Check the Vulnlog file
         run: |
+          vulnlog validate --strict acme-shop.vl.yaml
+          vulnlog fmt --check acme-shop.vl.yaml
+
+      - name: Generate suppression files
+        run: |
+          vulnlog suppress acme-shop.vl.yaml --reporter trivy
           [ -f .trivyignore.yaml ] || touch .trivyignore.yaml
 
-      - name: Run Trivy scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          format: sarif
-          output: trivy-results.sarif
-          trivyignores: .trivyignore.yaml
+      - name: Scan
+        run: trivy fs --ignorefile .trivyignore.yaml .
 
-      - name: Upload Trivy SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-results.sarif
-          category: trivy
-
-      - name: Generate Vulnlog HTML report
+      - name: Generate impact report
         if: always()
-        run: vulnlog report impact vulnlog.yaml
+        run: vulnlog report impact acme-shop.vl.yaml
 
-      - name: Upload Vulnlog HTML report
+      - name: Upload impact report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: vulnerability-report
+          name: vulnlog-impact-report
           path: vulnlog-impact-report.html
 ----
 
-Pin the `version` input so the pipeline does not change when a new Vulnlog release ships.
-See xref:reference/github-action.adoc[GitHub Action] for the inputs, outputs, and supported runners.
+The scan step assumes that Trivy is installed on the runner.
+Replace it with the scanner you use, and pass it the file Vulnlog generates for it.
+See xref:guides/generate-suppression-files.adoc[Generate suppression files].
 
-== Using the Docker image
+The suppression file is generated on every run, so you don't need to commit it.
+When no entry in the Vulnlog file names the scanner, `vulnlog suppress` writes no file and prints `Unchanged: no suppression entries applicable`.
+The `touch` line then creates an empty file, so the scan step finds one.
+For the action's inputs, outputs, and supported runners, see xref:reference/github-action.adoc[GitHub Action].
 
-On CI systems without a Vulnlog integration, run the container image.
-In most CI environments (Jenkins, GitLab CI, GitHub Actions) the runner's workspace is owned by UID 1000, so the container works without extra flags:
+== Variants
 
-[source,bash,subs="attributes"]
+=== If your pipeline runs Docker containers
+
+Use the Vulnlog image, and mount the workspace to `/work`:
+
+[source,console,subs="attributes+"]
 ----
-docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml --reporter trivy
-----
-
-When the CI runner requires root access, override the user at runtime:
-
-[source,bash,subs="attributes"]
-----
-docker run --rm --user root -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
-----
-
-== Validating in CI
-
-Running validation as part of the CI pipeline catches Vulnlog file errors early:
-
-[source,bash]
-----
-vulnlog validate my-app.vl.yaml --strict
+$ docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate --strict acme-shop.vl.yaml
+$ docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress acme-shop.vl.yaml --reporter trivy
 ----
 
-`--strict` treats warnings as errors.
+If the container can't write to the workspace, run it as your own user.
+For the user ID the container runs as, see xref:get-started/install.adoc[Install Vulnlog].
+
+=== If you use GitLab CI/CD
+
+Run the job in the Vulnlog image.
+Clear the image's entrypoint, so the runner can start a shell in it:
+
+[source,yaml,subs="attributes+"]
+----
+vulnlog:
+  image:
+    name: ghcr.io/vulnlog/vulnlog:{vulnlog-version}
+    entrypoint: [""]
+  script:
+    - vulnlog validate --strict acme-shop.vl.yaml
+    - vulnlog fmt --check acme-shop.vl.yaml
+    - vulnlog report impact acme-shop.vl.yaml
+  artifacts:
+    when: always
+    paths:
+      - vulnlog-impact-report.html
+----
+
+To pass suppression files to a scanner job, generate them in this job and add them to `artifacts`.
+
+=== If you build with Gradle
+
+Configure the files once and call the tasks in the pipeline:
+
+[source,kotlin]
+----
+vulnlog {
+    files.from("acme-shop.vl.yaml")
+    validate {
+        strict = true
+    }
+}
+----
+
+[source,console]
+----
+$ ./gradlew vulnlogValidate vulnlogFormat --check
+$ ./gradlew vulnlogSuppress vulnlogImpactReport
+----
+
+The suppression files go to `build/vulnlog/suppressions`, and the report to `build/vulnlog/vulnlog-impact-report.html`.
+Point your scanner and your upload step there.
+For all tasks, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+=== If you use another CI system
+
+Install the CLI on the runner, and run the same commands as in the GitHub Actions workflow.
+See xref:get-started/install.adoc[Install Vulnlog].
+
+== Check the result
+
+* Push a change that breaks the Vulnlog file, for example an entry with an undefined tag.
+The check step fails with exit code `2`.
+A file that isn't canonical fails with exit code `3`.
+* Open the uploaded report from the workflow run, and check that it shows the current entries.
+
+For all exit codes, see xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].

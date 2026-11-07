@@ -1,0 +1,57 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+  contact: security@acme.example
+
+tags:
+  - id: backend
+    description: Java server application
+  - id: container
+    description: Container image that bundles all components
+
+releases:
+  - id: 3.9.0
+    published_at: 2025-11-04
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@3.9.0"
+        tags: [backend]
+      - purl: "pkg:oci/acme-shop@sha256:a648cf45d8082c7e71693eaf8eeefa09b69ede432d33e14eb5bc468010bc82d0"
+        tags: [container]
+  - id: 3.9.1
+    published_at: 2026-03-20
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@3.9.1"
+        tags: [backend]
+      - purl: "pkg:oci/acme-shop@sha256:b3d57ecd7f8cce0a830f86394d16a4361c849d1401e68a3bd3e74cdd1c53058c"
+        tags: [container]
+
+vulnerabilities:
+
+  - id: CVE-2021-44228
+    name: Log4Shell
+    description: Remote code execution through JNDI lookups in Apache Log4j
+    aliases: [GHSA-jfh8-c2jp-5v3q]
+    releases: [3.9.0]
+    packages: ["pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"]
+    reports:
+      - reporter: grype
+        at: 2026-03-10
+    tags:
+      - backend
+      - container
+    analysis: >-
+      The server logs the User-Agent header with log4j-core 2.14.1. A crafted header triggers a JNDI lookup and runs attacker-controlled
+      code.
+    analyzed_at: 2026-03-11
+    verdict: affected
+    severity: critical
+    disposition: will fix
+    resolution:
+      in: 3.9.1
+      at: 2026-03-20
+      note: Updated log4j-core from 2.14.1 to 2.17.1
