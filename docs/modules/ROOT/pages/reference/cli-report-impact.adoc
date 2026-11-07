@@ -1,130 +1,146 @@
 = vulnlog report impact
 :page-aliases: cli-report.adoc
 
-Generates an impact report from one or more Vulnlog files.
-The report shows which vulnerabilities affect the project and which release ships each fix.
-Use it to decide whether a bugfix release is needed and what to update.
+`vulnlog report impact` generates an HTML report of the entries in one or more Vulnlog files: their state, verdict, severity, and the releases they affect.
+Several files are merged into one report.
+
+== Synopsis
 
 [source]
 ----
-vulnlog report impact <file...> [filter flags] [-o <path>]
+vulnlog report impact <inputs>... [-o <path>] [<filter-options>] [--state <state>]... [--verdict <verdict>]... [--disposition <disposition>]...
 ----
 
-Multiple files are merged and must share the same project metadata.
-Use `-` as a file argument to read from stdin and `-o -` to write the report to stdout.
+== Arguments and options
 
-[cols="2,3"]
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
 
-| `-o, --output <path>`
-| Output file path, or `-` to write to stdout. Defaults to `vulnlog-impact-report.html` in the current directory.
+| `<inputs>`
+| One or more Vulnlog files, or `-`
+| required
+| Files to report on, all with the same `project` block.
+For how files are merged, see xref:reference/cli.adoc#input-files[Input files].
+`-` reads one file from stdin.
 
-| `--reporter <value>`
-| Filter on reporter.
+| `-o`, `--output`
+| A file path, or `-`
+| `vulnlog-impact-report.html`
+| File to write, in the current directory by default.
+`-` writes the HTML to stdout.
 
-| `--as-of <release-id>`
-| Report the state as of this release.
-Includes all releases up to and including that release.
-A fix only counts once it has shipped inside that range.
-A vulnerability whose `resolution` targets a later release is reported under its pre-resolution state: `open` for `affected`, `accepted` for `affected` with `disposition: wont fix`, and `not applicable` for `not affected`.
-The report therefore shows what is actually shipped at the chosen release.
+| `--reporter`, `--as-of`, `--tag`
+| See xref:reference/cli.adoc#filters[Filter options]
+|
+| Select the entries.
+With `--as-of`, an entry whose fix ships in a later release shows the state it had before the fix.
 
-| `--tag <text>`
-| Filter on tags. Use multiple times to filter on multiple tags.
+| `--state`
+| `under investigation`, `open`, `accepted`, `resolved`, or `not applicable`
+| all states
+| Select entries in this state. Repeatable.
+With `--as-of`, the state at that release counts.
 
-| `--state <state>`
-| Filter on xref:concepts/vulnerability-states.adoc[vulnerability state].
-One of `under investigation`, `open`, `accepted`, `resolved`, `not applicable`.
-Use multiple times to report several states together.
-Combined with `--as-of`, each entry is reported in the state it was in at that release, so `--as-of 1.1.0 --state open` shows what was still open when 1.1.0 shipped.
-Naming a state no entry is in is valid and produces an empty report.
+| `--verdict`
+| `under investigation`, `affected`, or `not affected`
+| all verdicts
+| Select entries with this verdict. Repeatable.
+`under investigation` selects entries without a verdict.
+`--as-of` doesn't change the verdict.
 
-| `--verdict <verdict>`
-| Filter on xref:reference/verdicts-and-justifications.adoc[triage verdict].
-One of `under investigation`, `affected`, `not affected`.
-Use multiple times to report several verdicts together.
-A verdict is what you recorded, so it does not change with `--as-of`.
-`--verdict "under investigation"` selects the same entries as `--state "under investigation"`; the other two each span several states, so `--verdict affected` covers `open`, `accepted`, and affected entries that are already resolved.
-
-| `--disposition <disposition>`
-| Filter on the xref:reference/verdicts-and-justifications.adoc#disposition-values[remediation intent] recorded for affected entries.
-One of `will fix`, `wont fix`.
-Use multiple times to report both.
-Affected entries that state no intent are not selected by either value.
-
-| `-`
-| Use as the file argument to read from stdin.
-
+| `--disposition`
+| `will fix` or `wont fix`
+| all entries
+| Select `affected` entries with this disposition. Repeatable.
+Entries without a disposition don't match either value.
 |===
 
-== Report contents
+Repeat an option to select entries that match any of its values.
+Different options combine, so an entry must match each of them.
+For the states and what they mean, see xref:reference/verdicts-and-justifications.adoc#states[States].
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
 
-The rendered HTML is a single, self-contained document.
-It contains the following sections:
+== Output
 
-* *Header*: project organization, name, and author; the ISO-8601 UTC generation timestamp; the list of input file names (visible when several files are merged); and the applied filter (release, tags, reporter).
-* *Summary*: total entry count, breakdown by xref:concepts/vulnerability-states.adoc[state], breakdown of open entries by severity, and breakdown of accepted entries by severity.
-* *Entry table*: four columns (IDs, State, Details, Releases) sorted by state (open first), then severity (critical to low), then primary ID.
-Each row carries a coloured left stripe: green for resolved, violet for accepted, grey for not applicable, severity-coloured for open entries, and uncoloured for entries under investigation.
-The Details cell shows the verdict, severity, and disposition (each where applicable), the VEX justification for `not affected` entries, and the entry's description and analysis text.
-The verdict is omitted while an entry is still under investigation, because no verdict has been recorded yet.
-* *Footer*: Vulnlog version and a link to vulnlog.dev.
+The report is one HTML file that opens offline in a browser.
+It shows:
 
-The report is fully offline (no network requests), CSP-locked, print-friendly, and adapts to the reader's light or dark system theme.
+* The organisation, project, and author, the generation time, the input files, and the filters you applied.
+* A summary with the total number of entries, the number in each state, and the severities of the _Open_ (state `open`) and _Accepted_ (state `accepted`) entries.
+* A table with a row for each entry: its IDs, its state, the details (verdict, severity, disposition, justification, description, and analysis), and the affected releases.
+
+A filter that selects no entry produces a report with an empty table.
+The command never fails because of what the report contains.
+
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| The report was written.
+
+| `1`
+| A general error.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+| `2`
+| A file doesn't pass validation, or the files have different `project` blocks.
+
+| `5`
+| A filter names an unknown reporter, release, tag, state, verdict, or disposition.
+|===
 
 == Examples
 
-.Generate an HTML report
-[source]
+Report every entry:
+
+[source,console]
 ----
-vulnlog report impact full-example.vl.yaml
+$ vulnlog report impact acme-shop.vl.yaml
 Wrote: vulnlog-impact-report.html
 ----
 
-.Generate a merged report from multiple Vulnlog files
-[source]
+Report the entries that were still `open` when 4.3.0 shipped, and show what the filters matched:
+
+[source,console]
 ----
-vulnlog report impact frontend.vl.yaml backend.vl.yaml
+$ vulnlog -v report impact acme-shop.vl.yaml --as-of 4.3.0 --state open -o open-4.3.0.html
+verbose: parsed acme-shop.vl.yaml: schema version 1, releases: 3, tags: 4, vulnerabilities: 6
+verbose: as-of filter expanded to releases: 4.2.0, 4.3.0
+verbose: state filter: open
+Wrote: open-4.3.0.html
+verbose: wrote open-4.3.0.html
+----
+
+The report lists Spring4Shell only.
+With `--as-of 4.2.0` instead, Log4Shell is `open` as well, because its fix ships in 4.3.0.
+
+Report the risks you accepted:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --verdict affected --disposition "wont fix" -o accepted.html
+Wrote: accepted.html
+----
+
+The report lists the lodash entry `CVE-2021-23337`.
+
+Merge the files of one project:
+
+[source,console]
+----
+$ vulnlog report impact frontend.vl.yaml backend.vl.yaml
 Wrote: vulnlog-impact-report.html
 ----
 
-.Show what a filter resolved to
-[source]
+Files of different projects stop the command:
+
+[source,console]
 ----
-vulnlog -v report impact vulnlog.yaml --as-of 1.1.0
-verbose: as-of filter expanded to releases: 1.0.0, 1.1.0
-Wrote: vulnlog-impact-report.html
+$ vulnlog report impact acme-shop.vl.yaml acme-admin.vl.yaml
+error: all input files must share the same project metadata, found 2 different ones
+  hint: give every input the same project block, or report each project on its own
 ----
-
-To generate an HTML report using the Vulnlog Docker container:
-
-[source,subs="attributes"]
-----
-docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report impact vulnlog.yaml --output report.html
-Wrote: /work/report.html
-----
-
-This renders an example Vulnlog HTML report:
-
-.Example Vulnlog HTML Report
-image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
-
-== When the command fails
-
-The command exits non-zero on bad input.
-It never fails because the report contains vulnerabilities.
-
-* Unknown `--reporter`, `--as-of`, or `--tag`: the command lists the known values and exits `5`.
-* Input files with different project metadata: the command exits `2`.
-* No subcommand, as in `vulnlog report vulnlog.yaml`: the command prints the available reports and exits `1`.
-
-See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
-
-== See also
-
-- xref:get-started/quickstart-report.adoc[Quickstart: read the impact report]
-- xref:guides/generate-reports.adoc[Vulnlog Reporting]
-- xref:concepts/vulnerability-states.adoc[Vulnerability States]
-- xref:reference/gradle-plugin.adoc[Gradle plugin]
-- xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]

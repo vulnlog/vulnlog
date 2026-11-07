@@ -1,475 +1,485 @@
 = Gradle plugin
 :page-aliases: gradle-plugin.adoc
 
-The Vulnlog Gradle plugin integrates Vulnlog commands into your Gradle build.
+The Vulnlog Gradle plugin runs the Vulnlog commands as Gradle tasks.
+The tasks read the same files and run the same checks as the xref:reference/cli.adoc[Vulnlog CLI], with the differences listed in <<differences-from-the-cli>>.
+To add the plugin to a build, see xref:get-started/install.adoc[Install Vulnlog].
 
-== Installation
+== Plugin ID
 
-Apply the plugin in your `build.gradle.kts`:
-
-[source,kotlin,subs="attributes"]
+[source,kotlin,subs="attributes+"]
 ----
 plugins {
-    id("dev.vulnlog") version "{vulnlog-version}"
+    id("dev.vulnlog.plugin") version "{vulnlog-version}"
 }
 ----
 
-== Configuration
+== Extension
 
-The plugin is configured via the `vulnlog` extension block.
-The top-level `files` property is shared across tasks; per-task settings live in nested blocks documented under each task.
+The `vulnlog` block of `build.gradle.kts` configures the tasks:
 
 [source,kotlin]
 ----
 vulnlog {
-    files.from("vulnlog.yaml", "other.vl.yaml")
+    files.from("acme-shop.vl.yaml")
 }
 ----
 
-[cols="2,3"]
+[cols="2,1,2,4"]
 |===
-| Property | Description
+| Property | Type | Default | Description
 
 | `files`
-| File collection of Vulnlog YAML files to operate on. Used by all tasks except `vulnlogInit`.
-
-| `report`
-| Container for the report tasks. Each report type has its own nested block: `report { impact { } }` and `report { changelog { } }`.
-
-| `vex`
-| Container for the VEX tasks. Each format has its own nested block: `vex { openvex { } }`.
+| File collection
+| empty
+| The Vulnlog files the tasks read. Every task except `vulnlogInit` and `vulnlogOpenVexUpdate` reads it, and fails if it's empty.
+`vulnlogSuppress` and `vulnlogOpenVex` accept one file only.
 |===
 
-== Diagnostics
+The settings of each task go in a nested block of `vulnlog`, shown in the Settings column of <<tasks>>.
 
-The tasks emit the same diagnostics as the CLI's `-v` and `-vv` flags through the Gradle logger.
-Run with `gradle --info` to see parsed inputs, validation summaries, filter resolution, written outputs, and skipped suppression entries; `gradle --debug` adds debug detail such as included suppression entries and report entry counts.
-
+[[tasks]]
 == Tasks
 
-All tasks are registered in the `vulnlog` task group.
+The plugin registers these tasks in the `vulnlog` group:
 
-=== `vulnlogInit`
-
-Scaffolds a minimal Vulnlog file.
-See xref:reference/cli-init.adoc[`vulnlog init`] for the generated structure.
-
-`vulnlogInit` is configured via project properties (`-P`) since it is a one-shot bootstrapping command.
-
-[cols="2,1,3"]
+[cols="2,2,3"]
 |===
-| Property | Required | Description
+| Task | Settings | CLI command
+
+| <<vulnlogInit,`vulnlogInit`>>
+| `-P` project properties
+| xref:reference/cli-init.adoc[`vulnlog init`]
+
+| <<vulnlogValidate,`vulnlogValidate`>>
+| `validate { }`
+| xref:reference/cli-validate.adoc[`vulnlog validate`]
+
+| <<vulnlogFormat,`vulnlogFormat`>>
+| `fmt { }`
+| xref:reference/cli-fmt.adoc[`vulnlog fmt`]
+
+| <<vulnlogSuppress,`vulnlogSuppress`>>
+| `suppress { }`
+| xref:reference/cli-suppress.adoc[`vulnlog suppress`]
+
+| <<vulnlogImpactReport,`vulnlogImpactReport`>>
+| `report { impact { } }`
+| xref:reference/cli-report-impact.adoc[`vulnlog report impact`]
+
+| <<vulnlogChangelogReport,`vulnlogChangelogReport`>>
+| `report { changelog { } }`
+| xref:reference/cli-report-changelog.adoc[`vulnlog report changelog`]
+
+| <<vulnlogOpenVex,`vulnlogOpenVex`>>
+| `vex { openvex { } }`
+| xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`]
+
+| <<vulnlogOpenVexUpdate,`vulnlogOpenVexUpdate`>>
+| `vex { openvex { } }`
+| none
+|===
+
+The plugin also provides a task type for `vulnlog modify copy`, which you register yourself.
+See <<copy-task>>.
+
+Values such as reporters, states, and verdicts are the same as for the CLI.
+Each CLI command page describes what the values do.
+
+NOTE: `vulnlogOpenVex` and `vulnlogOpenVexUpdate` write OpenVEX documents, which tell your customers' tools whether a release is affected by a vulnerability.
+OpenVEX output is incubating.
+
+[[filter-properties]]
+=== Filter properties
+
+`vulnlogSuppress`, `vulnlogImpactReport`, and `vulnlogChangelogReport` accept these properties to select entries.
+For what they do, see xref:reference/cli.adoc#filters[Filter options].
+
+[cols="2,1,2,4"]
+|===
+| Property | Type | Default | Description
+
+| `reporter`
+| String
+| all reporters
+| As for `--reporter`.
+
+| `asOf`
+| String
+| all releases
+| As for `--as-of`.
+
+| `tags`
+| Set of strings
+| all entries, tagged or not
+| As for `--tag`.
+|===
+
+[[vulnlogInit]]
+=== vulnlogInit
+
+Creates a Vulnlog file.
+It takes its values from project properties:
+
+[cols="2,1,2,4"]
+|===
+| Property | Required | Default | Description
 
 | `vulnlog.organization`
-| Yes
-| Organization name for the Vulnlog project.
+| yes
+| none
+| Written to `project.organization`.
 
 | `vulnlog.name`
-| Yes
-| Project name.
+| yes
+| none
+| Written to `project.name`.
 
 | `vulnlog.author`
-| Yes
-| Author name.
+| yes
+| none
+| Written to `project.author`.
 
 | `vulnlog.output`
-| Yes
-| Output file path, relative to the project directory.
+| yes
+| none
+| File to create, relative to the project directory.
+
+| `vulnlog.force`
+| no
+| `false`
+| Replace the file if it exists. The task option `--force` does the same.
 |===
 
-.Example
-[source,shell]
+[source,console]
 ----
-./gradlew vulnlogInit \
-  -Pvulnlog.organization="Acme Corp" \
-  -Pvulnlog.name="Widget" \
-  -Pvulnlog.author="Alice" \
-  -Pvulnlog.output=vulnlog.yaml
+$ ./gradlew vulnlogInit -Pvulnlog.organization="Acme Corp" -Pvulnlog.name="Acme Shop" \
+    -Pvulnlog.author="Acme Product Security Team" -Pvulnlog.output=acme-shop.vl.yaml
 ----
 
-=== `vulnlogValidate`
+[[vulnlogValidate]]
+=== vulnlogValidate
 
-Validates the configured Vulnlog files.
-See xref:reference/cli-validate.adoc[`vulnlog validate`] for validation rules.
+Validates every file in `files`.
+
+[cols="2,1,2,4"]
+|===
+| Property | Type | Default | Description
+
+| `strict`
+| Boolean
+| `false`
+| Treat warnings as errors, so a warning fails the build.
+|===
 
 [source,kotlin]
 ----
 vulnlog {
     validate {
-        strict = true  // optional
+        strict = true
     }
 }
 ----
 
-[cols="2,2,3"]
+[[vulnlogFormat]]
+=== vulnlogFormat
+
+Formats every file in `files` in place.
+
+[cols="2,1,2,4"]
 |===
-| Property | Default | Description
-
-| `strict`
-| `false`
-| Treats warnings as errors and fails the build.
-|===
-
-The task uses Gradle's up-to-date checking via `@InputFiles` and `@Input`, so it is skipped when neither the files nor `strict` have changed.
-
-.Example
-[source,shell]
-----
-./gradlew vulnlogValidate
-----
-
-=== `vulnlogFormat`
-
-Formats the configured Vulnlog files to the canonical style, rewriting them in place.
-See xref:reference/cli-fmt.adoc[`vulnlog fmt`] for the formatting rules.
-
-[source,kotlin]
-----
-vulnlog {
-    fmt {
-        check = true  // optional
-    }
-}
-----
-
-[cols="2,2,3"]
-|===
-| Property | Default | Description
+| Property | Type | Default | Description
 
 | `check`
+| Boolean
 | `false`
-| Do not write changes; fail the build if any file is not already formatted. Also available as the `--check` task option.
+| Don't write anything, and fail the build if a file isn't in the canonical style.
+The task option `--check` does the same.
 |===
 
-.Example
-[source,shell]
+[source,console]
 ----
-./gradlew vulnlogFormat
-./gradlew vulnlogFormat --check   # CI: fail if any file is unformatted
+$ ./gradlew vulnlogFormat --check
 ----
 
-=== `vulnlogSuppress`
+[[vulnlogSuppress]]
+=== vulnlogSuppress
 
-Generates suppression files for downstream scanners.
-See xref:reference/cli-suppress.adoc[`vulnlog suppress`] for supported reporters.
+Writes the suppression files of one Vulnlog file, one file for each reporter.
+
+[cols="2,1,2,4"]
+|===
+| Property | Type | Default | Description
+
+| `outputDir`
+| Directory
+| `build/vulnlog/suppressions`
+| Directory to write the files to. It's created if it doesn't exist.
+
+| `format`
+| String
+| `auto`
+| `auto` or `generic`.
+|===
+
+The task also accepts the properties in <<filter-properties>>.
 
 [source,kotlin]
 ----
 vulnlog {
     suppress {
-        outputDir = layout.projectDirectory.dir("suppressions")  // optional
-        reporter = "trivy"                                       // optional
-        asOf = "1.0.0"                                           // optional
-        tags = setOf("frontend")                                 // optional
+        outputDir = layout.projectDirectory.dir("suppressions")
+        asOf = "4.3.0"
     }
 }
 ----
 
-[cols="2,2,3"]
+[[vulnlogImpactReport]]
+=== vulnlogImpactReport
+
+Writes the HTML impact report of every file in `files`, merged into one report.
+
+[cols="2,1,2,4"]
 |===
-| Property | Default | Description
+| Property | Type | Default | Description
 
-| `outputDir`
-| `build/vulnlog/suppressions/`
-| Directory where suppression files are written.
+| `outputFile`
+| File
+| `build/vulnlog/vulnlog-impact-report.html`
+| File to write.
 
-| `reporter`
-| All reporters
-| Filter on reporter.
+| `states`
+| Set of strings
+| all states
+| As for `--state`.
 
-| `asOf`
-| All releases
-| Report as of this release, including all releases up to and including it.
+| `verdicts`
+| Set of strings
+| all verdicts
+| As for `--verdict`.
 
-| `tags`
-| All tags
-| Filter on tags.
+| `dispositions`
+| Set of strings
+| all entries
+| As for `--disposition`.
 |===
 
-.Example
-[source,shell]
-----
-./gradlew vulnlogSuppress
-----
-
-=== `vulnlogImpactReport`
-
-Generates an HTML impact report from the configured Vulnlog files.
-Multiple files are merged and must share the same project metadata.
-See xref:reference/cli-report-impact.adoc[`vulnlog report impact`] for details.
-
-Settings live under `report { impact { } }`, so each report type keeps its own block.
+The task also accepts the properties in <<filter-properties>>.
 
 [source,kotlin]
 ----
 vulnlog {
     report {
         impact {
-            outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-impact-report.html"))  // optional
-            reporter = "trivy"                                                                // optional
-            asOf = "1.0.0"                                                                    // optional
-            tags = setOf("frontend")                                                          // optional
-            states = setOf("open", "accepted")                                                // optional
-            verdicts = setOf("affected")                                                      // optional
-            dispositions = setOf("wont fix")                                                  // optional
+            asOf = "4.3.0"
+            states = setOf("open", "accepted")
         }
     }
 }
 ----
 
-[cols="2,2,3"]
+[[vulnlogChangelogReport]]
+=== vulnlogChangelogReport
+
+Writes the changelog report of every file in `files`, merged into one report.
+
+[cols="2,1,2,4"]
 |===
-| Property | Default | Description
+| Property | Type | Default | Description
 
 | `outputFile`
-| `build/vulnlog/vulnlog-impact-report.html`
-| File where the HTML report is written.
+| File
+| `build/vulnlog/vulnlog-changelog.txt`, or `.md` for `markdown`
+| File to write.
 
-| `reporter`
-| All reporters
-| Filter on reporter.
+| `format`
+| String
+| `text`
+| `text` or `markdown`.
 
-| `asOf`
-| All releases
-| Report as of this release, including all releases up to and including it.
+| `brief`
+| Boolean
+| `false`
+| As for `--brief`.
 
-| `tags`
-| All tags
-| Filter on tags.
-
-| `states`
-| All states
-| Filter on xref:concepts/vulnerability-states.adoc[vulnerability state]: `under investigation`, `open`, `accepted`, `resolved`, `not applicable`.
-Combined with `asOf`, each entry is reported in the state it was in at that release.
-
-| `verdicts`
-| All verdicts
-| Filter on xref:reference/verdicts-and-justifications.adoc[triage verdict]: `under investigation`, `affected`, `not affected`.
-A verdict is what you recorded, so it does not change with `asOf`.
-
-| `dispositions`
-| All dispositions
-| Filter on the remediation intent recorded for affected entries: `will fix`, `wont fix`.
-Affected entries that state no intent are not selected by either value.
+| `fixedIn`
+| String
+| all releases
+| As for `--fixed-in`.
 |===
 
-The task is cacheable and uses Gradle's up-to-date checking, so it is skipped when neither the files nor the filter settings have changed.
+The task also accepts the properties in <<filter-properties>>.
 
-The task never fails because the report contains vulnerabilities.
-It fails the build only on invalid input, for example an unknown `asOf` or input files with different project metadata.
-
-.Example
-[source,shell]
-----
-./gradlew vulnlogImpactReport
-----
-
-=== `vulnlogChangelogReport`
-
-Reports which vulnerabilities each release fixed, newest release first.
-Multiple files are merged and must share the same project metadata.
-See xref:reference/cli-report-changelog.adoc[`vulnlog report changelog`] for the report contents and for what it leaves out.
-
-Settings live under `report { changelog { } }`.
+Unlike the CLI, the task also writes the file when no entry qualifies.
+The file is then empty for `markdown`, and holds only the organisation and project name for `text`.
 
 [source,kotlin]
 ----
 vulnlog {
     report {
         changelog {
-            outputFile.set(layout.buildDirectory.file("vulnlog/vulnlog-changelog.md"))  // optional
-            format = "markdown"                                                         // optional
-            brief = false                                                               // optional
-            fixedIn = "1.2.0"                                                           // optional
-            reporter = "trivy"                                                          // optional
-            asOf = "1.1.0"                                                              // optional
-            tags = setOf("frontend")                                                    // optional
+            format = "markdown"
+            fixedIn = "4.4.0"
         }
     }
 }
 ----
 
-[cols="2,2,3"]
+[[vulnlogOpenVex]]
+=== vulnlogOpenVex
+
+Writes one OpenVEX document from one Vulnlog file in each run.
+
+[cols="2,1,2,4"]
 |===
-| Property | Default | Description
+| Property | Type | Default | Description
 
 | `outputFile`
-| `build/vulnlog/vulnlog-changelog.<ext>`
-| File where the report is written.
-The default file name follows `format`, so it ends in `.txt` for `text` and `.md` for `markdown`.
+| File
+| `build/vulnlog/vex.json`
+| File to write.
 
-| `format`
-| `text`
-| Output format: `text` or `markdown`.
-`markdown` renders one section per release in the Keep a Changelog layout, ready to paste under a heading the changelog file already has.
-
-| `brief`
-| `false`
-| List identifiers and severity only. Descriptions, resolution notes, and references are left out.
-
-| `fixedIn`
-| All releases
-| Report only the vulnerabilities this release shipped a fix for.
-
-| `reporter`
-| All reporters
-| Filter on reporter.
-
-| `asOf`
-| All releases
-| Report as of this release, including all releases up to and including it.
-A fix that ships later is left out.
+| `release`
+| String
+| every published release
+| As for `--release`.
 
 | `tags`
-| All tags
-| Filter on tags.
+| Set of strings
+| all tags
+| As for `--tag`.
+
+| `baseline`
+| File
+| none
+| Document to continue, as for `--baseline`.
+If the file doesn't exist yet, the task issues a new document.
+It must not be the same file as `outputFile`.
 |===
 
-The report holds no timestamp, so the output depends only on the inputs and the settings.
-The task is cacheable and is skipped when neither has changed.
-
-The task always writes its output file.
-When no entry records a resolution it writes the report for zero releases and logs `info: no fixed vulnerabilities to report`.
-
-It fails the build only on invalid input, for example an unknown `fixedIn` or input files with different project metadata.
-
-.Example
-[source,shell]
-----
-./gradlew vulnlogChangelogReport
-----
-
-[#_vulnlogopenvex]
-=== `vulnlogOpenVex`
-
-NOTE: The Vulnlog OpenVEX export feature is currently incubating.
-Its behavior and configuration options may change in the upcoming releases.
-
-Writes an OpenVEX document from a single Vulnlog file, so Trivy and Grype can drop the findings you triaged.
-See xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`] for the purls to declare and what the document contains.
+The task writes only to `outputFile`.
+`vulnlogOpenVexUpdate` copies the result over the baseline.
 
 [source,kotlin]
 ----
 vulnlog {
     vex {
         openvex {
-            outputFile.set(layout.buildDirectory.file("vulnlog/vex.json"))  // optional
-            release.set("1.2.0")                                            // optional
-            tags.set(setOf("container"))                                    // optional
-            baseline.set(layout.projectDirectory.file(".vex/app.openvex.json"))  // optional
+            release = "4.3.0"
+            tags = setOf("container")
+            baseline = layout.projectDirectory.file("vex/acme-shop-4.3.0-container.json")
         }
     }
 }
 ----
 
-[cols="2,2,3"]
+[[vulnlogOpenVexUpdate]]
+=== vulnlogOpenVexUpdate
+
+Runs `vulnlogOpenVex` and copies its document over the `baseline` of the `vex { openvex { } }` block.
+If the content is the same, the file stays as it is.
+The task fails if `baseline` isn't set.
+
+One document per release and artifact needs one registered task of each type per document.
+For an example, see xref:guides/generate-openvex-documents.adoc#one-document-per-artifact[One document per release and artifact].
+
+A task you register yourself doesn't take its settings from the `vulnlog` block.
+It needs these properties set:
+
+[cols="2,3"]
 |===
-| Property | Default | Description
+| Task type | Properties to set
 
-| `outputFile`
-| `build/vulnlog/vex.json`
-| File where the document is written.
+| `VulnlogInitTask`
+| `organization`, `projectName`, `author`, `outputFile`
 
-| `release`
-| _(none)_
-| Write the document for this release only, even one without `published_at`. Without it the document covers every published release that declares `purls`. See xref:reference/cli-vex-openvex.adoc#scoping[One document per release and artifact].
+| `VulnlogValidateTask`
+| `files`, `strict`
 
-| `tags`
-| _(empty)_
-| Keep only the vulnerabilities and release purls carrying one of these tags.
+| `VulnlogFmtTask`
+| `files`
 
-| `baseline`
-| _(none)_
-| The committed document to continue, see xref:reference/cli-vex-openvex.adoc#identity[Keep a published document stable]. The first run issues a new document when the file does not exist yet.
+| `VulnlogSuppressTask`
+| `files`, `outputDir`
+
+| `VulnlogImpactReportTask`
+| `files`, `outputFile`
+
+| `VulnlogChangelogReportTask`
+| `files`, `brief`, `outputFile`
+
+| `VulnlogOpenVexTask`
+| `files`, `outputFile`
+
+| `VulnlogOpenVexUpdateTask`
+| `generatedFile`, `baseline`
+
+| `VulnlogCopyTask`
+| `sourceFile`, `destinationFiles`, `vulnIds`
 |===
 
-The task fails when `files` holds more than one Vulnlog file, when no statement applies, or when the `baseline` cannot be continued.
+The task types are in the package `dev.vulnlog.gradle`.
+With `group = "vulnlog"`, a registered task is listed with the other Vulnlog tasks.
 
-The task writes only to `outputFile`, so it stays cacheable, and `baseline` must not point at the same file.
-Run <<_vulnlogopenvexupdate,`vulnlogOpenVexUpdate`>> to copy the result over the `baseline`.
+[[copy-task]]
+=== Copy task
 
-To publish one document per artifact and release, register a task for each:
+The task type `dev.vulnlog.gradle.VulnlogCopyTask` copies entries as `vulnlog modify copy` does.
+No task of this type is registered by default.
 
-[source,kotlin]
-----
-import dev.vulnlog.gradle.VulnlogOpenVexTask
+[cols="2,1,2,4"]
+|===
+| Property | Type | Default | Description
 
-tasks.register<VulnlogOpenVexTask>("vulnlogOpenVexContainer") {
-    group = "vulnlog"
-    files.from("vulnlog.yaml")
-    release.set("1.2.0")
-    tags.set(setOf("container"))
-    baseline.set(layout.projectDirectory.file("vex/1.2.0-container.json"))
-    outputFile.set(layout.buildDirectory.file("vulnlog/1.2.0-container.json"))
-}
-----
+| `sourceFile`
+| File
+| none
+| Vulnlog file to copy from.
 
-[#_vulnlogopenvexupdate]
-=== `vulnlogOpenVexUpdate`
+| `destinationFiles`
+| File collection
+| empty
+| Vulnlog files to copy into.
 
-NOTE: The Vulnlog OpenVEX export feature is currently incubating.
-Its behavior and configuration options may change in the upcoming releases.
-
-Runs `vulnlogOpenVex` and copies its document over the configured `baseline`, so the committed document follows the Vulnlog file.
-The file is left as it is while nothing but the timestamp would change.
-Commit it after each run that wrote it.
-
-[source,shell]
-----
-./gradlew vulnlogOpenVexUpdate
-----
-
-For a task you registered yourself, register an update task next to it:
-
-[source,kotlin]
-----
-import dev.vulnlog.gradle.VulnlogOpenVexTask
-import dev.vulnlog.gradle.VulnlogOpenVexUpdateTask
-
-tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVexContainerUpdate") {
-    group = "vulnlog"
-    generatedFile.set(tasks.named<VulnlogOpenVexTask>("vulnlogOpenVexContainer").flatMap { it.outputFile })
-    baseline.set(layout.projectDirectory.file("vex/1.2.0-container.json"))
-}
-----
-
-=== `VulnlogCopyTask`
-
-Copies vulnerability entries from a source Vulnlog file into one or more target files.
-See xref:reference/cli-copy.adoc[`vulnlog modify copy`] for the underlying behavior, including merge semantics for entries that already exist in a target.
-
-The task type is provided but no task is registered by default, since the source, targets, and IDs to copy depend on the project.
-Register a task in your build script for each propagation you want to perform:
+| `vulnIds`
+| Set of strings
+| empty
+| IDs of the entries to copy.
+|===
 
 [source,kotlin]
 ----
 import dev.vulnlog.gradle.VulnlogCopyTask
 
-tasks.register<VulnlogCopyTask>("vulnlogCopyToBranches") {
-    group = "vulnlog"
-    description = "Copy a vulnerability analysis into branch files."
-    sourceFile.set(layout.projectDirectory.file("source.vl.yaml"))
-    destinationFiles.from("target1.vl.yaml", "target2.vl.yaml")
-    vulnIds.set(setOf("CVE-2026-002"))
+tasks.register<VulnlogCopyTask>("copySpring4Shell") {
+    sourceFile = layout.projectDirectory.file("acme-shop.vl.yaml")
+    destinationFiles.from("acme-shop-4.3.vl.yaml")
+    vulnIds = setOf("CVE-2022-22965")
 }
 ----
 
-[cols="2,3"]
-|===
-| Property | Description
+== Messages and failures
 
-| `sourceFile`
-| Vulnlog file to copy entries from.
+The tasks log status lines at the lifecycle level and warnings at the warning level.
+The detail the CLI prints as `verbose:` and `debug:` lines goes to the info and debug levels, without those prefixes.
+Gradle's `--info` and `--debug` take the place of the CLI's `-v` and `-vv`.
 
-| `destinationFiles`
-| File collection of target Vulnlog files to copy entries into.
+A task fails the build where the CLI exits with a code other than `0`, except in the cases listed in <<differences-from-the-cli>>.
+For the conditions, see the exit codes on each CLI command page.
 
-| `vulnIds`
-| Set of vulnerability IDs to copy. Each ID must exist in the source file.
-|===
+[[differences-from-the-cli]]
+== Differences from the CLI
 
-.Example
-[source,shell]
-----
-./gradlew vulnlogCopyToBranches
-----
+* The tasks don't check file names, so a file such as `acme-shop.yaml` is accepted.
+* A task reports a failure as a Gradle build failure, with the message and the hint in one text, for example `Release not found: 4.5.0. Known releases: 4.2.0, 4.3.0, 4.4.0.`
+It doesn't print `error:` and `hint:` lines for it.
+Validation findings still print as `error:`, `warning:`, and `info:` lines.
+* Status lines show absolute paths, for example `Wrote: /home/me/acme-shop/build/vulnlog/vex.json`.
+`Validated:` shows the file name, as in the CLI.
+* If the `baseline` file of `vulnlogOpenVex` doesn't exist, the task issues a new document.
+The CLI exits with code `5`.
+* `vulnlogChangelogReport` writes its file even when no entry qualifies.
+See <<vulnlogChangelogReport>>.
+* The tasks don't read from stdin or write to stdout.
+* The tasks create output directories that don't exist.
+The CLI exits with code `1`.

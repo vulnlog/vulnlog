@@ -1,52 +1,109 @@
 = vulnlog fmt
 :page-aliases: cli-fmt.adoc
 
-Formats one or more Vulnlog files to the canonical style, keeping files consistent and reviewable across branches.
+`vulnlog fmt` rewrites Vulnlog files in the canonical style, in place.
+With `--check`, it reports the files that aren't in the canonical style and doesn't change them.
 
-NOTE: YAML comments are not part of the format and are removed on writing.
-The xref:reference/cli-add.adoc[modify add] and xref:reference/cli-copy.adoc[modify copy] commands write the same canonical style to preserve the canonical Vulnlog YAML format.
+== Synopsis
 
 [source]
 ----
-vulnlog fmt <file...> [--check]
+vulnlog fmt [--check] <inputs>...
+vulnlog fmt [--check] -
 ----
 
-[cols="2,3"]
+== Arguments and options
+
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
+
+| `<inputs>`
+| One or more Vulnlog files, or `-`
+| required
+| Files to format.
+`-` reads one file from stdin and writes the formatted file to stdout.
 
 | `--check`
-| Do not write changes. Exit non-zero, list the files that are not already formatted, and explain which canonical-style rules each file violates.
-With `-q` the listing is suppressed and only the exit code reports the result.
-
-| `-`
-| Read from STDIN and write the formatted document to STDOUT.
-
+| none
+| off
+| Don't write anything.
+List each file that isn't in the canonical style, with the rule and line of each difference, and exit with code `3`.
 |===
 
-NOTE: `-` reads a single document from STDIN and writes the formatted result to STDOUT.
-STDIN cannot be combined with file arguments, and only one STDIN input is accepted.
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
 
-.Format multiple files in place.
-[source]
+== Behaviour
+
+The canonical style fixes the layout of a Vulnlog file: the schema header and `---` at the top, the order of fields, and the style of each list and text value.
+Two people who change the same file get the same layout.
+
+`fmt` removes YAML comments, which aren't part of the format, and prints a warning when a file contains any.
+For the fields that hold notes, see xref:reference/file-format.adoc[File format].
+
+`fmt` only needs a file it can parse.
+It formats a file that has validation errors and doesn't report them.
+xref:reference/cli-validate.adoc[`vulnlog validate`] checks the validation rules.
+
+With several files, `fmt` writes none of them if one can't be parsed.
+It names the file and exits with code `2`.
+
+xref:reference/cli-add.adoc[`vulnlog modify add`] and xref:reference/cli-copy.adoc[`vulnlog modify copy`] write their files in the same canonical style.
+
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| Every file is formatted, or with `--check`, every file is already in the canonical style.
+
+| `1`
+| A general error.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+| `2`
+| A file can't be parsed.
+
+| `3`
+| With `--check`, at least one file isn't in the canonical style.
+|===
+
+== Examples
+
+Format a file that's already canonical:
+
+[source,console]
 ----
-vulnlog fmt web-app-1.vl.yaml web-app-2.vl.yaml
-Formatted: web-app-1.vl.yaml
-Unchanged: web-app-2.vl.yaml
+$ vulnlog fmt acme-shop.vl.yaml
+Unchanged: acme-shop.vl.yaml
 ----
 
-.Check formatting in CI without writing changes. Each finding names the rule it violates, with the line in the file.
-[source]
+Check a copy of `acme-shop.vl.yaml` where someone wrote the releases of `CVE-2023-32681` as a block list and added a comment:
+
+[source,console]
 ----
-vulnlog fmt --check vulnlog.yaml
-warning: vulnlog.yaml: not canonically formatted
-  [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
-  [non-canonical-block-scalar] vulnerabilities[CVE-2026-1234].analysis: Line 18: canonical style for this value is a folded block (>-) (found double-quoted).
+$ vulnlog fmt --check acme-shop.vl.yaml
+warning: acme-shop.vl.yaml: not canonically formatted
+  [non-canonical-array-style] vulnerabilities[CVE-2023-32681].releases: Line 49: canonical style for this list is a flow array, e.g. key: [value].
   [comments-not-preserved] YAML comments are removed on write.
 ----
 
-.Format from STDIN to STDOUT.
-[source]
+The exit code is `3`.
+Format the file to fix it:
+
+[source,console]
 ----
-vulnlog fmt - < vulnlog.yaml
+$ vulnlog fmt acme-shop.vl.yaml
+warning: acme-shop.vl.yaml: contains YAML comments; they are removed on write
+  hint: record notes in schema fields (e.g. comment, analysis)
+Formatted: acme-shop.vl.yaml
+----
+
+Format from stdin to stdout:
+
+[source,console]
+----
+$ vulnlog fmt - < acme-shop.vl.yaml > formatted.vl.yaml
 ----

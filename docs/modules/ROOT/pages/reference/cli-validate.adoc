@@ -1,55 +1,128 @@
 = vulnlog validate
 :page-aliases: cli-validate.adoc
 
-Validates one or more Vulnlog files against the schema and all validation rules.
+`vulnlog validate` checks Vulnlog files against the schema and the validation rules, and prints every finding.
+It doesn't change the files.
 
-Parsing a Vulnlog is the first stage in the validation process.
-After the Vulnlog document is parsed successfully, its content is validated.
-
-The validation is either successful or reports one or multiple issues:
-
-[horizontal]
-Error:: Indicate structurally invalid or semantically broken files that would produce incorrect output.
-Warning:: File is technically valid, but something is likely wrong or will cause problems in the future.
-Info:: Informational findings that highlight potential improvements or non-critical observations.
+== Synopsis
 
 [source]
 ----
-vulnlog validate <file...> [--strict]
+vulnlog validate [--strict] <inputs>...
+vulnlog validate [--strict] -
 ----
 
-[cols="2,3"]
+== Arguments and options
+
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
+
+| `<inputs>`
+| One or more Vulnlog files, or `-`
+| required
+| Files to check. `-` reads one file from stdin.
 
 | `--strict`
-| Treats warnings as errors.
-
-| `-`
-| Use to read from STDIN.
-
+| none
+| off
+| Treat warnings as errors, so a file with a warning fails.
 |===
 
-.Validate multiple Vulnlog files.
-[source]
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
+
+== Findings
+
+Each finding has a level, which decides whether the file fails:
+
+[cols="1,4"]
+|===
+| Level | Result
+
+| `error`
+| The file fails.
+
+| `warning`
+| The file fails only with `--strict`.
+
+| `info`
+| The file doesn't fail.
+|===
+
+A file without errors ends with `Validated: <file>`.
+For the levels and the message format, see xref:reference/exit-codes-and-messages.adoc#messages[Messages].
+
+Files are checked in the order you name them.
+The command stops at the first file with errors and doesn't check the files after it.
+
+Every other command that reads a Vulnlog file runs the same checks first and stops on an error.
+It prints only the errors, not the warnings and infos.
+`fmt` is the exception: it only needs a file it can parse.
+
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| No file has errors, and with `--strict`, no file has warnings.
+
+| `1`
+| A general error, or stdin is mixed with file names.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+| `2`
+| A file can't be parsed or has errors, or with `--strict`, has warnings.
+|===
+
+== Examples
+
+Check one file:
+
+[source,console]
 ----
-vulnlog validate web-app-1.vl.yaml web-app-2.vl.yaml
-Validated: web-app-1.vl.yaml
-Validated: web-app-2.vl.yaml
+$ vulnlog validate acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+1 info
+Validated: acme-shop.vl.yaml
 ----
 
-.Validate a Vulnlog file from STDIN.
-[source]
+Release 4.4.0 isn't published yet, and no entry refers to it, so the command prints an `info` line.
+
+Check a file from stdin:
+
+[source,console]
 ----
-vulnlog validate - < vulnlog.yaml
+$ vulnlog validate - < acme-shop.vl.yaml
+info: <stdin>: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+1 info
 Validated: <stdin>
 ----
 
-.Validation was not successful because an undefined tag was used.
-[source]
+Check a file with an error.
+Here, the lodash entry `CVE-2021-23337` uses the tag `web`, which the file doesn't define:
+
+[source,console]
 ----
-vulnlog validate vulnlog.yaml
-error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
-1 error
+$ vulnlog validate acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+info: acme-shop.vl.yaml: tags[frontend]: Unreferenced tag ID 'frontend'.
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2021-23337].tags[web]: References undefined tags 'web'. Defined tags: backend, container, frontend, worker
+1 error, 2 infos
   hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
 ----
+
+Check a file with `--strict`, so that a warning fails the file.
+Here, the release package URL (PURL) of the 4.3.0 server has no version:
+
+[source,console]
+----
+$ vulnlog validate --strict acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+warning: acme-shop.vl.yaml: releases[4.3.0].purls[pkg:maven/com.acme/acme-shop-server]: Release purl 'pkg:maven/com.acme/acme-shop-server' has no version, so its VEX statements apply to every version of the artifact.
+1 warning, 1 info
+  hint: ask for help at https://github.com/vulnlog/vulnlog/discussions/categories/q-a
+----
+
+Without `--strict`, the same file ends with `Validated: acme-shop.vl.yaml` and exit code `0`.

@@ -1,119 +1,204 @@
 = vulnlog modify add
 :page-aliases: cli-add.adoc
 
-Adds a new vulnerability entry to one or more Vulnlog files, or prints the entry to STDOUT when no file is given.
-This records a finding from the command line instead of editing the YAML by hand.
+`vulnlog modify add` adds a vulnerability entry to one or more Vulnlog files.
+If a file already has an entry with the same ID, the command updates that entry.
+Without a file, it prints the new entry to stdout.
+
+== Synopsis
 
 [source]
 ----
-vulnlog modify add [<file...>] --vuln-id <id> [flags]
+vulnlog modify add [<destinations>...] --vuln-id <id> [<options>]
 ----
 
-[cols="2,3"]
+== Arguments and options
+
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
 
-| `--vuln-id <id>`
-| Vulnerability ID for the new entry. Required.
+| `<destinations>`
+| Zero or more Vulnlog files
+| none
+| Files to add the entry to.
+Without a file, the entry goes to stdout, indented to paste under `vulnerabilities`.
 
-| `--name <text>`
-| Common name for the vulnerability (e.g. Log4Shell).
+| `--vuln-id`
+| A vulnerability ID
+| required
+| ID of the entry, for example `CVE-2023-32681`.
+For the supported ID types, see xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
-| `--alias <id>`
-| Alternative identifier for the entry. Repeatable.
+| `--name`
+| Text
+| none
+| Common name, for example `Log4Shell`.
 
-| `--release <id>`
-| Release the vulnerability affects. Repeatable. On insert, defaults to the latest release defined in the file. Must be defined in the file.
+| `--alias`
+| A vulnerability ID
+| none
+| Another ID of the same vulnerability. Repeatable.
 
-| `--package <purl>`
-| Package URL (PURL) the vulnerability affects. Repeatable.
+| `--release`
+| A release ID
+| last release in the file
+| Release the vulnerability affects. Repeatable.
+The file must define it.
+Without it, a new entry gets the last release listed under `releases`, published or not.
 
-| `--tag <id>`
-| Tag to attach to the entry. Repeatable. Must be defined in the file.
+| `--package`
+| A package URL (PURL)
+| none
+| Affected package, for example `pkg:pypi/requests@2.28.2`. Repeatable.
 
-| `--reporter <value>`
-| Reporter that surfaced the vulnerability. Repeatable. Adds a report dated today for each value.
+| `--tag`
+| A tag ID
+| none
+| Tag of the entry. Repeatable.
+The file must define it.
 
-| `--description <text>`
-| Short description of the vulnerability.
+| `--reporter`
+| A reporter
+| none
+| Reporter that found the vulnerability. Repeatable.
+Each value adds a report dated today.
+For the reporters, see xref:reference/suppression.adoc#supported-scanners[Supported scanners].
 
-| `--analysis <text>`
-| Analysis and rationale for the triage decision.
+| `--description`
+| Text
+| none
+| Short description.
 
-| `--analyzed-at <date>`
-| Date the analysis was performed, formatted `yyyy-MM-dd`.
+| `--analysis`
+| Text
+| none
+| Reasoning behind the verdict.
 
-| `--verdict <value>`
-| Triage verdict. One of `affected`, `not affected`.
+| `--analyzed-at`
+| A date, `YYYY-MM-DD`
+| none
+| Date of the analysis.
 
-| `--severity <value>`
-| Severity. One of `low`, `medium`, `high`, `critical`.
+| `--verdict`
+| `affected` or `not affected`
+| none
+| Verdict. Without a verdict, the entry is in the state `under investigation`.
 
-| `--disposition <value>`
-| Remediation intent for an `affected` verdict. One of `will fix`, `wont fix`.
+| `--severity`
+| `low`, `medium`, `high`, or `critical`
+| none
+| Severity of an `affected` verdict.
 
-| `--justification <value>`
-| VEX justification for a `not affected` verdict (e.g. `vulnerable code not in execute path`).
+| `--disposition`
+| `will fix` or `wont fix`
+| none
+| What you plan to do about an `affected` verdict.
 
-| `--comment <text>`
-| Free-text comment stored with the entry.
+| `--justification`
+| `component not present`, `inline mitigations already exist`, `vulnerable code cannot be controlled by adversary`, `vulnerable code not in execute path`, or `vulnerable code not present`
+| none
+| Why a `not affected` verdict holds.
+
+| `--comment`
+| Text
+| none
+| Free-text comment.
 |===
 
-The positional arguments are the target files; repeat them to add the same entry to several files in one invocation.
-When no file is given, the entry is written to STDOUT instead, ready to paste under a `vulnerabilities` list.
-A new entry carries no `verdict` unless you pass `--verdict`, so it starts under investigation by default.
+Values with spaces need quotes, for example `--verdict "not affected"`.
+For the meaning of each field, see xref:reference/vulnerabilities.adoc[Vulnerabilities] and xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
 
-When writing to a file, the whole file is rewritten in the canonical style, exactly as xref:reference/cli-fmt.adoc[fmt] would format it.
-Any valid YAML layout is accepted as input.
-YAML comments are not preserved; the command warns when it drops them.
+== Behaviour
 
-The `--verdict`, `--severity`, `--disposition`, and `--justification` values are written exactly as given and are not cross-checked, so an inconsistent combination (for example `affected` together with a justification) is accepted here and reported later by xref:reference/cli-validate.adoc[validate].
+A new entry goes to the top of the `vulnerabilities` list.
 
-If an entry with the same `id` already exists in a target file, it is updated in place rather than duplicated.
-The update favours adding over replacing:
+An entry that exists keeps its place and gains what you pass:
 
-* List fields (`--alias`, `--release`, `--package`, `--tag`) are added to the existing values; nothing is removed.
-* `reports` are merged by reporter: each `--reporter` appends a report for a new reporter or sets the date to today for one that already exists.
-* Scalar fields (`--name`, `--description`, `--analysis`, `--analyzed-at`, `--verdict`, `--severity`, `--justification`, `--comment`) overwrite the existing value when supplied, and are left untouched when omitted.
-* `resolution` is never changed by this command.
-* The entry keeps its position in the file.
+* `--alias`, `--release`, `--package`, and `--tag` add values. Nothing is removed.
+* `--reporter` adds a report for a new reporter, and sets the date of an existing report from that reporter to today.
+* The other options replace the value when you pass them, and leave it as it is when you don't.
+* The `resolution` doesn't change.
 
-Releases and tags must already be defined in the file; otherwise the command fails without writing changes.
+The command checks every file before it writes any.
+If one file doesn't define a release or tag you pass, no file changes.
 
-== Example
+The command writes each file in the canonical style of xref:reference/cli-fmt.adoc[`vulnlog fmt`] and removes YAML comments, with a warning.
 
-.Add a new entry, letting the release default to the latest published release.
-[source]
+The command doesn't check that the verdict, severity, disposition, and justification fit together.
+xref:reference/cli-validate.adoc[`vulnlog validate`] checks them.
+
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| The entry was added or updated, or printed to stdout.
+
+| `1`
+| A general error, `--vuln-id` isn't supported, an option value isn't allowed, or a file doesn't define a release or tag you pass.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+| `2`
+| A file doesn't pass validation before the change.
+|===
+
+== Examples
+
+Print a minimal entry to stdout:
+
+[source,console]
 ----
-vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --reporter trivy
-Added: CVE-2026-1234 to vulnlog.yaml
-----
-
-The entry is inserted at the top of the `vulnerabilities` list:
-
-[source,yaml]
-----
-  - id: CVE-2026-1234
-    releases: [1.0.0]
-    packages: []
-    reports:
-      - reporter: trivy
-        at: 2026-06-02
-----
-
-.Re-run with new fields to update the existing entry in place.
-[source]
-----
-vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 --package pkg:npm/example-lib@2.3.0
-Updated: CVE-2026-1234 in vulnlog.yaml
-----
-
-.Print an entry to STDOUT without writing a file.
-[source]
-----
-vulnlog modify add --vuln-id CVE-2026-1234
-  - id: CVE-2026-1234
+$ vulnlog modify add --vuln-id CVE-2023-32681
+  - id: CVE-2023-32681
     releases: []
     packages: []
     reports: []
+----
+
+Record the `requests` finding from GitHub Dependabot in `acme-shop.vl.yaml`, in a version of the file that doesn't have the entry yet:
+
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2023-32681 \
+    --description "Proxy-Authorization header leak in requests" \
+    --release 4.3.0 --package pkg:pypi/requests@2.28.2 \
+    --reporter github-dependabot --tag worker --tag container
+Added: CVE-2023-32681 to acme-shop.vl.yaml
+----
+
+The new entry is at the top of `vulnerabilities`, with today's date on the report:
+
+[source,yaml]
+----
+  - id: CVE-2023-32681
+    description: Proxy-Authorization header leak in requests
+    releases: [4.3.0]
+    packages: ["pkg:pypi/requests@2.28.2"]
+    reports:
+      - reporter: github-dependabot
+        at: 2026-11-07
+    tags:
+      - worker
+      - container
+----
+
+Run the command again with the same ID to update the entry:
+
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2023-32681 --analyzed-at 2026-07-15
+Updated: CVE-2023-32681 in acme-shop.vl.yaml
+----
+
+A release the file doesn't define stops the command, and the file doesn't change:
+
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2023-32681 --release 4.5.0
+error: acme-shop.vl.yaml: releases not defined in the file: 4.5.0
+  hint: declare them under 'releases' in the file first
 ----

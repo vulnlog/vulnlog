@@ -1,55 +1,117 @@
 = Exit codes and messages
 
-The CLI's exit codes and message formats are a documented, stable interface for scripts and CI pipelines.
-The Gradle plugin surfaces the same messages through the Gradle logger.
+The exit codes and the shape of the messages stay stable, so scripts and CI pipelines can rely on them.
+The Gradle plugin prints status lines and findings through the Gradle log, and reports failures as Gradle build failures.
+For the differences, see xref:reference/gradle-plugin.adoc#differences-from-the-cli[Differences from the CLI].
 
+[[exit-codes]]
 == Exit codes
 
-[cols="1,2,3"]
+[cols="1,2,4"]
 |===
-| Code | Name | Description
+| Code | Meaning | Examples
 
 | `0`
 | Success
-| Command completed successfully.
+| The command did its work.
+A report or suppression file that lists vulnerabilities is still a success.
 
 | `1`
 | General error
-| Unexpected error (I/O failure, missing argument, file not found, unhandled exception).
+| A missing or unknown option or argument, `-q` together with `-v`, `report`, `modify`, or `vex` without a subcommand, a file that doesn't exist or can't be read or written, a file name Vulnlog doesn't accept, or an unexpected error.
+Also a release or tag in `modify add` that the file doesn't define, an ID in `modify copy` that the source file doesn't have, `suppress -o` with a selection that covers several reporters, a `--baseline` file that can't be read, or an existing output file for `init` without `--force`.
 
 | `2`
 | Validation error
-| The Vulnlog file failed parsing or contains validation errors.
+| A Vulnlog file can't be parsed or has validation errors, report inputs have different `project` blocks, `vex openvex` has no statement to write, or an `analysis` contains a character the native suppression format can't hold.
 
 | `3`
 | Formatting error
-| The Vulnlog file contains formatting errors.
+| `vulnlog fmt --check` found a file that isn't in the canonical style.
 
 | `5`
-| Invalid flag value
-| A flag references an unknown entity or unsupported type, for example a release that is not defined in the file.
+| Invalid option value
+| An option of `suppress`, a `report` command, or `vex openvex` names a release or tag the file doesn't know, or a reporter, state, verdict, or disposition that isn't supported.
+`--baseline` of `vex openvex` names a file that doesn't exist or isn't an OpenVEX document.
+OpenVEX documents tell your customers' tools whether a release is affected by a vulnerability.
 |===
 
-Code `4` is reserved for a dedicated file-not-found error in a future release.
+Code `4` isn't used.
+Each command page lists the codes that command returns.
 
-== Output messages
+[[messages]]
+== Messages
 
-Stdout carries data, stderr carries conversation.
-Report content, suppression files, and formatted YAML go to stdout only when `-` is the target; every message addressed to a human goes to stderr.
+Every message goes to stderr.
+For the output streams, see xref:reference/cli.adoc#stdin[Standard input and output].
 
-A command that worked prints one status line per action in the form `<Verb>: <path or subject>`, for example `Created: vulnlog.yaml` or `Wrote: reports/report.html`.
+A status line reports an action, in the form `<Verb>: <subject>`:
 
-Findings and errors print one per line in the form `<severity>: <file>[: <location>]: <message>` with the lowercase prefixes `error:`, `warning:`, and `info:`, followed by a summary line such as `2 errors, 1 warning`.
-When a next step is known, a `hint:` line follows the finding.
-The shape is stable, so `grep '^error:'` works in CI.
+[source]
+----
+Wrote: vulnlog-impact-report.html
+----
 
-== Color
+The verbs are `Created`, `Wrote`, `Formatted`, `Unchanged`, `Copied`, `Added`, `Updated`, and `Validated`.
+`-q` hides status lines.
 
-Color is on when the stream is a terminal and off when piped or redirected.
-Setting `NO_COLOR` to any value forces color off; `FORCE_COLOR` or `CLICOLOR_FORCE` forces it on, which is useful in CI systems that render ANSI, like GitHub Actions.
-Color never carries information on its own; stripped output reads identically.
+A finding starts with its level, followed by the file, the location in the file if there is one, and the text:
 
-== Related
+[source]
+----
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2021-23337].tags[web]: References undefined tags 'web'. Defined tags: backend, container, frontend, worker
+----
 
-* xref:reference/cli.adoc[The Vulnlog CLI] describes global flags and diagnostics verbosity.
-* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] uses the exit codes in pipeline steps.
+A summary line counts the findings of a file, for example `1 error, 2 infos`.
+A `hint:` line, indented by two spaces, follows a message when a next step is known.
+
+[cols="1,4"]
+|===
+| Prefix | Meaning
+
+| `error:`
+| The command can't continue.
+
+| `warning:`
+| Something is probably wrong, but the command continues.
+
+| `info:`
+| Information, for example a release or a tag that no entry uses.
+
+| `hint:`
+| What to do next.
+
+| `verbose:`
+| Detail about what the command did. Shown with `-v`.
+
+| `debug:`
+| More detail, for bug reports. Shown with `-vv`.
+|===
+
+`error:`, `warning:`, and `info:` print at every verbosity.
+The exception is `info: no fixed vulnerabilities to report` of `report changelog`, which `-q` hides.
+
+A usage error, such as an unknown option, a missing argument, or a file that doesn't exist, exits with `1`.
+It prints the `Usage:` line of the command, a blank line, and a line that starts with `Error:`:
+
+[source]
+----
+Usage: vulnlog validate [<options>] <inputs>...
+
+Error: missing argument <inputs>
+----
+
+Because the prefixes of the other messages stay the same, `grep '^error:'` finds every error except usage errors.
+
+An unexpected error prints one `error:` line.
+With `-vv`, the command also prints the stack trace.
+
+== Colour
+
+Messages are coloured when stderr is a terminal, and plain when it's piped or redirected.
+`NO_COLOR`, set to any value, turns colour off.
+`FORCE_COLOR` turns it on, for example in CI systems that show ANSI colours, such as GitHub Actions.
+`NO_COLOR` takes precedence when both are set.
+
+Colour never carries information on its own.
+Plain output contains the same text.

@@ -1,86 +1,132 @@
 = Tags
 :page-aliases: tags.adoc
 
-Tags provide a flexible, team-defined taxonomy for categorizing and scoping vulnerability entries.
-They can represent customer-facing deliverables (`binary`, `container`, `sdk`), internal usage contexts (`build-dep`, `test-infra`), or any other categorization.
+Tags are labels that you define once and attach to entries and to release package URLs (PURLs).
+Typical tags name the parts of your software, such as a server, a user interface, or a container image.
+Commands filter by tag.
+OpenVEX documents, which tell your customers' tools whether a release is affected by a vulnerability, use tags to link entries to release PURLs.
 
-== Defining tags
-
-Tags are defined in the optional `tags` section of a Vulnlog file.
-
-[cols="1,1,1,3"]
-|===
-| Field | Type | Required | Description
-
-| `id`
-| String
-| Yes
-| Unique identifier for the tag. Referenced by vulnerability entries and release purl entries.
-
-| `description`
-| String
-| No
-| Human-readable description of what this tag represents.
-|===
+== Synopsis
 
 [source,yaml]
 ----
 tags:
-  - id: binary
-    description: Shipped as native binary
-  - id: container
-    description: Shipped as Docker container
-  - id: build-dep
-    description: Build-time dependency only
-----
+  - id: backend
+    description: Java server application
 
-== Assigning tags
-
-Tags can be assigned in two places:
-
-=== On vulnerability entries
-
-Tags on a vulnerability entry categorize the finding, enable CLI filtering, and name the release artifacts a VEX statement covers.
-
-[source,yaml]
-----
-vulnerabilities:
-  - id: CVE-2026-5678
-    releases: [ 2.0.0 ]
-    packages: [ "pkg:npm/image-lib@3.1.0" ]
-    reports:
-      - reporter: trivy
-    tags: [ container ]
-----
-
-=== On release PURLs
-
-Tags on release purl entries enable scoped output generation.
-A VEX statement names only the release purls that share a tag with the entry, see xref:reference/cli-vex-openvex.adoc#purls[Declare and tag release purls].
-
-[source,yaml]
-----
 releases:
-  - id: 8.1.1
+  - id: 4.3.0
+    published_at: 2026-06-15
     purls:
-      - purl: pkg:generic/demo-project@8.1.1
-        tags: [ binary ]
-      - purl: pkg:docker/demo-project@8.1.1
-        tags: [ container ]
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.3.0"
+        tags: [backend]
+
+vulnerabilities:
+
+  - id: CVE-2022-42889
+    releases: [4.3.0]
+    packages: ["pkg:maven/org.apache.commons/commons-text@1.9"]
+    reports:
+      - reporter: dependency-check
+    tags: [backend]
 ----
 
-== Filtering by tags
+== `tags`
 
-Use the `--tag` flag to filter CLI output by tag.
-The flag is repeatable to filter on multiple tags.
-This flag is available on the `report`, `suppress` and `vex openvex` commands.
+`tags` is an optional top-level list of tag definitions.
 
-[source,bash]
+[cols="2,2,1,1,4"]
+|===
+| Field | Type | Required | Default | Description
+
+| `id`
+| String
+| Yes
+| None
+| Name of the tag.
+It can contain spaces, for example `dev dependency`.
+
+| `description`
+| String
+| No
+| None
+| What the tag stands for.
+|===
+
+== Where you use tags
+
+[cols="2,4"]
+|===
+| Field | Effect
+
+| `tags` on an entry
+| Filters with `--tag` select the entry.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+| `tags` on a release PURL
+| An OpenVEX statement for an entry names the release PURLs that share at least one tag with the entry.
+See xref:reference/project-and-releases.adoc[Project and releases] and xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex].
+|===
+
+Without `--tag`, commands include every entry, tagged or not.
+For the commands that accept `--tag` and how it selects entries, see xref:reference/cli.adoc#filters[Filter options].
+
+An entry without tags gets no OpenVEX statement.
+A release PURL without tags appears in no OpenVEX statement.
+
+== Rules
+
+`vulnlog validate` checks these rules.
+
+[cols="3,1,3"]
+|===
+| Rule | Level | Message
+
+| Each tag `id` is unique.
+| Error
+| `Duplicate tag ID 'backend'.`
+
+| Each tag on an entry or a release PURL is defined in `tags`.
+| Error
+| `References undefined tags 'backend'. Defined tags: container, frontend, worker`
+
+| Each defined tag is used on an entry or a release PURL.
+| Info
+| `Unreferenced tag ID 'backend'.`
+|===
+
+A `--tag` value that the file doesn't define fails with `Tag not found`, or with `tags not defined in the file` in `vulnlog modify add`.
+For the exit codes, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+== Examples
+
+A tag definition with an `id` and a `description`:
+
+[source,yaml]
 ----
-vulnlog suppress my-app.vl.yaml --reporter trivy --tag container
-vulnlog report impact my-app.vl.yaml --tag build-dep
+tags:
+  - id: container
+    description: Container image that bundles all components
 ----
 
-== Defaults
+Acme Shop defines four tags:
 
-Vulnerability entries without tags are included in all unfiltered outputs, except VEX documents: an untagged entry names no release artifact.
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=11..19]
+----
+
+Each Acme Shop release has two PURLs, one tagged `backend` and one tagged `container`:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=29..35]
+----
+
+The Text4Shell entry is in the server, so it carries `backend` and `container`.
+OpenVEX statements for it name both PURLs of each release:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=73..91]
+----

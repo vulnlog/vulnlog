@@ -27,16 +27,9 @@
 ** xref:guides/write-release-notes.adoc[Write release notes]
 ** xref:guides/run-in-ci.adoc[Run in CI pipelines]
 
-* Get started
-** xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?]
-* Concepts
-** xref:concepts/why-git.adoc[Why decisions live in git]
-** xref:concepts/data-model.adoc[The Vulnlog data model]
-** xref:concepts/vulnerability-states.adoc[Vulnerability states]
-** xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
-** xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out]
+.Reference
 * Reference
-** xref:reference/file-format.adoc[The Vulnlog file format]
+** xref:reference/file-format.adoc[File format]
 *** xref:reference/project-and-releases.adoc[Project and releases]
 *** xref:reference/vulnerabilities.adoc[Vulnerabilities]
 *** xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications]
@@ -46,19 +39,27 @@
 *** xref:reference/cli-init.adoc[init]
 *** xref:reference/cli-validate.adoc[validate]
 *** xref:reference/cli-fmt.adoc[fmt]
+*** xref:reference/cli-add.adoc[modify add]
+*** xref:reference/cli-copy.adoc[modify copy]
 *** xref:reference/cli-suppress.adoc[suppress]
 *** xref:reference/cli-report-impact.adoc[report impact]
 *** xref:reference/cli-report-changelog.adoc[report changelog]
-*** xref:reference/cli-add.adoc[modify add]
-*** xref:reference/cli-copy.adoc[modify copy]
 *** xref:reference/cli-vex-openvex.adoc[vex openvex]
+*** xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]
 ** xref:reference/gradle-plugin.adoc[Gradle plugin]
 ** xref:reference/github-action.adoc[GitHub Action]
-** xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]
-* Troubleshooting
+** xref:glossary.adoc[Glossary]
 ** xref:troubleshooting.adoc[Troubleshooting]
+
+* Get started
+** xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?]
+* Concepts
+** xref:concepts/why-git.adoc[Why decisions live in git]
+** xref:concepts/data-model.adoc[The Vulnlog data model]
+** xref:concepts/vulnerability-states.adoc[Vulnerability states]
+** xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
+** xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out]
 * Upgrade
 ** xref:upgrade/migrate-from-kotlin-dsl.adoc[Migrate from the Kotlin DSL]
 ** xref:upgrade/migrate-risk-acceptable.adoc[Migrate from the 'risk acceptable' verdict]
-* xref:glossary.adoc[Glossary]
 * https://github.com/vulnlog/vulnlog/discussions[Get help]

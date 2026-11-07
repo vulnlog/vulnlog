@@ -1,64 +1,133 @@
 = vulnlog modify copy
 :page-aliases: cli-copy.adoc
 
-Copies one or more vulnerability entries from a source file into one or more target files.
-This propagates an existing analysis across multiple branch files.
+`vulnlog modify copy` copies vulnerability entries from a source Vulnlog file into one or more target files.
+In each target, a copied entry lists only the last release of that target.
+
+== Synopsis
 
 [source]
 ----
-vulnlog modify copy <source-file> <target-file...> --vuln-id <id> [--vuln-id <id>...]
+vulnlog modify copy <source> <destinations>... --vuln-id <id> [--vuln-id <id>...]
 ----
 
-[cols="2,3"]
+== Arguments and options
+
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
 
-| `--vuln-id <id>`
-| Vulnerability ID to copy. Required and repeatable. Each ID must exist in the source file.
+| `<source>`
+| A Vulnlog file
+| required
+| File to copy the entries from.
+
+| `<destinations>`
+| One or more Vulnlog files
+| required
+| Files to copy the entries into.
+
+| `--vuln-id`
+| A vulnerability ID
+| required
+| ID of an entry to copy. Repeatable.
+The source must have an entry with this ID.
 |===
 
-The first positional argument is the source file.
-All subsequent positional arguments are target files.
-At least one `--vuln-id` is required; repeat the flag to copy multiple entries in one invocation.
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
 
-Target files are rewritten in the canonical style, exactly as xref:reference/cli-fmt.adoc[fmt] would format them, so a later `fmt` is a no-op.
-Any valid YAML layout is accepted as input.
-YAML comments are not preserved; the command warns when it drops them.
+== Behaviour
 
-For each target file, the `releases` field on the copied entry is rewritten to the last release in the target's list of releases.
+A copied entry that's new to a target goes to the top of its `vulnerabilities` list.
+Its `releases` is set to the last release listed under the target's `releases`, published or not.
+Every other field is copied as it is.
 
-If an entry with the same `id` already exists in a target file, the existing entry is merged with the source entry rather than overwritten:
+If the target already has an entry with the same ID, that entry keeps its place and its own values, and only gains what it lacks:
 
-* Scalar fields (`name`, `description`, `analysis`, `analyzed_at`, `verdict`, `justification`, `resolution`, `comment`) keep the existing value when set; otherwise the source value is used.
-* List fields (`aliases`, `packages`, `tags`) are unioned, preserving the existing order.
-* `reports` are merged by reporter: an existing report is kept, with the source's `vuln_ids` appended and missing scalars filled in from the source.
-* `releases` is replaced with the target's last release, as for new entries.
+* `releases` is set to the target's last release.
+* `aliases`, `packages`, and `tags` gain the values the source has and the target lacks.
+* `name`, `description`, `analysis`, `analyzed_at`, `resolution`, and `comment` take the source value only when the target has none.
+* The verdict, and with it `severity`, `disposition`, and `justification`, stays as the target has it.
+* Reports are matched by reporter.
+A report the target lacks is added. A report the target has gains the source's `vuln_ids`, and any of `at`, `source`, and `suppress` it lacks.
 
-== Example
+The target must define every tag the copied entries use.
+Otherwise, the target no longer passes validation after the copy, and the next command that reads it fails.
 
-In this example the vulnerability `CVE-2026-002` is copied from link:{examplesdir}/copy/before/source.vl.yml[source.vl.yml] to link:{examplesdir}/copy/after/target1.vl.yml[target1.vl.yml] and link:{examplesdir}/copy/after/target2.vl.yml[target2.vl.yml].
+The command writes each target in the canonical style of xref:reference/cli-fmt.adoc[`vulnlog fmt`] and removes YAML comments, with a warning.
 
-.Copy `CVE-2026-002` from source.vl.yml to target1.vl.yml and target2.vl.yml.
-[source,bash]
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| The entries were copied.
+
+| `1`
+| A general error, or the source has no entry with an ID you pass.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+| `2`
+| The source or a target doesn't pass validation.
+|===
+
+== Examples
+
+`acme-shop-4.3.vl.yaml` is the Vulnlog file of the 4.3 release line of Acme Shop.
+It defines the tags `backend` and `container`, the releases `4.3.0` and `4.3.1`, and no entries yet.
+Copy the Spring4Shell entry from `acme-shop.vl.yaml` into it:
+
+[source,console]
 ----
-vulnlog modify copy source.vl.yml target1.vl.yml target2.vl.yml --vuln-id CVE-2026-002
-
-Copied: 1 entry to target1.vl.yml
-Copied: 1 entry to target2.vl.yml
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-4.3.vl.yaml --vuln-id CVE-2022-22965
+Copied: 1 entry to acme-shop-4.3.vl.yaml
 ----
 
-The command adds the vulnerability entry to the previously empty `vulnerabilities` list.
-
-This copies `CVE-2026-002` from before:
+The entry in `acme-shop-4.3.vl.yaml` now lists `4.3.1`, the last release of the target:
 
 [source,yaml]
 ----
-include::{examplesdir}/copy/before/target1.vl.yml[lines=14..15]
+vulnerabilities:
+
+  - id: CVE-2022-22965
+    name: Spring4Shell
+    description: Remote code execution through data binding in Spring Framework
+    releases: [4.3.1]
+    packages: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
+    reports:
+      - reporter: trivy
+        at: 2026-04-07
+        suppress:
+          expires_at: 2027-03-31
+    tags:
+      - backend
+      - container
+    analysis: >-
+      Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
+      but Spring advises all users to upgrade.
+    analyzed_at: 2026-04-08
+    verdict: affected
+    severity: medium
+    disposition: will fix
+    comment: Planned for 4.4.0 together with the Spring Boot update.
 ----
 
-After the operation, the vulnerability entry is added with `releases` pointing to the target's last release:
+Copy two entries into two targets at once:
 
-[source,yaml]
+[source,console]
 ----
-include::{examplesdir}/copy/after/target1.vl.yml[lines=14..25]
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-4.2.vl.yaml acme-shop-4.3.vl.yaml --vuln-id CVE-2022-22965 --vuln-id CVE-2022-42889
+Copied: 2 entries to acme-shop-4.2.vl.yaml
+Copied: 2 entries to acme-shop-4.3.vl.yaml
+----
+
+An ID the source doesn't have stops the command, and no file changes:
+
+[source,console]
+----
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-4.3.vl.yaml --vuln-id CVE-2099-0001
+error: vulnerability IDs not found in acme-shop.vl.yaml: CVE-2099-0001
+  hint: copy only IDs the source file records
 ----

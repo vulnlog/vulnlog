@@ -1,44 +1,103 @@
 = vulnlog init
 :page-aliases: cli-init.adoc
 
-Scaffolds a minimal Vulnlog file containing only the required sections (`schemaVersion`, `project`, `releases`, `vulnerabilities`).
+`vulnlog init` creates a Vulnlog file with the required sections only: the schema header, `schemaVersion`, `project`, an empty `releases` list, and an empty `vulnerabilities` list.
+It writes to stdout unless you name an output file.
+
+== Synopsis
 
 [source]
 ----
-vulnlog init [flags]
+vulnlog init --organization <text> --name <text> --author <text> [-o <path>] [--force]
 ----
 
-[cols="2,3"]
+== Options
+
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
 
-| `-o, --output <path>`
-| Output path for the generated file. Defaults to stdout.
+| `--organization`
+| Text
+| required
+| Organisation that owns the project. Written to `project.organization`.
 
-| `--name <text>`
-| Project name. Prompted if not provided.
+| `--name`
+| Text
+| required
+| Project name. Written to `project.name`.
 
-| `--organization <text>`
-| Organization name. Prompted if not provided.
+| `--author`
+| Text
+| required
+| Author of the Vulnlog file, for example a team. Written to `project.author`.
 
-| `--author <text>`
-| Author name. Prompted if not provided.
+| `-o`, `--output`
+| A file path, or `-`
+| stdout
+| File to write. `-` writes to stdout.
+The directory must exist.
+
+| `--force`
+| none
+| off
+| Replace the output file if it exists.
+Without it, `init` doesn't overwrite a file.
 |===
 
-.Create a new Vulnlog project.
-[source]
+For the fields of the `project` block, see xref:reference/project-and-releases.adoc[Project and releases].
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
+
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| The file was written, or the content went to stdout.
+
+| `1`
+| A general error, the output file exists and `--force` isn't set, the output path is a directory, or its directory doesn't exist.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+|===
+
+== Examples
+
+Print a new file to stdout:
+
+[source,console]
 ----
-vulnlog init --name "My App" --organization "Acme Corp" --author "Security Team"
+$ vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team"
 # $schema: https://vulnlog.dev/schema/vulnlog-v1.json
 ---
 schemaVersion: "1"
 
 project:
   organization: Acme Corp
-  name: My App
-  author: Security Team
+  name: Acme Shop
+  author: Acme Product Security Team
 
 releases: []
 
 vulnerabilities: []
 ----
+
+Write it to `vulnlog.yaml`:
+
+[source,console]
+----
+$ vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o vulnlog.yaml
+Created: vulnlog.yaml
+----
+
+Run the same command again, and `init` refuses to replace the file:
+
+[source,console]
+----
+$ vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o vulnlog.yaml
+error: the file vulnlog.yaml already exists
+  hint: pass --force to replace it
+----
+
+The file `init` creates passes `vulnlog validate` and `vulnlog fmt --check` as it is.

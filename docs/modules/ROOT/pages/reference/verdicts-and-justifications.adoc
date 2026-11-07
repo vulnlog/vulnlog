@@ -1,186 +1,225 @@
 = Verdicts and justifications
 :page-aliases: verdicts-and-justifications.adoc
 
-The term "verdict" is used deliberately to distinguish from automated scanner statuses: it reflects a deliberate human judgment about the impact of a vulnerability.
+Four fields on an entry record your judgement: `verdict`, `severity`, `disposition`, and `justification`.
+Of these, only `verdict` and `disposition`, together with `resolution`, decide the entry's state.
 
-Each vulnerability entry answers up to four questions:
+== Synopsis
 
-[cols="1,2,2"]
+An entry with the verdict `affected` has a severity and, optionally, a disposition:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=112..114]
+----
+
+An entry with the verdict `not affected` has a justification:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=90..91]
+----
+
+An entry without `verdict` is `under investigation`.
+
+== Field combinations
+
+[cols="2,1,1,1"]
 |===
-| Question | Field | Values
+| `verdict` | `severity` | `disposition` | `justification`
 
-| Does it affect this release?
-| `verdict`
-| absent (under investigation), `affected`, `not affected`
+| Not set
+| Ignored
+| Not allowed
+| Ignored
 
-| How severe is it for us?
-| `severity`
-| `low`, `medium`, `high`, `critical`
+| `affected`
+| Required
+| Optional
+| Ignored
 
-| What will we do about it?
-| `disposition`
-| `will fix`, `wont fix` (optional)
-
-| Was it remediated, and where?
-| `resolution`
-| absent, or a resolution block
+| `not affected`
+| Ignored
+| Not allowed
+| Required
 |===
 
-Severity and disposition only carry meaning once the verdict is `affected`.
-Resolution is independent of the verdict: it records the fact that the dependency was updated or the issue otherwise addressed.
+The CLI ignores `justification` without a verdict or with `verdict: affected`, but the JSON schema rejects it.
 
+[[verdict-values]]
 == Verdict values
 
 [cols="1,3"]
 |===
-| Value | Description
+| Value | Meaning
+
+| Not set
+| You're still investigating whether the vulnerability affects your software.
 
 | `affected`
-| The vulnerability impacts this release. Requires `severity`; an optional `disposition` states the remediation intent.
+| The vulnerability affects your software.
 
 | `not affected`
-| The vulnerability is present in a dependency but does not impact this release. Requires `justification`.
-
-| _(absent)_
-| Not yet triaged. The entry is under investigation.
+| The vulnerability doesn't affect your software.
 |===
 
-NOTE: "Fixed" is not a verdict.
-Fixing a vulnerability is a resolution action, not a judgment about impact.
-Use `verdict: affected` with a `resolution` block to record that a vulnerability was real and subsequently fixed.
-Use `verdict: not affected` with an optional `resolution` to record that a vulnerability was not relevant but the dependency was updated anyway.
+The CLI rejects `under investigation` as a value of `verdict`.
 
-=== `affected`
-
-The vulnerability is confirmed to impact the project.
-Requires a `severity` assessment.
-Typically paired with a `resolution` block once the fix is applied.
-
-Once a resolution is recorded, the entry is automatically excluded from generated suppression files; the scanner is expected to stop reporting the finding after the dependency update.
-Without a resolution, an explicit `suppress` block is required to suppress the finding.
-
-[source,yaml]
-----
-verdict: affected
-severity: high
-resolution:
-  in: 2.0.1
-  at: 2026-03-03
-  note: "Updated image-lib from 3.1.0 to 3.2.0"
-----
-
-=== `not affected`
-
-The vulnerable dependency is present but does not impact the project.
-Requires a `justification` explaining why the vulnerability is not exploitable in this context.
-
-Because the finding does not reflect a real risk to the project, entries with this verdict are included in generated suppression files without requiring an explicit `suppress` block.
-
-If a `resolution` is also recorded, the entry is treated as resolved and excluded from generated suppression files; the dependency was updated, so the scanner is expected to stop reporting the finding.
-
-[source,yaml]
-----
-verdict: not affected
-justification: vulnerable code not in execute path
-analysis: >
-  The vulnerable code path requires SVG input processing.
-  Our application only accepts PNG and JPEG formats.
-----
-
-[[disposition-values]]
-== Disposition values
-
-The optional `disposition` field states what the project intends to do about an `affected` vulnerability.
-It is only valid together with `verdict: affected` and has no default: absence means the intent has not been stated, which is distinct from both values.
-
-[cols="1,3"]
-|===
-| Value | Description
-
-| `will fix`
-| The project intends to remediate the vulnerability.
-
-| `wont fix`
-| The project accepts the risk; no remediation is intended.
-|===
-
-=== Accepting a risk
-
-A deliberate decision to accept a risk is expressed as `verdict: affected` with `disposition: wont fix`.
-The vulnerable dependency remains in place and represents a live risk, so the scanner continues to report the finding.
-Suppressing a live risk must be a deliberate decision separate from the triage, so an explicit `suppress` block on the report entry is required.
-
-[source,yaml]
-----
-verdict: affected
-severity: medium
-disposition: wont fix
-analysis: >
-  Vulnerability confirmed but only exploitable with
-  specially crafted input that our validation layer rejects.
-----
-
-A risk-accepted vulnerability may still be fixed passively, for example when an unrelated dependency update happens to contain the fix.
-Record that with a `resolution` block; the `wont fix` disposition and the resolution coexist.
-
-=== Migration from `risk acceptable`
-
-Earlier versions expressed risk acceptance as a dedicated verdict, `risk acceptable`.
-That verdict is deprecated: it combined the applicability judgment with the remediation intent, which are separate questions.
-
-Files carrying the legacy verdict keep parsing until the 1.0 release; the entry behaves exactly like `verdict: affected` with `disposition: wont fix`, and `vulnlog validate` prints a deprecation warning.
-Writing commands leave the legacy verdict as written; migrating is a deliberate step.
-Reports never render `risk acceptable` either.
-An accepted risk appears as verdict `affected`, its severity, disposition `wont fix`, and state `accepted`, which is exactly what the file records.
-
-See xref:upgrade/migrate-risk-acceptable.adoc[Migrate from the 'risk acceptable' verdict] for the migration guide.
+There is no `fixed` verdict.
+An entry records the fix in `resolution`.
+See xref:reference/vulnerabilities.adoc#resolution-entry[Resolution].
 
 [[severity-values]]
 == Severity values
 
-Required when `verdict` is `affected`.
+[cols="1,3"]
+|===
+| Value | Meaning
+
+| `critical`
+| Immediate action required.
+Exploitable with severe impact.
+
+| `high`
+| Action required.
+Significant impact if exploited.
+
+| `medium`
+| Action recommended.
+Moderate impact.
+
+| `low`
+| Low priority.
+Minimal impact or difficult to exploit.
+|===
+
+[[disposition-values]]
+== Disposition values
 
 [cols="1,3"]
 |===
-| Value | Description
+| Value | Meaning
 
-| `critical`
-| Immediate action required. Exploitable with severe impact.
+| Not set
+| You haven't stated what you plan to do.
 
-| `high`
-| Action required. Significant impact if exploited.
+| `will fix`
+| You plan to fix the vulnerability.
 
-| `medium`
-| Action recommended. Moderate impact.
-
-| `low`
-| Low priority. Minimal impact or difficult to exploit.
+| `wont fix`
+| You accept the risk and don't plan to fix it.
 |===
-
-NOTE: Accepting a `critical` risk with `disposition: wont fix` is valid but unusual; `vulnlog validate` points it out with an info finding.
 
 [[justification-values]]
 == Justification values
 
-Required when `verdict` is `not affected`.
-Values align with the OpenVEX justification vocabulary.
+The values match the justifications of OpenVEX documents, which tell your customers' tools whether a release is affected by a vulnerability.
 
 [cols="1,3"]
 |===
-| Value | Description
+| Value | Meaning
 
 | `component not present`
-| The vulnerable component is not included in the deliverable.
+| The vulnerable component isn't part of the software you ship.
 
 | `vulnerable code not present`
-| The vulnerable code is present but the specific vulnerable function or code path is not included.
+| The component is present, but the vulnerable code isn't.
 
 | `vulnerable code not in execute path`
-| The vulnerable code is present but cannot be reached during execution.
+| The vulnerable code is present, but your software never runs it.
 
 | `vulnerable code cannot be controlled by adversary`
-| The vulnerable code is reachable but cannot be triggered by an attacker.
+| Your software runs the vulnerable code, but an attacker can't trigger the vulnerability.
 
 | `inline mitigations already exist`
-| The vulnerability is mitigated by existing controls (e.g., WAF, input validation).
+| Existing controls, such as input validation or a web application firewall, prevent the attack.
 |===
+
+[[states]]
+== States
+
+Vulnlog derives a state for each entry from its verdict, disposition, and resolution.
+You don't write the state into the file.
+The impact report shows it, and its `--state` filter selects by it.
+
+[cols="1,3"]
+|===
+| State | Condition
+
+| `under investigation`
+| No verdict.
+
+| `open`
+| `affected`, no resolution, and `disposition` is `will fix` or not set.
+
+| `accepted`
+| `affected`, no resolution, and `disposition: wont fix`.
+
+| `resolved`
+| `affected` or `not affected`, with a resolution.
+
+| `not applicable`
+| `not affected`, no resolution.
+|===
+
+With `--as-of`, a resolution in a later release doesn't count.
+As of 4.2.0, Log4Shell is `open`, because 4.3.0 fixes it.
+For the option, see xref:reference/cli.adoc#filters[Filter options].
+For why states work this way, see xref:concepts/vulnerability-states.adoc[Vulnerability states].
+
+== Rules
+
+`vulnlog validate` checks these rules.
+
+[cols="3,1,3"]
+|===
+| Rule | Level | Message
+
+| `verdict` is `affected`, `not affected`, or not set.
+| Error
+| `Invalid verdict: fixed`
+
+| An entry with the verdict `affected` has a valid `severity`.
+| Error
+| `Invalid severity: null`
+
+| An entry with the verdict `not affected` has a valid `justification`.
+| Error
+| `Invalid justification: null`
+
+| `disposition` appears only with `verdict: affected`.
+| Error
+| `Disposition requires verdict 'affected'.`
+
+| `disposition` is `will fix` or `wont fix`.
+| Error
+| `Invalid disposition: maybe`
+
+| An entry with severity `critical` doesn't have `disposition: wont fix`.
+| Info
+| `A critical severity vulnerability is marked 'wont fix'.`
+|===
+
+== Examples
+
+The lodash entry is `accepted`.
+It's `affected` with severity `low`, and its disposition is `wont fix`:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=117..135]
+----
+
+The XZ Utils backdoor doesn't affect Acme Shop, because Debian 12 doesn't ship the backdoored versions:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=56..71]
+----
+
+The Log4Shell entry is `affected` and has a resolution in 4.3.0, so its state is `resolved`:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=137..162]
+----

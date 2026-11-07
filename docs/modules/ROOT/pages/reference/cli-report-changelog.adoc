@@ -1,156 +1,164 @@
 = vulnlog report changelog
 
-Generates a report of which vulnerabilities each release fixed.
-The report groups entries by the release that shipped the fix, newest release first.
-Use it to write the security part of release notes and changelogs.
+`vulnlog report changelog` lists the vulnerabilities each release fixed, newest release first, as text or Markdown.
+Several Vulnlog files are merged into one report.
+
+== Synopsis
 
 [source]
 ----
-vulnlog report changelog <file...> [filter flags] [--format <format>] [--brief] [-o <path>]
+vulnlog report changelog <inputs>... [-o <path>] [--fixed-in <release-id>] [--format text|markdown] [--brief] [<filter-options>]
 ----
 
-Multiple files are merged and must share the same project metadata.
-Use `-` as a file argument to read from stdin.
-The report goes to stdout, so it can be piped; `-o <path>` writes it to a file instead.
+== Arguments and options
 
-[cols="2,3"]
+[cols="2,2,1,4"]
 |===
-| Flag | Description
+| Name | Value | Default | Description
 
-| `-o, --output <path>`
-| Output file path, or `-` to write to stdout. Defaults to stdout.
+| `<inputs>`
+| One or more Vulnlog files, or `-`
+| required
+| Files to report on, all with the same `project` block.
+For how files are merged, see xref:reference/cli.adoc#input-files[Input files].
+`-` reads one file from stdin.
 
-| `--format <format>`
-| Output format. One of `text`, `markdown`. Defaults to `text`.
-`text` reads in a terminal.
-`markdown` renders one section per release in the Keep a Changelog layout, ready to paste under a heading the changelog file already has.
+| `-o`, `--output`
+| A file path, or `-`
+| stdout
+| File to write. `-` writes to stdout.
+
+| `--fixed-in`
+| A release ID
+| all releases
+| List only the vulnerabilities this release fixed.
+
+| `--format`
+| `text` or `markdown`
+| `text`
+| `text` is for reading in a terminal.
+`markdown` writes a `## [<release>] - <date>` section, or `## [<release>] - unreleased` for a release without `published_at`, with a `### Security` subsection for each release, to paste into a changelog file.
 
 | `--brief`
-| List identifiers and severity only. Descriptions, resolution notes, and references are left out.
+| none
+| off
+| List only the IDs, aliases, and severities.
 
-| `--fixed-in <release-id>`
-| Report only the vulnerabilities this release shipped a fix for.
-
-| `--as-of <release-id>`
-| Report the state as of this release, including every earlier release.
-A fix that ships later is left out, so the report holds what the chosen release actually shipped.
-
-| `--tag <text>`
-| Filter on tags. Use multiple times to filter on multiple tags.
-
-| `--reporter <value>`
-| Filter on reporter.
-
-| `-`
-| Use as the file argument to read from stdin.
-
+| `--reporter`, `--as-of`, `--tag`
+| See xref:reference/cli.adoc#filters[Filter options]
+|
+| Select the entries.
+With `--as-of`, a fix in a later release isn't listed.
 |===
 
-== Report contents
+For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
 
-An entry appears once it records a `resolution`, under the release named by `resolution.in`.
-Two entries never appear:
+== Output
 
-* An entry with no `resolution`, because nothing has shipped for it yet.
-* An entry that no release before the fix was affected by, because nobody ever ran a release carrying it.
-An entry listed for `1.0.1` and `1.0.2` and fixed in `1.0.2` does appear, because `1.0.1` shipped with the vulnerability.
+An entry appears under the release named in its `resolution.in`.
+An entry without a `resolution` doesn't appear.
+An entry doesn't appear either if none of its `releases` comes before the release in `resolution.in`, because no release shipped with the vulnerability.
 
-Each release section carries the release identifier, its publication date, and a summary line stating how many vulnerabilities the release fixed and how many of each severity.
-A release with no publication date is marked `unreleased`.
+Each release shows its ID and `published_at` date, or `unreleased` without a date, and a line that counts the fixes by severity.
 
-Each entry carries its primary identifier, its severity, and any alias, named alongside the identifier it belongs to.
-Unless `--brief` is given, the entry also carries the `name` and `description` of the vulnerability and the `note` and `ref` recorded on the resolution.
+Each entry shows its ID, its severity, and its aliases.
+Without `--brief`, it also shows the `name` and `description` of the entry, and the `note` and `ref` of its `resolution`.
+For these fields, see xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
-An entry with the verdict `not affected` appears when it records a resolution, marked `not affected` and contributing no severity.
-The dependency was updated even though the project was never exposed.
+If no entry qualifies, the command writes nothing, prints `info: no fixed vulnerabilities to report` unless `-q` is set, and exits with `0`.
 
-The report is only as complete as the entries behind it.
-A `resolution` with `in` puts an entry in the report; a `description` and a `resolution.note` turn it into a sentence that needs no editing.
+The report contains no timestamp, so the same input always gives the same output.
+
+== Exit codes
+
+[cols="1,4"]
+|===
+| Code | When
+
+| `0`
+| The report was written, or no entry qualified.
+
+| `1`
+| A general error, or `--format` has an unknown value.
+For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-codes[Exit codes].
+
+| `2`
+| A file doesn't pass validation, or the files have different `project` blocks.
+
+| `5`
+| `--fixed-in` or a filter names an unknown release, reporter, or tag.
+|===
 
 == Examples
 
-.Report every release that shipped a fix
-[source]
+Report every release that fixed a vulnerability:
+
+[source,console]
 ----
-vulnlog report changelog acme-web-app.vl.yaml
-Acme Corp / Acme Web App
+$ vulnlog report changelog acme-shop.vl.yaml
+Acme Corp / Acme Shop
 
-1.2.0 (unreleased)
-  1 fixed: 1 high
-  CVE-2026-7791 (high) SQL injection in query-parser
-    fix: Updated query-parser from 5.2.1 to 5.3.0
-    ref: https://jira.example.com/browse/SEC-201
-
-1.1.0 (2026-03-20)
+4.3.0 (2026-06-15)
   1 fixed: 1 critical
-  CVE-2025-9876 (critical) Authentication bypass in auth-middleware
-    fix: Updated auth-middleware from 3.0.2 to 3.1.0
-    ref: https://jira.example.com/browse/SEC-158
+  CVE-2021-44228 (critical, also GHSA-jfh8-c2jp-5v3q) "Log4Shell" Remote code execution through JNDI lookups in Apache Log4j
+    fix: Updated log4j-core from 2.14.1 to 2.17.1
 ----
 
-.Report one release as Markdown
-[source]
+Report release 4.3.0 as Markdown:
+
+[source,console]
 ----
-vulnlog report changelog acme-web-app.vl.yaml --fixed-in 1.1.0 --format markdown
-## [1.1.0] - 2026-03-20
+$ vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.3.0 --format markdown
+## [4.3.0] - 2026-06-15
 
 ### Security
 
 _1 fixed: 1 critical_
 
-- **CVE-2025-9876** (critical): Authentication bypass in auth-middleware. Updated auth-middleware from 3.0.2 to 3.1.0. (https://jira.example.com/browse/SEC-158)
+- **CVE-2021-44228** (critical, also GHSA-jfh8-c2jp-5v3q): "Log4Shell" Remote code execution through JNDI lookups in Apache Log4j. Updated log4j-core from 2.14.1 to 2.17.1.
 ----
 
-.Append the release section to a changelog file
-[source]
-----
-vulnlog report changelog vulnlog.yaml --fixed-in 1.1.0 --format markdown >> CHANGELOG.md
-----
+List the IDs only:
 
-.List the identifiers without the detail
-[source]
+[source,console]
 ----
-vulnlog report changelog acme-web-app.vl.yaml --brief
-Acme Corp / Acme Web App
+$ vulnlog report changelog acme-shop.vl.yaml --brief
+Acme Corp / Acme Shop
 
-1.2.0 (unreleased)
-  1 fixed: 1 high
-  CVE-2026-7791 (high)
-
-1.1.0 (2026-03-20)
+4.3.0 (2026-06-15)
   1 fixed: 1 critical
-  CVE-2025-9876 (critical)
+  CVE-2021-44228 (critical, also GHSA-jfh8-c2jp-5v3q)
 ----
 
-.Merge several Vulnlog files of one project
-[source]
+Release 4.4.0 has no fix yet:
+
+[source,console]
 ----
-vulnlog report changelog frontend.vl.yaml backend.vl.yaml
+$ vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.4.0
+info: no fixed vulnerabilities to report
 ----
 
-.Write the report to a file
-[source]
+Once the Spring4Shell entry records `resolution.in: 4.4.0`, the report lists 4.4.0 as `unreleased` until you set its `published_at`:
+
+[source,console]
 ----
-vulnlog report changelog vulnlog.yaml --format markdown -o security-changelog.md
+$ vulnlog report changelog acme-shop.vl.yaml
+Acme Corp / Acme Shop
+
+4.4.0 (unreleased)
+  1 fixed: 1 medium
+  CVE-2022-22965 (medium) "Spring4Shell" Remote code execution through data binding in Spring Framework
+
+4.3.0 (2026-06-15)
+  1 fixed: 1 critical
+  CVE-2021-44228 (critical, also GHSA-jfh8-c2jp-5v3q) "Log4Shell" Remote code execution through JNDI lookups in Apache Log4j
+    fix: Updated log4j-core from 2.14.1 to 2.17.1
+----
+
+Write the Markdown report to a file:
+
+[source,console]
+----
+$ vulnlog report changelog acme-shop.vl.yaml --format markdown -o security-changelog.md
 Wrote: security-changelog.md
 ----
-
-== When the command fails
-
-The command exits non-zero on bad input.
-It never fails because a release fixed vulnerabilities.
-
-* No entry records a resolution: the command prints `info: no fixed vulnerabilities to report` and exits `0`.
-* Unknown `--fixed-in`, `--as-of`, `--reporter`, or `--tag`: the command lists the known values and exits `5`.
-* Input files with different project metadata: the command exits `2`.
-* Unknown `--format`: the command lists the valid values and exits `1`.
-
-See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
-
-== See also
-
-- xref:guides/write-release-notes.adoc[Write release notes]
-- xref:guides/record-a-resolution.adoc[Record a resolution]
-- xref:reference/cli-report-impact.adoc[vulnlog report impact]
-- xref:reference/gradle-plugin.adoc#_vulnlogchangelogreport[The vulnlogChangelogReport Gradle task]
-- xref:reference/exit-codes-and-messages.adoc[Exit codes and messages]
