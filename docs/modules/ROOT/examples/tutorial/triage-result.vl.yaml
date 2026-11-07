@@ -1,0 +1,28 @@
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+
+releases:
+  - id: 4.3.0
+    published_at: 2026-06-15
+
+vulnerabilities:
+
+  - id: CVE-2022-42889
+    name: Text4Shell
+    description: Remote code execution through string interpolation in Apache Commons Text
+    releases: [4.3.0]
+    packages: ["pkg:maven/org.apache.commons/commons-text@1.9"]
+    reports:
+      - reporter: dependency-check
+        at: 2026-11-07
+    analysis: >-
+      Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable
+      interpolation.
+    verdict: not affected
+    justification: vulnerable code not in execute path

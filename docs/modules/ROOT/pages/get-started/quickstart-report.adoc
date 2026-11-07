@@ -1,63 +1,127 @@
-= Quickstart: read the impact report
+= Read the impact report
 
-In about five minutes you read a Vulnlog report and can state how the project is affected, by what, and which release ships each fix.
-You do not edit any file and you do not need a development environment.
+In this tutorial, you read the impact report of the Acme Shop project to find out how vulnerabilities affect it.
+You read the team's assessment of each one and see which release fixes what.
+It takes about 10 minutes.
+You don't edit any file, and you don't need to know YAML.
 
-== Prerequisites
+The impact report is a single HTML file.
+It needs no network connection, and you can print it.
 
-* A Vulnlog HTML report.
-Your team generates it with xref:reference/cli-report-impact.adoc[`vulnlog report impact`], often as a CI artifact.
-The examples below describe the report generated from this file:
+== Before you start
 
-.acme-web-app.vl.yaml
+* Install the Vulnlog CLI. For instructions, see xref:get-started/install.adoc[Install Vulnlog].
+* Have a web browser to open the report.
+* Create an empty directory and save the Acme Shop Vulnlog file in it as `acme-shop.vl.yaml`:
++
+.acme-shop.vl.yaml
 [%collapsible]
 ====
 [source,yaml]
 ----
-include::{examplesdir}/acme-web-app.vl.yaml[]
+include::example$acme-shop.vl.yaml[]
 ----
 ====
 
-== Step 1: Open the report
+== Generate the report
 
-The report is a single HTML file that works offline and prints cleanly.
+In the directory that contains `acme-shop.vl.yaml`, generate the impact report:
 
-.Example Vulnlog HTML Report
-image::VulnlogReportScreenshot.png[Example Vulnlog HTML Report]
+[source,bash]
+----
+vulnlog report impact acme-shop.vl.yaml
+----
 
-The header shows the project, the generation timestamp, and any filter that was applied.
-Check the filter first: a report scoped to a release answers "what does a user of that release face?", an unfiltered report shows the maintainer's full backlog.
+[source]
+----
+Wrote: vulnlog-impact-report.html
+----
 
-== Step 2: Read the summary
+== Open the report
 
-The summary counts entries by state, then breaks the open entries down by severity and the accepted entries down by severity.
-The five states, defined in xref:concepts/vulnerability-states.adoc[Vulnerability states]:
+Open `vulnlog-impact-report.html` in your web browser.
 
-* *open*: triage confirmed impact and no fix has shipped. These entries are the live risk; their severity tells you how urgent.
-* *under investigation*: the team has not concluded triage. Impact is unknown, not zero.
-* *accepted*: triage confirmed impact and the project decided not to remediate. The risk is live and deliberately carried, so these entries belong on a standing review list.
-* *resolved*: a fix is recorded. The Fixed In column names the release that ships it.
-* *not applicable*: triage concluded the vulnerability does not impact the project. Nothing is owed.
+The heading names the report and the project: *Vulnerability Impact Report* for *Acme Shop*.
+Below it, you see the organisation, Acme Corp, and the team that maintains the file, the Acme Product Security Team.
 
-== Step 3: Read the entry table
+== Check what the report covers
 
-For the example project, the unfiltered report reads:
+The *About* box on the left tells you what you're looking at:
 
-* `CVE-2025-9876` (critical) and `CVE-2026-7791` (high): *resolved*, fixed in 1.1.0 and 1.2.0.
-Whether your audience is protected depends on whether those releases shipped to them.
-* `CVE-2026-6685` (low): *accepted*, with the project lead's rationale in the details.
-* `CVE-2026-1234`: *not applicable*, with the justification and analysis explaining why.
-* `CVE-2026-8802`: *under investigation*.
+* *Generated* is the date and time the report was created, in UTC.
+* *Inputs* is the Vulnlog file the report comes from, `acme-shop.vl.yaml`.
+* *Filter* is `none`.
 
-The Details cell carries the verdict, the severity, the stated disposition, the justification, and the analysis text, so the reasoning behind every decision is in the report itself.
+A filter of `none` means the report shows every entry in the file.
+A report can also show the state of one release, for example `as of=4.3.0`.
+Always check this line before you draw conclusions, because a filtered report leaves entries out.
 
-== What you can now state
+== Read the summary
 
-"Acme Web App has no open vulnerability in the maintainer view; one finding is still under triage.
-Release 1.1.0 users face one high-severity issue whose fix ships with 1.2.0."
-Statements like these come directly from the summary, the state column, and Fixed In.
+The *Summary* box on the right counts the entries:
+
+* *Total* is 6 entries.
+* *State* is 1 _Open_, 1 _Investigating_ (the state `under investigation`), 1 _Accepted_, 1 _Resolved_, and 2 _Not applicable_.
+* *Open severity* is 1 _Medium_.
+* *Accepted severity* is 1 _Low_.
+
+Entries in the state `open` affect Acme Shop and aren't fixed yet, so start with them.
+Here, one vulnerability of medium severity is open.
+
+== Read the table
+
+Each row of the table is one vulnerability.
+The rows are sorted by state, so `open` entries come first, and entries that don't affect Acme Shop come last.
+A coloured bar on the left edge of a row repeats the state, and for `open` entries the colour shows the severity.
+Rows for entries `under investigation` and `open` entries without a severity have no bar.
+
+The four columns are:
+
+* *IDs*: the vulnerability identifier, for example `CVE-2022-22965`, and any other identifiers for the same vulnerability below it.
+* *State*: where the team stands with the vulnerability.
+* *Details*: the team's assessment.
+* *Releases*: the Acme Shop releases the vulnerability affects.
+
+Go through the rows from top to bottom:
+
+* `CVE-2022-22965` is _Open_.
+The *Details* column shows *Verdict* _Affected_, *Severity* _Medium_, and *Disposition* _Will fix_.
+The team confirmed that Acme Shop is affected and plans a fix.
+The *Analysis* text explains why the risk is medium.
+* `CVE-2023-32681` is _Investigating_.
+It has a *Description* but no verdict, because the team hasn't finished its analysis.
+Until the team records a verdict, its impact is unknown.
+* `CVE-2021-23337` is _Accepted_, with *Disposition* _Wont fix_.
+Acme Shop is affected, and the team accepted the risk.
+The *Analysis* says why: only administrators can reach the vulnerable function, and the admin interface goes away in Acme Shop 5.0.
+* `CVE-2021-44228` is _Resolved_.
+Its second identifier, `GHSA-jfh8-c2jp-5v3q`, appears below the CVE.
+The *Releases* column shows 4.2.0 and *Fixed in* 4.3.0.
+* `CVE-2022-42889` and `CVE-2024-3094` are _Not applicable_.
+Their verdict is _Not affected_, and the line in italics under the verdict gives the reason, for example _Vulnerable code not present_.
+
+For the exact meaning of each state, see xref:reference/verdicts-and-justifications.adoc#states[States].
+
+== Answer questions from the report
+
+You can now answer the questions people usually ask about Acme Shop:
+
+* Is anything open? Yes, one vulnerability of medium severity, and the team plans to fix it.
+* Is anything still being analysed? Yes, one vulnerability, `CVE-2023-32681`.
+* Which risks has the team accepted? One low-severity vulnerability in the admin interface.
+* Is Log4Shell (`CVE-2021-44228`) fixed? Yes, in release 4.3.0. Users of 4.2.0 are still affected.
+
+== What you've learned
+
+Now you can:
+
+* Check which entries a report covers before you draw conclusions.
+* Read the state of each vulnerability and the team's assessment behind it.
+* Answer common questions about a project from its impact report.
 
 == Next steps
 
-* Ask your team for a release-scoped report (`--as-of <release-id>`) when you need the exposure of a specific shipped release; the xref:get-started/quickstart-release.adoc[release quickstart] shows the difference.
-* xref:concepts/vulnerability-states.adoc[Vulnerability states] explains the state model behind the report.
+* See how the report changes for a single release in xref:get-started/quickstart-release.adoc[Find what affects your release].
+* Answer a customer's question about one vulnerability in xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry].
+* Generate and share reports for your own project with xref:guides/generate-reports.adoc[Generate reports].
+* Learn how a state follows from the team's assessment in xref:concepts/vulnerability-states.adoc[Vulnerability states].

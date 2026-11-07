@@ -1,132 +1,243 @@
-= Quickstart: triage your first finding
+= Triage your first finding
 :page-aliases: quickstart.adoc
 
-In about ten minutes you create a Vulnlog file, record a scanner finding with your verdict, and generate a suppression file that silences the finding in your scanner.
+In this tutorial, you create a Vulnlog file for the Acme Shop project and record a scanner finding.
+You record the verdict that the finding doesn't affect Acme Shop and generate a suppression file so the scanner stops reporting it.
+It takes about 10 minutes.
 
-== Prerequisites
+The finding is Text4Shell (`CVE-2022-42889`), a remote code execution vulnerability in the Apache Commons Text library.
+OWASP Dependency-Check reported it in `commons-text` 1.9, which Acme Shop 4.3.0 ships.
 
-* The Vulnlog CLI is installed (see xref:get-started/install.adoc[Install Vulnlog]).
-* A finding from an SCA scanner to work with.
-This quickstart uses a Trivy finding for `CVE-2026-1234` in the npm package `example-lib`; substitute your own scanner and finding as you go. (see xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner])
+== Before you start
 
-== Step 1: Create the Vulnlog file
+* Install the Vulnlog CLI. For instructions, see xref:get-started/install.adoc[Install Vulnlog].
+* Install Git.
 
-Run `vulnlog init` in the root of your repository:
+== Create a project directory
+
+Create an empty directory and make it a Git repository:
 
 [source,bash]
 ----
-vulnlog init --organization "Acme Corp" --name "Acme Web App" --author "Acme Corp Security Team" -o vulnlog.yaml
+mkdir acme-shop
+cd acme-shop
+git init
+----
+
+Run every command in this tutorial from this directory.
+
+== Create the Vulnlog file
+
+Create a Vulnlog file with the project details:
+
+[source,bash]
+----
+vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o vulnlog.yaml
+----
+
+Vulnlog confirms that it created the file:
+
+[source]
+----
 Created: vulnlog.yaml
 ----
 
-The file contains the project metadata and empty `releases` and `vulnerabilities` sections.
+Open `vulnlog.yaml` in your editor.
+It contains the project details and two empty lists, one for releases and one for vulnerabilities:
 
-== Step 2: Record your release
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
 
-Vulnerability entries reference the releases they affect, so the file needs at least one release.
-Open `vulnlog.yaml` and replace `releases: []` with your current version:
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+
+releases: []
+
+vulnerabilities: []
+----
+
+== Add the release
+
+Every entry in a Vulnlog file names the releases it affects, so the file needs at least one release.
+
+In `vulnlog.yaml`, replace the line `releases: []` with release 4.3.0, published on 15 June 2026:
 
 [source,yaml]
 ----
 releases:
-  - id: 1.0.0
-    published_at: 2026-01-15
+  - id: 4.3.0
+    published_at: 2026-06-15
 ----
 
-== Step 3: Record the finding
-
-Record what the scanner reported, before any analysis:
-
-[source,bash]
-----
-vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 \
-  --package "pkg:npm/example-lib@2.3.0" \
-  --reporter trivy \
-  --description "Remote code execution in example-lib"
-Added: CVE-2026-1234 to vulnlog.yaml
-----
-
-The entry starts without a verdict, so Vulnlog tracks it as under investigation.
-The report is dated with the current date.
-
-== Step 4: Record your verdict
-
-Analyse the finding, then record the outcome.
-In this example the vulnerable code path is not reachable, so the verdict is `not affected`:
-
-[source,bash]
-----
-vulnlog modify add vulnlog.yaml --vuln-id CVE-2026-1234 \
-  --analysis "The vulnerable code path is not reachable in our application because we only use the safe subset of the API." \
-  --verdict "not affected" \
-  --justification "vulnerable code not in execute path"
-Updated: CVE-2026-1234 in vulnlog.yaml
-----
-
-The entry in `vulnlog.yaml` now reads:
-
-[source,yaml]
-----
-  - id: CVE-2026-1234
-    description: Remote code execution in example-lib
-    releases: [1.0.0]
-    packages: ["pkg:npm/example-lib@2.3.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-07-10
-    analysis: >-
-      The vulnerable code path is not reachable in our application because we only use the safe subset of the API.
-    verdict: not affected
-    justification: vulnerable code not in execute path
-----
-
-== Step 5: Validate the file
+Save the file and check it:
 
 [source,bash]
 ----
 vulnlog validate vulnlog.yaml
+----
+
+[source]
+----
+info: vulnlog.yaml: releases[4.3.0]: Unreferenced release ID '4.3.0'.
+1 info
 Validated: vulnlog.yaml
 ----
 
-== Step 6: Generate the suppression file
+The file is valid.
+The `info` line tells you that no entry refers to release 4.3.0 yet.
+That changes in the next step.
+
+== Record the finding
+
+Record what Dependency-Check reported.
+You don't add a verdict yet, because you haven't analysed the finding:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2022-42889 \
+  --name Text4Shell \
+  --description "Remote code execution through string interpolation in Apache Commons Text" \
+  --package "pkg:maven/org.apache.commons/commons-text@1.9" \
+  --reporter dependency-check
+----
+
+[source]
+----
+Added: CVE-2022-42889 to vulnlog.yaml
+----
+
+The `--package` value is a package URL (PURL), a standard way to name a package, its ecosystem, and its version in one string.
+Here it names version 1.9 of the Maven package `commons-text`.
+
+Vulnlog adds an entry to `vulnerabilities`:
+
+[source,yaml]
+----
+  - id: CVE-2022-42889
+    name: Text4Shell
+    description: Remote code execution through string interpolation in Apache Commons Text
+    releases: [4.3.0]
+    packages: ["pkg:maven/org.apache.commons/commons-text@1.9"]
+    reports:
+      - reporter: dependency-check
+        at: 2026-11-07
+----
+
+Vulnlog sets `releases` to the latest release in the file, 4.3.0, and sets the report date `at` to today.
+Your file shows the date you ran the command.
+
+The entry has no verdict, so its state is `under investigation`.
+
+== Record your verdict
+
+Suppose you've analysed the finding.
+Text4Shell needs the `StringSubstitutor` class, and Acme Shop only uses `StringEscapeUtils`.
+The vulnerable code is in the library, but Acme Shop never runs it.
+
+Record the verdict `not affected`, the reason in your own words, and a justification from a fixed list of values:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2022-42889 \
+  --analysis "Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation." \
+  --verdict "not affected" \
+  --justification "vulnerable code not in execute path"
+----
+
+Because an entry for `CVE-2022-42889` already exists, Vulnlog updates it:
+
+[source]
+----
+Updated: CVE-2022-42889 in vulnlog.yaml
+----
+
+Your file now looks like this, apart from the report date:
+
+[source,yaml]
+----
+include::example$tutorial/triage-result.vl.yaml[]
+----
+
+== Validate the file
+
+Check the file again.
+The `--strict` option also fails the file on warnings:
+
+[source,bash]
+----
+vulnlog validate --strict vulnlog.yaml
+----
+
+[source]
+----
+Validated: vulnlog.yaml
+----
+
+The `info` line from before is gone, because the entry now refers to release 4.3.0.
+
+== Generate the suppression file
+
+A suppression file tells a scanner which findings to skip.
+Generate it from the Vulnlog file:
 
 [source,bash]
 ----
 vulnlog suppress vulnlog.yaml
-Wrote: /path/to/.trivyignore.yaml
 ----
 
-Because the verdict is `not affected`, the finding is included automatically:
+Vulnlog prints the full path of each file it writes:
 
-[source,yaml]
+[source]
 ----
-# Generated by Vulnlog (https://vulnlog.dev). DO NOT EDIT.
----
-vulnerabilities:
-- id: CVE-2026-1234
-  statement: The vulnerable code path is not reachable in our application because
-    we only use the safe subset of the API.
+Wrote: /home/you/acme-shop/dependency-check-suppressions.xml
 ----
 
-Point Trivy at this file and the finding disappears from the scan, while your analysis stays in `vulnlog.yaml`.
+Open `dependency-check-suppressions.xml`:
 
-== Step 7: Commit the decision
+[source,xml]
+----
+<!-- Generated by Vulnlog (https://vulnlog.dev). DO NOT EDIT. -->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes>Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation.</notes>
+        <cve>CVE-2022-42889</cve>
+    </suppress>
+</suppressions>
+----
+
+The file is in Dependency-Check's own suppression format, because the report came from `dependency-check`.
+Your analysis is in the `notes` element, so anyone who reads the suppression file sees why the finding is suppressed.
+Vulnlog included the entry because the verdict is `not affected`.
+You didn't have to ask for the suppression.
+
+== Commit your work
+
+Commit the Vulnlog file, but not the suppression file:
 
 [source,bash]
 ----
 git add vulnlog.yaml
-git commit -m "Triage CVE-2026-1234: not affected"
+git commit -m "Triage CVE-2022-42889 (Text4Shell): not affected"
 ----
 
-The git history is now the audit trail for the decision.
+The Git history now shows who recorded the verdict, when, and why.
+If you later learn something that changes your verdict, you change the entry in a new commit, and the history keeps both versions.
 
-== What you did
+== What you've learned
 
-You created a xref:reference/file-format.adoc[Vulnlog file] and recorded an entry for a scanner finding: first the facts (package, xref:reference/vulnerabilities.adoc#report-entry[report]), then your judgment (xref:reference/verdicts-and-justifications.adoc[verdict and justification]) with the analysis explaining it.
-From that single source Vulnlog generated a suppression file for the scanner, and the commit preserved the decision for everyone who asks later.
+Now you can:
+
+* Create a Vulnlog file and add a release to it.
+* Record a finding first and add your verdict to the same entry later.
+* Generate a suppression file from your verdicts.
 
 == Next steps
 
-* xref:guides/triage-a-finding.adoc[Triage a new scanner finding] shows the recording patterns for every verdict, including affected and risk-accepted findings.
-* xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines] wires validation and suppression into your pipeline.
-* xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner] lists the supported scanners and suppression formats.
+* Record findings that do affect your software, with a severity and a plan, in xref:guides/triage-a-finding.adoc[Triage a new scanner finding].
+* Point your scanner at the generated file and decide whether to commit it with xref:guides/generate-suppression-files.adoc[Generate suppression files].
+* Find out which releases a vulnerability affects in xref:get-started/quickstart-release.adoc[Find what affects your release].

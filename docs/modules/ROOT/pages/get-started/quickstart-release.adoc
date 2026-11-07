@@ -1,70 +1,157 @@
-= Quickstart: find what affects your release
+= Find what affects your release
 
-In about five minutes you find out which vulnerabilities affect a shipped release and which dependency updates the next release must carry.
+In this tutorial, you find out which vulnerabilities affect Acme Shop 4.3.0 and compare them with the older release 4.2.0.
+Then you build the list of what the next release, 4.4.0, must fix.
+It takes about 10 minutes, and you don't change the Vulnlog file.
 
-== Prerequisites
+== Before you start
 
-* The Vulnlog CLI is installed (see xref:get-started/install.adoc[Install Vulnlog]).
-* A Vulnlog file.
-To follow along without one, save the example file below as `acme-web-app.vl.yaml`.
-It tracks the Acme Web App with two published releases (1.0.0, 1.1.0) and one unpublished release (1.2.0).
-
-.acme-web-app.vl.yaml
+* Install the Vulnlog CLI. For instructions, see xref:get-started/install.adoc[Install Vulnlog].
+* Have a web browser to open the reports.
+* Create an empty directory and save the Acme Shop Vulnlog file in it as `acme-shop.vl.yaml`:
++
+.acme-shop.vl.yaml
 [%collapsible]
 ====
 [source,yaml]
 ----
-include::{examplesdir}/acme-web-app.vl.yaml[]
+include::example$acme-shop.vl.yaml[]
 ----
 ====
 
-== Step 1: Generate the release-scoped report
+The file lists three releases.
+Acme Corp published 4.2.0 on 2 March 2026 and 4.3.0 on 15 June 2026.
+Release 4.4.0 has no `published_at` date, because it hasn't shipped yet.
 
-You maintain release 1.1.0 and plan the next release.
-Scope the report to what actually ships in 1.1.0:
+Run every command in this tutorial from the directory that contains `acme-shop.vl.yaml`.
 
-[source,bash]
-----
-vulnlog report impact acme-web-app.vl.yaml --as-of 1.1.0 -o release-1.1.0.html
-Wrote: release-1.1.0.html
-----
+== Report on release 4.3.0
 
-With `--as-of`, a recorded fix only counts when its target release shipped at or before 1.1.0.
-A fix that is merged but not yet released does not protect anyone running 1.1.0, and the report reflects that.
-
-== Step 2: Read the open entries
-
-Open `release-1.1.0.html`.
-The entry table is sorted by state, open entries first:
-
-* `CVE-2026-7791` is *open* with severity high.
-Its fix is already recorded for release 1.2.0, but 1.2.0 has not shipped, so every 1.1.0 installation still runs the vulnerable `query-parser 5.2.1`.
-Shipping 1.2.0 with `query-parser 5.3.0` is the update your next release must carry.
-* `CVE-2026-8802` is *under investigation*.
-Triage has not concluded, so its impact on the release is unknown; it needs a verdict before the release decision.
-
-The *not applicable* entries need no action: their `not affected` verdict closed them.
-The *accepted* entries need no action for this release either, but they are not closed: the project carries their risk on purpose, so they belong in the periodic review rather than in the release decision.
-
-== Step 3: Compare with the maintainer view
-
-Generate the same report without the release filter:
+Generate an impact report as of release 4.3.0:
 
 [source,bash]
 ----
-vulnlog report impact acme-web-app.vl.yaml
-Wrote: vulnlog-impact-report.html
+vulnlog report impact acme-shop.vl.yaml --as-of 4.3.0 -o acme-shop-4.3.0.html
 ----
 
-Here `CVE-2026-7791` shows as *resolved* with `1.2.0` in the Fixed In column: from the maintainer's perspective the triage work is done.
-The release-scoped view and the maintainer view answer different questions; use `--as-of` whenever the question is "what does a user of this release face?".
+[source]
+----
+Wrote: acme-shop-4.3.0.html
+----
 
-== What you did
+The `--as-of` option asks what a user of that release faces.
+The report includes 4.3.0 and every earlier release.
+A fix counts only if it shipped in 4.3.0 or earlier.
 
-You used the release filter of xref:reference/cli-report-impact.adoc[`vulnlog report impact`] to separate fixes that shipped from fixes that are only recorded, and read the update list for the next release straight from the open entries.
-How states derive from verdict and resolution is defined in xref:concepts/vulnerability-states.adoc[Vulnerability states].
+Open `acme-shop-4.3.0.html` in your browser.
+Under *About*, the *Filter* line reads `as of=4.3.0`.
+Under *Summary*, the *State* line counts 1 _Open_, 1 _Investigating_ (the state `under investigation`), 1 _Accepted_, 1 _Resolved_, and 2 _Not applicable_.
+
+Look at the *State* column of the table:
+
+* `CVE-2022-22965` (Spring4Shell) is _Open_, with severity _Medium_ and disposition _Will fix_.
+Acme Shop is affected and the team plans to fix it, but no release contains the fix yet.
+* `CVE-2023-32681` is _Investigating_.
+Nobody has assessed yet whether the vulnerability affects Acme Shop.
+* `CVE-2021-23337` is _Accepted_.
+Acme Shop is affected, and the team accepted the risk instead of fixing it.
+The *Analysis* text explains why.
+* `CVE-2021-44228` (Log4Shell) is _Resolved_.
+The *Releases* column shows *Fixed in* 4.3.0.
+* `CVE-2022-42889` and `CVE-2024-3094` are _Not applicable_, because they don't affect Acme Shop.
+
+== Compare with release 4.2.0
+
+Generate the same report as of the older release:
+
+[source,bash]
+----
+vulnlog report impact acme-shop.vl.yaml --as-of 4.2.0 -o acme-shop-4.2.0.html
+----
+
+[source]
+----
+Wrote: acme-shop-4.2.0.html
+----
+
+Open `acme-shop-4.2.0.html`.
+The table has four entries instead of six, and two things changed:
+
+* `CVE-2021-44228` (Log4Shell) is _Open_, with severity _Critical_.
+The fix shipped in 4.3.0, so it doesn't protect anyone who still runs 4.2.0.
+* `CVE-2023-32681` and `CVE-2024-3094` are gone.
+They only concern 4.3.0, so they don't affect a 4.2.0 user.
+
+A customer who asks "Am I affected by Log4Shell?" gets a different answer depending on the release they run.
+The `--as-of` option gives you the answer for each release.
+
+== List what 4.4.0 must fix
+
+Narrow the 4.3.0 report to the entries that still need work.
+Use `--state` once for each state you want:
+
+[source,bash]
+----
+vulnlog report impact acme-shop.vl.yaml --as-of 4.3.0 --state open --state "under investigation" -o acme-shop-4.4.0-todo.html
+----
+
+[source]
+----
+Wrote: acme-shop-4.4.0-todo.html
+----
+
+Open `acme-shop-4.4.0-todo.html`.
+Two entries remain:
+
+* `CVE-2022-22965` (Spring4Shell), with verdict _Affected_ and disposition _Will fix_.
+* `CVE-2023-32681`, which needs a verdict before you can decide whether 4.4.0 must fix it.
+
+== Check what each release fixed
+
+The changelog report lists the fixes each release shipped.
+It prints to the terminal:
+
+[source,bash]
+----
+vulnlog report changelog acme-shop.vl.yaml
+----
+
+[source]
+----
+Acme Corp / Acme Shop
+
+4.3.0 (2026-06-15)
+  1 fixed: 1 critical
+  CVE-2021-44228 (critical, also GHSA-jfh8-c2jp-5v3q) "Log4Shell" Remote code execution through JNDI lookups in Apache Log4j
+    fix: Updated log4j-core from 2.14.1 to 2.17.1
+----
+
+Now ask for the fixes in 4.4.0:
+
+[source,bash]
+----
+vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.4.0
+----
+
+[source]
+----
+info: no fixed vulnerabilities to report
+----
+
+No resolution is recorded for 4.4.0 yet.
+When the team fixes Spring4Shell and records the resolution, this command lists it, and you can paste the result into the release notes.
+
+== What you've learned
+
+Now you can:
+
+* See a release the way its users see it with `--as-of`.
+* Narrow a report to the work that's still open with `--state`.
+* List the fixes each release shipped with the changelog report.
 
 == Next steps
 
-* xref:guides/generate-reports.adoc[Generate reports] covers merged reports and filters in full.
-* xref:guides/triage-a-finding.adoc[Triage a new scanner finding] shows how to conclude the entry that is still under investigation.
+* Learn to read every part of the impact report in xref:get-started/quickstart-report.adoc[Read the impact report].
+* Combine release, state, and tag filters in xref:guides/find-what-affects-a-release.adoc[Find what affects a release].
+* Record the resolution of Spring4Shell with xref:guides/record-a-resolution.adoc[Record a resolution].
+* Turn the changelog into release notes with xref:guides/write-release-notes.adoc[Write release notes].
