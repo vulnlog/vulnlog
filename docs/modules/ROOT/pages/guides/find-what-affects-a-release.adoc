@@ -1,73 +1,81 @@
 = Find what affects a release
 
-Answer the release planning questions from the Vulnlog file: which vulnerabilities affect a shipped release, which fixes has it already received, and which updates must the next release carry.
+Generate an impact report for one release to see which vulnerabilities affect it, which ones it already fixes, and what your next release must fix.
 
-== Prerequisites
+== Before you start
 
-* A Vulnlog file whose `releases` section is current (every shipped release listed with its `published_at` date).
-* Recorded resolutions for fixes that shipped or are scheduled (see xref:guides/record-a-resolution.adoc[Record a resolution]).
+* A Vulnlog file that lists your releases, oldest first.
+`--as-of` follows this order, so the releases don't need `published_at`.
+* A `resolution` on every entry that a release fixes.
+See xref:guides/record-a-resolution.adoc[Record a resolution].
 
-== Generate the release-scoped report
+In this guide, Acme Shop wants to know what affects 4.3.0 and what 4.4.0 must fix.
 
-[source,bash]
+== Generate the report for the release
+
+. Generate the report with `--as-of` and the release:
++
+[source,console]
 ----
-vulnlog report impact vulnlog.yaml --as-of 8.1.1 -o release-8.1.1.html
-Wrote: release-8.1.1.html
+$ vulnlog report impact acme-shop.vl.yaml --as-of 4.3.0 -o acme-shop-4.3.0.html
+Wrote: acme-shop-4.3.0.html
+----
++
+The report includes the entries of 4.3.0 and every earlier release.
+It counts a resolution only if its release is 4.3.0 or earlier.
+
+. Open the report.
+The *State* column shows the state of each entry in 4.3.0.
+For the definition of each state, see xref:reference/verdicts-and-justifications.adoc#states[States].
+
+== List what the next release must fix
+
+Filter the same report on the states that need work:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --as-of 4.3.0 --state open --state "under investigation" -o todo-4.4.0.html
+Wrote: todo-4.4.0.html
 ----
 
-`--as-of 8.1.1` includes all releases up to and including 8.1.1, and classifies each entry from that release's perspective: a resolution only counts when its target release shipped at or before 8.1.1.
-
-== Read the answer
-
-The entry table, sorted open-first, is the work list:
-
-Open entries::
-Confirmed impact, no shipped fix.
-Entries whose Fixed In column names a later or unpublished release are the update list for your next release: the fix is recorded but your users do not have it yet.
-Entries without any resolution still need a remediation decision.
-
-Under investigation entries::
-Unknown impact.
-They need a verdict before the release can be assessed honestly; route them to xref:guides/triage-a-finding.adoc[triage].
-
-Resolved entries::
-Fixes this release already ships.
-xref:guides/write-release-notes.adoc[Write release notes] turns them into the security section of the release notes.
-
-Accepted entries::
-No action for the release, but the risk is live and deliberately carried. Review them periodically rather than treating them as closed.
-
-Not applicable entries::
-No action; the `not affected` verdict closed them.
+For Acme Shop, the report lists Spring4Shell and CVE-2023-32681.
+Triage the entries that are `under investigation`.
+See xref:guides/triage-a-finding.adoc[Triage a new scanner finding].
 
 == Variants
 
-=== Scope by deliverable
+=== If you ship several components
 
-When tags mark deliverables (for example `container` versus `sdk`), combine filters to assess one artifact of the release:
+Add `--tag` to limit the report to one component.
+See xref:guides/tag-entries-by-component.adoc[Tag entries by component].
 
-[source,bash]
+=== If you check an older release
+
+Run the report as of that release.
+A resolution in a later release doesn't count, so an entry that a later release fixed shows as _Open_.
+As of 4.2.0, Log4Shell is _Open_, because 4.3.0 fixed it.
+
+=== If you maintain several release lines
+
+Run the report on the file of the line you want to check, for example `acme-shop-3.vl.yaml`.
+See xref:guides/support-several-release-lines.adoc[Support several release lines].
+
+=== If your scanner checks the release
+
+Generate its suppression file with the same `--as-of`.
+See xref:guides/generate-suppression-files.adoc[Generate suppression files].
+
+== Check the result
+
+* The *About* section of the report shows the release in the *Filter* line, for example `as of=4.3.0`.
+* Pick an _Open_ entry and check it in the Vulnlog file.
+It has no `resolution`, or its `resolution.in` is a later release.
+
+For an unknown release, the command stops with exit code `5`:
+
 ----
-vulnlog report impact vulnlog.yaml --as-of 8.1.1 --tag container -o container-8.1.1.html
+error: Release not found: 9.9.9
+  hint: Known releases: 4.2.0, 4.3.0, 4.4.0
 ----
 
-The xref:reference/tags.adoc[tag reference] covers defining and assigning tags.
-
-=== Keep the deployed release's pipeline quiet
-
-The same `--as-of` filter works on `vulnlog suppress`: a fix recorded for an unshipped release is treated as still unresolved, and eligible entries are emitted so the scanner watching the deployed release stays green until the fix actually ships.
-See xref:guides/record-a-resolution.adoc[Record a resolution] for the required `suppress` block.
-
-=== Several release lines
-
-With one Vulnlog file per release line (see xref:guides/organize-files-across-branches.adoc[Organize files across branches]), run the report against the file of the line you are planning; verdicts and resolutions legitimately differ per line.
-
-== Verify
-
-Cross-check one entry: pick an open entry from the report and confirm in the YAML that its `resolution` is absent or targets a release after the one you scoped to.
-
-== Related
-
-* xref:concepts/vulnerability-states.adoc[Vulnerability states] defines the release-scoped state derivation precisely.
-* xref:reference/cli-report-impact.adoc[vulnlog report impact] and xref:reference/cli-suppress.adoc[vulnlog suppress] document the filter flags.
-* xref:get-started/quickstart-release.adoc[Quickstart: find what affects your release] walks a worked example.
+For all filter options, see xref:reference/cli.adoc#filters[Filter options].

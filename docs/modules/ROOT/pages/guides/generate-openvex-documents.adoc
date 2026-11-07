@@ -1,0 +1,186 @@
+= Generate OpenVEX documents
+
+Generate an OpenVEX document from your Vulnlog file and publish it, so your customers' tools can read whether your releases are affected by a vulnerability.
+OpenVEX support in Vulnlog is incubating.
+For what VEX is and how it differs from suppression files, see xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX].
+
+== Before you start
+
+* A Vulnlog file whose releases list the package URL (PURL) of each artifact under `purls`, with tags.
+* Tags on the entries that match the tags of the release PURLs.
+An entry only appears for release PURLs that share a tag with it.
+* `published_at` on every release that has shipped.
+
+To set these up, see xref:guides/add-and-publish-releases.adoc[Add and publish releases] and xref:guides/tag-entries-by-component.adoc[Tag entries by component].
+
+== Generate and publish the document
+
+. Generate the document:
++
+[source,console]
+----
+$ vulnlog vex openvex acme-shop.vl.yaml
+Wrote: vex.json
+----
++
+The document covers every published release that has `purls`.
+An entry gets a statement for the first release it lists and for every later release, whatever the verdict.
+From the release in `resolution.in` on, the statement is `fixed`.
+For which releases and PURLs the statements name, see xref:reference/cli-vex-openvex.adoc#what-the-document-covers[What the document covers].
+This is the statement for the XZ Utils entry in 4.3.0:
++
+[source,json]
+----
+{
+  "vulnerability": {
+    "@id": "https://nvd.nist.gov/vuln/detail/CVE-2024-3094",
+    "name": "CVE-2024-3094",
+    "description": "Backdoor in the liblzma library of XZ Utils"
+  },
+  "timestamp": "2026-07-02T00:00:00Z",
+  "products": [
+    {
+      "@id": "pkg:oci/acme-shop@sha256%3A23a5bff22a95119dc4bcef9422a20038eb3c2fd355f03928b02791273ff1cc27",
+      "identifiers": {
+        "purl": "pkg:oci/acme-shop@sha256%3A23a5bff22a95119dc4bcef9422a20038eb3c2fd355f03928b02791273ff1cc27"
+      },
+      "subcomponents": [
+        {
+          "@id": "pkg:deb/debian/xz-utils@5.4.1",
+          "identifiers": {
+            "purl": "pkg:deb/debian/xz-utils@5.4.1"
+          }
+        }
+      ]
+    }
+  ],
+  "status": "not_affected",
+  "justification": "vulnerable_code_not_present",
+  "impact_statement": "The container image is based on Debian 12, which ships xz-utils 5.4.1. The backdoor is only in the upstream releases 5.6.0 and 5.6.1.",
+  "supplier": "Acme Corp"
+}
+----
+
+. Commit `vex.json` to your repository.
+You use it as the baseline for the next document.
+
+. Publish the document.
+Vulnlog doesn't host or publish it, so put it where your customers can download it:
++
+* Publish it on your website at a stable URL, and tell your customers the URL.
+* Attach it to each release, for example as a release asset on GitHub or GitLab.
++
+Your customers pass the document to tools that read OpenVEX.
+
+. When the Vulnlog file changes, generate the document again from the baseline, then publish it again:
++
+[source,console]
+----
+$ vulnlog vex openvex acme-shop.vl.yaml --baseline vex.json -o vex.json
+Wrote: vex.json
+----
++
+The document keeps its `@id`, and `version` counts up.
+If nothing changed, the command shows `Unchanged: vex.json` and keeps the file as it is.
+Without `--baseline`, every run creates a new document with a new `@id`.
+
+For all options, see xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex].
+
+== Variants
+
+=== If you publish a document per release or per component
+
+Pass `--release` for one release, and `--tag` for the release PURLs of one component.
+`--release` also works for a release without `published_at`:
+
+[source,console]
+----
+$ vulnlog vex openvex acme-shop.vl.yaml --release 4.4.0 --tag container -o vex-4.4.0-container.json
+Wrote: vex-4.4.0-container.json
+----
+
+Keep a baseline per document, for example `vex-4.4.0-container.json`.
+
+=== If you use the Gradle plugin
+
+Set the baseline to the committed document:
+
+[source,kotlin]
+----
+vulnlog {
+    files.from("acme-shop.vl.yaml")
+    vex {
+        openvex {
+            baseline = layout.projectDirectory.file("vex.json")
+        }
+    }
+}
+----
+
+Run `vulnlogOpenVex` to write `build/vulnlog/vex.json`, and `vulnlogOpenVexUpdate` to copy it over the baseline:
+
+[source,console]
+----
+$ ./gradlew vulnlogOpenVex vulnlogOpenVexUpdate
+----
+
+The baseline and the output must be different files.
+For all settings, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+[[one-document-per-artifact]]
+=== One document per release and artifact
+
+To keep one document per release and artifact with the Gradle plugin, register a task of each type for each document:
+
+[source,kotlin]
+----
+import dev.vulnlog.gradle.VulnlogOpenVexTask
+import dev.vulnlog.gradle.VulnlogOpenVexUpdateTask
+
+val vexContainer = tasks.register<VulnlogOpenVexTask>("vulnlogOpenVexContainer") {
+    files.from("acme-shop.vl.yaml")
+    release = "4.3.0"
+    tags = setOf("container")
+    baseline = layout.projectDirectory.file("vex/acme-shop-4.3.0-container.json")
+    outputFile = layout.buildDirectory.file("vulnlog/acme-shop-4.3.0-container.json")
+}
+
+tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVexContainerUpdate") {
+    generatedFile = vexContainer.flatMap { it.outputFile }
+    baseline = layout.projectDirectory.file("vex/acme-shop-4.3.0-container.json")
+}
+----
+
+A task you register yourself doesn't read the `vulnlog` block.
+For the properties each task type needs, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+[[check-the-result]]
+== Check the result
+
+. Run with `-v` to see which releases the document covers and how many statements it has:
++
+[source,console]
+----
+$ vulnlog -v vex openvex acme-shop.vl.yaml
+verbose: parsed acme-shop.vl.yaml: schema version 1, releases: 3, tags: 4, vulnerabilities: 6
+verbose: releases without published_at are not part of the document: '4.4.0'
+verbose: anchored on 2 releases with purls: '4.2.0' (2 purls), '4.3.0' (2 purls)
+verbose: collected 8 statements: 3 affected, 1 fixed, 3 not_affected, 1 under_investigation
+Wrote: vex.json
+verbose: wrote vex.json: openvex format, version 1, 8 statements
+----
++
+If an entry is missing, check its tags.
+In Acme Shop, CVE-2021-23337 has the tag `frontend`, and no release PURL has that tag, so the document has no statement for it.
+
+. Scan a released artifact the way your customers do, and pass the document to the scanner.
+For the Acme Shop 4.3.0 image with Trivy:
++
+[source,console]
+----
+$ trivy image --vex vex.json --show-suppressed ghcr.io/acme/acme-shop:4.3.0
+----
++
+The table Suppressed Vulnerabilities lists Text4Shell (CVE-2022-42889) as `not_affected`, with `vex.json` as the source.
+If an entry with the verdict `not affected` is still reported, the release PURL doesn't match what the scanner sees.
+See xref:guides/add-and-publish-releases.adoc#choose-purls[Choose the PURL of each artifact].

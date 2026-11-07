@@ -1,88 +1,113 @@
 = Migrate from scanner ignore files
 
-Your repository already has a hand-maintained `.trivyignore`, `.snyk`, or similar file.
-This guide moves those suppressions into a Vulnlog file without losing coverage, so the scanner keeps passing while every future decision is recorded properly.
+Move the suppressions from a hand-written ignore file, such as `.trivyignore`, into your Vulnlog file, and generate the suppression file from Vulnlog from then on.
+Your scanner suppresses the same findings as before.
 
-== Prerequisites
+Vulnlog doesn't import scanner output, so you add the entries yourself, with `vulnlog modify add` or in the YAML.
+You only need entries for the findings you've analysed or want to suppress.
+The scanner keeps reporting findings without an entry, as before.
 
-* The Vulnlog CLI and an initialized Vulnlog file (see the xref:get-started/quickstart-triage.adoc[triage quickstart]).
-* The existing ignore files of your scanners.
+== Before you start
 
-== Step 1: Inventory the existing suppressions
+* A Vulnlog file with your releases.
+To create one, see xref:guides/create-a-vulnlog-file.adoc[Create a Vulnlog file].
+* The ignore file of your scanner.
 
-Each line in an ignore file is a past decision, usually without its reasoning.
-For every suppressed identifier, note the affected package and, where anyone remembers, why it was suppressed.
+In this guide, Acme Shop has a `.trivyignore` with one line, and `acme-shop.vl.yaml` doesn't have an entry for Spring4Shell yet:
 
-== Step 2: Record entries with known reasoning
-
-Where the reasoning is known, record a full entry with verdict and analysis, exactly as in xref:guides/triage-a-finding.adoc[Triage a new scanner finding]:
-
-[source,bash]
 ----
-vulnlog modify add vulnlog.yaml --vuln-id CVE-2025-1111 \
-  --package "pkg:npm/legacy-lib@1.0.0" \
-  --reporter trivy \
-  --analysis "Only reachable through the admin API, which is not exposed." \
-  --verdict "not affected" \
-  --justification "vulnerable code not in execute path"
-Added: CVE-2025-1111 to vulnlog.yaml
+CVE-2022-22965
 ----
 
-`not affected` entries are suppressed automatically, so coverage for these lines is preserved.
+== Move the suppressions
 
-== Step 3: Record entries with lost reasoning honestly
+. List the IDs in the ignore file, and find out for each one why it's suppressed.
+Ask the person who added it, or look at the commit that added it.
 
-Do not invent verdicts for suppressions nobody can explain.
-Record them as under investigation with an expiring suppression:
+. Add an entry for each ID with what you know, using the scanner as reporter:
++
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2022-22965 --name Spring4Shell \
+    --description "Remote code execution through data binding in Spring Framework" \
+    --release 4.2.0 --release 4.3.0 \
+    --package "pkg:maven/org.springframework/spring-beans@5.3.15" \
+    --reporter trivy --tag backend --tag container \
+    --analysis "Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat, but Spring advises all users to upgrade." \
+    --analyzed-at 2026-11-07 --verdict affected --severity medium --disposition "will fix"
+Added: CVE-2022-22965 to acme-shop.vl.yaml
+----
++
+`modify add` dates the report today, and `vulnlog validate` warns if `--analyzed-at` is earlier.
+Pass today's date, or set the report's `at` in the YAML to the day the scanner first reported the finding.
+For the verdict values, see xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+. Add a `suppress` block to the report of each `affected` entry and each entry without a verdict.
+Entries with the verdict `not affected` don't need one, because Vulnlog suppresses them anyway.
+For the rules, see xref:reference/suppression.adoc#rules[Suppression rules].
+Give the block an end date if the suppression is temporary:
++
+[source,yaml]
+----
+    reports:
+      - reporter: trivy
+        at: 2026-11-07
+        suppress:
+          expires_at: 2027-03-31
+----
+
+. Generate the suppression file and compare its IDs with the old file:
++
+[source,console]
+----
+$ vulnlog suppress acme-shop.vl.yaml --reporter trivy
+Wrote: /home/dev/acme-shop/.trivyignore.yaml
+$ diff <(grep -oE 'CVE-[0-9]+-[0-9]+' .trivyignore | sort) <(grep -oE 'CVE-[0-9]+-[0-9]+' .trivyignore.yaml | sort)
+----
++
+No output means both files suppress the same IDs.
+An ID only in `.trivyignore` has no entry yet, or its entry has no `suppress` block.
+
+. Delete the old file, point Trivy to `.trivyignore.yaml`, and commit:
++
+[source,console]
+----
+$ git rm .trivyignore
+$ git add acme-shop.vl.yaml .trivyignore.yaml
+$ git commit -m "Move Trivy suppressions to Vulnlog"
+----
+
+From now on, change `acme-shop.vl.yaml` and generate the file again.
+For how to use the file with each scanner, see xref:guides/generate-suppression-files.adoc[Generate suppression files].
+
+== Variants
+
+=== If nobody knows why an ID is suppressed
+
+Add the entry without a verdict, and give the report a `suppress` block with an end date.
+The scanner stays quiet until that date, and the entry has the state `under investigation` until you triage it:
 
 [source,yaml]
 ----
-  - id: CVE-2024-0001
-    releases: [1.0.0]
-    packages: ["pkg:npm/legacy-lib@1.0.0"]
+  - id: CVE-2023-32681
+    description: Proxy-Authorization header leak in requests
+    releases: [4.3.0]
+    packages: ["pkg:pypi/requests@2.28.2"]
     reports:
-      - reporter: trivy
+      - reporter: github-dependabot
+        at: 2026-07-14
         suppress:
-          expires_at: 2026-10-01
+          expires_at: 2026-12-31
 ----
 
-The explicit `suppress` block keeps the scanner quiet for now, and the expiry date forces a real triage before it lapses; after `expires_at`, the entry drops out of the generated files and the scanner flags it again.
+=== If the ignore file is for another scanner
 
-== Step 4: Compare old and new
+Use that scanner as reporter and compare with its generated file.
+Snyk needs Snyk IDs in its file, so add them to the report with `vuln_ids`.
+For the file name of each scanner, see xref:reference/suppression.adoc#supported-scanners[Supported scanners].
 
-Generate the suppression files and compare them against the hand-maintained ones:
+== Check the result
 
-[source,bash]
-----
-vulnlog suppress vulnlog.yaml --reporter trivy -o .trivyignore.generated.yaml
-Wrote: /path/to/.trivyignore.generated.yaml
-diff .trivyignore.yaml .trivyignore.generated.yaml
-----
-
-The formats match the scanner's own, so differences are real coverage differences: an identifier only in the old file is a suppression you have not migrated yet.
-Formatting and field differences (for example generated `statement` texts from your analyses) are expected.
-
-== Step 5: Replace the hand-maintained file
-
-Once the generated file covers everything intentionally kept, delete the hand-maintained ignore file and generate into its place:
-
-[source,bash]
-----
-rm .trivyignore.yaml
-vulnlog suppress vulnlog.yaml --reporter trivy
-Wrote: /path/to/.trivyignore.yaml
-git add vulnlog.yaml .trivyignore.yaml
-git commit -m "Migrate Trivy suppressions to Vulnlog"
-----
-
-From now on, the ignore file is generated output; edits happen in `vulnlog.yaml` (see xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner] for keeping it static or generating it in CI).
-
-== Verify
-
-Run the scanner: it must report exactly the findings it reported before the migration, no more and no fewer.
-Then run `vulnlog validate vulnlog.yaml` to confirm the new entries are well-formed.
-
-== Related
-
-* xref:reference/suppression.adoc[Suppression] defines the rules that decide what is emitted.
-* xref:guides/triage-a-finding.adoc[Triage a new scanner finding] concludes the entries parked as under investigation.
+. Validate the file with `vulnlog validate --strict acme-shop.vl.yaml`.
+. Run the scanner with the generated file.
+It reports the same findings as with the old file.

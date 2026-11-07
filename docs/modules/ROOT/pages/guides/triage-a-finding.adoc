@@ -1,236 +1,196 @@
 = Triage a new scanner finding
 
-Your SCA scanner reported a new finding.
-This guide shows how to record it in the Vulnlog file, which verdict fits which situation, and what each verdict means for the generated suppression files.
-At the end, the finding is triaged and your build reflects the decision.
+Record a finding as an entry in your Vulnlog file as soon as a scanner reports it, then add your verdict to the entry when you've analysed it.
+Your reports and suppression files pick up the entry the next time you generate them.
 
-== Prerequisites
+== Before you start
 
-* A Vulnlog file with at least one release (see the xref:get-started/quickstart-triage.adoc[triage quickstart]).
-* The scanner finding: its identifier, the affected package, and the scanner that reported it.
+* A Vulnlog file that lists the releases the finding affects.
+To add a release, see xref:guides/add-and-publish-releases.adoc[Add and publish releases].
+* From the scanner: the vulnerability ID, the package URL (PURL) of the affected package, and the scanner's name.
+A PURL identifies a package and its version, for example `pkg:maven/org.apache.commons/commons-text@1.9`.
+Most scanners show it with the finding.
 
-== Record the finding first, decide later
+In this guide, Dependency-Check reports Text4Shell (CVE-2022-42889) in Acme Shop 4.2.0 and 4.3.0, and `acme-shop.vl.yaml` doesn't have an entry for it yet.
 
-Analysis takes time; recording the finding does not.
-Add a stub entry the moment the scanner reports, either with xref:reference/cli-add.adoc[`vulnlog modify add`] or by hand:
+== Record the finding
 
+. Add the entry with `vulnlog modify add`:
++
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2022-42889 --name Text4Shell \
+    --description "Remote code execution through string interpolation in Apache Commons Text" \
+    --release 4.2.0 --release 4.3.0 \
+    --package "pkg:maven/org.apache.commons/commons-text@1.9" \
+    --reporter dependency-check --tag backend --tag container
+Added: CVE-2022-42889 to acme-shop.vl.yaml
+----
++
+Vulnlog adds the entry at the top of `vulnerabilities` and sets the report date to today:
++
 [source,yaml]
 ----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    packages: ["pkg:npm/image-lib@3.1.0"]
+  - id: CVE-2022-42889
+    name: Text4Shell
+    description: Remote code execution through string interpolation in Apache Commons Text
+    releases:
+      - 4.2.0
+      - 4.3.0
+    packages: ["pkg:maven/org.apache.commons/commons-text@1.9"]
     reports:
-      - reporter: trivy
-    tags: [webapp]
+      - reporter: dependency-check
+        at: 2026-11-07
+    tags:
+      - backend
+      - container
 ----
++
+Without `--release`, the entry gets the last release in the file.
+For all options, see xref:reference/cli-add.adoc[vulnlog modify add].
 
-Without a `verdict`, Vulnlog tracks the entry as under investigation.
-Nothing is suppressed, so the scanner keeps flagging the finding until you decide.
+. Commit the entry.
+It has no verdict yet, so its state is `under investigation`, and the scanner keeps reporting the finding.
 
 == Record the verdict
 
-Analyse the finding and pick the verdict that matches your conclusion.
-Each verdict has different required fields and different suppression behavior; the xref:reference/verdicts-and-justifications.adoc[verdict reference] defines all values.
+. Analyse the finding.
+Commons Text is only vulnerable through `StringSubstitutor`, and Acme Shop never calls it.
 
-=== The finding does not affect you
-
-Record `not affected` with a `justification` and put your reasoning in `analysis`:
-
+. Run `vulnlog modify add` again with the same `--vuln-id`.
+Vulnlog updates the existing entry and keeps the fields you don't pass:
++
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2022-42889 \
+    --analysis "Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation." \
+    --analyzed-at 2026-11-07 --verdict "not affected" \
+    --justification "vulnerable code not in execute path"
+Updated: CVE-2022-42889 in acme-shop.vl.yaml
+----
++
+The entry now ends with your analysis and verdict:
++
 [source,yaml]
 ----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-01
-    tags: [webapp]
-    analysis: >
-      The vulnerable code path requires SVG input processing.
-      Our application only accepts PNG and JPEG formats.
-    analyzed_at: 2026-03-02
+    analysis: >-
+      Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable
+      interpolation.
+    analyzed_at: 2026-11-07
     verdict: not affected
     justification: vulnerable code not in execute path
 ----
++
+Pass the day you analysed the finding to `--analyzed-at`.
+`vulnlog validate` warns if it's before the report date.
++
+Always pass `--justification` with `--verdict "not affected"`.
+Without it, `modify add` still writes the entry, but every later command rejects the file with `Invalid justification: null`.
 
-`not affected` entries are included in generated suppression files automatically; the finding is noise and needs no further decision.
+You can also edit the YAML by hand instead of running `modify add`.
+Run `vulnlog fmt` afterwards.
+See xref:guides/validate-and-format.adoc[Validate and format files].
+For every verdict, justification, severity, and disposition value, see xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
 
-=== The finding affects you and you fix it
+== Variants
 
-Record `affected` with a `severity`.
-Once the fix ships, add a `resolution`:
+=== If the finding affects you and you'll fix it
+
+Record `affected` with a severity and the disposition `will fix`:
+
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2022-22965 \
+    --analysis "Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat, but Spring advises all users to upgrade." \
+    --analyzed-at 2026-11-07 --verdict affected --severity medium --disposition "will fix"
+----
+
+The scanner keeps reporting the finding until you ship the fix.
+When you do, record the resolution.
+See xref:guides/record-a-resolution.adoc[Record a resolution].
+
+=== If you need the scanner to pass until the fix ships
+
+Add a temporary suppression to the report of the scanner that should stop failing.
+`modify add` has no option for it, so edit the YAML.
+Give the `suppress` block the last day the suppression applies:
 
 [source,yaml]
 ----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-01
-    tags: [webapp]
-    analysis: >
-      Confirmed exploitable via crafted PNG uploads.
-    analyzed_at: 2026-03-02
-    severity: high
-    verdict: affected
-    resolution:
-      in: 2.0.1
-      at: 2026-03-03
-      ref: "https://jira.example.com/browse/SEC-99"
-      note: "Updated image-lib from 3.1.0 to 3.2.0"
+include::example$acme-shop.vl.yaml[lines=100..104]
 ----
 
-An `affected` entry without a resolution stays visible in the scanner output; that is intentional, it is a live risk.
-See xref:guides/record-a-resolution.adoc[Record a resolution] for the fix workflow.
+Up to and including that date, the generated suppression file contains the finding.
+From the next day on, it doesn't, and the scanner reports the finding again.
 
-=== You accept the risk
+=== If you accept the risk
 
-Record `verdict: affected` with a `severity` and `disposition: wont fix`.
-Suppressing a live risk is a second, deliberate decision, so it needs an explicit `suppress` block on the report:
+Record `affected` with the disposition `wont fix`.
+To keep the scanner quiet, add an empty `suppress` block to the report:
 
 [source,yaml]
 ----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
-    reports:
-      - reporter: trivy
-        suppress: {}
-    tags: [webapp]
-    analysis: >
-      Vulnerability confirmed but only exploitable with
-      specially crafted input that our validation layer rejects.
-    severity: medium
-    verdict: affected
-    disposition: wont fix
-    comment: >
-      Risk accepted by project lead. Revisit when upstream
-      releases a stable fix.
+include::example$acme-shop.vl.yaml[lines=117..135]
 ----
 
-To make the suppression temporary, give the `suppress` block an `expires_at` date; the xref:reference/suppression.adoc[suppression reference] defines the rules.
+For all suppression rules, see xref:reference/suppression.adoc#rules[Suppression rules].
 
-=== The finding is a false positive
+=== If your verdict changes
 
-A false positive is a `not affected` verdict whose analysis records why the scanner is wrong:
+New information can change a verdict, for example a code change that now calls `StringSubstitutor`.
+Run `vulnlog modify add` with the new verdict, a new analysis, and today's date:
+
+[source,console]
+----
+$ vulnlog modify add acme-shop.vl.yaml --vuln-id CVE-2022-42889 \
+    --analysis "The new template feature passes user input to StringSubstitutor." \
+    --analyzed-at 2026-11-08 --verdict affected --severity critical --disposition "will fix"
+Updated: CVE-2022-42889 in acme-shop.vl.yaml
+----
+
+`modify add` keeps the `justification` of the old verdict, and `vulnlog validate` doesn't report it.
+Remove the `justification` line by hand.
+In the other direction, from `affected` to `not affected`, remove `severity` and `disposition` and pass `--justification`.
+
+Commit the change on its own, so the Git history shows the old and the new verdict.
+
+=== If a customer or researcher reports a vulnerability
+
+Use the reporter `other` and say where the report came from in `source`.
+`modify add` can't set `source`, so add the report in the YAML.
+An entry that `modify add --reporter other` writes fails validation with `Generic reporter without source specified` until you add `source`:
 
 [source,yaml]
 ----
-  - id: CVE-2026-4321
-    releases: [2.0.0]
-    description: Remote code execution in logging-framework
-    packages: ["pkg:npm/logging-framework@2.0.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-15
-    analysis: >
-      False positive. The scanner flagged logging-framework as a
-      runtime dependency, but it is only present in the test scope
-      and not included in the deliverable.
-    analyzed_at: 2026-03-16
-    verdict: not affected
-    justification: component not present
+include::example$acme-shop.vl.yaml[lines=61..64]
 ----
 
-=== The finding only touches your build environment
+If a scanner already reported the same vulnerability, add the report to the existing entry instead of creating a second entry.
 
-A vulnerability in a build-time dependency that never reaches the deliverable is also `not affected`.
-A tag such as `build-dep` keeps these entries filterable:
+== Check the result
 
-[source,yaml]
+. Validate the file:
++
+[source,console]
 ----
-  - id: CVE-2026-9999
-    releases: [2.0.0]
-    description: Command injection in build-tool
-    packages: ["pkg:npm/build-tool@5.0.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-01
-    tags: [build-dep]
-    analysis: >
-      Affects the build pipeline only. The vulnerable command
-      injection requires untrusted input which the CI environment
-      does not expose.
-    verdict: not affected
-    justification: vulnerable code cannot be controlled by adversary
+$ vulnlog validate acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+1 info
+Validated: acme-shop.vl.yaml
 ----
 
-== How an entry evolves
-
-The same entry, refined as triage progresses.
-
-Stage 1, the stub recorded on the day the scanner reports:
-
-[source,yaml]
+. Generate the suppression file of the scanner and check that it contains the finding:
++
+[source,console]
 ----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    packages: ["pkg:npm/image-lib@3.1.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-01
+$ vulnlog suppress acme-shop.vl.yaml --reporter dependency-check -o -
+<!-- Generated by Vulnlog (https://vulnlog.dev). DO NOT EDIT. -->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes>Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation.</notes>
+        <cve>CVE-2022-42889</cve>
+    </suppress>
+</suppressions>
 ----
 
-Stage 2, analysis complete and verdict recorded:
-
-[source,yaml]
-----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-01
-    analysis: >
-      Confirmed exploitable via crafted PNG uploads.
-    analyzed_at: 2026-03-02
-    severity: high
-    verdict: affected
-----
-
-Stage 3, resolution recorded after the fix shipped:
-
-[source,yaml]
-----
-  - id: CVE-2026-5678
-    releases: [2.0.0]
-    description: Memory corruption in image-lib
-    packages: ["pkg:npm/image-lib@3.1.0"]
-    reports:
-      - reporter: trivy
-        at: 2026-03-01
-    analysis: >
-      Confirmed exploitable via crafted PNG uploads.
-    analyzed_at: 2026-03-02
-    severity: high
-    verdict: affected
-    resolution:
-      in: 2.0.1
-      at: 2026-03-03
-      note: "Updated image-lib from 3.1.0 to 3.2.0"
-----
-
-Once the resolution is recorded, the entry is excluded from generated suppression files; the scanner is expected to stop reporting the finding after the dependency update.
-
-== Verify
-
-Validate the file after every triage session:
-
-[source,bash]
-----
-vulnlog validate vulnlog.yaml
-Validated: vulnlog.yaml
-----
-
-Validation catches missing conditional fields, for example a `not affected` verdict without a `justification`.
-
-== Related
-
-* xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications] defines every verdict, severity, and justification value.
-* xref:reference/suppression.adoc[Suppression] defines which entries end up in suppression files.
-* xref:concepts/vulnerability-states.adoc[Vulnerability states] explains how verdict and resolution derive the entry state shown in reports.
+For how a verdict leads to a state in reports, see xref:concepts/vulnerability-states.adoc[Vulnerability states].

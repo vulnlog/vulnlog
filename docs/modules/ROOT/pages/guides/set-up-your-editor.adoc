@@ -1,0 +1,43 @@
+= Set up your editor
+
+Get validation, completion, and field descriptions for Vulnlog files while you type.
+
+== Before you start
+
+* A Vulnlog file, for example `acme-shop.vl.yaml`.
+* An editor with JSON Schema support for YAML, for example Visual Studio Code with the YAML extension by Red Hat, or a JetBrains IDE such as IntelliJ IDEA.
+
+== Link the file to the schema
+
+Make sure the first line of the file is the schema header, a comment that names the JSON schema.
+`vulnlog init` writes it, and the other commands keep it:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=1]
+----
+
+Both editors named above read the header and load the schema.
+
+== Variants
+
+=== If your editor ignores the schema header
+
+Map the schema URL to the Vulnlog file names in the editor's JSON Schema settings.
+In Visual Studio Code with the YAML extension by Red Hat, add this to your `settings.json`:
+
+[source,json]
+----
+"yaml.schemas": {
+  "https://vulnlog.dev/schema/vulnlog-v1.json": ["*.vl.yaml", "*.vl.yml", "vulnlog.yaml", "vulnlog.yml"]
+}
+----
+
+== Check the result
+
+Change a value to one the schema doesn't allow, for example `verdict: maybe`.
+The editor marks the value.
+
+The editor checks the schema only.
+Run `vulnlog validate` as well.
+See xref:guides/validate-and-format.adoc[Validate and format files].

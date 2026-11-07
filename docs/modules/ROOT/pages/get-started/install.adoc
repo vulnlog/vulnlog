@@ -1,158 +1,128 @@
 = Install Vulnlog
 :page-aliases: installation.adoc
 
-Vulnlog can be installed and used in several ways.
+Install the Vulnlog CLI on your computer, or run Vulnlog in Docker, in GitHub Actions, or in a Gradle build.
+Choose the method that fits where you run Vulnlog.
 
-== Docker
+== Install with the install script
 
-A container image is published to the GitHub Container Registry on every release.
-The image runs as a non-root user (UID 1000) by default.
+On Linux and macOS, the install script downloads the latest release and installs it for your user.
+It needs `curl` and `unzip`.
 
-.Pull version {vulnlog-version} Vulnlog Docker image and print the version.
-[source,bash,subs="attributes"]
+. Run the script:
++
+[source,console]
 ----
-docker pull ghcr.io/vulnlog/vulnlog:{vulnlog-version}
-docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} --version
+$ curl -fsSL vulnlog.dev/install | sh
+----
++
+The script detects your operating system and processor and installs the native binary to `~/.local/bin`.
+If `~/.local/bin` doesn't exist, it uses `~/bin`.
 
+. If the script reports that the directory isn't in your `PATH`, add the `export` line it prints to your shell configuration, and open a new terminal.
+
+. Check the installation:
++
+[source,console,subs="attributes+"]
+----
+$ vulnlog --version
 vulnlog version {vulnlog-version}
 ----
 
-Either use STDOUT, STDIN or Docker volumes to pass files into the container and get them out of it.
+Native binaries are available for Linux on x86-64, macOS on Apple silicon, and Windows on x86-64.
+On other platforms, the script installs the JVM distribution instead, which needs Java 21 or later.
+To install the JVM distribution on a platform that has a native binary, pass `--jvm`:
 
-.Print the output of vulnlog init to STDOUT with `--output -`.
-[source,bash,subs="attributes"]
+[source,console]
 ----
-docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} init --organization "Demo Org" --name Demo --author Me --output -
----
-schemaVersion: "1"
-
-project:
-  organization: "Demo Org"
-  name: "Demo"
-  author: "Me"
-
-releases: []
-
-vulnerabilities: []
+$ curl -fsSL vulnlog.dev/install | sh -s -- --jvm
 ----
 
-.Use the Docker interactive `-i` flag to keep STDIN open to pass the vulnlog.yaml file into the container.
-[source,bash,subs="attributes"]
+Each release on the https://github.com/vulnlog/vulnlog/releases[Vulnlog releases page] also has the script for that version, `install-vulnlog.sh`.
+
+To uninstall Vulnlog, run the uninstall script:
+
+[source,console]
 ----
-docker run --rm -i ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate - < vulnlog.yaml
+$ curl -fsSL vulnlog.dev/uninstall | sh
+----
+
+== Install with Homebrew
+
+On macOS, install Vulnlog from the Vulnlog tap:
+
+[source,console]
+----
+$ brew install vulnlog/vulnlog/vulnlog
+----
+
+To upgrade to the latest release:
+
+[source,console]
+----
+$ brew update && brew upgrade vulnlog
+----
+
+== Download the binary
+
+Use this method on Windows, or when you can't run the install script.
+
+. On the https://github.com/vulnlog/vulnlog/releases[Vulnlog releases page], download the archive for your platform: `vulnlog-linux-amd64.zip`, `vulnlog-macos-aarch64.zip`, or `vulnlog-windows-amd64.zip`.
+. Extract the archive.
+. Move the `vulnlog` binary (`vulnlog.exe` on Windows) to a directory in your `PATH`.
+. Run `vulnlog --version` to check the installation.
+
+For other platforms, download the JVM distribution, `vulnlog-{vulnlog-version}.zip`, from the same page.
+It needs Java 21 or later.
+Extract it and add its `bin` directory to your `PATH`.
+
+== Run in Docker
+
+The Vulnlog image is `ghcr.io/vulnlog/vulnlog`.
+Each release has an image tagged with its version number.
+
+. Pull the image and check it:
++
+[source,console,subs="attributes+"]
+----
+$ docker pull ghcr.io/vulnlog/vulnlog:{vulnlog-version}
+$ docker run --rm ghcr.io/vulnlog/vulnlog:{vulnlog-version} --version
+vulnlog version {vulnlog-version}
+----
+
+. Mount your project directory at `/work`, the working directory in the container, and run any Vulnlog command:
++
+[source,console,subs="attributes+"]
+----
+$ docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate vulnlog.yaml
+Validated: vulnlog.yaml
+----
+
+The container runs as user ID 1000.
+If your user ID is different, Vulnlog can't write files to the mounted directory and reports `permission denied`.
+Run the container as your own user to fix this:
+
+[source,console,subs="attributes+"]
+----
+$ docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} report impact vulnlog.yaml
+----
+
+To read a single file without a mount, pass it on standard input with `-i` and use `-` as the file name:
+
+[source,console,subs="attributes+"]
+----
+$ docker run --rm -i ghcr.io/vulnlog/vulnlog:{vulnlog-version} validate - < vulnlog.yaml
 Validated: <stdin>
 ----
 
-.Use Docker volumes to map a local directory into the Docker container.
-[source,bash,subs="attributes"]
-----
-docker run --rm -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
-Wrote: /work/.snyk
-Wrote: /work/.trivyignore.yaml
-----
+Which commands read from standard input or write to standard output is described in xref:reference/cli.adoc[Vulnlog CLI].
 
-[NOTE]
-====
-Not all Vulnlog CLI commands support the same set of input (STDIN) and output (STDOUT) capabilities.
-Check the corresponding command documentations for more details.
-====
+== Set up in GitHub Actions
 
-== Install script
+Add the Setup Vulnlog CLI action to your job.
+It installs the CLI and puts it in the `PATH`, so later steps can run `vulnlog`:
 
-A POSIX install script is attached to every release.
-It detects the current OS and architecture, downloads the matching native binary,
-and installs it to `~/.local/bin` (or `~/bin` if `~/.local/bin` does not exist).
-Platforms without a native build (`linux-aarch64`, `macos-amd64`) automatically
-fall back to the JVM distribution and require Java 21 or later.
-
-.Install the latest Vulnlog release.
-[source,bash]
-----
-curl -fsSL vulnlog.dev/install | sh
-----
-
-To force the JVM distribution, pass `--jvm`:
-
-[source,bash]
-----
-curl -fsSL vulnlog.dev/install | sh -s -- --jvm
-----
-
-To uninstall, run:
-
-[source,bash]
-----
-curl -fsSL vulnlog.dev/uninstall | sh
-----
-
-A versioned copy of the same script is also attached to each GitHub release as
-`install-vulnlog.sh` and `uninstall-vulnlog.sh`.
-
-== Homebrew (macOS)
-
-On macOS, install Vulnlog from the https://github.com/vulnlog/homebrew-vulnlog[Vulnlog tap].
-On Apple Silicon (`arm64`) the formula installs the native binary.
-On Intel (`x86_64`) there is no native build, so it installs the JVM distribution and pulls in `openjdk@21`
-as a dependency automatically.
-
-.Install in one step.
-[source,bash]
-----
-brew install vulnlog/vulnlog/vulnlog
-----
-
-.Or tap once, then install and upgrade with the bare name.
-[source,bash]
-----
-brew tap vulnlog/vulnlog
-brew install vulnlog
-----
-
-.Upgrade to the latest release.
-[source,bash]
-----
-brew update && brew upgrade vulnlog
-----
-
-== Native binary
-
-Standalone native binaries are built with GraalVM and require no Java runtime.
-They start instantly and are the recommended choice for local use.
-
-. Download the latest Vulnlog archive from https://github.com/vulnlog/vulnlog/releases[releases page].
-. Extract the archive.
-. Move the `vulnlog` binary to a directory on `PATH`, for example `/usr/local/bin`.
-. Verify the installation:
-+
-[source,bash,subs="attributes"]
-----
-vulnlog --version
-vulnlog version {vulnlog-version}
-----
-
-== JVM distribution
-
-A platform-independent JVM distribution is also published on the https://github.com/vulnlog/vulnlog/releases[releases page].
-It requires Java 21 or later to be installed.
-
-== Build from source
-
-Clone the repository and build with Gradle:
-
-[source,bash]
-----
-git clone https://github.com/vulnlog/vulnlog.git
-cd vulnlog
-./gradlew installDist
-----
-
-The resulting distribution is placed in `build/install/vulnlog`.
-
-== GitHub Actions
-
-On a GitHub Actions runner, the Setup Vulnlog CLI action installs the CLI and puts it on `PATH`:
-
-[source,yaml,subs="attributes"]
+[source,yaml,subs="attributes+"]
 ----
 - name: Set up Vulnlog CLI
   uses: vulnlog/setup-vulnlog@v1
@@ -160,36 +130,46 @@ On a GitHub Actions runner, the Setup Vulnlog CLI action installs the CLI and pu
     version: {vulnlog-version}
 ----
 
-Every later step in the job calls `vulnlog` directly.
-The xref:reference/github-action.adoc[GitHub Action reference] documents the inputs, outputs, and supported runners.
+For the inputs and outputs of the action, see xref:reference/github-action.adoc[GitHub Action].
+For a complete workflow, see xref:guides/run-in-ci.adoc[Run in CI pipelines].
 
-== Gradle plugin
+== Add the Gradle plugin
 
-For Gradle-based builds, the Vulnlog Gradle plugin runs Vulnlog as part of the build instead of as a separate binary:
+In a Gradle build, apply the Vulnlog plugin in `build.gradle.kts`.
+Gradle downloads it from the Gradle Plugin Portal:
 
-[source,kotlin,subs="attributes"]
+[source,kotlin,subs="attributes+"]
 ----
 plugins {
-    id("dev.vulnlog") version "{vulnlog-version}"
+    id("dev.vulnlog.plugin") version "{vulnlog-version}"
 }
 ----
 
-The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the tasks and configuration.
+You don't need to install the CLI for the plugin.
+For its tasks and settings, see xref:reference/gradle-plugin.adoc[Gradle plugin].
 
-== Editor setup
+== Build from source
 
-Vulnlog's JSON Schema is published on https://vulnlog.dev/schema/vulnlog-v1.json[vulnlog.dev].
-IDEs with YAML support can automatically provide validation and autocompletion for `.vl.yaml` and `vulnlog.yaml` files.
+You need Git and a JDK to run Gradle.
+Gradle downloads the JDK version that the build needs.
 
-To reference the schema explicitly, add the following as the first line of the Vulnlog file:
-
-[source,yaml]
+. Clone the repository and build the distribution:
++
+[source,console]
 ----
-# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+$ git clone https://github.com/vulnlog/vulnlog.git
+$ cd vulnlog
+$ ./gradlew installDist
 ----
 
-// Other ideas:
-// - Snap package (Linux)
-// - Scoop or Winget (Windows)
-// - APT / RPM repositories
-// - Nix package
+. Run the CLI from the build directory:
++
+[source,console]
+----
+$ modules/cli-app/build/install/vulnlog/bin/vulnlog --version
+----
+
+== Next steps
+
+* Record your first finding in xref:get-started/quickstart-triage.adoc[Triage your first finding].
+* Set up your editor to check Vulnlog files as you type with xref:guides/set-up-your-editor.adoc[Set up your editor].

@@ -1,0 +1,141 @@
+= Add and publish releases
+:page-aliases: guides/work-with-releases-and-tags.adoc
+
+Add each release to your Vulnlog file when you start working on it, and mark it as published when it ships.
+Entries and reports then refer to the right releases.
+So do OpenVEX documents, which tell your customers' tools whether a release is affected by a vulnerability.
+
+== Before you start
+
+* A Vulnlog file, for example `acme-shop.vl.yaml`.
+To create one, see xref:guides/create-a-vulnlog-file.adoc[Create a Vulnlog file].
+
+== Add a release
+
+. Add the release at the end of `releases`.
+Keep the list in order, oldest first, because `--as-of` follows this order.
+Leave out `published_at` until the release ships.
+. List the artifacts of the release under `purls`, each with its package URL (PURL) and tags.
+A PURL identifies a package and its version, for example `pkg:maven/com.acme/acme-shop-server@4.5.0`.
+OpenVEX documents name the release by these PURLs.
+For the PURL of each kind of artifact, see <<choose-purls>>.
++
+[source,yaml]
+----
+  - id: 4.5.0
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.5.0"
+        tags: [backend]
+----
++
+The PURL of a container image contains its digest, so you add it once the image is built.
+
+For all release fields, see xref:reference/project-and-releases.adoc[Project and releases].
+For the tags, see xref:guides/tag-entries-by-component.adoc[Tag entries by component].
+
+== Publish a release
+
+On the day the release ships, set `published_at`, and add the PURLs of artifacts that got their identity during the build, such as the container image:
+
+[source,yaml]
+----
+  - id: 4.4.0
+    published_at: 2026-11-07
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.4.0"
+        tags: [backend]
+      - purl: "pkg:oci/acme-shop@sha256:350f97615163b67cbff8b015e60c77c2cbb954b4d9ffa9d48254e216e54899c8"
+        tags: [container]
+----
+
+The changelog shows a release without `published_at` as `unreleased`, and OpenVEX documents only cover published releases unless you name one with `--release`.
+
+[[choose-purls]]
+== Choose the PURL of each artifact
+
+A scanner applies an OpenVEX statement only if the statement's product is the PURL that the scanner gives to what it scans.
+So use the PURL of the artifact your customers scan, written the way the scanner writes it.
+
+With Trivy 0.76.2, statements apply to these artifacts:
+
+[cols="2,3,3"]
+|===
+| Artifact | What your customers scan | Release PURL
+
+| Container image
+| The image, with `trivy image`
+| `pkg:oci/<name>@sha256:<digest>`, where `<name>` is the last part of the repository name and `<digest>` is the digest of the image in the registry
+
+| Go program
+| The binary, built from a commit with a version tag, with `trivy rootfs`
+| `pkg:golang/<module path>@<tag>`, for example `pkg:golang/github.com/acme/acme-shop-worker/v4@v4.3.0`
+
+| .NET application
+| The published output, which contains `<project>.deps.json`
+| `pkg:nuget/<project>@<version>`, for example `pkg:nuget/Acme.Shop.Api@4.3.0`
+
+| Maven project
+| The project with its `pom.xml`
+| `pkg:maven/<groupId>/<artifactId>@<version>`
+
+| Python project with a `uv.lock` file
+| The project
+| `pkg:pypi/<name>@<version>`, with `name` and `version` from `pyproject.toml`
+
+| npm, PyPI, or NuGet library
+| Their own project, with `package-lock.json`, `uv.lock`, `poetry.lock`, or `packages.lock.json`
+| `pkg:npm/<name>@<version>`, `pkg:pypi/<name>@<version>`, or `pkg:nuget/<id>@<version>` of your library
+|===
+
+To get the digest of an image after you push it, run `docker inspect`:
+
+[source,console]
+----
+$ docker inspect --format '{{index .RepoDigests 0}}' ghcr.io/acme/acme-shop:4.4.0
+ghcr.io/acme/acme-shop@sha256:350f97615163b67cbff8b015e60c77c2cbb954b4d9ffa9d48254e216e54899c8
+----
+
+The release PURL is then `pkg:oci/acme-shop@sha256:350f97615163b67cbff8b015e60c77c2cbb954b4d9ffa9d48254e216e54899c8`.
+
+With Trivy 0.76.2, statements don't apply when a scan sees the artifact in one of these ways:
+
+* An image named with a `pkg:docker` PURL.
+* A JAR that contains its dependencies.
+* A project scanned from its `gradle.lockfile`, `requirements.txt`, or its own `package-lock.json`, `poetry.lock`, or `packages.lock.json`, because these files don't name the project.
+* Installed packages in `node_modules` or `site-packages` without a lock file.
+* A Go module in the `go.mod` of another project.
+
+For a Gradle or npm application, publish it as a container image and use the image PURL.
+The statements then apply to every package in the image, including the libraries in a JAR.
+
+A scanner other than Trivy can identify artifacts differently.
+To check that a document applies, scan the artifact with it.
+See xref:guides/generate-openvex-documents.adoc#check-the-result[Check the result].
+
+== Check the result
+
+. Validate the file:
++
+[source,console]
+----
+$ vulnlog validate acme-shop.vl.yaml
+info: acme-shop.vl.yaml: releases[4.4.0]: Unreferenced release ID '4.4.0'.
+info: acme-shop.vl.yaml: releases[4.5.0]: Unreferenced release ID '4.5.0'.
+2 infos
+Validated: acme-shop.vl.yaml
+----
++
+An `info` line about an unreferenced release only means that no entry refers to it yet.
+
+. Fix what validation reports.
+A release whose `published_at` is earlier than that of the release listed before it gives a warning:
++
+----
+warning: acme-shop.vl.yaml: releases[4.4.0]: Release '4.4.0' published '2026-01-09' is declared after '4.3.0' published '2026-06-15'. Declare releases oldest first, because a release filter follows this order.
+----
++
+A release without `purls` gives a warning too, for example 4.5.0 without the PURLs from step 2:
++
+----
+warning: acme-shop.vl.yaml: releases[4.5.0]: Release '4.5.0' declares no purls and is left out of VEX documents.
+----

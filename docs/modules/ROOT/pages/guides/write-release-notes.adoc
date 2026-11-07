@@ -1,124 +1,125 @@
 = Write release notes
 
-State which vulnerabilities a release fixed, without reading the Vulnlog file entry by entry.
-A release is going out and the notes must name the security fixes it carries.
-The changelog report answers that from the triage that is already recorded.
+Generate the security section of your release notes from the resolutions in your Vulnlog file, instead of collecting the fixes by hand.
 
-== Prerequisites
+== Before you start
 
-* A Vulnlog file whose `releases` section lists the release you are cutting.
-* Recorded resolutions for the fixes that shipped (see xref:guides/record-a-resolution.adoc[Record a resolution]).
+* A `resolution` on every entry that the release fixes.
+See xref:guides/record-a-resolution.adoc[Record a resolution].
+* The release in `releases`.
 
-== Generate the report
+In this guide, Acme Shop releases 4.4.0, which fixes Spring4Shell.
 
-[source,bash]
+== Generate the release notes
+
+. Set `published_at` on the release.
+See xref:guides/add-and-publish-releases.adoc[Add and publish releases].
+Without it, the notes show the release as `unreleased`.
+
+. Generate the changelog for the release:
++
+[source,console]
 ----
-vulnlog report changelog vulnlog.yaml
+$ vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.4.0
+Acme Corp / Acme Shop
+
+4.4.0 (2026-11-07)
+  1 fixed: 1 medium
+  CVE-2022-22965 (medium) "Spring4Shell" Remote code execution through data binding in Spring Framework
+    fix: Updated spring-beans from 5.3.15 to 5.3.18
 ----
++
+Each line shows the vulnerability ID, severity, name, and `description`.
+For a `not affected` entry, the line shows `not affected` in place of the severity.
+The `fix` line is the `note` of the resolution.
+If the resolution has a `ref`, the line below shows it.
 
-The report groups the fixed vulnerabilities by the release that shipped them, newest release first.
-It goes to stdout, so it can be piped or redirected.
+. Copy the lines into your release notes.
 
-== Read the answer
-
-Each section is one release: the version, its publication date, and how many vulnerabilities it fixed at which severity.
-A release with no `published_at` date is marked `unreleased`, which is the release you are about to cut.
-
-Under each release stands one line per vulnerability, most severe first.
-The line names the primary identifier, the severity, and the description.
-Aliases stand next to the identifier they belong to, so the number of lines is the number of vulnerabilities fixed.
-
-Two kinds of entry never appear.
-An entry without a `resolution` has not shipped anything, so it belongs in the impact report instead.
-An entry that no earlier release was affected by never reached anyone, so there is nothing to announce.
-An entry found in one release and fixed in the next does appear, whether or not the fix release is still listed among its `releases`.
-
-== Record what makes the report useful
-
-The report carries what the entries carry.
-Three fields do the work:
-
-`resolution.in`:: Puts the entry in the report, under that release.
-`description`:: Says what the vulnerability was, in the reader's language.
-`resolution.note`:: Says what was done about it, for example `Updated query-parser from 5.2.1 to 5.3.0`.
-
-With all three recorded, a report line is a finished release note:
-
-[source]
-----
-CVE-2026-7791 (high) SQL injection in query-parser
-  fix: Updated query-parser from 5.2.1 to 5.3.0
-  ref: https://jira.example.com/browse/SEC-201
-----
-
-Without them, the line holds an identifier and a severity, and the wording has to be invented at release time.
-Recording the resolution properly during triage is what removes that step.
+If a line is missing words, add a `description` to the entry or a `note` to its resolution, then generate the changelog again.
 
 == Variants
 
-=== Paste into a changelog file
+=== If you keep a CHANGELOG.md file
 
-`--format markdown` renders the Keep a Changelog layout, so the sections drop under a heading the changelog file already has:
+Add `--format markdown`, and write the section to a file with `-o`:
 
-[source,bash]
+[source,console]
 ----
-vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0 --format markdown >> CHANGELOG.md
-----
-
-The project heading is left out on purpose; only the release sections are written.
-
-=== Report one release
-
-`--fixed-in` selects the release whose fixes you are announcing:
-
-[source,bash]
-----
-vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0
+$ vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.4.0 --format markdown -o security-4.4.0.md
+Wrote: security-4.4.0.md
 ----
 
-`--as-of` takes the other view: everything fixed up to and including a release, with later fixes left out.
+Paste the section into `CHANGELOG.md` above the older releases.
+Don't append it with `>>`, which puts it at the end of the file, below the older releases.
 
-=== List the identifiers only
+Vulnlog writes one section per release, without the project heading:
 
-For an advisory that carries its own wording, `--brief` reduces each line to an identifier and a severity:
-
-[source,bash]
+[source,markdown]
 ----
-vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0 --brief
-----
+## [4.4.0] - 2026-11-07
 
-=== From the Gradle build
+### Security
 
-[source,bash]
-----
-./gradlew vulnlogChangelogReport
+_1 fixed: 1 medium_
+
+- **CVE-2022-22965** (medium): "Spring4Shell" Remote code execution through data binding in Spring Framework. Updated spring-beans from 5.3.15 to 5.3.18.
 ----
 
-The report lands in `build/vulnlog/vulnlog-changelog.txt` by default.
-Set `format` to `markdown` under `report { changelog { } }` and the default file name follows.
-The xref:reference/gradle-plugin.adoc[Gradle plugin reference] documents the task settings.
+=== If your advisory only needs the IDs
 
-=== Merge several files
+Add `--brief`:
 
-Projects with xref:guides/organize-files-across-branches.adoc[several Vulnlog files] report as one; the files must share the same project metadata:
-
-[source,bash]
+[source,console]
 ----
-vulnlog report changelog frontend.vl.yaml backend.vl.yaml
+$ vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.4.0 --brief
+Acme Corp / Acme Shop
+
+4.4.0 (2026-11-07)
+  1 fixed: 1 medium
+  CVE-2022-22965 (medium)
 ----
 
-A release declared in both files appears once, and a vulnerability recorded in both appears once.
+=== If you need every release
 
-== Verify
+Leave out `--fixed-in`.
+The changelog then lists each release that fixed something, newest first.
+To stop at a release, use `--as-of` instead.
 
-Run the report with `--fixed-in` for the release you are cutting and count the lines.
-The count is the number of security fixes the release notes must mention.
+=== If you have several Vulnlog files
 
-Under the Cyber Resilience Act, a manufacturer must inform users about fixed vulnerabilities in the products it places on the market.
-A release-scoped changelog report is that statement, generated from the record rather than assembled by hand.
+Pass all files, for example `vulnlog report changelog acme-shop.vl.yaml acme-shop-3.vl.yaml`.
+They must have the same `project` values.
 
-== Related
+=== If you use the Gradle plugin
 
-* xref:reference/cli-report-changelog.adoc[vulnlog report changelog] documents every flag and the report contents in detail.
-* xref:guides/record-a-resolution.adoc[Record a resolution] covers the fields this report reads.
-* xref:guides/generate-reports.adoc[Generate reports] covers the impact report, which answers what still affects the project.
+Run `vulnlogChangelogReport`.
+It writes `build/vulnlog/vulnlog-changelog.txt`, or `vulnlog-changelog.md` when you set `format` to `markdown`:
+
+[source,kotlin]
+----
+vulnlog {
+    files.from("acme-shop.vl.yaml")
+    report {
+        changelog {
+            format = "markdown"
+            fixedIn = "4.4.0"
+        }
+    }
+}
+----
+
+[source,console]
+----
+$ ./gradlew vulnlogChangelogReport
+----
+
+For all settings, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+
+== Check the result
+
+Compare the lines with the entries you expect.
+An entry is missing when its `resolution.in` names another release, or when it has no resolution.
+If no entry has a resolution in the release, the command prints `info: no fixed vulnerabilities to report`.
+
+For all options, see xref:reference/cli-report-changelog.adoc[vulnlog report changelog].
