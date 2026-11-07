@@ -1,123 +1,127 @@
 = Glossary
 
-Vulnlog::
-An open-source tool and format for tracking, analyzing, and managing software vulnerabilities reported by SCA scanners.
-The name combines "vulnerability" and "log."
-The term refers to both the YAML file format and the CLI tool.
-
-Vulnlog file::
-A YAML file following the Vulnlog specification, identified by the `.vl.yaml` (or `.vl.yml`) file extension.
-Simple projects may use `vulnlog.yaml` (or `vulnlog.yml`).
-Each Vulnlog file is scoped to a single release branch.
-
-Vulnlog CLI::
-The command-line interface tool that reads Vulnlog files and generates output artifacts (suppression files, HTML reports).
-
-Vulnerability entry::
-A single record in the `vulnerabilities` section of a Vulnlog file.
-Captures a finding (what was found, where, by whom) and the human verdict about it.
-
-Vulnerability ID::
-The primary identifier of a vulnerability entry, stored in the `id` field.
-Must be unique across all entries and aliases within the file.
-Preferably a CVE identifier (e.g., `CVE-2021-44228`).
+Accepted::
+The state of an entry that is `affected`, has `disposition: wont fix`, and has no resolution.
+See xref:reference/verdicts-and-justifications.adoc#states[States].
 
 Alias::
-An alternative identifier for the same vulnerability, stored in the `aliases` array.
-Must not overlap with any `id` or `aliases` in other entries within the same file.
-Used for cross-referencing in reports but not for suppression file generation.
-
-Verdict::
-The human triage decision recorded for a vulnerability entry, stored in the `verdict` field.
-The term reflects a deliberate judgment by an engineer, distinct from automated scanner statuses.
-Possible values: `affected`, `not affected`.
-When absent, the vulnerability is considered under investigation.
-See xref:reference/verdicts-and-justifications.adoc[Verdicts and Justifications].
-
-Under investigation::
-The implicit state of a vulnerability entry when no `verdict` has been set.
-
-Accepted::
-The state of an `affected` entry carrying `disposition: wont fix` and no resolution.
-The vulnerability impacts the project and the project decided not to remediate, so the risk is live and deliberately carried.
-
-Not applicable::
-The state of a `not affected` entry with no resolution.
-The vulnerability does not impact the project, so no remediation is owed.
+Another ID of the same vulnerability, for example its GHSA ID, listed in `aliases`.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
 Analysis::
-The free-text rationale for the triage decision, stored in the `analysis` field.
-Records why the team reached the verdict.
+The reasoning behind a verdict, recorded in `analysis`.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
-Justification::
-The reason why a vulnerability does not affect the project, stored in the `justification` field.
-Required when the verdict is `not affected`.
-Values align with the OpenVEX justification vocabulary.
-See xref:reference/verdicts-and-justifications.adoc#justification-values[Justification Values].
-
-Severity::
-The assessed severity of a vulnerability.
-Values: `critical`, `high`, `medium`, `low`.
-Required when the verdict is `affected`.
+Canonical style::
+The one layout in which Vulnlog commands write a Vulnlog file.
+See xref:reference/cli-fmt.adoc[vulnlog fmt].
 
 Disposition::
-The stated remediation intent for an `affected` vulnerability, stored in the `disposition` field.
-Values: `will fix`, `wont fix`.
-Optional with no default; absence means the intent has not been stated.
-See xref:reference/verdicts-and-justifications.adoc#disposition-values[Disposition Values].
+What you plan to do about a vulnerability that affects you: `will fix` or `wont fix`.
+See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+Entry::
+A vulnerability recorded in the `vulnerabilities` list of a Vulnlog file.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+Finding::
+A vulnerability that a scanner reports.
+See xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner].
+
+Generic suppression file::
+A JSON suppression file, named `<reporter>.generic.json`, that Vulnlog writes for reporters without a native format.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+Impact report::
+An HTML page that shows which releases each vulnerability affects, how severely, and its state.
+See xref:reference/cli-report-impact.adoc[vulnlog report impact].
+
+Justification::
+The reason a vulnerability doesn't affect your software, required with `verdict: not affected`.
+See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+Not applicable::
+The state of an entry that is `not affected` and has no resolution.
+See xref:reference/verdicts-and-justifications.adoc#states[States].
+
+Open::
+The state of an entry that is `affected`, has no resolution, and isn't marked `wont fix`.
+See xref:reference/verdicts-and-justifications.adoc#states[States].
+
+OpenVEX::
+A JSON format for VEX statements.
+Vulnlog's OpenVEX output is incubating.
+See xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex].
+
+Package URL (PURL)::
+A standard identifier for a software package, for example `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`.
+See xref:reference/project-and-releases.adoc[Project and releases].
+
+Project::
+The organisation, project name, and author of a Vulnlog file, recorded in `project`.
+See xref:reference/project-and-releases.adoc[Project and releases].
+
+Release::
+A version of your software that the Vulnlog file tracks, listed in `releases`.
+See xref:reference/project-and-releases.adoc[Project and releases].
+
+Release notes::
+A list of the vulnerabilities a release fixes, generated with `vulnlog report changelog`.
+See xref:reference/cli-report-changelog.adoc[vulnlog report changelog].
+
+Report::
+An item in an entry's `reports` list that names the scanner or source that reported the vulnerability, and when.
+See xref:reference/vulnerabilities.adoc#report-entry[Report].
+
+Reporter::
+The scanner or other source in a report, for example `trivy` or `other`.
+It decides which suppression file the entry goes into.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
 
 Resolution::
-A structured record that a dependency update or other corrective action was taken, stored in the `resolution` block.
-Independent of the verdict: a vulnerability may be `not affected` yet still have a resolution.
+The release that fixes a vulnerability, recorded in `resolution`.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
-Report (vulnerability impact report)::
-A record in the `reports` array indicating that a specific scanner or source reported the finding.
-Not to be confused with HTML report (an output artifact).
+Resolved::
+The state of an entry with a verdict and a resolution.
+See xref:reference/verdicts-and-justifications.adoc#states[States].
 
-Reporter type::
-The `reporter` field on a report entry, identifying the scanner or source.
-A fixed enum (e.g., `trivy`, `snyk`, `dependency-check`, `other`).
-Determines the suppression file format.
+Schema header::
+The optional first-line comment that points editors to the Vulnlog JSON schema.
+See xref:reference/file-format.adoc[File format].
+
+Severity::
+How severe a vulnerability is for your software: `low`, `medium`, `high`, or `critical`.
+See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+State::
+A label that Vulnlog derives from an entry's verdict, disposition, and resolution.
+See xref:reference/verdicts-and-justifications.adoc#states[States].
 
 Suppression::
-A directive to exclude a vulnerability from a scanner's findings.
-Can be temporary (with `expires_at`) or permanent (without `expires_at`).
+Listing a finding in a suppression file so that the scanner ignores it, permanently or until a date.
 See xref:reference/suppression.adoc[Suppression].
 
 Suppression file::
-A file generated by the Vulnlog CLI that instructs an SCA scanner to suppress specific findings.
-Each scanner has its own format.
-
-VEX::
-Vulnerability Exploitability eXchange: a machine-readable statement of whether a vulnerability affects a product, and why.
-Vulnlog's verdicts and justifications follow the VEX vocabulary.
-
-Project::
-The `project` section of a Vulnlog file.
-Contains metadata: organization, project name, author, and optional contact.
-
-Release::
-A software release tracked in the `releases` section.
-Releases must be listed in chronological order (oldest first) because the CLI uses array position for range resolution.
-
-Release branch::
-A line of releases sharing a common major/minor version.
-Each Vulnlog file is scoped to a single release branch.
-See xref:guides/organize-files-across-branches.adoc[Branching Strategy] for how to organize files across branches.
+A file that Vulnlog generates so a scanner ignores a finding, for example `.trivyignore.yaml`.
+See xref:reference/suppression.adoc[Suppression].
 
 Tag::
-A label defined in the optional `tags` section.
-Provides flexible categorization for deliverables, usage contexts, or any team-specific taxonomy.
-See xref:reference/tags.adoc[Tags and Filtering].
+A label you define in `tags` and attach to entries and release PURLs.
+See xref:reference/tags.adoc[Tags].
 
-Package URL (purl)::
-A standardized format for identifying software packages.
-Examples: `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`, `pkg:docker/demo-project@8.1.1`.
+Under investigation::
+The state of an entry without a verdict.
+See xref:reference/verdicts-and-justifications.adoc#states[States].
 
-HTML report::
-An HTML file for communicating vulnerability analysis to stakeholders.
-Each vulnerability entry corresponds to a single row.
+Verdict::
+Your judgement whether a vulnerability affects your software: `affected` or `not affected`.
+See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
 
-Stub entry::
-A minimal vulnerability entry containing only required fields (`id`, `releases`, `packages`, `reports`).
-Created during quick triage.
+VEX::
+Vulnerability Exploitability eXchange, a machine-readable statement of whether a vulnerability affects a product.
+See xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX].
+
+Vulnlog file::
+A YAML file in the Vulnlog format, for example `acme-shop.vl.yaml`.
+See xref:reference/file-format.adoc[File format].

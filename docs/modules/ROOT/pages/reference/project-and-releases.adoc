@@ -1,92 +1,191 @@
 = Project and releases
 :page-aliases: project-and-releases.adoc
 
+`project` names who publishes the software and who answers for the analysis.
+`releases` lists the versions of the software that the file tracks.
+Reports take their author and product information from these two sections, and so do OpenVEX documents, which tell your customers' tools whether a release is affected by a vulnerability.
+
+== Synopsis
+
+[source,yaml]
+----
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+  contact: security@acme.example
+
+releases:
+  - id: 4.3.0
+    published_at: 2026-06-15
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.3.0"
+        tags: [backend]
+----
+
 == `project`
 
-Project-level metadata.
-Used in report generation.
-
-[cols="1,1,1,3"]
+[cols="2,2,1,1,4"]
 |===
-| Field | Type | Required | Description
+| Field | Type | Required | Default | Description
 
 | `organization`
 | String
 | Yes
-| Name of the organization or vendor.
+| None
+| Name of the organisation or vendor that publishes the software.
 
 | `name`
 | String
 | Yes
+| None
 | Name of the software project.
 
 | `author`
 | String
 | Yes
-| Name of the responsible security team or author.
+| None
+| Name of the team or person responsible for the analysis.
+OpenVEX documents name it as their author.
 
 | `contact`
-| String (email)
+| String, email address
 | No
-| Contact email for the security team.
+| None
+| Email address of the security team.
+OpenVEX documents name it as the author contact.
 |===
-
-Validation reports a blank project field as an error: VEX documents name their author and supplier from it.
 
 == `releases`
 
-Defines the releases tracked in this Vulnlog file.
-Releases must be listed in chronological order (oldest first).
-This ordering is used by the CLI to resolve `--as-of` filtering.
-Validation warns when two releases carrying `published_at` are declared out of order.
+A list of release objects, oldest first.
 
-[cols="1,1,1,3"]
+[cols="2,2,1,1,4"]
 |===
-| Field | Type | Required | Description
+| Field | Type | Required | Default | Description
 
 | `id`
 | String
 | Yes
-| Unique release identifier (e.g., `8.1.1`, `2.0.0-SNAPSHOT`).
+| None
+| Release identifier, for example `4.3.0` or `2.0.0-SNAPSHOT`.
+Entries and resolutions refer to a release by this value.
 
 | `published_at`
-| String (date, `YYYY-MM-DD`)
+| Date, `YYYY-MM-DD`
 | No
-| Publication date of the release. Absence indicates the release is not yet published, and leaves it out of VEX documents unless `--release` names it.
+| Not published
+| Date the release was published.
+A release without `published_at` isn't published.
 
 | `purls`
-| Array of <<purl-entry,PURL entries>>
+| List of <<purl-entry,PURL entries>>
 | No
-| Versioned Package URLs identifying the release artifacts.
+| No PURLs
+| The artifacts that make up the release, each identified by a package URL (PURL).
+OpenVEX documents use them as product identifiers.
+See xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex].
 |===
 
 [[purl-entry]]
 === PURL entry
 
-A release artifact identified by its https://github.com/package-url/purl-spec[Package URL], optionally tagged for scoping.
+A PURL identifies a software package in a standard format, `pkg:<type>/<namespace>/<name>@<version>`.
+See the https://github.com/package-url/purl-spec[PURL specification].
 
-[cols="1,1,1,3"]
+[cols="2,2,1,1,4"]
 |===
-| Field | Type | Required | Description
+| Field | Type | Required | Default | Description
 
 | `purl`
-| String (Package URL)
+| String, PURL
 | Yes
-| The versioned Package URL for this artifact in this release.
-Validation warns about a purl without a version, because VEX statements for it would apply to every version of the artifact.
+| None
+| PURL of the artifact in this release, including its version.
 
 | `tags`
-| Array of String
+| List of tag IDs
 | No
-| Tags associated with this purl. Must reference tags defined in the `tags` section. See xref:reference/tags.adoc[Tags and Filtering].
+| No tags
+| Tags that link the artifact to entries with the same tag.
+Each tag must be defined in `tags`.
+See xref:reference/tags.adoc[Tags].
 |===
 
-=== Package URL examples
+== Rules
 
-[source]
+`vulnlog validate` checks these rules.
+
+[cols="3,1,3"]
+|===
+| Rule | Level | Message
+
+| `organization`, `name`, and `author` are present.
+| Error
+| `YAML parse error: ... missing (therefore NULL) value for creator parameter author ...`
+
+| No project field is blank.
+| Error
+| `Project 'organization' must not be blank.`
+
+| Each release `id` is unique.
+| Error
+| `Duplicate release ID '4.2.0'.`
+
+| Each `purl` is a valid PURL.
+| Error
+| `Unsupported PURL: acme-shop`
+
+| Each tag on a release PURL is defined in `tags`.
+| Error
+| `References undefined tags 'backend'. Defined tags: container, frontend, worker`
+
+| Releases with `published_at` are listed oldest first.
+| Warning
+| `Release '4.3.0' published '2026-01-01' is declared after '4.2.0' published '2026-03-02'. Declare releases oldest first, because a release filter follows this order.`
+
+| A release PURL includes a version.
+| Warning
+| `Release purl 'pkg:maven/com.acme/acme-shop-server' has no version, so its VEX statements apply to every version of the artifact.`
+
+| If any release declares PURLs, every release does.
+| Warning
+| `Release '4.3.0' declares no purls and is left out of VEX documents.`
+
+| Every release is used by an entry or a resolution.
+| Info
+| `Unreferenced release ID '4.4.0'.`
+|===
+
+The order of `releases` matters.
+With `--as-of`, the selection includes the given release and every release listed before it.
+See xref:reference/cli.adoc#filters[Filter options].
+
+A release ID that YAML reads as a number must be quoted to keep its value.
+YAML reads the unquoted ID `5.10` as the number 5.1, and Vulnlog uses `5.1` as the ID.
+`vulnlog fmt` quotes such an ID, but it keeps the value YAML read, so `5.10` becomes `"5.1"`.
+
+== Examples
+
+A minimal project and release:
+
+[source,yaml]
 ----
-pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1
-pkg:docker/demo-project@8.1.1
-pkg:npm/image-lib@3.1.0
-pkg:generic/demo-project@8.1.1
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+
+releases:
+  - id: 4.2.0
+----
+
+Acme Shop has two published releases and one that isn't published yet.
+Each release has a Maven artifact for the server and a container image:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=5..9]
+
+include::example$acme-shop.vl.yaml[lines=21..41]
 ----

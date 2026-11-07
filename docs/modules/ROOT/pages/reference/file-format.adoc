@@ -1,86 +1,180 @@
-= The Vulnlog file format
+= File format
 :page-aliases: format-overview.adoc
 
-A Vulnlog file is a YAML document that tracks software vulnerabilities reported by one or more SCA scanners, together with the human decisions about them.
-Each Vulnlog file is scoped to a single release branch; when the branch reaches end of life, its file becomes a natural historical archive.
-From this file, the Vulnlog CLI generates machine-readable outputs such as scanner suppression files and HTML reports.
+A Vulnlog file is a YAML document with five top-level keys.
+The CLI reads it only under certain file names, and an optional first-line comment links it to the JSON schema.
 
-This page defines the file-level contract; xref:concepts/data-model.adoc[The Vulnlog data model] explains the model and its design principles.
-
-== File name convention
-
-Vulnlog files use the naming convention `<project-name>.vl.yaml`.
-The `.vl.` infix identifies Vulnlog files and enables automatic JSON Schema association in IDEs via glob pattern matching.
-Simple projects may use `vulnlog.yaml` (see also xref:guides/organize-files-across-branches.adoc[]).
-
-The file location within the repository is not prescribed.
-The CLI requires an explicit file path as a positional argument; it does not search for files automatically.
-
-== Schema reference
-
-To enable IDE validation and autocompletion, add a schema reference comment as the first line:
+== Synopsis
 
 [source,yaml]
 ----
 # $schema: https://vulnlog.dev/schema/vulnlog-v1.json
-----
-
-The path can point to a local bundled schema file or to the published JSON schema URL.
-The header is optional: it only enables editor support and has no effect on how the CLI reads a file.
-A file-writing command keeps the header when the file already has one and leaves it out otherwise; only xref:reference/cli-init.adoc[init] adds it to a newly created file.
-
-== Canonical formatting
-
-Vulnlog files are canonical: every file-writing command (xref:reference/cli-fmt.adoc[fmt], xref:reference/cli-add.adoc[modify add], xref:reference/cli-copy.adoc[modify copy], xref:reference/cli-init.adoc[init]) rewrites the whole file in the same style, derived only from the file's data.
-Any valid YAML layout is accepted as input, which makes the commands safe for automation: a file written by hand or by another tool is normalized on the next write.
-
-YAML comments are not part of the format and are not preserved; commands warn when they drop comments.
-Record prose in the schema fields designed for it: `comment` and `analysis` on a vulnerability, `description` on a tag, and `note` on a release.
-This keeps every remark visible to the outputs generated from the file, such as reports and suppression files.
-
-== File structure
-
-[source,yaml]
-----
-# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
 schemaVersion: "1"
 
 project:
-  # Project metadata
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
 
 tags:
-  # Tag definitions (optional)
+  - id: backend
+    description: Java server application
 
 releases:
-  # Release definitions (chronological order, oldest first)
+  - id: 4.2.0
 
 vulnerabilities:
-  # Vulnerability entries (newest first)
+
+  - id: CVE-2022-42889
+    releases: [4.2.0]
+    packages: ["pkg:maven/org.apache.commons/commons-text@1.9"]
+    reports:
+      - reporter: dependency-check
+    tags: [backend]
 ----
 
-Required top-level sections: `schemaVersion`, `project`, `releases`, `vulnerabilities`.
-Optional top-level sections: `tags`.
+== File names
 
-`vulnerabilities` may be an empty array.
+The CLI reads a file only when its name matches one of these patterns:
 
-=== Ordering rules
+[cols="1,2"]
+|===
+| Pattern | Example
 
-Releases:: Must be in chronological order (oldest first).
-This ordering has functional significance: the CLI uses array position to resolve `--as-of` range filtering.
-A release at position N includes all releases at positions 0 through N.
+| `vulnlog.yaml`
+| `vulnlog.yaml`
 
-Vulnerabilities:: Should be in reverse chronological order (newest first).
-The most recent findings appear at the top of the file for immediate visibility.
-This is a readability convention enforced by the linter, with no functional impact on CLI output.
+| `vulnlog.yml`
+| `vulnlog.yml`
 
-=== Unique identifiers
+| `*.vl.yaml`
+| `acme-shop.vl.yaml`
 
-All vulnerability identifiers must be unique within a Vulnlog file.
-No two vulnerability entries may share the same `id`.
-An `id` of one entry must not appear in the `aliases` of another entry, and vice versa.
-This ensures unambiguous lookup by any identifier.
+| `*.vl.yml`
+| `acme-shop.vl.yml`
+|===
 
-== Branching strategy
+Any other name fails with `+File name must be [vulnlog|*.vl].[yaml|yml]+`.
+You can put the file anywhere in your repository.
+You pass its path to every command, because the CLI doesn't search for it.
+`-` in place of the path reads the file from standard input.
+See xref:reference/cli.adoc#stdin[Standard input and output].
 
-For projects with a single release line, a single `vulnlog.yaml` file is sufficient.
-For projects maintaining multiple release branches in parallel, see the xref:guides/organize-files-across-branches.adoc[Branching Strategy] guide for detailed options and trade-offs.
+== Schema header
+
+The first line of the file can be a comment that names the JSON schema:
+
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+----
+
+The header is optional.
+Editors with YAML schema support use it for validation and completion, and the CLI ignores it.
+`vulnlog init` writes the header into every new file.
+Commands that write a file keep the header if the file has one, and always write it with the URL shown above.
+See xref:guides/set-up-your-editor.adoc[Set up your editor].
+
+== Document start
+
+The document can start with `---`, after the schema header if there is one.
+The marker is optional, and `vulnlog fmt` adds it when it's missing.
+A file holds one YAML document.
+
+== Top-level keys
+
+[cols="2,2,1,1,4"]
+|===
+| Key | Type | Required | Default | Description
+
+| `schemaVersion`
+| String, `"1"`
+| Yes
+| None
+| Version of the Vulnlog format.
+The CLI also accepts `"1.0"` and the number `1`.
+A newer version fails with `Unsupported schema version '2'. Try updating vulnlog.`
+A value that isn't a version fails with `Invalid schema version 'abc'`.
+Without `schemaVersion`, the file fails with `Missing schemaVersion`.
+
+| `project`
+| Object
+| Yes
+| None
+| The organisation, project, and author.
+See xref:reference/project-and-releases.adoc[Project and releases].
+
+| `tags`
+| List of tag objects
+| No
+| No tags
+| Labels you attach to entries and to release package URLs (PURLs).
+See xref:reference/tags.adoc[Tags].
+
+| `releases`
+| List of release objects
+| Yes
+| None
+| The releases this file tracks.
+`vulnlog init` starts with an empty list.
+Each entry refers to releases from this list.
+See xref:reference/project-and-releases.adoc[Project and releases].
+
+| `vulnerabilities`
+| List of entries
+| Yes
+| None
+| One entry per vulnerability.
+The list can be empty.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+|===
+
+== Rules
+
+* Keys that the format doesn't define fail with `Unknown property '<key>'. Try updating vulnlog.`
+This applies at every level of the file.
+* An empty file fails with `Empty YAML document`.
+* The CLI accepts empty lists, such as the `releases: []` that `vulnlog init` writes.
+The JSON schema requires at least one item in every list, so an editor that checks the file against the schema marks an empty list.
+* The order of `releases` matters.
+See xref:reference/project-and-releases.adoc[Project and releases].
+* By convention, `vulnerabilities` is listed newest first.
+The CLI doesn't check or change this order.
+* YAML comments other than the schema header aren't part of the format.
+Commands that write the file remove them and print a warning.
+The fields for notes are `analysis` and `comment` on an entry, `description` on a tag, and `note` on a resolution.
+* Commands that write the file use one canonical style: field order, list style, quoting, and blank lines.
+`vulnlog fmt --check` reports where a file differs.
+See xref:reference/cli-fmt.adoc[vulnlog fmt].
+
+== Examples
+
+`vulnlog init` writes the smallest file that the CLI accepts:
+
+[source,yaml]
+----
+# $schema: https://vulnlog.dev/schema/vulnlog-v1.json
+---
+schemaVersion: "1"
+
+project:
+  organization: Acme Corp
+  name: Acme Shop
+  author: Acme Product Security Team
+
+releases: []
+
+vulnerabilities: []
+----
+
+The Acme Shop file uses every top-level key:
+
+.acme-shop.vl.yaml
+[%collapsible]
+====
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[]
+----
+====

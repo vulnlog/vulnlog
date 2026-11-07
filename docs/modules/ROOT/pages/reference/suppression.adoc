@@ -1,141 +1,220 @@
 = Suppression
 :page-aliases: suppression.adoc
 
-Suppression directives exclude specific vulnerability findings from a scanner's output.
-The Vulnlog CLI generates scanner-specific suppression files from the Vulnlog file, keeping the triage rationale alongside the suppression rules.
+A suppression file tells a scanner to stop reporting a finding.
+`vulnlog suppress` generates one for each reporter in your Vulnlog file.
+The `suppress` block on a report and the suppression rules decide which entries go into it.
 
-Whether the generated files are committed or created on the fly in CI is a workflow decision, covered in xref:guides/generate-suppression-files.adoc[Generate suppression files for your scanner].
-
-== Suppression rules
-
-Four rules decide whether an entry appears in the generated suppression file:
-
-Resolved findings are never suppressed::
-Once a `resolution` is recorded, the vulnerable dependency is gone and the scanner stops reporting the finding on its own.
-These entries are excluded regardless of verdict or `suppress` block.
-If the scanner still reports one, the resolution is incomplete and should be fixed rather than suppressed.
-
-Expired suppressions are always dropped::
-A `suppress` block whose `expires_at` date has passed is excluded, regardless of verdict.
-Expiry takes precedence over every other rule, so even a `not affected` finding is removed once its `expires_at` lapses.
-A finding without a `suppress` block has no expiry and stays suppressed.
-
-`not affected` findings are always suppressed::
-The finding does not impact the release, so it is noise and is suppressed automatically; no `suppress` block is required.
-The one exception is the expiry rule above: if a `suppress` block is present and its `expires_at` has passed, the entry is dropped.
-
-Everything else needs an explicit `suppress` block::
-`affected` findings (with or without a `wont fix` disposition) and not-yet-triaged findings are still a live or unknown risk.
-Suppressing one is a deliberate decision, so it happens only when the report entry carries a `suppress` block.
-
-=== Permanent suppression
+== Synopsis
 
 [source,yaml]
 ----
-reports:
-  - reporter: trivy
-    suppress: {}
-----
-
-=== Temporary suppression
-
-[source,yaml]
-----
-reports:
-  - reporter: trivy
-    suppress:
-      expires_at: 2026-06-01
-----
-
-After the expiration date, the entry is excluded from every generated suppression file.
-Vulnlog manages expiry itself so that each generated file lists only active suppressions and never an expired one.
-
-== Multiple reporters
-
-When multiple scanners report the same vulnerability, each scanner is listed as a separate report entry.
-Suppression is configured independently per reporter, allowing different suppression strategies per scanner.
-
-[source,yaml]
-----
-  - id: CVE-2021-002
-    releases: [ 8.1.1 ]
-    packages: [ "pkg:maven/example.org/some-dependency@1.1.2" ]
     reports:
       - reporter: trivy
-        at: 2021-03-03
-      - reporter: snyk
-        at: 2021-03-03
-        vuln_ids: [ SNYK-2021-002 ]
-    verdict: not affected
-    justification: vulnerable code not present
+        at: 2026-04-07
+        suppress:
+          expires_at: 2027-03-31
 ----
 
-In this example, both Trivy and Snyk reported the same CVE.
-The Snyk report entry includes a `vuln_ids` field with the scanner-specific identifier, which is used instead of the CVE ID when generating the Snyk suppression file.
+== `suppress`
 
-Since the verdict is `not affected`, both reporters are automatically included in suppression output.
-Adding a `suppress` block to only one reporter limits suppression to that specific scanner.
+`suppress` is an optional object on a report.
+It applies only to the suppression file of that report's reporter.
+See xref:reference/vulnerabilities.adoc#report-entry[Report].
 
-== Suppression identifier resolution
-
-The CLI determines which identifiers to write into the suppression file using this order:
-
-. `vuln_ids` values from the report entry for the target reporter type, if present.
-. The vulnerability's `id` field.
-
-`aliases` are not used for suppression.
-
-[[supported-reporters]]
-== Supported reporters
-
-[cols="1,2,2,1"]
+[cols="2,2,1,1,4"]
 |===
-| Value | Scanner | Default Suppression Path | Suppression Support
+| Field | Type | Required | Default | Description
+
+| `expires_at`
+| Date, `YYYY-MM-DD`
+| No
+| Never expires
+| Last day of the suppression.
+From the next day on, the entry no longer appears in the suppression file of that report's reporter.
+|===
+
+An empty block suppresses a finding without an end date:
+
+[source,yaml]
+----
+        suppress: {}
+----
+
+[[rules]]
+== Suppression rules
+
+Vulnlog checks each report of each entry against these rules, in order.
+The first rule that applies decides.
+
+. The entry is `resolved`: never suppressed.
+With `--as-of`, the resolution counts only if its release is part of the selection.
+. `suppress.expires_at` is in the past: not suppressed.
+. The verdict is `not affected`: suppressed for every reporter of the entry, with or without a `suppress` block.
+. Any other entry: suppressed only for a report that has a `suppress` block.
+
+See xref:reference/verdicts-and-justifications.adoc#states[States].
+
+== Identifiers
+
+A suppression file lists the IDs in the report's `vuln_ids`.
+Without `vuln_ids`, it lists the entry's `id`.
+It never lists `aliases`.
+
+Each native format accepts only some ID types, shown in the table below.
+Vulnlog leaves out IDs that the format can't hold.
+With `-v`, the command shows each one it leaves out.
+This line is an illustration, because Acme Shop has no Snyk report:
+
+[source]
+----
+verbose: skipped CVE-2021-23337 for .snyk: the snyk format requires SNYK ids
+----
+
+[[supported-scanners]]
+== Supported scanners
+
+The `reporter` value decides which suppression file an entry goes into.
+Reporters with a native format get a file in the scanner's own format.
+Every other reporter except `other` gets a file in the generic Vulnlog JSON format.
+
+[cols="2,2,3,2"]
+|===
+| `reporter` | Scanner | Suppression file | IDs in the file
 
 | `trivy`
 | Trivy
 | `.trivyignore.yaml`
-| Yes
+| CVE, GHSA
 
 | `snyk`
 | Snyk
 | `.snyk`
-| Yes
+| SNYK
 
 | `dependency-check`
-| OWASP Dependency Check
+| OWASP Dependency-Check
 | `dependency-check-suppressions.xml`
-| Yes (CVE IDs only)
+| CVE
+
+| `cargo-audit`
+| cargo-audit
+| `audit.toml`
+| RUSTSEC
 
 | `grype`
 | Grype
-| `.grype.yaml`
-| Planned
-
-| `cargo-audit`
-| Cargo Audit (Rust)
-| `audit.toml`
-| Yes (RUSTSEC IDs only)
+| `grype.generic.json`
+| CVE, GHSA, RUSTSEC, SNYK
 
 | `semgrep`
 | Semgrep
-| (none)
-| No
+| `semgrep.generic.json`
+| CVE, GHSA, RUSTSEC, SNYK
 
 | `npm-audit`
 | npm audit
-| (none)
-| No
+| `npm-audit.generic.json`
+| CVE, GHSA, RUSTSEC, SNYK
 
 | `github-dependabot`
 | GitHub Dependabot
-| (none)
-| No
+| `github-dependabot.generic.json`
+| CVE, GHSA, RUSTSEC, SNYK
 
 | `other`
-| Generic / non-scanner source
-| (none)
-| No
+| Any other source, such as a customer or a penetration test
+| None
+| None
 |===
 
-For reporters of type `other`, the `source` field on report entries is required.
+In the generic format, the file of a reporter is `<reporter>.generic.json`, for example `trivy.generic.json`.
+
+Every format except `audit.toml` carries the entry's `analysis` as the reason and the expiry date.
+The `audit.toml` file lists only the IDs.
+
+For the `--format` option and the files the command writes, see xref:reference/cli-suppress.adoc[vulnlog suppress].
+
+[[generic-format]]
+== Generic format
+
+A generic suppression file is a JSON object with one key, `vulnerabilities`.
+It holds one object for each ID, so an entry with two IDs in `vuln_ids` gets two objects.
+
+[cols="2,2,4"]
+|===
+| Field | Type | Description
+
+| `id`
+| String
+| The vulnerability ID.
+
+| `expires_at`
+| Date, `YYYY-MM-DD`
+| The last day of the suppression.
+Left out when the `suppress` block has no `expires_at`.
+
+| `statement`
+| String
+| The entry's `analysis`.
+An empty string when the entry has no analysis.
+|===
+
+The generated `npm-audit.generic.json` for the lodash entry, which is suppressed without an end date:
+
+[source,json]
+----
+{
+  "vulnerabilities" : [ {
+    "id" : "CVE-2021-23337",
+    "statement" : "The template function is only used in the admin interface, with templates that administrators write. Administrators can already change the shop configuration, so the injection gives them no additional access. The admin interface is removed in Acme Shop 5.0."
+  } ]
+}
+----
+
+== Examples
+
+The Spring4Shell entry has the verdict `affected`.
+Its Trivy report is suppressed until 31 March 2027:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=93..115]
+----
+
+The generated `.trivyignore.yaml`:
+
+[source,yaml]
+----
+# Generated by Vulnlog (https://vulnlog.dev). DO NOT EDIT.
+---
+vulnerabilities:
+  - id: CVE-2022-22965
+    expired_at: 2027-03-31
+    statement: >-
+      Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
+      but Spring advises all users to upgrade.
+----
+
+The Text4Shell entry has the verdict `not affected`, so its Dependency-Check report is suppressed without a `suppress` block:
+
+[source,yaml]
+----
+include::example$acme-shop.vl.yaml[lines=73..91]
+----
+
+The generated `dependency-check-suppressions.xml`:
+
+[source,xml]
+----
+<!-- Generated by Vulnlog (https://vulnlog.dev). DO NOT EDIT. -->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <suppress>
+        <notes>Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation.</notes>
+        <cve>CVE-2022-42889</cve>
+    </suppress>
+</suppressions>
+----
+
+The Log4Shell entry's Grype report has no `suppress` block, so `grype.generic.json` doesn't list it.
+The XZ Utils entry has only an `other` report, so no suppression file lists it.

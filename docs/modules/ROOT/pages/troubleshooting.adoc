@@ -1,112 +1,318 @@
 = Troubleshooting
 
-Symptoms are listed by the message or behavior you see.
-Every section has a stable anchor, so guides and answers can link directly to a symptom.
+Each section starts with the message you see.
+The examples use `acme-shop.vl.yaml`, and line numbers and IDs come from your own file.
+
+[[file-name-must-be]]
+== `+File name must be [vulnlog|*.vl].[yaml|yml]+`
+
+[source]
+----
+Usage: vulnlog validate [<options>] <inputs>...
+
+Error: invalid value for <inputs>: Input 'acme-shop.yaml' is not valid: File name must be [vulnlog|*.vl].[yaml|yml]: acme-shop.yaml
+----
+
+This is the output of `vulnlog validate acme-shop.yaml`, which exits with code 1.
+
+The CLI reads only files named `vulnlog.yaml`, `vulnlog.yml`, `*.vl.yaml`, or `*.vl.yml`.
+Rename the file, for example to `acme-shop.vl.yaml`.
+See xref:reference/file-format.adoc[File format].
+
+[[unsupported-vulnerability-id]]
+== `+Unsupported vulnerability ID+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 45:9: vulnerabilities[ACME-2026-001].id: Unsupported vulnerability ID: ACME-2026-001
+----
+
+The `id`, every alias, and every value in `vuln_ids` must start with `CVE-`, `GHSA-`, `RUSTSEC-`, or `SNYK-`.
+Use the CVE ID if the vulnerability has one, or the GHSA ID otherwise.
+Record internal ticket numbers in `comment` or in `resolution.ref`.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+[[unknown-property]]
+== `+Unknown property+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 69:18: vulnerabilities[CVE-2024-3094].analysed_at: Unknown property 'analysed_at'. Try updating vulnlog.
+----
+
+The file contains a key that the format doesn't define.
+Often it's a spelling mistake.
+Field names use American spelling, for example `analyzed_at`.
+If the key is right, the file may need a newer version of Vulnlog.
+See xref:get-started/install.adoc[Install Vulnlog].
+
+[[missing-value]]
+== `+missing (therefore NULL) value for creator parameter+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 45:5: vulnerabilities[CVE-2023-32681].packages: YAML parse error: Instantiation of [simple type, class dev.vulnlog.lib.document.dto.VulnerabilityEntryDto] value failed for JSON property packages due to missing (therefore NULL) value for creator parameter packages which is a non-nullable type
+----
+
+A required field is missing.
+The name after `creator parameter` is the field, here `packages`.
+Add it to the object the path points to.
+For the required fields, see xref:reference/vulnerabilities.adoc[Vulnerabilities] and xref:reference/project-and-releases.adoc[Project and releases].
+
+[[invalid-verdict]]
+== `+Invalid verdict: under investigation+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 55:14: vulnerabilities[CVE-2023-32681].verdict: Invalid verdict: under investigation
+----
+
+An entry that is `under investigation` has no `verdict`.
+Remove the `verdict` line.
+The same message with another value means the value isn't `affected` or `not affected`.
+See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+[[invalid-severity-null]]
+== `+Invalid severity: null+`
+
+[source]
+----
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2022-22965].severity: Invalid severity: null
+----
+
+An entry with `verdict: affected` needs a `severity`: `low`, `medium`, `high`, or `critical`.
+Add it below `verdict`.
+
+[[invalid-justification-null]]
+== `+Invalid justification: null+`
+
+[source]
+----
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2022-42889].justification: Invalid justification: null
+----
+
+An entry with `verdict: not affected` needs a `justification`.
+Add one of the five values from xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+[[disposition-requires-affected]]
+== `+Disposition requires verdict 'affected'+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 72:18: vulnerabilities[CVE-2024-3094].disposition: Disposition requires verdict 'affected'.
+----
+
+`disposition` says what you plan to do about a vulnerability that affects you.
+Remove it from entries that are `not affected` or have no verdict yet.
+
+[[references-undefined-release]]
+== `+References undefined release+`
+
+[source]
+----
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2023-32681].releases: References undefined release '4.1.0'. Defined releases: 4.2.0, 4.3.0, 4.4.0
+----
+
+An entry's `releases` or `resolution.in` names a release that isn't in the top-level `releases` list.
+Fix the value, or add the release.
+See xref:guides/add-and-publish-releases.adoc[Add and publish releases].
+
+If the defined releases show `5.1` where your file says `5.10`, YAML read the unquoted ID as a number.
+Quote the ID in `releases`, for example `id: "5.10"`.
+See xref:reference/project-and-releases.adoc[Project and releases].
+
+[[duplicate-vulnerability-id]]
+== `+Duplicate vulnerability ID+`
+
+[source]
+----
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2022-22965]: Duplicate vulnerability ID 'CVE-2022-22965'.
+----
+
+Two entries have the same `id`.
+A Vulnlog file has one entry per vulnerability.
+Merge the two entries: keep one, and move the reports, releases, packages, and tags of the other into it.
+
+[[cannot-deserialize-localdate]]
+== `+Cannot deserialize value of type java.time.LocalDate+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 23:19: releases[4.2.0].published_at: YAML parse error: Cannot deserialize value of type `java.time.LocalDate` from String "2026-3-2": ...
+----
+
+A date isn't in the format `YYYY-MM-DD`.
+Write the month and the day with two digits, for example `2026-03-02`.
+
+[[unsupported-reporter]]
+== `+Unsupported reporter+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 101:19: vulnerabilities[CVE-2022-22965].reports[0].reporter: Unsupported reporter: trivvy
+----
+
+The `reporter` of a report isn't one of the supported values.
+For a source that isn't a supported scanner, use `other` with a `source`.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+`Invalid reporter` is the same problem in the `--reporter` option.
+The command exits with code 5, and the hint lists the supported reporters.
+
+[[unsupported-purl]]
+== `+Unsupported PURL+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 79:16: vulnerabilities[CVE-2022-42889].packages[0]: Unsupported PURL: pkgx:maven/org.apache.commons/commons-text@1.9
+----
+
+A package URL (PURL) in `packages` or in a release's `purls` isn't valid.
+A PURL starts with `pkg:`, and some types need more parts.
+For example, a Maven PURL needs the group ID, as in `pkg:maven/org.apache.commons/commons-text@1.9`.
+Copy the PURL from the scanner's finding, or check it against the https://github.com/package-url/purl-spec[PURL specification].
+
+[[unsupported-schema-version]]
+== `+Unsupported schema version+`
+
+[source]
+----
+error: acme-shop.vl.yaml: 3:16: schemaVersion: Unsupported schema version '2'. Try updating vulnlog.
+----
+
+The file uses a version of the format that your Vulnlog version doesn't know.
+Update Vulnlog.
+See xref:get-started/install.adoc[Install Vulnlog].
+
+[[empty-yaml-document]]
+== `+Empty YAML document+`
+
+[source]
+----
+error: acme-shop.vl.yaml: Empty YAML document
+----
+
+The file is empty.
+To create a Vulnlog file, see xref:reference/cli-init.adoc[vulnlog init].
 
 [[references-undefined-tags]]
-== error: References undefined tags
+== `+References undefined tags+`
 
 [source]
 ----
-error: vulnlog.yaml: vulnerabilities[CVE-2023-6481].tags[does not exist]: References undefined tags 'does not exist'. Defined tags: dev dependency
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2023-32681].tags[workers]: References undefined tags 'workers'. Defined tags: backend, container, frontend, worker
 ----
 
-An entry (or a release purl) uses a tag that is not defined in the file's `tags` section.
-Add the tag to the `tags` section, or fix the spelling; the message lists the tags the file defines.
+An entry or a release package URL (PURL) uses a tag that isn't defined in `tags`.
+The message lists the tags the file defines.
+Fix the spelling, or add the tag.
 See xref:reference/tags.adoc[Tags].
 
-[[not-canonically-formatted]]
-== warning: not canonically formatted
+[[generic-reporter-without-source]]
+== `+Generic reporter without source specified+`
 
 [source]
 ----
-warning: vulnlog.yaml: not canonically formatted
-  [non-canonical-array-style] vulnerabilities[CVE-2026-1234].releases: Line 13: canonical style for this list is a flow array, e.g. key: [value].
+error: acme-shop.vl.yaml: vulnerabilities[CVE-2024-3094]: Generic reporter without source specified.
 ----
 
-The file is valid but deviates from the canonical style; `fmt --check` (or the Gradle `vulnlogFormat --check` task) reports each violated rule with its line.
-Run `vulnlog fmt <file>` to rewrite the file canonically.
-See xref:guides/validate-and-format.adoc[Validate and format Vulnlog files].
+A report with `reporter: other` needs a `source` that says who reported the vulnerability, for example `source: Customer inquiry`.
+
+[[not-canonically-formatted]]
+== `+not canonically formatted+`
+
+[source]
+----
+warning: acme-shop.vl.yaml: not canonically formatted
+  [non-canonical-array-style] vulnerabilities[CVE-2023-32681].releases: Line 48: canonical style for this list is a flow array, e.g. key: [value].
+----
+
+`vulnlog fmt --check` found a difference from the canonical style and exits with code 3.
+The file is still valid.
+Run `vulnlog fmt acme-shop.vl.yaml` to rewrite it.
+See xref:guides/validate-and-format.adoc[Validate and format files].
 
 [[contains-yaml-comments]]
-== warning: contains YAML comments; they are removed on write
+== `+contains YAML comments; they are removed on write+`
 
 [source]
 ----
-warning: vulnlog.yaml: contains YAML comments; they are removed on write
+warning: acme-shop.vl.yaml: contains YAML comments; they are removed on write
   hint: record notes in schema fields (e.g. comment, analysis)
 ----
 
-YAML comments are not part of the Vulnlog format; every file-writing command drops them (the `$schema` header line is the one exception).
-Move the note into a schema field before the next write: `comment` or `analysis` on an entry, `description` on a tag, `note` on a release.
-Content in fields stays visible to generated outputs; comments never were.
-See xref:reference/file-format.adoc[The Vulnlog file format].
+Commands that write the file remove every YAML comment except the schema header.
+`vulnlog fmt --check` reports the same problem as `[comments-not-preserved]`.
+Before you run the command, move each note into a field.
+For the fields that take notes, see xref:reference/file-format.adoc[File format].
 
 [[o-requires-single-reporter]]
-== error: -o requires a single reporter
+== `+-o requires a single reporter+`
 
 [source]
 ----
-error: -o requires a single reporter, found: other, snyk, trivy
+error: -o requires a single reporter, found: dependency-check, github-dependabot, grype, npm-audit, trivy
   hint: use --reporter <name> to pick one, or --output-dir for one file per reporter
 ----
 
-`vulnlog suppress -o <file>` writes exactly one suppression file, but the input contains reports from several reporters.
-Pick one with `--reporter`, or use `--output-dir` to write one file per reporter.
+`vulnlog suppress -o` writes one file, but the file has reports from several reporters.
+Add `--reporter`, or use `--output-dir` to write one file per reporter.
 See xref:reference/cli-suppress.adoc[vulnlog suppress].
 
 [[release-not-found]]
-== error: Release not found
+== `+Release not found+`
 
 [source]
 ----
-error: Release not found: 9.9.9
-  hint: Known releases: 1.0.0, 1.1.0, 1.2.0
+error: Release not found: 4.5.0
+  hint: Known releases: 4.2.0, 4.3.0, 4.4.0
 ----
 
-The value passed to `--as-of` does not match any `id` in the file's `releases` section.
-Filters only accept defined releases; add the release to the file or fix the value.
-The command exits with code 5 (invalid flag value), see xref:reference/exit-codes-and-messages.adoc[Exit codes and messages].
+The value of `--as-of` isn't a release `id` in the file.
+Use one of the releases in the hint.
+`Tag not found` means the same for `--tag`.
+The command exits with code 5.
+See xref:reference/cli.adoc#filters[Filter options].
 
 [[finding-still-reported]]
-== The scanner still reports a suppressed finding
+== The scanner still reports a finding
 
-Work through the xref:reference/suppression.adoc[suppression rules] in order:
+Run `suppress` with `-v` to see which entries it left out, and why:
 
-. The entry has a `resolution`: resolved findings are never suppressed.
-The scanner should stop reporting once the fixed dependency actually ships; if it still reports, the resolution is incomplete.
-. The `suppress` block's `expires_at` has passed: expired suppressions are dropped so the finding resurfaces for re-triage.
-. The verdict is `affected` or missing, and the report has no `suppress` block: these findings are only suppressed by explicit decision.
-. The identifier does not fit the format: some formats accept only matching identifier types, for example `.snyk` requires Snyk identifiers from `vuln_ids`.
-
-Run with `-v` to see exactly which entries were skipped and why:
-
-[source]
+[source,console]
 ----
-vulnlog -v suppress full-example.vl.yaml
-verbose: skipped CVE-2026-1234 for .snyk: the snyk format requires SNYK ids
+$ vulnlog -v suppress acme-shop.vl.yaml
 ----
 
-[[docker-permission-denied]]
-== Docker: output files cannot be written or belong to root
+[cols="3,2"]
+|===
+| Message | Cause
 
-The container runs as UID 1000 by default.
-When the mounted workspace belongs to another user, output files cannot be created; when the runner requires root, generated files end up root-owned.
-Map your user into the container, or override the user where the CI runner needs it:
+| `verbose: skipped CVE-2021-44228: resolved vulnerabilities are not suppressed`
+| The entry has a resolution.
+If the scanner still reports it, the code it scans doesn't contain the fix yet.
 
-[source,bash,subs="attributes"]
-----
-docker run --rm -u "$(id -u):$(id -g)" -v "$PWD:/work" ghcr.io/vulnlog/vulnlog:{vulnlog-version} suppress vulnlog.yaml
-----
+| `verbose: skipped CVE-2022-22965 for reporter trivy: suppression expired on 2026-11-01`
+| `suppress.expires_at` is in the past.
+Analyse the finding again and set a new date, or record the resolution.
 
-See xref:guides/run-in-ci.adoc[Run Vulnlog in CI pipelines].
+| `verbose: skipped CVE-2021-23337 for .snyk: the snyk format requires SNYK ids`
+| The format can't hold this ID type.
+This line is an illustration, because Acme Shop has no Snyk report.
+Add the scanner's ID to the report's `vuln_ids`.
 
-[[unexpected-error]]
-== error: with no explanation
+| `verbose: skipped CVE-2024-3094 for reporter other: no suppression format available`
+| Reporter `other` gets no suppression file.
+|===
 
-An unexpected error prints a single `error:` line and exits with code 1.
-Rerun with `-vv` to get the full stack trace and debug detail, and report the problem with that output at https://github.com/vulnlog/vulnlog/issues[GitHub issues].
+If no line names the entry, check that it qualifies at all.
+An entry that isn't `not affected` needs a `suppress` block on the scanner's report.
+For the full rules, see xref:reference/suppression.adoc#rules[Suppression rules].
 
-== Something else?
+If the generated file lists the finding, check that the scanner reads the file.
+For how to pass the file to each scanner, see xref:guides/generate-suppression-files.adoc[Generate suppression files].
 
-Ask in the https://github.com/vulnlog/vulnlog/discussions/categories/q-a[Q&A discussions]; questions there regularly become new sections on this page.
+== Ask for help
+
+If your problem isn't listed, ask in https://github.com/vulnlog/vulnlog/discussions/categories/q-a[Q&A discussions].
+Error messages link there too.
