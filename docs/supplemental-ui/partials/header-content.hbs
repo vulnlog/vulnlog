@@ -35,6 +35,12 @@
   </div>
   <div id="topbar-nav" class="navbar-menu">
     <div class="navbar-end">
+      <button type="button" class="navbar-item vl-theme-toggle" data-mode="system" title="Theme: system. Switch to light.">
+        <svg class="vl-icon-system" viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M1.75 2h12.5c.966 0 1.75.784 1.75 1.75v7.5A1.75 1.75 0 0 1 14.25 13H10.5v1.5h1.25a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1 0-1.5H5.5V13H1.75A1.75 1.75 0 0 1 0 11.25v-7.5C0 2.784.784 2 1.75 2ZM7 13v1.5h2V13Zm7.25-9.5H1.75a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+        <svg class="vl-icon-light" viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 12a4 4 0 1 1 0-8 4 4 0 0 1 0 8Zm0-1.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Zm5.657-8.157a.75.75 0 0 1 0 1.061l-1.061 1.06a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.06-1.06a.75.75 0 0 1 1.06 0Zm-9.193 9.193a.75.75 0 0 1 0 1.06l-1.06 1.061a.75.75 0 1 1-1.061-1.06l1.06-1.061a.75.75 0 0 1 1.061 0ZM8 0a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0V.75A.75.75 0 0 1 8 0ZM3 8a.75.75 0 0 1-.75.75H.75a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 3 8Zm13 0a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 16 8Zm-8 5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 13Zm3.536-1.464a.75.75 0 0 1 1.06 0l1.061 1.06a.75.75 0 0 1-1.06 1.061l-1.061-1.06a.75.75 0 0 1 0-1.061ZM2.343 2.343a.75.75 0 0 1 1.061 0l1.06 1.061a.751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018l-1.06-1.06a.75.75 0 0 1 0-1.06Z"/></svg>
+        <svg class="vl-icon-dark" viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M9.598 1.591a.749.749 0 0 1 .785-.175 7.001 7.001 0 1 1-8.967 8.967.75.75 0 0 1 .961-.96 5.5 5.5 0 0 0 7.046-7.046.75.75 0 0 1 .175-.786Zm1.616 1.945a7 7 0 0 1-7.678 7.678 5.499 5.499 0 1 0 7.678-7.678Z"/></svg>
+        <span class="vl-theme-toggle-label">Theme: system</span>
+      </button>
       {{#if env.SITE_SEARCH_PROVIDER}}
       <div class="navbar-item search hide-for-print">
         <div id="search-field" class="field">
@@ -120,6 +126,37 @@
       if (!repo && !release) return
       try { localStorage.setItem(KEY, JSON.stringify(facts)) } catch (e) {}
       show(facts)
+    })
+  })()
+</script>
+<script>
+  // Theme toggle: system, light, dark. The choice is stored in localStorage. "System" removes it,
+  // so the CSS follows prefers-color-scheme again.
+  (function () {
+    var KEY = 'vulnlog-theme'
+    var ORDER = ['system', 'light', 'dark']
+    var button = document.querySelector('.vl-theme-toggle')
+    if (!button) return
+    var label = button.querySelector('.vl-theme-toggle-label')
+    function apply (mode) {
+      var root = document.documentElement
+      if (mode === 'system') delete root.dataset.theme
+      else root.dataset.theme = mode
+      var next = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length]
+      button.dataset.mode = mode
+      button.title = 'Theme: ' + mode + '. Switch to ' + next + '.'
+      button.setAttribute('aria-label', button.title)
+      label.textContent = 'Theme: ' + mode
+    }
+    var stored = document.documentElement.dataset.theme
+    apply(stored === 'light' || stored === 'dark' ? stored : 'system')
+    button.addEventListener('click', function () {
+      var mode = ORDER[(ORDER.indexOf(button.dataset.mode) + 1) % ORDER.length]
+      try {
+        if (mode === 'system') localStorage.removeItem(KEY)
+        else localStorage.setItem(KEY, mode)
+      } catch (e) {}
+      apply(mode)
     })
   })()
 </script>
