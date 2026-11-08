@@ -60,10 +60,3 @@
 ** xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
 ** xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX]
 ** xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out]
-
-* Get started
-** xref:get-started/what-is-vulnlog.adoc[What is Vulnlog?]
-* Upgrade
-** xref:upgrade/migrate-from-kotlin-dsl.adoc[Migrate from the Kotlin DSL]
-** xref:upgrade/migrate-risk-acceptable.adoc[Migrate from the 'risk acceptable' verdict]
-* https://github.com/vulnlog/vulnlog/discussions[Get help]
