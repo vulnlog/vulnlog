@@ -1,4 +1,14 @@
 <link rel="icon" href="{{uiRootPath}}/img/favicon.ico">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="{{{uiRootPath}}}/css/vulnlog-theme.css">
+<script>
+  // Apply the theme the reader chose before the page renders, so it doesn't flash.
+  // Without a stored choice, the CSS follows the system setting.
+  try {
+    var theme = localStorage.getItem('vulnlog-theme')
+    if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
+  } catch (e) {}
+</script>
 <style>
 .navbar-brand > a.navbar-item:first-child {
   padding-top: 0;

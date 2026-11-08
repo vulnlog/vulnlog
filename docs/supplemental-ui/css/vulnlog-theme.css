@@ -1,0 +1,439 @@
+/*
+ * Light and dark theme for the Antora default UI.
+ *
+ * color-scheme decides which value of each light-dark() pair applies:
+ * - no data-theme attribute: the system setting (prefers-color-scheme), also without JavaScript,
+ * - data-theme="light" or "dark": the reader's choice from the header toggle.
+ * The light values are the colours of the default UI, so the light theme looks as before.
+ * Browsers without light-dark() ignore these rules and show the default light UI.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --vl-bg: light-dark(#fff, #121417);
+  --vl-surface: light-dark(#fafafa, #1a1d21);
+  --vl-surface-2: light-dark(#f0f0f0, #22262b);
+  --vl-surface-hover: light-dark(#f5f5f5, #2a2f35);
+  --vl-border: light-dark(#e1e1e1, #2e333a);
+  --vl-border-strong: light-dark(#c1c1c1, #3d434b);
+  --vl-text: light-dark(#222, #d6d9de);
+  --vl-text-body: light-dark(#333, #d6d9de);
+  --vl-text-strong: light-dark(#191919, #f1f3f5);
+  --vl-text-muted: light-dark(#5d5d5d, #a3aab4);
+  --vl-text-subtle: light-dark(#8e8e8e, #8a919b);
+  --vl-link: light-dark(#1565c0, #6cb6ff);
+  --vl-link-hover: light-dark(#104d92, #9ccbff);
+  --vl-code-text: light-dark(#222, #e6e8eb);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@media print {
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+  }
+}
+
+/*
+ * The default UI draws some icons as dark SVG background images, which colours can't change.
+ * In the dark theme, they are inverted: the home icon, the menu and back icons, the expand and
+ * collapse icon of the navigation, and the chevron of the version menu in the navigation.
+ * The version menu in the toolbar also holds text, so it gets a light chevron image instead.
+ * Both blocks are needed: the first for the system setting, the second for the toggle.
+ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) :is(.home-link, .nav-toggle, .nav-menu-toggle),
+  :root:not([data-theme='light']) .nav-panel-explore .context .version::after {
+    filter: invert(1);
+  }
+
+  :root:not([data-theme='light']) .page-versions .version-menu-toggle {
+    background-image: url(../img/chevron-dark.svg);
+  }
+}
+
+:root[data-theme='dark'] :is(.home-link, .nav-toggle, .nav-menu-toggle),
+:root[data-theme='dark'] .nav-panel-explore .context .version::after {
+  filter: invert(1);
+}
+
+:root[data-theme='dark'] .page-versions .version-menu-toggle {
+  background-image: url(../img/chevron-dark.svg);
+}
+
+/* Page, navigation, toolbar */
+
+body {
+  background: var(--vl-bg);
+  color: var(--vl-text);
+}
+
+html,
+body * {
+  scrollbar-color: var(--vl-border-strong) transparent;
+}
+
+.nav,
+.nav-panel-explore {
+  background: var(--vl-surface);
+}
+
+.nav {
+  box-shadow: 0.5px 0 3px var(--vl-border-strong);
+}
+
+.nav-menu h3.title {
+  color: light-dark(#424242, #c9ced5);
+}
+
+.nav-panel-explore .context {
+  color: var(--vl-text-muted);
+  box-shadow: 0 -1px 0 var(--vl-border);
+}
+
+.nav-panel-explore .components {
+  background: var(--vl-surface-2);
+  box-shadow: inset 0 1px 5px var(--vl-border);
+}
+
+.toolbar {
+  color: var(--vl-text-muted);
+  background-color: var(--vl-surface);
+  box-shadow: 0 1px 0 var(--vl-border);
+}
+
+.toolbar .edit-this-page a,
+.page-versions .version.is-missing {
+  color: var(--vl-text-subtle);
+}
+
+.page-versions .version-menu {
+  background: var(--vl-surface-2);
+}
+
+.toc-menu {
+  color: var(--vl-text-muted);
+}
+
+.toc .toc-menu h3,
+.toc .toc-menu a.is-active {
+  color: var(--vl-text-body);
+}
+
+.toc .toc-menu a {
+  border-left-color: var(--vl-border);
+}
+
+.toc .toc-menu a:hover {
+  color: var(--vl-link);
+}
+
+.toc .toc-menu a.is-active {
+  border-left-color: var(--vl-link);
+}
+
+.sidebar.toc .toc-menu a:focus {
+  background: var(--vl-surface);
+}
+
+/* Header menu on small screens and dropdowns */
+
+@media screen and (max-width: 1023.5px) {
+  .navbar-menu {
+    background: light-dark(#fff, #1a1d21);
+  }
+
+  .navbar-menu .navbar-item,
+  .navbar-menu .navbar-link {
+    color: var(--vl-text);
+  }
+
+  .navbar-menu .navbar-link:hover,
+  .navbar-menu a.navbar-item:hover {
+    background: var(--vl-surface-hover);
+  }
+}
+
+.navbar-dropdown {
+  background: light-dark(#fff, #1a1d21);
+  border-color: var(--vl-border);
+}
+
+.navbar-dropdown a.navbar-item:hover {
+  background: var(--vl-surface-hover);
+}
+
+#search-input {
+  background: light-dark(#fff, #121417);
+  border-color: light-dark(#dbdbdb, #3d434b);
+  color: var(--vl-text-body);
+}
+
+/* Article */
+
+.doc {
+  color: var(--vl-text-body);
+}
+
+.doc h1,
+.doc h2,
+.doc h3,
+.doc h4,
+.doc h5,
+.doc h6 {
+  color: var(--vl-text-strong);
+}
+
+.doc h1.sect0 {
+  background: var(--vl-surface-2);
+}
+
+.doc h2:not(.discrete),
+.doc hr,
+nav.pagination {
+  border-color: var(--vl-border);
+}
+
+.doc a {
+  color: var(--vl-link);
+}
+
+.doc a:hover {
+  color: var(--vl-link-hover);
+}
+
+.doc a.unresolved {
+  color: light-dark(#d32f2f, #ff7b72);
+}
+
+.doc .colist > table code,
+.doc p code,
+.doc thead code {
+  background: var(--vl-surface-2);
+  color: var(--vl-code-text);
+}
+
+.doc .listingblock pre:not(.highlight),
+.doc .literalblock pre,
+.doc pre.highlight > code {
+  background: var(--vl-surface);
+  box-shadow: inset 0 0 1.75px var(--vl-border);
+}
+
+.doc table.tableblock,
+.doc table.tableblock > * > tr > * {
+  border-color: var(--vl-border);
+}
+
+.doc table.stripes-all > tbody > tr,
+.doc table.stripes-even > tbody > tr:nth-of-type(2n),
+.doc table.stripes-hover > tbody > tr:hover,
+.doc table.stripes-odd > tbody > tr:nth-of-type(odd) {
+  background: var(--vl-surface);
+}
+
+.doc table.tableblock > tfoot {
+  background: var(--vl-surface-2);
+}
+
+.doc .admonitionblock td.content {
+  background: var(--vl-surface);
+}
+
+#preamble .abstract blockquote {
+  background: var(--vl-surface-2);
+  border-left-color: var(--vl-border);
+  color: var(--vl-text-muted);
+}
+
+.doc .quoteblock,
+.doc .verseblock {
+  background: var(--vl-surface);
+  border-left-color: var(--vl-text-muted);
+  color: var(--vl-text-muted);
+}
+
+.doc .quoteblock .attribution,
+nav.pagination span::before,
+nav.pagination a::after,
+nav.pagination a::before {
+  color: var(--vl-text-subtle);
+}
+
+.doc .admonitionblock .title,
+.doc .exampleblock .title,
+.doc .imageblock .title,
+.doc .listingblock .title,
+.doc .literalblock .title,
+.doc .openblock .title,
+.doc .tableblock caption,
+.doc .videoblock .title,
+.doc details.result > summary {
+  color: var(--vl-text-muted);
+}
+
+.doc .exampleblock > .content,
+.doc details.result > .content {
+  background: var(--vl-bg);
+  border-color: var(--vl-text-muted);
+}
+
+.doc .sidebarblock {
+  background: var(--vl-surface-2);
+}
+
+.doc kbd {
+  background: var(--vl-surface);
+  border-color: var(--vl-border-strong);
+  box-shadow: 0 1px 0 var(--vl-border-strong), inset 0 0 0 0.1em var(--vl-bg);
+}
+
+/* Footer */
+
+footer.footer {
+  background-color: light-dark(#e1e1e1, #1a1d21);
+  color: var(--vl-text-muted);
+}
+
+/* Code highlighting: the default GitHub light colours, and GitHub dark colours */
+
+.hljs-comment,
+.hljs-quote,
+.hljs-meta {
+  color: light-dark(#998, #8b949e);
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+  color: light-dark(#333, #ff7b72);
+}
+
+.hljs-literal,
+.hljs-number,
+.hljs-tag .hljs-attr,
+.hljs-template-variable,
+.hljs-variable {
+  color: light-dark(teal, #79c0ff);
+}
+
+.hljs-doctag,
+.hljs-string {
+  color: light-dark(#d14, #a5d6ff);
+}
+
+.hljs-section,
+.hljs-selector-id,
+.hljs-title {
+  color: light-dark(#900, #d2a8ff);
+}
+
+.hljs-class .hljs-title,
+.hljs-type {
+  color: light-dark(#458, #ffa657);
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: light-dark(#0086b3, #ffa657);
+}
+
+.hljs-attribute,
+.hljs-name,
+.hljs-tag {
+  color: light-dark(navy, #7ee787);
+}
+
+.hljs-link,
+.hljs-regexp {
+  color: light-dark(#009926, #a5d6ff);
+}
+
+.hljs-bullet,
+.hljs-symbol {
+  color: light-dark(#990073, #f2cc60);
+}
+
+.hljs-deletion {
+  background: light-dark(#fdd, #490202);
+}
+
+.hljs-addition {
+  background: light-dark(#dfd, #04260f);
+}
+
+/* Search results. search.css loads after this file, so these selectors are one level more specific. */
+
+html .search-result-dropdown-menu,
+html .search-result-dataset {
+  background: light-dark(#fff, #1a1d21);
+  border-color: light-dark(#d9d9d9, #3d434b);
+}
+
+html .search-result-component-header {
+  color: var(--vl-text-strong);
+  border-bottom-color: var(--vl-border);
+}
+
+html .search-result-document-title {
+  color: var(--vl-text-strong);
+  border-right-color: var(--vl-border);
+}
+
+html .search-result-document-hit {
+  color: var(--vl-text-muted);
+}
+
+html .search-result-document-hit .search-result-highlight {
+  color: var(--vl-link);
+  background: light-dark(rgb(143 187 237 / 10%), rgb(108 182 255 / 15%));
+}
+
+html .search-result-document-hit .search-result-section-title {
+  color: var(--vl-text-body);
+}
+
+/* Theme toggle in the header */
+
+.navbar-item.vl-theme-toggle {
+  display: flex;
+  align-items: center;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+.vl-theme-toggle svg {
+  display: none;
+}
+
+.vl-theme-toggle[data-mode='system'] .vl-icon-system,
+.vl-theme-toggle[data-mode='light'] .vl-icon-light,
+.vl-theme-toggle[data-mode='dark'] .vl-icon-dark {
+  display: block;
+}
+
+.vl-theme-toggle-label {
+  margin-left: 0.5rem;
+}
+
+@media screen and (min-width: 1024px) {
+  .vl-theme-toggle-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
