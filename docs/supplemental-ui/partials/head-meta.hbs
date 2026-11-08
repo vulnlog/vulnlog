@@ -10,4 +10,45 @@
 .navbar-item .icon svg {
   vertical-align: middle;
 }
+.navbar-item.vl-source {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  line-height: 1.2;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+.navbar-item.vl-source:hover {
+  opacity: 1;
+}
+.vl-source-icon svg {
+  display: block;
+}
+.vl-source-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 2.1em;
+}
+.vl-source-name {
+  font-weight: 500;
+}
+.vl-source-facts {
+  display: flex;
+  gap: 0.7rem;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.vl-source-facts.is-loaded {
+  opacity: 0.8;
+}
+.vl-fact {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+.vl-fact.is-loaded {
+  display: inline-flex;
+}
 </style>
