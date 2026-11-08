@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://vulnlog.dev/sitemap.xml
+Sitemap: https://vulnlog.dev/docs/sitemap.xml
