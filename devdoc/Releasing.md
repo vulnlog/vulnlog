@@ -145,7 +145,7 @@ list plus a link to `CHANGELOG.md`.
 - Check that the Homebrew tap opened and merged its bump PR in
   [vulnlog/homebrew-vulnlog](https://github.com/vulnlog/homebrew-vulnlog).
 - Spot-check https://vulnlog.dev, the Docker `:latest` tag, and the
-  [Gradle Plugin Portal](https://plugins.gradle.org/plugin/dev.vulnlog) listing.
+  [Gradle Plugin Portal](https://plugins.gradle.org/plugin/dev.vulnlog.plugin) listing.
 
 ## Bug fix release (vX.Y.Z)
 

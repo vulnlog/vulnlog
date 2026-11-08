@@ -97,7 +97,7 @@ To integrate Vulnlog into a Gradle build, add the plugin:
 
 ```kotlin
 plugins {
-    id("dev.vulnlog") version "<version>"
+    id("dev.vulnlog.plugin") version "<version>"
 }
 ```
 
