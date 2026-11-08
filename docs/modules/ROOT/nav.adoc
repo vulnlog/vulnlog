@@ -1,6 +1,3 @@
-* xref:index.adoc[Vulnlog]
-
-.Tutorials
 * Tutorials
 ** xref:get-started/quickstart-triage.adoc[Triage your first finding]
 ** xref:get-started/quickstart-release.adoc[Find what affects your release]
@@ -8,7 +5,6 @@
 ** xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry]
 ** xref:get-started/quickstart-openvex.adoc[Share your analysis with OpenVEX]
 
-.How-to guides
 * How-to guides
 ** xref:get-started/install.adoc[Install Vulnlog]
 ** xref:guides/create-a-vulnlog-file.adoc[Create a Vulnlog file]
@@ -27,7 +23,6 @@
 ** xref:guides/write-release-notes.adoc[Write release notes]
 ** xref:guides/run-in-ci.adoc[Run in CI pipelines]
 
-.Reference
 * Reference
 ** xref:reference/file-format.adoc[File format]
 *** xref:reference/project-and-releases.adoc[Project and releases]
@@ -51,7 +46,6 @@
 ** xref:glossary.adoc[Glossary]
 ** xref:troubleshooting.adoc[Troubleshooting]
 
-.Explanation
 * Explanation
 ** xref:concepts/where-vulnlog-fits.adoc[Where Vulnlog fits]
 ** xref:concepts/data-model.adoc[The data model]

@@ -67,6 +67,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       native_relevant: ${{ steps.filter.outputs.native_relevant }}
+      docs_relevant: ${{ steps.filter.outputs.docs_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -84,6 +85,12 @@ jobs:
               - 'modules/lib-domain/build.gradle.kts'
               - 'gradle/libs.versions.toml'
               - 'buildSrc/**'
+            docs_relevant:
+              - 'docs/**'
+              - 'antora-playbook.yml'
+              - 'package.json'
+              - 'package-lock.json'
+              - '.github/actions/build-docs/**'
 
   check:
     runs-on: ubuntu-latest
@@ -103,6 +110,25 @@ jobs:
             echo "::error::.vex/ does not match vulnlog.yaml. Run './gradlew updateVexDocuments' and commit the result."
             exit 1
           fi
+
+  docs:
+    needs: [ detect-changes ]
+    if: |
+      always() && (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'pull_request' && needs.detect-changes.outputs.docs_relevant == 'true')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # antora-playbook.yml reads the release branches.
+          fetch-depth: 0
+      - name: Build docs
+        uses: ./.github/actions/build-docs
 
   native-image:
     needs: [ detect-changes ]

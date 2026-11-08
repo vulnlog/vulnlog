@@ -14,9 +14,9 @@ Four pipelines drive the project:
 Validates pull requests and main-branch pushes. CI never publishes anything; all publishing
 happens in the Release pipeline.
 
-The `native-image` job is conditional: it always runs on `main` pushes and `workflow_dispatch`,
-but on pull requests only when the diff touches files relevant to the native build (detected
-via `dorny/paths-filter`). `perf-test` depends on `native-image` and inherits this gate.
+The `native-image` and `docs` jobs are conditional: they always run on `main` pushes and
+`workflow_dispatch`, but on pull requests only when the diff touches files relevant to them
+(detected via `dorny/paths-filter`). `perf-test` depends on `native-image` and inherits this gate.
 
 ```mermaid
 flowchart TD
@@ -29,6 +29,9 @@ flowchart TD
     PUSH --> CHK
     DISP --> CHK
     DC --> NI[native-image<br/>build-native.yaml]
+    DC --> DOCS[docs<br/>build-docs action]
+    PUSH --> DOCS
+    DISP --> DOCS
     PUSH --> NI
     DISP --> NI
     NI --> PT[perf-test<br/>perf-test.yaml]
@@ -44,11 +47,17 @@ flowchart TD
   `modules/lib/src/main/kotlin/dev/vulnlog/lib/document/**`,
   `modules/lib/src/main/kotlin/dev/vulnlog/lib/codec/**`, `modules/cli-app/**`,
   `modules/lib/build.gradle.kts`, `modules/lib-domain/build.gradle.kts`, `gradle/libs.versions.toml`, `buildSrc/**`.
+  Sets the `docs_relevant` output if the PR touches any of: `docs/**`, `antora-playbook.yml`,
+  `package.json`, `package-lock.json`, `.github/actions/build-docs/**`.
 - **check**: runs `./gradlew check :buildSrc:check` (compile, lint, unit tests, JVM integration
   tests, build logic tests, SBOMs of the CLI and the Gradle plugin) on Java 21 / Temurin via the
   [`setup-jvm`](../.github/actions/setup-jvm/action.yml) composite action. Every SBOM task
   validates its output against the CycloneDX schema and fails when the root purl does not match
   the products of the artifact's OpenVEX document in `.vex/`.
+- **docs**: builds the docs site with the [`build-docs`](../.github/actions/build-docs/action.yml)
+  composite action, exactly as the website deploy does, and fails if the site has no search
+  index or no search box. Dependabot's npm updates of Antora and the search extension go through
+  this job.
 - **native-image**: calls [`build-native.yaml`](../.github/workflows/build-native.yaml) with
   default inputs; uploads the Linux binary as artifact `vulnlog-linux-amd64` and its SBOM as
   `sbom-vulnlog-linux-amd64`.
@@ -134,7 +143,8 @@ flowchart TD
 
 ## Website deploy
 
-Single implementation of the website deploy. It builds the Antora docs, composes the
+Single implementation of the website deploy. It builds the Antora docs with the
+[`build-docs`](../.github/actions/build-docs/action.yml) composite action, composes the
 static site (website, docs, JSON schemas, install scripts, latest security report), and
 uploads it to the Bunny storage zone behind `vulnlog.dev`.
 
@@ -190,6 +200,7 @@ their definitions.
 | [`perf-test.yaml`](../.github/workflows/perf-test.yaml)                    | Reusable workflow | Runs `perf/perf-test.sh` (hyperfine) against the native binary. Inputs: `artifact-name`, `threshold-ms`. Also exposes `workflow_dispatch` for standalone runs, in which case it first calls `build-native.yaml` to produce the binary.                                                                                           |
 | [`deploy-website.yml`](../.github/workflows/deploy-website.yml)            | Reusable workflow | Bunny Storage deploy of website and docs. Input: `version` (defaults to `vulnlog-version` from `docs/antora.yml`). Used by `release.yaml` and standalone via `workflow_dispatch` and `workflow_run`.                                                                                                                             |
 | [`setup-jvm`](../.github/actions/setup-jvm/action.yml)                     | Composite action  | Java 21 Temurin + Gradle setup. Used by the `check` jobs, `publish-release`, and `publish-gradle-plugin`.                                                                                                                                                                                                                        |
+| [`build-docs`](../.github/actions/build-docs/action.yml)                   | Composite action  | Node.js setup with npm cache, `npm ci` of the docs toolchain pinned in `package-lock.json` (Antora and `@antora/lunr-extension`), `npx antora antora-playbook.yml` into `build/docs`, then fails if `build/docs/search-index.js` or the search box is missing. Needs a checkout with `fetch-depth: 0`. Used by the CI `docs` job and `deploy-website.yml`. |
 | [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) | Composite action  | Downloads the native-image artifact and marks it executable. Input: `artifact-name` (default `vulnlog-linux-amd64`). Used by `publish-docker` and `perf-test.yaml`.                                                                                                                                                              |
 
 ### Running perf-test standalone
