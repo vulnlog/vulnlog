@@ -1,0 +1,31 @@
+name: Build docs
+description: >-
+  Builds the Antora docs site into build/docs with the toolchain pinned in package-lock.json, and fails if the site has 
+  no search index or no search box. Needs a checkout with fetch-depth 0, because antora-playbook.yml reads the release branches.
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 'lts/*'
+        cache: npm
+    - name: Install the docs toolchain
+      # Antora and the search extension, as pinned in package-lock.json.
+      shell: bash
+      run: npm ci --no-fund --no-audit
+    - name: Build Antora docs
+      shell: bash
+      run: npx antora antora-playbook.yml
+    - name: Check the docs search
+      shell: bash
+      run: |
+        if [ ! -s build/docs/search-index.js ]; then
+          echo "::error::Antora wrote no search index (build/docs/search-index.js)."
+          exit 1
+        fi
+        if ! grep -rq --include='*.html' 'id="search-input"' build/docs/vulnlog; then
+          echo "::error::The docs pages have no search box. Check docs/supplemental-ui/partials/header-content.hbs."
+          exit 1
+        fi

@@ -12,6 +12,8 @@ node {
     version.set("22.11.0")
     workDir.set(layout.buildDirectory.dir("nodejs"))
     npmWorkDir.set(layout.buildDirectory.dir("npm"))
+    // Install exactly what package-lock.json pins, as CI does.
+    npmInstallCommand.set("ci")
 }
 
 val gitHash: String = try {
@@ -63,10 +65,12 @@ tasks.register("installGitHooks") {
 tasks.register<NpxTask>("docsBuild") {
     group = "documentation"
     description = "Builds the docs site locally into build/docs using Antora"
+    dependsOn(tasks.npmInstall)
     command.set("antora")
     args.set(listOf("antora-local-playbook.yml"))
     inputs.dir("docs")
     inputs.file("antora-local-playbook.yml")
+    inputs.file("package-lock.json")
     outputs.dir(layout.buildDirectory.dir("docs"))
 }
 

@@ -89,6 +89,23 @@ updates:
           - "minor"
           - "patch"
 
+  # Antora and its extensions for the docs site (package.json). CI builds the site for each update.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    cooldown:
+      default-days: 7
+    groups:
+      antora:
+        patterns:
+          - "@antora/*"
+
   - package-ecosystem: "docker"
     directory: "/modules/cli-app"
     schedule:

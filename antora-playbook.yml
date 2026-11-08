@@ -18,6 +18,13 @@ urls:
   latest_version_segment: latest
   latest_version_segment_strategy: redirect:from
 
+antora:
+  extensions:
+    # Full-text search in the browser. The index is a static file written at build time.
+    - require: '@antora/lunr-extension'
+      # Only the latest version is indexed, so results don't repeat for every release line.
+      index_latest_only: true
+
 ui:
   bundle:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable

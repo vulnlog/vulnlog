@@ -1,0 +1,13 @@
+{
+  "name": "vulnlog-docs-site",
+  "private": true,
+  "description": "Toolchain for the Vulnlog documentation site, built with Antora. CI installs it with npm ci.",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@antora/cli": "3.2.2",
+    "@antora/lunr-extension": "1.0.0-alpha.13",
+    "@antora/site-generator": "3.2.2"
+  }
+}
