@@ -7,7 +7,7 @@ docker run --rm ghcr.io/vulnlog/vulnlog --help
 ```
 
 ```shell
-docker run --rm -v $(pwd):/work ghcr.io/vulnlog/vulnlog validate /work/full-example.vl.yaml
+docker run --rm -v $(pwd):/work ghcr.io/vulnlog/vulnlog validate /work/acme-shop.vl.yaml
 ```
 
 ## Build locally
