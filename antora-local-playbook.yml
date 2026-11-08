@@ -11,6 +11,12 @@ content:
       worktrees: true
       start_path: docs
 
+asciidoc:
+  attributes:
+    # Previous and next page links at the bottom of each page, in navigation order.
+    # The @ lets a component turn them off with page-pagination: false.
+    page-pagination: '@'
+
 antora:
   extensions:
     # Full-text search in the browser. The index is a static file written at build time.
