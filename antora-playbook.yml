@@ -23,6 +23,9 @@ asciidoc:
     # Previous and next page links at the bottom of each page, in navigation order.
     # The @ lets a component turn them off with page-pagination: false.
     page-pagination: '@'
+    # Readable heading anchors: #check-the-result instead of #_check_the_result.
+    idprefix: ''
+    idseparator: '-'
 
 antora:
   extensions:
