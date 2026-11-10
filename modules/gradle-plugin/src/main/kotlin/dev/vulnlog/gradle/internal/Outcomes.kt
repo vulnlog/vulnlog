@@ -5,6 +5,7 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
+import dev.vulnlog.lib.app.CycloneDxVexOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -17,6 +18,7 @@ import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.VexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderCopyFailure
+import dev.vulnlog.lib.render.renderCycloneDxVexFailure
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderInputFailure
@@ -32,6 +34,7 @@ import org.gradle.api.tasks.VerificationException
 
 private const val BASELINE_OPTION = "'baseline'"
 private const val RELEASE_OPTION = "'release'"
+private const val TAG_OPTION = "'tags'"
 
 /** Mirrors `exitCode` in the CLI's `Exits.kt` for the Gradle plugin. */
 fun failure(
@@ -43,6 +46,18 @@ fun failure(
         is FilterRejected -> InvalidUserDataException(message)
         is OpenVexOutcome.BaselineRejected -> InvalidUserDataException(message)
         is OpenVexOutcome.NoStatementApplies -> VerificationException(message)
+    }
+}
+
+fun failure(
+    failed: CycloneDxVexOutcome.Failed,
+    baseline: String,
+): GradleException {
+    val message = formatFailureMessage(renderCycloneDxVexFailure(failed, baseline, BASELINE_OPTION, TAG_OPTION))
+    return when (failed) {
+        is FilterRejected -> InvalidUserDataException(message)
+        is CycloneDxVexOutcome.BaselineRejected -> InvalidUserDataException(message)
+        is CycloneDxVexOutcome.NoVulnerabilityApplies -> VerificationException(message)
     }
 }
 

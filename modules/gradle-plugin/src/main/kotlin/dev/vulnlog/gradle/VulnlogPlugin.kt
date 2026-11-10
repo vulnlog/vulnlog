@@ -106,6 +106,27 @@ class VulnlogPlugin : Plugin<Project> {
             task.generatedFile.convention(openVex.flatMap { it.outputFile })
             task.baseline.convention(extension.vex.openvex.baseline)
         }
+
+        val cycloneDxVex =
+            project.tasks.register("vulnlogCycloneDxVex", VulnlogCycloneDxVexTask::class.java) { task ->
+                task.description = "Generate a CycloneDX VEX document for one release. (Incubating feature)"
+                task.group = "vulnlog"
+                task.files.from(extension.files)
+                task.release.convention(extension.vex.cyclonedx.release)
+                task.tags.convention(extension.vex.cyclonedx.tags)
+                task.baseline.convention(extension.vex.cyclonedx.baseline)
+                task.outputFile.convention(
+                    extension.vex.cyclonedx.outputFile
+                        .orElse(project.layout.buildDirectory.file("vulnlog/vex.cdx.json")),
+                )
+            }
+
+        project.tasks.register("vulnlogCycloneDxVexUpdate", VulnlogCycloneDxVexUpdateTask::class.java) { task ->
+            task.description = "Copy the generated CycloneDX VEX document over the baseline. (Incubating feature)"
+            task.group = "vulnlog"
+            task.generatedFile.convention(cycloneDxVex.flatMap { it.outputFile })
+            task.baseline.convention(extension.vex.cyclonedx.baseline)
+        }
     }
 }
 

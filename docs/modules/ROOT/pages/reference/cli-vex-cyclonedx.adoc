@@ -1,0 +1,256 @@
+= vulnlog vex cyclonedx
+
+NOTE: The Vulnlog CycloneDX VEX export feature is currently incubating. Its behavior and configuration options may change in the upcoming releases.
+
+Writes a standalone https://cyclonedx.org/capabilities/vex/[CycloneDX VEX] document (CycloneDX 1.7) for one release of your project.
+Upload it to the matching project version in https://dependencytrack.org/[Dependency-Track], and the findings you triaged as not affected or fixed are suppressed there, with your justification and analysis on record.
+
+[source]
+----
+vulnlog vex cyclonedx <file> --release <release-id> [--tag <tag>]... [--baseline <path>] [-o <path>]
+----
+
+[cols="2,3"]
+|===
+| Flag | Description
+
+| `--release <release-id>`
+| Required.
+Write the document for this release, even one without `published_at`.
+See <<release>>.
+
+| `--tag <tag>`
+| Keep only the vulnerabilities and release purls carrying this tag.
+Repeatable; those carrying any of the given tags are kept.
+See <<release>>.
+
+| `--baseline <path>`
+| The CycloneDX VEX document you published before.
+Its `serialNumber` is kept and its `version` counts up when the content changed.
+See <<identity>>.
+
+| `-o, --output <path>`
+| Output file path, or `-` to write to stdout.
+Defaults to `vex.cdx.json` in the current directory.
+
+| `-`
+| Use as the file argument to read from stdin.
+|===
+
+[[release]]
+== One document per release
+
+CycloneDX holds one analysis per vulnerability, so a document cannot say that a package is fixed in one release and still affected in another.
+Vulnlog therefore writes one document per release, and `--release` is required.
+This is also the shape Dependency-Track expects: a VEX document is uploaded to one project version, and the analyses apply to the findings of that version.
+
+The release needs `purls`, and a vulnerability is only written when it shares a tag with one of them, exactly as for xref:reference/cli-vex-openvex.adoc#purls[`vulnlog vex openvex`].
+The release purls in scope become the parts of the product the document describes, see <<content>>.
+
+To publish next to one artifact, add `--tag`: it keeps the vulnerabilities and release purls carrying the tag.
+
+[source]
+----
+vulnlog vex cyclonedx vulnlog.yaml --release 1.2.0 --tag container -o vex-1.2.0-container.cdx.json
+----
+
+`--release` does not cut the range: an entry reported for an earlier release still applies, and a fix in a later release is still named in the `recommendation`.
+
+[[content]]
+== What the document contains
+
+The document is a CycloneDX BOM without a dependency inventory: `metadata.component` is your project at the release, with the release purls as its nested `components`; the top-level `components` are the vulnerable `packages` of the entries; and `vulnerabilities` carries one entry per vulnerability with its `analysis`.
+Each vulnerability `affects` its packages by `bom-ref`, which is the package purl, so Dependency-Track resolves the reference inside the document and matches the package against the components of your project by purl.
+
+An entry applies from the earliest release it lists through every later release in the file.
+From the release named by `resolution.in` on, it is `resolved`, even where `releases` lists it too.
+
+[cols="1,3"]
+|===
+| Your entry | CycloneDX `analysis`
+
+| No verdict yet
+| `state: in_triage`, with `analysis` as `detail`.
+
+| `not affected`
+| `state: not_affected`, with the `justification` mapped as below and `analysis` as `detail`.
+
+| `affected`
+| `state: exploitable`, with `analysis` as `detail`, a `response` and a `recommendation`, see below.
+
+| `resolution.in` and later releases
+| `state: resolved`, without `detail`: it describes the state before the fix.
+|===
+
+CycloneDX names justifications in its own vocabulary, which folds two of the Vulnlog justifications into one.
+The Vulnlog justification is therefore kept as the property `vulnlog:justification` on the vulnerability as well.
+
+[cols="2,2"]
+|===
+| `justification` | CycloneDX `analysis.justification`
+
+| `component not present`
+| `code_not_present`
+
+| `vulnerable code not present`
+| `code_not_present`
+
+| `vulnerable code not in execute path`
+| `code_not_reachable`
+
+| `vulnerable code cannot be controlled by adversary`
+| `protected_at_runtime`
+
+| `inline mitigations already exist`
+| `protected_by_mitigating_control`
+|===
+
+For an affected entry the `response` and the `recommendation` follow from `disposition` and `resolution.in`, never from `analysis` or the resolution `note`, which are written for your team.
+The `recommendation` is the sentence xref:reference/cli-vex-openvex.adoc#status[`vulnlog vex openvex`] writes as `action_statement`.
+
+[cols="1,1,1,2"]
+|===
+| `disposition` | `resolution.in` | `response` | `recommendation`
+
+| _(absent)_ or `will fix`
+| a published release
+| `update`
+| `Update to release <id>.`
+
+| _(absent)_ or `will fix`
+| a release without `published_at`
+| _(none)_
+| `A fix is planned for release <id>.`
+
+| _(absent)_
+| absent
+| `can_not_fix`
+| `No remediation is available yet.`
+
+| `will fix`
+| absent
+| _(none)_
+| `A fix is planned but not yet available.`
+
+| `wont fix`
+| set
+| `will_not_fix`
+| `The risk is accepted for this release. A fix ships with release <id>.`
+
+| `wont fix`
+| absent
+| `will_not_fix`
+| `The risk is accepted. No fix is planned.`
+|===
+
+Each analysis carries `firstIssued`, the day its status became true: `resolution.at`, else the fix release's `published_at`, for `resolved`; `analyzed_at` for a verdict; the earliest `reports[].at` for an open investigation or a verdict without `analyzed_at`.
+Without any of these the release's own `published_at` is used.
+Only a release without `published_at` can lack it; its analyses are then dated by the run that first issues them, and only a `--baseline` keeps such a time from one version to the next.
+
+`aliases` are written as `references`, each with its source, and `description` as `description`.
+The vulnerability `source` is named as Dependency-Track knows it: `NVD` for a CVE, `GITHUB` for a GHSA, `SNYK` for a Snyk id, and `RUSTSEC` for a RustSec advisory.
+`name`, `severity`, `comment` and `reports` have no place in a VEX document.
+
+[[identity]]
+== Keep a published document stable
+
+Consumers recognise later versions of a document by its `serialNumber`.
+Without `--baseline` every run issues a new `serialNumber` with `version` `1`, even when the output file exists.
+With `--baseline`, the run continues the document you published:
+
+[source]
+----
+vulnlog vex cyclonedx vulnlog.yaml --release 1.2.0 --baseline vex.cdx.json -o vex.cdx.json
+----
+
+* `serialNumber` stays, `version` counts up and `metadata.timestamp` is the time of the run.
+* An analysis that did not change keeps its `firstIssued`.
+* When nothing but the clock would change, no new version is issued: writing back to the baseline prints `Unchanged:`, and any other output receives the baseline as it is.
+* A baseline written by another tool always counts as changed, because it carries fields Vulnlog does not write.
+
+A baseline that is missing, no CycloneDX document, in another CycloneDX version than `1.7`, or has a `serialNumber`, `metadata.timestamp` or `version` that cannot be continued fails the run.
+Vulnlog never replaces it with a new identity, because consumers following the `serialNumber` would lose track of your document.
+
+== Use the document with Dependency-Track
+
+Upload the document of a release to the Dependency-Track project version that holds the SBOM of that release, in the project's _Components_ view or through the API:
+
+[source]
+----
+curl -X POST "https://dtrack.example.com/api/v1/vex" \
+  -H "X-Api-Key: $DTRACK_API_KEY" \
+  -F "project=<project-uuid>" \
+  -F "vex=@vex-1.2.0-container.cdx.json"
+----
+
+Dependency-Track applies an analysis to a finding it already has: the vulnerability must be known to it under the same id and source, and the package must be a component of the project, matched by purl.
+Upload the SBOM first and let the analysis run before you upload the VEX.
+`not_affected` and `resolved` suppress the finding; `exploitable` and `in_triage` keep it open, with your `detail` as the analysis comment.
+Write one document per release and upload it to the matching project version: a document of another release would overwrite the analyses with the state of that release.
+
+Trivy does not read a standalone CycloneDX VEX; hand it the document of xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`] instead.
+
+== Examples
+
+.See what the document leaves out
+[source]
+----
+vulnlog -vv vex cyclonedx full-example.vl.yaml --release 8.1.1
+verbose: parsed full-example.vl.yaml: schema version 1, releases: 3, tags: 4, vulnerabilities: 7
+verbose: release scope: 8.1.1
+verbose: product: release '8.1.1' with 2 purls: pkg:generic/demo-project@8.1.1, pkg:oci/demo-project@sha256:...
+debug: skipped CVE-2020-099: no release purl in scope shares one of its tags
+debug: skipped CVE-2022-21449: it does not apply to the release in scope
+verbose: collected 4 vulnerabilities: 1 affected, 2 not_affected, 1 under_investigation
+Wrote: vex.cdx.json
+verbose: wrote vex.cdx.json: cyclonedx format, version 1, 4 vulnerabilities
+----
+
+.One vulnerability of a written document
+[source,json]
+----
+{
+  "id": "CVE-2021-44228",
+  "source": {
+    "name": "NVD",
+    "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228"
+  },
+  "references": [
+    {
+      "id": "GHSA-jfh8-c2jp-5v3q",
+      "source": {
+        "name": "GITHUB",
+        "url": "https://github.com/advisories/GHSA-jfh8-c2jp-5v3q"
+      }
+    }
+  ],
+  "description": "RCE vulnerability in Log4J via JNDI lookup",
+  "recommendation": "A fix is planned for release 8.1.2.",
+  "analysis": {
+    "state": "exploitable",
+    "detail": "Demo project utilizes Log4J and a PoC showed that the project is vulnerable to this RCE vulnerability.",
+    "firstIssued": "2021-12-10T00:00:00Z"
+  },
+  "affects": [
+    {
+      "ref": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+    }
+  ]
+}
+----
+
+== When the command fails
+
+* The Vulnlog file fails validation: exit `2`.
+* No vulnerability applies, because the release declares no `purls`, no release purl carries a requested tag, no vulnerability shares a tag with the release purls, or no entry applies to the release: exit `2`, no file is written, since a document without analyses would change nothing in Dependency-Track.
+* A missing `--release`: exit `1`.
+* An unknown `--release` or `--tag`, or a `--baseline` that cannot be continued: exit `5`.
+
+See xref:reference/exit-codes-and-messages.adoc[Exit codes and messages] for the full table.
+
+== See also
+
+- xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex] for Trivy and Grype, and for declaring release purls
+- xref:reference/project-and-releases.adoc[Project and releases] for declaring release purls
+- xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications] for the justification vocabulary
+- xref:reference/gradle-plugin.adoc#_vulnlogcyclonedxvex[The `vulnlogCycloneDxVex` Gradle task]

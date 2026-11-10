@@ -5,6 +5,8 @@ cliktVersion = "5.1.0"
 cyclonedxVersion = "3.5.1"
 graalvmNativeBuildToolsVersion = "1.1.18"
 jacksonVersion = "3.2.4"
+# Test only: validates the CycloneDX VEX output against the published JSON schema.
+jsonSchemaValidatorVersion = "1.5.9"
 kotestVersion = "6.2.6"
 kotlinVersion = "2.4.21"
 ktlintVersion = "14.2.0"
@@ -19,6 +21,7 @@ cyclonedxGradlePlugin = { module = "org.cyclonedx:cyclonedx-gradle-plugin", vers
 graalvmNativeGradlePlugin = { module = "org.graalvm.buildtools:native-gradle-plugin", version.ref = "graalvmNativeBuildToolsVersion" }
 # detektGradlePlugin = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detektVersion" }
 jacksonKotlin = { module = "tools.jackson.module:jackson-module-kotlin", version.ref = "jacksonVersion"}
+jsonSchemaValidator = { module = "com.networknt:json-schema-validator", version.ref = "jsonSchemaValidatorVersion" }
 kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotestVersion" }
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }

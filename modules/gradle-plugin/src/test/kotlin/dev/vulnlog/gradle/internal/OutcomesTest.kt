@@ -5,6 +5,7 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
+import dev.vulnlog.lib.app.CycloneDxVexOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -15,10 +16,15 @@ import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
+import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.vex.VexBaselineRead
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexBaselineProblem
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexCollection
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexEmptyReason
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
@@ -48,6 +54,26 @@ class OutcomesTest :
 
             exceptions.map { it::class } shouldContainExactly
                 listOf(InvalidUserDataException::class, InvalidUserDataException::class, VerificationException::class)
+        }
+
+        test("in a CycloneDX run, a bad scope or baseline is configuration to fix, an empty document is a verdict") {
+            val empty =
+                CycloneDxVexCollection(CycloneDxVexScope(release("1.0.0")), emptyList(), emptyList(), emptyList())
+            val failures =
+                listOf(
+                    FilterRejected(emptyList()),
+                    CycloneDxVexOutcome.BaselineRejected(CycloneDxVexBaselineProblem.NotCycloneDx),
+                    CycloneDxVexOutcome.NoVulnerabilityApplies(
+                        empty,
+                        CycloneDxVexEmptyReason.RELEASE_DECLARES_NO_PURLS,
+                    ),
+                )
+
+            val exceptions = failures.map { failure(it, "vex.cdx.json") }
+
+            exceptions.map { it::class } shouldContainExactly
+                listOf(InvalidUserDataException::class, InvalidUserDataException::class, VerificationException::class)
+            exceptions.last().message shouldBe "No vulnerability applies. Declare 'purls' on release '1.0.0'."
         }
 
         test("a rejected suppression filter is still a plain GradleException, worded in sentences") {

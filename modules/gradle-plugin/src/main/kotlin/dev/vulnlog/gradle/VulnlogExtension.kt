@@ -109,11 +109,24 @@ abstract class VulnlogVexExtension
     ) {
         val openvex: VulnlogOpenVexExtension = objects.newInstance(VulnlogOpenVexExtension::class.java)
 
+        val cyclonedx: VulnlogCycloneDxVexExtension = objects.newInstance(VulnlogCycloneDxVexExtension::class.java)
+
         fun openvex(action: Action<VulnlogOpenVexExtension>) = action.execute(openvex)
+
+        fun cyclonedx(action: Action<VulnlogCycloneDxVexExtension>) = action.execute(cyclonedx)
     }
 
 interface VulnlogOpenVexExtension {
     val outputFile: RegularFileProperty
+    val release: Property<String>
+    val tags: SetProperty<String>
+    val baseline: RegularFileProperty
+}
+
+interface VulnlogCycloneDxVexExtension {
+    val outputFile: RegularFileProperty
+
+    /** Required by the task, see [VulnlogCycloneDxVexTask.release]. */
     val release: Property<String>
     val tags: SetProperty<String>
     val baseline: RegularFileProperty

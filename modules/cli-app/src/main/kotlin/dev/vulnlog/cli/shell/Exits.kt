@@ -6,6 +6,7 @@ package dev.vulnlog.cli.shell
 import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
+import dev.vulnlog.lib.app.CycloneDxVexOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
@@ -22,6 +23,13 @@ fun exitCode(failed: OpenVexOutcome.Failed): ExitCode =
         is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
         is OpenVexOutcome.BaselineRejected -> ExitCode.INVALID_FLAG_VALUE
         is OpenVexOutcome.NoStatementApplies -> ExitCode.VALIDATION_ERROR
+    }
+
+fun exitCode(failed: CycloneDxVexOutcome.Failed): ExitCode =
+    when (failed) {
+        is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
+        is CycloneDxVexOutcome.BaselineRejected -> ExitCode.INVALID_FLAG_VALUE
+        is CycloneDxVexOutcome.NoVulnerabilityApplies -> ExitCode.VALIDATION_ERROR
     }
 
 fun exitCode(failed: SuppressionOutcome.Failed): ExitCode =

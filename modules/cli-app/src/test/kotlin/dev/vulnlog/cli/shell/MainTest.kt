@@ -104,6 +104,7 @@ class MainTest :
                 val (_, out) = withCapturedStdout { runVulnlog(vulnlogCommand(), listOf("vex")) }
 
                 out shouldContain "openvex"
+                out shouldContain "cyclonedx"
             }
 
             test("report lists the reports it can generate") {

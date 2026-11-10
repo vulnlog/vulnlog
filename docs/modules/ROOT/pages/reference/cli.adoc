@@ -100,6 +100,9 @@ Available on `report` and `suppress` commands.
 
 | xref:reference/cli-vex-openvex.adoc[vex openvex]
 | Generate an OpenVEX document for the published releases that declare purls.
+
+| xref:reference/cli-vex-cyclonedx.adoc[vex cyclonedx]
+| Generate a CycloneDX VEX document for one release, to upload to Dependency-Track.
 |===
 
 == Exit codes
