@@ -9,20 +9,21 @@ import dev.vulnlog.lib.codec.openvex.dto.OpenVexProductDto
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexStatementDto
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexSubcomponentDto
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexVulnerabilityDto
+import dev.vulnlog.lib.codec.vex.vexJson
 import dev.vulnlog.lib.core.vex.vexStatusKind
 import dev.vulnlog.lib.model.Purl
+import dev.vulnlog.lib.model.vex.VexStatementTime
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 object OpenVexEncoder {
-    fun encode(document: OpenVexDocument): String = openVexJson.writeValueAsString(toDto(document)) + "\n"
+    fun encode(document: OpenVexDocument): String = vexJson.writeValueAsString(toDto(document)) + "\n"
 
     /** One branch per format version: a new version gets its own mapping rather than flags in this one. */
     internal fun toDto(document: OpenVexDocument): OpenVexDocumentDto =
@@ -53,9 +54,9 @@ private fun toStatementDto(
 ): OpenVexStatementDto {
     val timestamp =
         when (val time = statement.timestamp) {
-            is OpenVexStatementTime.Stated -> time.date.atStartOfDay(ZoneOffset.UTC).toInstant()
-            is OpenVexStatementTime.Carried -> time.at
-            OpenVexStatementTime.Issued -> document.identity.timestamp
+            is VexStatementTime.Stated -> time.date.atStartOfDay(ZoneOffset.UTC).toInstant()
+            is VexStatementTime.Carried -> time.at
+            VexStatementTime.Issued -> document.identity.timestamp
         }.let(::format)
     val statementDto =
         OpenVexStatementDto(

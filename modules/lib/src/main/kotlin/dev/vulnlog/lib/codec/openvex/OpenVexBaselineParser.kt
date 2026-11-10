@@ -6,21 +6,22 @@ package dev.vulnlog.lib.codec.openvex
 import com.github.packageurl.MalformedPackageURLException
 import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.codec.openvex.dto.OpenVexBaselineDto
+import dev.vulnlog.lib.codec.vex.vexJson
 import dev.vulnlog.lib.core.parsePurl
 import dev.vulnlog.lib.core.parseVulnId
 import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+import dev.vulnlog.lib.model.vex.VexStatementTime
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.VexStatusKind
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import tools.jackson.core.JacksonException
 import tools.jackson.databind.JsonNode
@@ -42,7 +43,7 @@ fun parseOpenVexBaseline(
 ): OpenVexBaselineResult {
     val dto =
         try {
-            openVexJson.readValue(content, OpenVexBaselineDto::class.java)
+            vexJson.readValue(content, OpenVexBaselineDto::class.java)
         } catch (_: JacksonException) {
             return rejected(OpenVexBaselineProblem.NotOpenVex)
         }
@@ -65,11 +66,11 @@ fun sameOpenVexContent(
 ): Boolean {
     val baselineTree =
         try {
-            openVexJson.readTree(baselineContent)
+            vexJson.readTree(baselineContent)
         } catch (_: JacksonException) {
             return false
         }
-    val documentTree = openVexJson.valueToTree<JsonNode>(OpenVexEncoder.toDto(document))
+    val documentTree = vexJson.valueToTree<JsonNode>(OpenVexEncoder.toDto(document))
     if (baselineTree !is ObjectNode || documentTree !is ObjectNode) return false
     baselineTree.remove(VOLATILE_FIELDS)
     documentTree.remove(VOLATILE_FIELDS)
@@ -85,8 +86,8 @@ private fun baselineOf(
         dto.timestamp?.let(::parseTimestamp) ?: return invalid(OpenVexIdentityField.TIMESTAMP, dto.timestamp)
     val version =
         dto.version?.let { value ->
-            OpenVexDocumentVersion.parse(value) ?: return invalid(OpenVexIdentityField.VERSION, value.toString())
-        } ?: OpenVexDocumentVersion.FIRST
+            VexDocumentVersion.parse(value) ?: return invalid(OpenVexIdentityField.VERSION, value.toString())
+        } ?: VexDocumentVersion.FIRST
     val statements =
         dto.statements
             ?.takeIf(
@@ -122,7 +123,7 @@ private fun statementOf(
     val subcomponents =
         products.map { product -> subcomponentsOf(product) ?: return null }.distinct().singleOrNull() ?: return null
     val status = statusOf(node) ?: return null
-    return OpenVexStatement(vulnerability, OpenVexStatementTime.Carried(at ?: issuedAt), purls, subcomponents, status)
+    return OpenVexStatement(vulnerability, VexStatementTime.Carried(at ?: issuedAt), purls, subcomponents, status)
 }
 
 private fun vulnerabilityOf(node: JsonNode): OpenVexVulnerability? {

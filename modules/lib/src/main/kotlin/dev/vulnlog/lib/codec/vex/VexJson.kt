@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.codec.openvex
+package dev.vulnlog.lib.codec.vex
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import tools.jackson.core.util.DefaultIndenter
@@ -22,7 +22,7 @@ private val prettyPrinter =
         .withSeparators(Separators.createDefaultInstance().withObjectNameValueSpacing(Separators.Spacing.AFTER))
 
 /** Shared by writing and reading back, so a document this binary wrote parses under the same configuration. */
-internal val openVexJson: ObjectMapper by lazy {
+internal val vexJson: ObjectMapper by lazy {
     JsonMapper
         .builder()
         .enable(SerializationFeature.INDENT_OUTPUT)

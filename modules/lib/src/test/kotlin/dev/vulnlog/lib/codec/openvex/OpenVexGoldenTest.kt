@@ -22,10 +22,10 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+import dev.vulnlog.lib.model.vex.VexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.nio.file.Files
@@ -117,9 +117,9 @@ class OpenVexGoldenTest :
             val document =
                 buildOpenVexDocument(
                     file.project,
-                    OpenVexIdentity(DOCUMENT_ID, ISSUED_AT, OpenVexDocumentVersion.FIRST),
+                    OpenVexIdentity(DOCUMENT_ID, ISSUED_AT, VexDocumentVersion.FIRST),
                     collectOpenVexStatements(file).statements,
-                    tooling = OpenVexTooling("CLI", "0.18.0"),
+                    tooling = VexTooling("CLI", "0.18.0"),
                 )
 
             val actual = OpenVexEncoder.encode(document)

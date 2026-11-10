@@ -17,7 +17,7 @@ import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.suppression.SuppressionCollection
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -81,7 +81,7 @@ class ExitsTest :
         }
 
         test("an absent baseline is a bad flag value, an unreadable one an I/O error") {
-            val unavailable = listOf(OpenVexBaselineRead.Absent, OpenVexBaselineRead.Unreadable("Permission denied"))
+            val unavailable = listOf(VexBaselineRead.Absent, VexBaselineRead.Unreadable("Permission denied"))
 
             val codes = unavailable.map { exitCode(it) }
 

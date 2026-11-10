@@ -15,6 +15,7 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.ReleaseStatus
+import dev.vulnlog.lib.model.vex.VexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
@@ -22,7 +23,6 @@ import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import java.time.LocalDate
 
@@ -89,21 +89,21 @@ fun carryOverOpenVexTimestamps(
     val carried =
         baseline.statements
             .mapNotNull { statement ->
-                (statement.timestamp as? OpenVexStatementTime.Carried)?.let { time ->
-                    statement.copy(timestamp = OpenVexStatementTime.Issued) to time
+                (statement.timestamp as? VexStatementTime.Carried)?.let { time ->
+                    statement.copy(timestamp = VexStatementTime.Issued) to time
                 }
             }.groupBy({ it.first }, { it.second })
-            .mapValues { (_, times) -> times.minBy(OpenVexStatementTime.Carried::at) }
+            .mapValues { (_, times) -> times.minBy(VexStatementTime.Carried::at) }
     return statements.map { statement ->
         carried[statement]?.let { time -> statement.copy(timestamp = time) }
             ?: statement
     }
 }
 
-private fun OpenVexStatementTime.statedDate(): LocalDate? =
+private fun VexStatementTime.statedDate(): LocalDate? =
     when (this) {
-        is OpenVexStatementTime.Stated -> date
-        is OpenVexStatementTime.Carried, OpenVexStatementTime.Issued -> null
+        is VexStatementTime.Stated -> date
+        is VexStatementTime.Carried, VexStatementTime.Issued -> null
     }
 
 private fun OpenVexScope.covers(release: ReleaseEntry): Boolean =
@@ -157,7 +157,7 @@ private fun statementsOf(
                         aliases = vulnEntry.aliases.sortedBy(VulnId::id),
                         description = vulnEntry.description,
                     ),
-                timestamp = releaseStatus.since?.let(OpenVexStatementTime::Stated) ?: OpenVexStatementTime.Issued,
+                timestamp = releaseStatus.since?.let(VexStatementTime::Stated) ?: VexStatementTime.Issued,
                 products = products,
                 subcomponents = vulnEntry.packages.sortedBy(Purl::value),
                 status = releaseStatus.status,

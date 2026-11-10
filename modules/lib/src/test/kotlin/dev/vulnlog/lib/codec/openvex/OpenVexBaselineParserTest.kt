@@ -25,17 +25,17 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+import dev.vulnlog.lib.model.vex.VexStatementTime
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion.VERSION_0_2_0
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -67,7 +67,7 @@ private fun document(
 private fun read(content: String): OpenVexBaselineResult = parseOpenVexBaseline(content, VERSION_0_2_0)
 
 private fun baselineOf(version: Int = 1): OpenVexBaseline =
-    OpenVexBaseline(formatVersion = VERSION_0_2_0, id = DOCUMENT_IRI, version = OpenVexDocumentVersion(version))
+    OpenVexBaseline(formatVersion = VERSION_0_2_0, id = DOCUMENT_IRI, version = VexDocumentVersion(version))
 
 private val APP = tag("app")
 
@@ -90,7 +90,7 @@ private val fileWithOneStatement: VulnlogFile =
 private fun firstDocumentOf(file: VulnlogFile): OpenVexDocument =
     buildOpenVexDocument(
         file.project,
-        OpenVexIdentity(DOCUMENT_IRI, ISSUED_AT, OpenVexDocumentVersion.FIRST),
+        OpenVexIdentity(DOCUMENT_IRI, ISSUED_AT, VexDocumentVersion.FIRST),
         collectOpenVexStatements(file).statements,
     )
 
@@ -237,11 +237,11 @@ class OpenVexBaselineParserTest :
                     document.statements.map { statement ->
                         val at =
                             when (val time = statement.timestamp) {
-                                is OpenVexStatementTime.Stated -> time.date.atStartOfDay(ZoneOffset.UTC).toInstant()
-                                is OpenVexStatementTime.Carried -> time.at
-                                OpenVexStatementTime.Issued -> ISSUED_AT
+                                is VexStatementTime.Stated -> time.date.atStartOfDay(ZoneOffset.UTC).toInstant()
+                                is VexStatementTime.Carried -> time.at
+                                VexStatementTime.Issued -> ISSUED_AT
                             }
-                        statement.copy(timestamp = OpenVexStatementTime.Carried(at))
+                        statement.copy(timestamp = VexStatementTime.Carried(at))
                     }
             }
 
@@ -250,7 +250,7 @@ class OpenVexBaselineParserTest :
 
                 val statement = readBack(content).statements.single()
 
-                statement.timestamp shouldBe OpenVexStatementTime.Carried(ISSUED_AT)
+                statement.timestamp shouldBe VexStatementTime.Carried(ISSUED_AT)
             }
 
             test("a statement Vulnlog cannot read is skipped, and the baseline still reads") {

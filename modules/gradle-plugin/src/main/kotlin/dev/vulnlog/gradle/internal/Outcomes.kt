@@ -14,17 +14,17 @@ import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderCopyFailure
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderNotFormatted
-import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderProjectsDiffer
 import dev.vulnlog.lib.render.renderSuppressionEncodingProblems
+import dev.vulnlog.lib.render.renderVexBaselineFailure
 import dev.vulnlog.lib.render.renderWriteFailure
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
@@ -93,11 +93,11 @@ fun failure(
 }
 
 fun failure(
-    unreadable: OpenVexBaselineRead.Unreadable,
+    unreadable: VexBaselineRead.Unreadable,
     baseline: String,
 ): GradleException =
     InvalidUserDataException(
-        formatFailureMessage(listOf(renderOpenVexBaselineFailure(unreadable, baseline, BASELINE_OPTION))),
+        formatFailureMessage(listOf(renderVexBaselineFailure(unreadable, baseline, BASELINE_OPTION))),
     )
 
 fun failure(failed: InputRead.Failed): GradleException {

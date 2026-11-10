@@ -18,8 +18,8 @@ import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.VulnId
+import dev.vulnlog.lib.model.vex.VexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
@@ -104,7 +104,7 @@ class OutcomesTest :
         }
 
         test("an unreadable baseline is configuration to fix") {
-            val unreadable = OpenVexBaselineRead.Unreadable("Is a directory")
+            val unreadable = VexBaselineRead.Unreadable("Is a directory")
 
             val exception = failure(unreadable, "vex.json")
 

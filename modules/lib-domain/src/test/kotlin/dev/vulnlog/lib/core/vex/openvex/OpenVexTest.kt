@@ -10,9 +10,9 @@ import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
 import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
@@ -47,15 +47,15 @@ class OpenVexTest :
 
                 val identity = resolveOpenVexIdentity(revision, ISSUED_AT)
 
-                identity shouldBe OpenVexIdentity(ID, ISSUED_AT, OpenVexDocumentVersion.FIRST)
+                identity shouldBe OpenVexIdentity(ID, ISSUED_AT, VexDocumentVersion.FIRST)
             }
 
             test("continues the baseline in the next revision") {
-                val baseline = OpenVexBaseline(OpenVexFormatVersion.LATEST, ID, OpenVexDocumentVersion(3))
+                val baseline = OpenVexBaseline(OpenVexFormatVersion.LATEST, ID, VexDocumentVersion(3))
 
                 val identity = resolveOpenVexIdentity(OpenVexRevision.Next(baseline), ISSUED_AT)
 
-                identity shouldBe OpenVexIdentity(ID, ISSUED_AT, OpenVexDocumentVersion(4))
+                identity shouldBe OpenVexIdentity(ID, ISSUED_AT, VexDocumentVersion(4))
             }
 
             test("cuts the clock to whole seconds") {

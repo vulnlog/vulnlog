@@ -23,18 +23,18 @@ import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.codec.openvex.openVexDocumentId
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
-import dev.vulnlog.lib.io.readOpenVexBaseline
+import dev.vulnlog.lib.io.readVexBaseline
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
+import dev.vulnlog.lib.model.vex.VexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.Message
 import dev.vulnlog.lib.render.StatusVerb
 import dev.vulnlog.lib.render.formatStatus
-import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderOpenVexMessages
 import dev.vulnlog.lib.render.renderOpenVexWritten
+import dev.vulnlog.lib.render.renderVexBaselineFailure
 import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
@@ -121,7 +121,7 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
                 baseline = baselineRequest?.let(::readBaselineOrFail),
                 documentId = openVexDocumentId(UUID.randomUUID()),
                 timestamp = Instant.now(),
-                tooling = OpenVexTooling("CLI", BuildInfo.VERSION),
+                tooling = VexTooling("CLI", BuildInfo.VERSION),
                 formatVersion = formatVersion,
             )
 
@@ -161,9 +161,9 @@ class OpenVexCommand : CliktCommand(name = "openvex") {
 
     /** A missing file is an error: the user asked to continue a document, and a new one would fork its identity. */
     private fun readBaselineOrFail(path: Path): String =
-        when (val read = readOpenVexBaseline(path)) {
-            is OpenVexBaselineRead.Present -> read.text
-            is OpenVexBaselineRead.Unavailable ->
-                failWith(listOf(renderOpenVexBaselineFailure(read, path.toString(), BASELINE_OPTION)), exitCode(read))
+        when (val read = readVexBaseline(path)) {
+            is VexBaselineRead.Present -> read.text
+            is VexBaselineRead.Unavailable ->
+                failWith(listOf(renderVexBaselineFailure(read, path.toString(), BASELINE_OPTION)), exitCode(read))
         }
 }

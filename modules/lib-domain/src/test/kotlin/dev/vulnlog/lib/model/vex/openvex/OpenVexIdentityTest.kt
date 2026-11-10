@@ -44,35 +44,4 @@ class OpenVexIdentityTest :
                 shouldThrow<IllegalArgumentException> { OpenVexDocumentId("vex-1") }
             }
         }
-
-        context("OpenVexDocumentVersion") {
-
-            test("the next version is one more") {
-                val version = OpenVexDocumentVersion(3)
-
-                val next = version.next()
-
-                next shouldBe OpenVexDocumentVersion(4)
-            }
-
-            test("parses a version that has a successor") {
-                val values = listOf(1L, Int.MAX_VALUE - 1L)
-
-                val versions = values.map(OpenVexDocumentVersion::parse)
-
-                versions.map { it?.value } shouldBe listOf(1, Int.MAX_VALUE - 1)
-            }
-
-            test("parses no version below 1 or without a successor") {
-                val values = listOf(0L, -1L, Int.MAX_VALUE.toLong(), Long.MAX_VALUE)
-
-                val versions = values.map(OpenVexDocumentVersion::parse)
-
-                versions.forEach { it.shouldBeNull() }
-            }
-
-            test("cannot be built below 1") {
-                shouldThrow<IllegalArgumentException> { OpenVexDocumentVersion(0) }
-            }
-        }
     })

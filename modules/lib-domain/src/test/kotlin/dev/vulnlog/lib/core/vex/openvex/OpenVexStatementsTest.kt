@@ -22,18 +22,18 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.vex.Remediation
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+import dev.vulnlog.lib.model.vex.VexStatementTime
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.VexStatusKind
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexReleaseScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexScope
 import dev.vulnlog.lib.model.vex.openvex.OpenVexSkippedEntry
 import dev.vulnlog.lib.model.vex.openvex.OpenVexStatement
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
 import dev.vulnlog.lib.model.vex.openvex.OpenVexVulnerability
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -372,7 +372,7 @@ class OpenVexStatementsTest :
 
                 val statement = collectOpenVexStatements(file, scope).statements.single()
 
-                statement.timestamp shouldBe OpenVexStatementTime.Issued
+                statement.timestamp shouldBe VexStatementTime.Issued
             }
         }
 
@@ -454,18 +454,18 @@ class OpenVexStatementsTest :
                             aliases = emptyList(),
                             description = null,
                         ),
-                    timestamp = OpenVexStatementTime.Issued,
+                    timestamp = VexStatementTime.Issued,
                     products = listOf(Purl.Maven("pkg:maven/com.acme/app@1.0.0")),
                     subcomponents = emptyList(),
                     status = VexStatus.UnderInvestigation(),
                 )
-            val carried = OpenVexStatementTime.Carried(Instant.parse("2026-04-20T08:30:00Z"))
+            val carried = VexStatementTime.Carried(Instant.parse("2026-04-20T08:30:00Z"))
 
             fun baselineWith(vararg statements: OpenVexStatement): OpenVexBaseline =
                 OpenVexBaseline(
                     formatVersion = OpenVexFormatVersion.LATEST,
                     id = OpenVexDocumentId("https://vulnlog.dev/vex/abc"),
-                    version = OpenVexDocumentVersion.FIRST,
+                    version = VexDocumentVersion.FIRST,
                     statements = statements.toList(),
                 )
 
@@ -486,7 +486,7 @@ class OpenVexStatementsTest :
             }
 
             test("a date the file states wins over the baseline") {
-                val stated = undated.copy(timestamp = OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 6)))
+                val stated = undated.copy(timestamp = VexStatementTime.Stated(LocalDate.of(2026, 4, 6)))
 
                 val statements =
                     carryOverOpenVexTimestamps(listOf(stated), baselineWith(undated.copy(timestamp = carried)))
@@ -495,7 +495,7 @@ class OpenVexStatementsTest :
             }
 
             test("of equal statements in the baseline the earliest time is carried") {
-                val later = OpenVexStatementTime.Carried(Instant.parse("2026-04-22T00:00:00Z"))
+                val later = VexStatementTime.Carried(Instant.parse("2026-04-22T00:00:00Z"))
                 val baseline = baselineWith(undated.copy(timestamp = later), undated.copy(timestamp = carried))
 
                 val statements = carryOverOpenVexTimestamps(listOf(undated), baseline)
