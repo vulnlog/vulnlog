@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.model
 
-/** In `model` like `OpenVexBaselineRead`: `io` produces it, and `render`, which may not import `io`, words it. */
+/** In `model` like `VexBaselineRead`: `io` produces it, and `render`, which may not import `io`, words it. */
 sealed interface OutputWrite {
     data object Written : OutputWrite
 

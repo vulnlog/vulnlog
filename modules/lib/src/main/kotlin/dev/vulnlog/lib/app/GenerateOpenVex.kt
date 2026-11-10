@@ -15,15 +15,15 @@ import dev.vulnlog.lib.core.vex.openvex.openVexEmptyReason
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexIdentity
 import dev.vulnlog.lib.core.vex.openvex.resolveOpenVexScope
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+import dev.vulnlog.lib.model.vex.VexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocument
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexRevision
-import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import java.time.Instant
 
 /** The driver reads the baseline, draws the document id and reads the clock, so the run itself stays pure. */
@@ -34,7 +34,7 @@ data class OpenVexRequest(
     /** Only used when no baseline is continued. */
     val documentId: OpenVexDocumentId,
     val timestamp: Instant,
-    val tooling: OpenVexTooling,
+    val tooling: VexTooling,
     val formatVersion: OpenVexFormatVersion = OpenVexFormatVersion.LATEST,
 )
 
@@ -53,7 +53,7 @@ sealed interface OpenVexOutcome {
 
     sealed interface Generated : OpenVexOutcome {
         val collection: OpenVexCollection
-        val version: OpenVexDocumentVersion
+        val version: VexDocumentVersion
         val content: String
     }
 
@@ -62,13 +62,13 @@ sealed interface OpenVexOutcome {
         val document: OpenVexDocument,
         override val content: String,
     ) : Generated {
-        override val version: OpenVexDocumentVersion get() = document.identity.version
+        override val version: VexDocumentVersion get() = document.identity.version
     }
 
     /** Only the clock moved, so the baseline's bytes and version stand and no revision is issued. */
     data class Unchanged(
         override val collection: OpenVexCollection,
-        override val version: OpenVexDocumentVersion,
+        override val version: VexDocumentVersion,
         override val content: String,
     ) : Generated
 }

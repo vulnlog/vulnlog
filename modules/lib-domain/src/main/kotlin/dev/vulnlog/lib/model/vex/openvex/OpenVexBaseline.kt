@@ -3,30 +3,16 @@
 
 package dev.vulnlog.lib.model.vex.openvex
 
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+
 /** An existing document a run continues. It is read for its identity and its statement times only. */
 data class OpenVexBaseline(
     val formatVersion: OpenVexFormatVersion,
     val id: OpenVexDocumentId,
-    val version: OpenVexDocumentVersion,
+    val version: VexDocumentVersion,
     /** Only the statements this writer can read back, each with the time it carries. */
     val statements: List<OpenVexStatement> = emptyList(),
 )
-
-/** What reading the baseline file found. Each caller decides what an unavailable baseline means. */
-sealed interface OpenVexBaselineRead {
-    data class Present(
-        val text: String,
-    ) : OpenVexBaselineRead
-
-    sealed interface Unavailable : OpenVexBaselineRead
-
-    data object Absent : Unavailable
-
-    /** [reason] is the file system's own wording, such as "Is a directory". */
-    data class Unreadable(
-        val reason: String,
-    ) : Unavailable
-}
 
 /** Every case is rejected: continuing such a baseline would fork or corrupt the published document. */
 sealed interface OpenVexBaselineProblem {

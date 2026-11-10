@@ -6,6 +6,7 @@ package dev.vulnlog.cli.shell
 import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
+import dev.vulnlog.lib.app.CycloneDxVexOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
@@ -14,7 +15,7 @@ import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
 
 /** Mirrors [Outcomes] for the CLI */
 fun exitCode(failed: OpenVexOutcome.Failed): ExitCode =
@@ -22,6 +23,13 @@ fun exitCode(failed: OpenVexOutcome.Failed): ExitCode =
         is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
         is OpenVexOutcome.BaselineRejected -> ExitCode.INVALID_FLAG_VALUE
         is OpenVexOutcome.NoStatementApplies -> ExitCode.VALIDATION_ERROR
+    }
+
+fun exitCode(failed: CycloneDxVexOutcome.Failed): ExitCode =
+    when (failed) {
+        is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
+        is CycloneDxVexOutcome.BaselineRejected -> ExitCode.INVALID_FLAG_VALUE
+        is CycloneDxVexOutcome.NoVulnerabilityApplies -> ExitCode.VALIDATION_ERROR
     }
 
 fun exitCode(failed: SuppressionOutcome.Failed): ExitCode =
@@ -58,10 +66,10 @@ fun exitCode(failed: InitOutcome.Failed): ExitCode =
         InitOutcome.AlreadyExists -> ExitCode.GENERAL_ERROR
     }
 
-fun exitCode(unavailable: OpenVexBaselineRead.Unavailable): ExitCode =
+fun exitCode(unavailable: VexBaselineRead.Unavailable): ExitCode =
     when (unavailable) {
-        OpenVexBaselineRead.Absent -> ExitCode.INVALID_FLAG_VALUE
-        is OpenVexBaselineRead.Unreadable -> ExitCode.GENERAL_ERROR
+        VexBaselineRead.Absent -> ExitCode.INVALID_FLAG_VALUE
+        is VexBaselineRead.Unreadable -> ExitCode.GENERAL_ERROR
     }
 
 fun exitCode(failed: InputRead.Failed): ExitCode =

@@ -14,6 +14,7 @@ class VexCommand : CliktCommand(name = "vex") {
     init {
         subcommands(
             OpenVexCommand(),
+            CycloneDxVexCommand(),
         )
     }
 

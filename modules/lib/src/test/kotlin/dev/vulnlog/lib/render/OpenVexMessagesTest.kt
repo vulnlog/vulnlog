@@ -14,9 +14,9 @@ import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
+import dev.vulnlog.lib.model.vex.VexBaselineRead
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentityField
@@ -98,7 +98,7 @@ class OpenVexMessagesTest :
                 val scope =
                     OpenVexScope(release = OpenVexReleaseScope.Named(release("1.0.0")), tags = setOf(tag("container")))
                 val collection = collectOpenVexStatements(taggedFile, scope)
-                val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
+                val outcome = OpenVexOutcome.Unchanged(collection, VexDocumentVersion.FIRST, content = "")
 
                 val messages = renderOpenVexMessages(outcome)
 
@@ -113,7 +113,7 @@ class OpenVexMessagesTest :
 
             test("names the left-out releases, warns about those without purls and states why each entry is left out") {
                 val collection = collectOpenVexStatements(file)
-                val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion.FIRST, content = "")
+                val outcome = OpenVexOutcome.Unchanged(collection, VexDocumentVersion.FIRST, content = "")
 
                 val messages = renderOpenVexMessages(outcome)
 
@@ -163,7 +163,7 @@ class OpenVexMessagesTest :
 
         test("renderOpenVexWritten names the target, the format, the version and the count") {
             val collection = collectOpenVexStatements(file)
-            val outcome = OpenVexOutcome.Unchanged(collection, OpenVexDocumentVersion(3), content = "")
+            val outcome = OpenVexOutcome.Unchanged(collection, VexDocumentVersion(3), content = "")
 
             val message = renderOpenVexWritten("vex.json", outcome)
 
@@ -200,10 +200,10 @@ class OpenVexMessagesTest :
                 ).map { message -> Failure(message, "omit --baseline to issue a new document") }
         }
 
-        test("renderOpenVexBaselineFailure names the baseline, why it cannot be read and the way out") {
-            val unavailable = listOf(OpenVexBaselineRead.Absent, OpenVexBaselineRead.Unreadable("Is a directory"))
+        test("renderVexBaselineFailure names the baseline, why it cannot be read and the way out") {
+            val unavailable = listOf(VexBaselineRead.Absent, VexBaselineRead.Unreadable("Is a directory"))
 
-            val failures = unavailable.map { renderOpenVexBaselineFailure(it, "vex.json", "--baseline") }
+            val failures = unavailable.map { renderVexBaselineFailure(it, "vex.json", "--baseline") }
 
             failures shouldContainExactly
                 listOf(
@@ -215,8 +215,8 @@ class OpenVexMessagesTest :
                 )
         }
 
-        test("renderOpenVexNewDocument says that the baseline is missing and a new document is issued") {
-            val message = renderOpenVexNewDocument("vex.json")
+        test("renderVexNewDocument says that the baseline is missing and a new document is issued") {
+            val message = renderVexNewDocument("vex.json")
 
             message shouldBe Message.Verbose("baseline 'vex.json' does not exist yet, issuing a new document")
         }

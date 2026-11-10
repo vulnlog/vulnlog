@@ -18,13 +18,13 @@ import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
+import dev.vulnlog.lib.model.vex.VexStatementTime
+import dev.vulnlog.lib.model.vex.VexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineProblem
 import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentId
-import dev.vulnlog.lib.model.vex.openvex.OpenVexDocumentVersion
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
 import dev.vulnlog.lib.model.vex.openvex.OpenVexIdentity
-import dev.vulnlog.lib.model.vex.openvex.OpenVexStatementTime
-import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -61,7 +61,7 @@ private fun request(
     baseline: String? = null,
     now: Instant = ISSUED_AT,
     release: String? = null,
-): OpenVexRequest = OpenVexRequest(release, emptySet(), baseline, DOCUMENT_ID, now, OpenVexTooling("CLI", "0.18.0"))
+): OpenVexRequest = OpenVexRequest(release, emptySet(), baseline, DOCUMENT_ID, now, VexTooling("CLI", "0.18.0"))
 
 private fun revised(
     file: VulnlogFile,
@@ -78,8 +78,8 @@ class GenerateOpenVexTest :
 
             val revised = revised(file)
 
-            revised.document.identity shouldBe OpenVexIdentity(DOCUMENT_ID, ISSUED_AT, OpenVexDocumentVersion.FIRST)
-            revised.version shouldBe OpenVexDocumentVersion.FIRST
+            revised.document.identity shouldBe OpenVexIdentity(DOCUMENT_ID, ISSUED_AT, VexDocumentVersion.FIRST)
+            revised.version shouldBe VexDocumentVersion.FIRST
         }
 
         test("a rerun over an unchanged file keeps the baseline bytes and version") {
@@ -87,7 +87,7 @@ class GenerateOpenVexTest :
 
             val outcome = generateOpenVex(loaded(fileWith("1.0.0")), request(first.content, UPDATED_AT))
 
-            outcome shouldBe OpenVexOutcome.Unchanged(first.collection, OpenVexDocumentVersion.FIRST, first.content)
+            outcome shouldBe OpenVexOutcome.Unchanged(first.collection, VexDocumentVersion.FIRST, first.content)
         }
 
         test("a changed file continues the identity and counts the version up") {
@@ -95,7 +95,7 @@ class GenerateOpenVexTest :
 
             val second = revised(fileWith("1.0.0", "1.1.0"), first.content, UPDATED_AT)
 
-            second.document.identity shouldBe OpenVexIdentity(DOCUMENT_ID, UPDATED_AT, OpenVexDocumentVersion(2))
+            second.document.identity shouldBe OpenVexIdentity(DOCUMENT_ID, UPDATED_AT, VexDocumentVersion(2))
         }
 
         test("an undated statement keeps its time when another entry changes the document") {
@@ -115,8 +115,8 @@ class GenerateOpenVexTest :
 
             second.document.statements.map { it.vulnerability.id to it.timestamp } shouldContainExactly
                 listOf(
-                    cve("CVE-2026-1111") to OpenVexStatementTime.Carried(ISSUED_AT),
-                    cve("CVE-2026-2222") to OpenVexStatementTime.Stated(LocalDate.of(2026, 4, 30)),
+                    cve("CVE-2026-1111") to VexStatementTime.Carried(ISSUED_AT),
+                    cve("CVE-2026-2222") to VexStatementTime.Stated(LocalDate.of(2026, 4, 30)),
                 )
             second.content shouldContain "\"timestamp\": \"2026-04-25T00:00:00Z\""
         }

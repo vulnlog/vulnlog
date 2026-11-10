@@ -6,6 +6,7 @@ package dev.vulnlog.cli.shell
 import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
+import dev.vulnlog.lib.app.CycloneDxVexOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
@@ -14,10 +15,15 @@ import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.document.InputDocument
 import dev.vulnlog.lib.document.InputRead
+import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.suppression.SuppressionCollection
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexBaselineProblem
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexCollection
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexEmptyReason
+import dev.vulnlog.lib.model.vex.cyclonedx.CycloneDxVexScope
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -36,6 +42,27 @@ class ExitsTest :
             val codes = failed.map { exitCode(it) }
 
             codes shouldContainExactly listOf(ExitCode.INVALID_FLAG_VALUE, ExitCode.GENERAL_ERROR)
+        }
+
+        test(
+            "in a CycloneDX run, a bad scope or baseline is a bad flag value and an empty document a validation error",
+        ) {
+            val empty =
+                CycloneDxVexCollection(CycloneDxVexScope(release("1.0.0")), emptyList(), emptyList(), emptyList())
+            val failed: List<CycloneDxVexOutcome.Failed> =
+                listOf(
+                    FilterRejected(emptyList()),
+                    CycloneDxVexOutcome.BaselineRejected(CycloneDxVexBaselineProblem.NotCycloneDx),
+                    CycloneDxVexOutcome.NoVulnerabilityApplies(
+                        empty,
+                        CycloneDxVexEmptyReason.RELEASE_DECLARES_NO_PURLS,
+                    ),
+                )
+
+            val codes = failed.map { exitCode(it) }
+
+            codes shouldContainExactly
+                listOf(ExitCode.INVALID_FLAG_VALUE, ExitCode.INVALID_FLAG_VALUE, ExitCode.VALIDATION_ERROR)
         }
 
         test("in both reports, differing projects are a validation error and a rejected filter a bad flag value") {
@@ -81,7 +108,7 @@ class ExitsTest :
         }
 
         test("an absent baseline is a bad flag value, an unreadable one an I/O error") {
-            val unavailable = listOf(OpenVexBaselineRead.Absent, OpenVexBaselineRead.Unreadable("Permission denied"))
+            val unavailable = listOf(VexBaselineRead.Absent, VexBaselineRead.Unreadable("Permission denied"))
 
             val codes = unavailable.map { exitCode(it) }
 

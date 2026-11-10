@@ -12,17 +12,17 @@ import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.OpenVexRequest
 import dev.vulnlog.lib.app.generateOpenVex
 import dev.vulnlog.lib.codec.openvex.openVexDocumentId
-import dev.vulnlog.lib.io.readOpenVexBaseline
+import dev.vulnlog.lib.io.readVexBaseline
 import dev.vulnlog.lib.io.writeOutput
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
+import dev.vulnlog.lib.model.vex.VexTooling
 import dev.vulnlog.lib.model.vex.openvex.OpenVexFormatVersion
-import dev.vulnlog.lib.model.vex.openvex.OpenVexTooling
 import dev.vulnlog.lib.render.Message
 import dev.vulnlog.lib.render.StatusVerb
 import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderOpenVexMessages
-import dev.vulnlog.lib.render.renderOpenVexNewDocument
 import dev.vulnlog.lib.render.renderOpenVexWritten
+import dev.vulnlog.lib.render.renderVexNewDocument
 import org.gradle.api.DefaultTask
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.file.ConfigurableFileCollection
@@ -78,7 +78,7 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
                 baseline = readBaseline(out),
                 documentId = openVexDocumentId(UUID.randomUUID()),
                 timestamp = Instant.now(),
-                tooling = OpenVexTooling("Gradle plugin", BuildInfo.VERSION),
+                tooling = VexTooling("Gradle plugin", BuildInfo.VERSION),
                 formatVersion = FORMAT_VERSION,
             )
 
@@ -114,15 +114,15 @@ abstract class VulnlogOpenVexTask : DefaultTask() {
                     "to copy the document over the baseline.",
             )
         }
-        return when (val read = readOpenVexBaseline(file.toPath())) {
-            is OpenVexBaselineRead.Present -> read.text
+        return when (val read = readVexBaseline(file.toPath())) {
+            is VexBaselineRead.Present -> read.text
 
-            OpenVexBaselineRead.Absent -> {
-                logger.log(renderOpenVexNewDocument(file.path))
+            VexBaselineRead.Absent -> {
+                logger.log(renderVexNewDocument(file.path))
                 null
             }
 
-            is OpenVexBaselineRead.Unreadable -> throw failure(read, file.path)
+            is VexBaselineRead.Unreadable -> throw failure(read, file.path)
         }
     }
 }

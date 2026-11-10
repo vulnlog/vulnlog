@@ -37,7 +37,7 @@ vulnlog {
 | Container for the report tasks. Each report type has its own nested block: `report { impact { } }` and `report { changelog { } }`.
 
 | `vex`
-| Container for the VEX tasks. Each format has its own nested block: `vex { openvex { } }`.
+| Container for the VEX tasks. Each format has its own nested block: `vex { openvex { } }` and `vex { cyclonedx { } }`.
 |===
 
 == Diagnostics
@@ -432,6 +432,88 @@ tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVexContainerUpdate") {
     baseline.set(layout.projectDirectory.file("vex/1.2.0-container.json"))
 }
 ----
+
+[#_vulnlogcyclonedxvex]
+=== `vulnlogCycloneDxVex`
+
+NOTE: The Vulnlog CycloneDX VEX export feature is currently incubating.
+Its behavior and configuration options may change in the upcoming releases.
+
+Writes a CycloneDX VEX document for one release from a single Vulnlog file, so Dependency-Track can suppress the findings you triaged.
+See xref:reference/cli-vex-cyclonedx.adoc[`vulnlog vex cyclonedx`] for what the document contains and how Dependency-Track applies it.
+
+[source,kotlin]
+----
+vulnlog {
+    vex {
+        cyclonedx {
+            release.set("1.2.0")                                                // required
+            outputFile.set(layout.buildDirectory.file("vulnlog/vex.cdx.json"))  // optional
+            tags.set(setOf("container"))                                        // optional
+            baseline.set(layout.projectDirectory.file(".vex/app.cdx.json"))     // optional
+        }
+    }
+}
+----
+
+[cols="2,2,3"]
+|===
+| Property | Default | Description
+
+| `release`
+| _(required)_
+| Write the document for this release, even one without `published_at`. CycloneDX holds one analysis per vulnerability, so a document covers one release, see xref:reference/cli-vex-cyclonedx.adoc#release[One document per release].
+
+| `outputFile`
+| `build/vulnlog/vex.cdx.json`
+| File where the document is written.
+
+| `tags`
+| _(empty)_
+| Keep only the vulnerabilities and release purls carrying one of these tags.
+
+| `baseline`
+| _(none)_
+| The committed document to continue, see xref:reference/cli-vex-cyclonedx.adoc#identity[Keep a published document stable]. The first run issues a new document when the file does not exist yet.
+|===
+
+The task fails when `release` is not set, when `files` holds more than one Vulnlog file, when no vulnerability applies, or when the `baseline` cannot be continued.
+
+The task writes only to `outputFile`, so it stays cacheable, and `baseline` must not point at the same file.
+Run <<_vulnlogcyclonedxvexupdate,`vulnlogCycloneDxVexUpdate`>> to copy the result over the `baseline`.
+
+Dependency-Track takes one document per project version, so register a task per release and artifact you upload, as for `vulnlogOpenVex`:
+
+[source,kotlin]
+----
+import dev.vulnlog.gradle.VulnlogCycloneDxVexTask
+
+tasks.register<VulnlogCycloneDxVexTask>("vulnlogCycloneDxVexContainer") {
+    group = "vulnlog"
+    files.from("vulnlog.yaml")
+    release.set("1.2.0")
+    tags.set(setOf("container"))
+    baseline.set(layout.projectDirectory.file("vex/1.2.0-container.cdx.json"))
+    outputFile.set(layout.buildDirectory.file("vulnlog/1.2.0-container.cdx.json"))
+}
+----
+
+[#_vulnlogcyclonedxvexupdate]
+=== `vulnlogCycloneDxVexUpdate`
+
+NOTE: The Vulnlog CycloneDX VEX export feature is currently incubating.
+Its behavior and configuration options may change in the upcoming releases.
+
+Runs `vulnlogCycloneDxVex` and copies its document over the configured `baseline`, so the committed document follows the Vulnlog file.
+The file is left as it is while nothing but the timestamp would change.
+Commit it after each run that wrote it.
+
+[source,shell]
+----
+./gradlew vulnlogCycloneDxVexUpdate
+----
+
+For a task you registered yourself, register an update task next to it with `VulnlogCycloneDxVexUpdateTask`, as shown for <<_vulnlogopenvexupdate,`vulnlogOpenVexUpdate`>>.
 
 === `VulnlogCopyTask`
 

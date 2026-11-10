@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.model.vex.openvex
 
+import dev.vulnlog.lib.model.vex.VexDocumentVersion
 import java.net.URI
 import java.net.URISyntaxException
 import java.time.Instant
@@ -25,7 +26,7 @@ enum class OpenVexFormatVersion(
 data class OpenVexIdentity(
     val id: OpenVexDocumentId,
     val timestamp: Instant,
-    val version: OpenVexDocumentVersion,
+    val version: VexDocumentVersion,
 )
 
 /** A baseline is only continued in its own format version, so a revision takes the version from it. */
@@ -55,25 +56,6 @@ value class OpenVexDocumentId(
 
     companion object {
         fun parse(value: String): OpenVexDocumentId? = value.takeIf(::isAbsoluteIri)?.let(::OpenVexDocumentId)
-    }
-}
-
-@JvmInline
-value class OpenVexDocumentVersion(
-    val value: Int,
-) {
-    init {
-        require(value >= 1) { "OpenVEX document version must be at least 1: $value" }
-    }
-
-    fun next(): OpenVexDocumentVersion = OpenVexDocumentVersion(Math.addExact(value, 1))
-
-    companion object {
-        val FIRST: OpenVexDocumentVersion = OpenVexDocumentVersion(1)
-
-        /** Rejects the last Int too: a baseline at that version could not be continued without overflow. */
-        fun parse(value: Long): OpenVexDocumentVersion? =
-            value.takeIf { it in 1 until Int.MAX_VALUE }?.let { OpenVexDocumentVersion(it.toInt()) }
     }
 }
 

@@ -16,6 +16,7 @@ dependencies {
 
     testFixturesApi(testFixtures(project(":lib-domain")))
 
+    testImplementation(libs.jsonSchemaValidator)
     testImplementation(libs.kotestAssertionsCoreJvm)
     testImplementation(libs.kotestRunnerJunit5Jvm)
 }

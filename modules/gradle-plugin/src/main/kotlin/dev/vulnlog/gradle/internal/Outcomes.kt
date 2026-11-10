@@ -5,6 +5,7 @@ package dev.vulnlog.gradle.internal
 
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
+import dev.vulnlog.lib.app.CycloneDxVexOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.ImpactReportOutcome
@@ -14,17 +15,18 @@ import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
-import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
+import dev.vulnlog.lib.model.vex.VexBaselineRead
 import dev.vulnlog.lib.render.formatFailureMessage
 import dev.vulnlog.lib.render.renderCopyFailure
+import dev.vulnlog.lib.render.renderCycloneDxVexFailure
 import dev.vulnlog.lib.render.renderFilterProblems
 import dev.vulnlog.lib.render.renderInitFailure
 import dev.vulnlog.lib.render.renderInputFailure
 import dev.vulnlog.lib.render.renderNotFormatted
-import dev.vulnlog.lib.render.renderOpenVexBaselineFailure
 import dev.vulnlog.lib.render.renderOpenVexFailure
 import dev.vulnlog.lib.render.renderProjectsDiffer
 import dev.vulnlog.lib.render.renderSuppressionEncodingProblems
+import dev.vulnlog.lib.render.renderVexBaselineFailure
 import dev.vulnlog.lib.render.renderWriteFailure
 import org.gradle.api.GradleException
 import org.gradle.api.InvalidUserDataException
@@ -32,6 +34,7 @@ import org.gradle.api.tasks.VerificationException
 
 private const val BASELINE_OPTION = "'baseline'"
 private const val RELEASE_OPTION = "'release'"
+private const val TAG_OPTION = "'tags'"
 
 /** Mirrors `exitCode` in the CLI's `Exits.kt` for the Gradle plugin. */
 fun failure(
@@ -43,6 +46,18 @@ fun failure(
         is FilterRejected -> InvalidUserDataException(message)
         is OpenVexOutcome.BaselineRejected -> InvalidUserDataException(message)
         is OpenVexOutcome.NoStatementApplies -> VerificationException(message)
+    }
+}
+
+fun failure(
+    failed: CycloneDxVexOutcome.Failed,
+    baseline: String,
+): GradleException {
+    val message = formatFailureMessage(renderCycloneDxVexFailure(failed, baseline, BASELINE_OPTION, TAG_OPTION))
+    return when (failed) {
+        is FilterRejected -> InvalidUserDataException(message)
+        is CycloneDxVexOutcome.BaselineRejected -> InvalidUserDataException(message)
+        is CycloneDxVexOutcome.NoVulnerabilityApplies -> VerificationException(message)
     }
 }
 
@@ -93,11 +108,11 @@ fun failure(
 }
 
 fun failure(
-    unreadable: OpenVexBaselineRead.Unreadable,
+    unreadable: VexBaselineRead.Unreadable,
     baseline: String,
 ): GradleException =
     InvalidUserDataException(
-        formatFailureMessage(listOf(renderOpenVexBaselineFailure(unreadable, baseline, BASELINE_OPTION))),
+        formatFailureMessage(listOf(renderVexBaselineFailure(unreadable, baseline, BASELINE_OPTION))),
     )
 
 fun failure(failed: InputRead.Failed): GradleException {
