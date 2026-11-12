@@ -50,7 +50,8 @@ How you pass the file depends on the scanner:
 * Snyk: keep `.snyk` in the project directory, where the Snyk CLI reads it.
 * cargo-audit: create the `.cargo` directory of the project with `mkdir -p .cargo`, then write `audit.toml` into it with `--reporter cargo-audit --output-dir .cargo`.
 * Scanners with a generic JSON file don't read it.
-Use the file in your own scripts, for example to filter the scanner's output.
+Convert the file, or filter the scanner's output with it.
+See xref:guides/use-generic-suppression-files.adoc[Use generic suppression files].
 
 . Commit the generated files, or generate them in your pipeline before the scanner runs.
 Either way, regenerate them after every change to the Vulnlog file.
@@ -126,6 +127,7 @@ $ vulnlog suppress acme-shop.vl.yaml --reporter trivy --format generic -o -
 ----
 
 For the fields, see xref:reference/suppression.adoc#generic-format[Generic format].
+To apply the file to a scanner, see xref:guides/use-generic-suppression-files.adoc[Use generic suppression files].
 
 === If you use Snyk or cargo-audit
 
