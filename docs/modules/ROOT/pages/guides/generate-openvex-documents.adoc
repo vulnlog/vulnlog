@@ -24,7 +24,7 @@ Wrote: vex.json
 ----
 +
 The document covers every published release that has `purls`.
-An entry gets a statement for the first release it lists and for every later release, whatever the verdict.
+An entry gets a statement for the earliest release it lists and for every later release, whatever the verdict.
 From the release in `resolution.in` on, the statement is `fixed`.
 For which releases and PURLs the statements name, see xref:reference/cli-vex-openvex.adoc#what-the-document-covers[What the document covers].
 This is the statement for the XZ Utils entry in 4.3.0:

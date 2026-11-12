@@ -54,7 +54,9 @@ Suppression files don't use aliases.
 | List of release IDs
 | Yes
 | None
-| Releases the vulnerability concerns.
+| Releases in which the vulnerability was found.
+The entry also applies to every release listed after the earliest of them, until the release in `resolution.in`.
+It doesn't apply to releases listed before the earliest one, so list the earliest affected release.
 Each ID must be defined in `releases` at the top level.
 
 | `packages`

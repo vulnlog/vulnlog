@@ -46,6 +46,8 @@ Vulnlog adds the entry at the top of `vulnerabilities` and sets the report date 
       - container
 ----
 +
+Pass at least the earliest release that has the finding.
+The entry also applies to every later release until it has a resolution.
 Without `--release`, the entry gets the last release in the file.
 For all options, see xref:reference/cli-add.adoc[vulnlog modify add].
 
