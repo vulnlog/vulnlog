@@ -153,5 +153,5 @@ Now you can:
 
 * Learn to read every part of the impact report in xref:get-started/quickstart-report.adoc[Read the impact report].
 * Combine release, state, and tag filters in xref:guides/find-what-affects-a-release.adoc[Find what affects a release].
-* Record the resolution of Spring4Shell with xref:guides/record-a-resolution.adoc[Record a resolution].
+* Record the resolution of Spring4Shell yourself in xref:get-started/quickstart-fix.adoc[Track a vulnerability to its fix].
 * Turn the changelog into release notes with xref:guides/write-release-notes.adoc[Write release notes].
