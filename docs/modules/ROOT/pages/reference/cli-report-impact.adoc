@@ -70,6 +70,9 @@ It shows:
 * A summary with the total number of entries, the number in each state, and the severities of the _Open_ (state `open`) and _Accepted_ (state `accepted`) entries.
 * A table with a row for each entry: its IDs, its state, the details (verdict, severity, disposition, justification, description, and analysis), and the affected releases.
 
+The rows are sorted by state, in the order `open`, `under investigation`, `accepted`, `resolved`, and `not applicable`.
+Within a state, they're sorted by severity and then by ID.
+
 A filter that selects no entry produces a report with an empty table.
 The command never fails because of what the report contains.
 
