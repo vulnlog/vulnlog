@@ -62,6 +62,7 @@ An entry doesn't appear either if none of its `releases` comes before the releas
 Each release shows its ID and `published_at` date, or `unreleased` without a date, and a line that counts the fixes by severity.
 
 Each entry shows its ID, its severity, and its aliases.
+A `not affected` entry shows `not affected` in place of the severity.
 Without `--brief`, it also shows the `name` and `description` of the entry, and the `note` and `ref` of its `resolution`.
 For these fields, see xref:reference/vulnerabilities.adoc[Vulnerabilities].
 

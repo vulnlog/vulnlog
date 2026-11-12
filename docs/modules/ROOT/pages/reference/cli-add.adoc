@@ -121,6 +121,10 @@ An entry that exists keeps its place and gains what you pass:
 * The other options replace the value when you pass them, and leave it as it is when you don't.
 * The `resolution` doesn't change.
 
+The command has no option for a report's date, `source`, `vuln_ids`, or `suppress` block, or for the `resolution`.
+Set these in the YAML.
+A report that `--reporter other` adds has no `source`, so the file fails validation until you add one.
+
 The command checks every file before it writes any.
 If one file doesn't define a release or tag you pass, no file changes.
 
