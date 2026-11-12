@@ -4,8 +4,15 @@
 Install the Vulnlog CLI on your computer, or run Vulnlog in Docker, in GitHub Actions, or in a Gradle build.
 Choose the method that fits where you run Vulnlog.
 
-== Install with the install script
+== Install the CLI
 
+Choose the method for your computer:
+
+[tabs]
+======
+Install script::
++
+--
 On Linux and macOS, the install script downloads the latest release and installs it for your user.
 It needs `curl` and `unzip`.
 
@@ -46,9 +53,11 @@ To uninstall Vulnlog, run the uninstall script:
 ----
 $ curl -fsSL vulnlog.dev/uninstall | sh
 ----
+--
 
-== Install with Homebrew
-
+Homebrew::
++
+--
 On macOS, install Vulnlog from the Vulnlog tap:
 
 [source,console]
@@ -62,9 +71,11 @@ To upgrade to the latest release:
 ----
 $ brew update && brew upgrade vulnlog
 ----
+--
 
-== Download the binary
-
+Download::
++
+--
 Use this method on Windows, or when you can't run the install script.
 
 . On the https://github.com/vulnlog/vulnlog/releases[Vulnlog releases page], download the archive for your platform: `vulnlog-linux-amd64.zip`, `vulnlog-macos-aarch64.zip`, or `vulnlog-windows-amd64.zip`.
@@ -75,6 +86,8 @@ Use this method on Windows, or when you can't run the install script.
 For other platforms, download the JVM distribution, `vulnlog-{vulnlog-version}.zip`, from the same page.
 It needs Java 21 or later.
 Extract it and add its `bin` directory to your `PATH`.
+--
+======
 
 == Run in Docker
 
