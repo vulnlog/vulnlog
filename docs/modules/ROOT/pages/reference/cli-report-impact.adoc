@@ -73,6 +73,10 @@ It shows:
 The rows are sorted by state, in the order `open`, `under investigation`, `accepted`, `resolved`, and `not applicable`.
 Within a state, they're sorted by severity and then by ID.
 
+This is the report for `acme-shop.vl.yaml` without filters:
+
+image::impact-report.png[The impact report of Acme Shop. The About and Summary boxes are above a table with one row for each of the six vulnerabilities.]
+
 A filter that selects no entry produces a report with an empty table.
 The command never fails because of what the report contains.
 
