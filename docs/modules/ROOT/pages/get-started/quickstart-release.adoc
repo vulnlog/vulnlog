@@ -1,4 +1,5 @@
 = Find what affects your release
+:description: Tutorial: find out which vulnerabilities affect one release of your software and compare it with an older release.
 
 In this tutorial, you find out which vulnerabilities affect Acme Shop 4.3.0 and compare them with the older release 4.2.0.
 Then you build the list of what the next release, 4.4.0, must fix.

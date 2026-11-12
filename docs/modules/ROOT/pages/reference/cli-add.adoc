@@ -1,5 +1,6 @@
 = vulnlog modify add
 :page-aliases: cli-add.adoc
+:description: Reference for vulnlog modify add, which adds a vulnerability entry to Vulnlog files or updates an existing one.
 
 `vulnlog modify add` adds a vulnerability entry to one or more Vulnlog files.
 If a file already has an entry with the same ID, the command updates that entry.

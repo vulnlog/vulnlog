@@ -1,5 +1,6 @@
 = Project and releases
 :page-aliases: project-and-releases.adoc
+:description: Reference for the project and releases sections of a Vulnlog file.
 
 `project` names who publishes the software and who answers for the analysis.
 `releases` lists the versions of the software that the file tracks.

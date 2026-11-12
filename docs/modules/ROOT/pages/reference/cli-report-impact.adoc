@@ -1,5 +1,6 @@
 = vulnlog report impact
 :page-aliases: cli-report.adoc
+:description: Reference for vulnlog report impact, which generates an HTML report of the state, verdict, and severity of each vulnerability.
 
 `vulnlog report impact` generates an HTML report of the entries in one or more Vulnlog files: their state, verdict, severity, and the releases they affect.
 Several files are merged into one report.

@@ -1,4 +1,5 @@
 = Migrate from scanner ignore files
+:description: Move the suppressions from a hand-written scanner ignore file into your Vulnlog file, and generate the suppression file from then on.
 
 Move the suppressions from a hand-written ignore file, such as `.trivyignore`, into your Vulnlog file, and generate the suppression file from Vulnlog from then on.
 Your scanner suppresses the same findings as before.

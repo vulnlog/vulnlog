@@ -1,4 +1,5 @@
 = Triage a new scanner finding
+:description: Record a scanner finding as an entry in your Vulnlog file, then add your verdict, severity, and plan when you've analysed it.
 
 Record a finding as an entry in your Vulnlog file as soon as a scanner reports it, then add your verdict to the entry when you've analysed it.
 Your reports and suppression files pick up the entry the next time you generate them.

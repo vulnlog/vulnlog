@@ -1,5 +1,6 @@
 = Where Vulnlog fits
 :page-aliases: get-started/what-is-vulnlog.adoc
+:description: Which projects benefit most from Vulnlog, and how it compares with scanner ignore files and vulnerability management platforms.
 
 Vulnlog suits projects with planned releases best.
 It works next to your scanners and vulnerability management platforms, and it replaces hand-written scanner ignore files.

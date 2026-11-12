@@ -1,4 +1,5 @@
 = Generate suppression files
+:description: Generate a suppression file for Trivy, Snyk, OWASP Dependency-Check, cargo-audit, and other scanners from your Vulnlog file.
 
 Generate a suppression file for each scanner from your Vulnlog file.
 Your scanners then skip the findings that don't affect you or that you chose to suppress, and keep reporting the rest.

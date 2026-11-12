@@ -1,5 +1,6 @@
 = Verdicts and justifications
 :page-aliases: verdicts-and-justifications.adoc
+:description: Reference for the verdict, severity, disposition, and justification fields of a Vulnlog entry, and for the states Vulnlog derives from them.
 
 Four fields on an entry record your judgement: `verdict`, `severity`, `disposition`, and `justification`.
 Of these, only `verdict` and `disposition`, together with `resolution`, decide the entry's state.

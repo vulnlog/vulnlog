@@ -1,4 +1,5 @@
 = Exit codes and messages
+:description: The exit codes of the vulnlog command and the format of its error, warning, and info messages.
 
 The exit codes and the shape of the messages stay stable, so scripts and CI pipelines can rely on them.
 The Gradle plugin prints status lines and findings through the Gradle log, and reports failures as Gradle build failures.

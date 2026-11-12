@@ -1,5 +1,6 @@
 = vulnlog fmt
 :page-aliases: cli-fmt.adoc
+:description: Reference for vulnlog fmt, which rewrites Vulnlog files in the canonical style.
 
 `vulnlog fmt` rewrites Vulnlog files in the canonical style, in place.
 With `--check`, it reports the files that aren't in the canonical style and doesn't change them.

@@ -1,5 +1,6 @@
 = Support several release lines
 :page-aliases: branching-strategy.adoc, guides/organize-files-across-branches.adoc
+:description: Keep one Vulnlog file for each supported release line of your product, and copy entries between the files.
 
 When you support several release lines of a product at once, keep one Vulnlog file per line.
 Each line then has its own releases, verdicts, and suppression files, and you can still report on all lines together.

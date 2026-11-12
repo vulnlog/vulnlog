@@ -1,5 +1,6 @@
 = Triage your first finding
 :page-aliases: quickstart.adoc
+:description: Tutorial: create a Vulnlog file, record a scanner finding and your verdict, and generate a suppression file and an impact report.
 
 In this tutorial, you create a Vulnlog file for the Acme Shop project and record a scanner finding.
 You record the verdict that the finding doesn't affect Acme Shop and generate a suppression file so the scanner stops reporting it.

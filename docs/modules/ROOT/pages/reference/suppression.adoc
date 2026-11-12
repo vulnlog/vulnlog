@@ -1,5 +1,6 @@
 = Suppression
 :page-aliases: suppression.adoc
+:description: Reference for suppression in Vulnlog: the suppress block, the supported scanners, and the format of each suppression file.
 
 A suppression file tells a scanner to stop reporting a finding.
 `vulnlog suppress` generates one for each reporter in your Vulnlog file.

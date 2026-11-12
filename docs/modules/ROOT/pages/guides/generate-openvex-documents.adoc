@@ -1,4 +1,5 @@
 = Generate OpenVEX documents
+:description: Generate an OpenVEX document from your Vulnlog file and publish it, so your customers' tools can read whether a release is affected.
 
 Generate an OpenVEX document from your Vulnlog file and publish it, so your customers' tools can read whether your releases are affected by a vulnerability.
 OpenVEX support in Vulnlog is incubating.

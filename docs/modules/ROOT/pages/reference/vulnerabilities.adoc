@@ -1,5 +1,6 @@
 = Vulnerabilities
 :page-aliases: vulnerabilities.adoc
+:description: Reference for the vulnerabilities section of a Vulnlog file: the fields of an entry, a report, and a resolution.
 
 Each item in `vulnerabilities` is an entry.
 An entry records one vulnerability: the releases and packages it concerns, who reported it, your verdict, and, once it's fixed, the resolution.

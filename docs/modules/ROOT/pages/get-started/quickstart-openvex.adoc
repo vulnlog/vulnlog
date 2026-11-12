@@ -1,4 +1,5 @@
 = Share your analysis with OpenVEX
+:description: Tutorial: generate an OpenVEX document with Vulnlog and let a scanner read from it that a vulnerability doesn't affect your release.
 
 In this tutorial, you tell a scanner that a vulnerability doesn't affect your release, without a suppression file.
 You record that Text4Shell (`CVE-2022-42889`) doesn't affect Acme Shop 4.3.0, generate an OpenVEX document from the Vulnlog file, and scan the project with Trivy and that document.

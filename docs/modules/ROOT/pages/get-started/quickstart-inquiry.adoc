@@ -1,4 +1,5 @@
 = Answer a vulnerability inquiry
+:description: Tutorial: answer a customer who asks whether your product is affected by a vulnerability, with the analysis in the Vulnlog file.
 
 In this tutorial, you answer a customer who asks whether Acme Shop is affected by a vulnerability.
 You find the team's assessment in the Vulnlog file and turn it into an answer, without analysing the vulnerability again.
