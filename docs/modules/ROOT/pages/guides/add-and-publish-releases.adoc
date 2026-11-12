@@ -104,9 +104,15 @@ With Trivy 0.76.2, statements don't apply when a scan sees the artifact in one o
 * A project scanned from its `gradle.lockfile`, `requirements.txt`, or its own `package-lock.json`, `poetry.lock`, or `packages.lock.json`, because these files don't name the project.
 * Installed packages in `node_modules` or `site-packages` without a lock file.
 * A Go module in the `go.mod` of another project.
+* An image scanned from its software bill of materials (SBOM), the list of packages in the image, with `trivy sbom`.
 
 For a Gradle or npm application, publish it as a container image and use the image PURL.
 The statements then apply to every package in the image, including the libraries in a JAR.
+
+If your customers scan the SBOM of the image, also list the PURL of your application under `purls`, with the same tag as the image.
+Copy it from the SBOM.
+`trivy sbom` then applies the statements to the dependencies of your application, but not to the operating system packages of the image.
+This works only if the SBOM lists your application as a component with its dependencies under it.
 
 A scanner other than Trivy can identify artifacts differently.
 To check that a document applies, scan the artifact with it.
