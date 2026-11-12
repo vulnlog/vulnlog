@@ -16,6 +16,21 @@ Many vulnerabilities don't affect your software, but your scanners keep reportin
 Others do affect it, and you can't always fix them and release straight away.
 Until you do, your team needs to know which releases are affected, and your customers want to know what you plan to do.
 
+== Who Vulnlog is for
+
+Vulnlog is for teams that ship software in releases and have to answer for the vulnerabilities in it.
+
+* Developers and security engineers who analyse scanner findings.
+They write each analysis once, next to the code, and stop maintaining an ignore file for every scanner.
+* Release managers and product managers who need to know what affects a release.
+They read the impact report and the release notes, and they don't need to know YAML.
+* Support engineers who answer customers' questions about a vulnerability.
+They find the team's verdict and its reasoning in the impact report.
+
+Vulnlog suits projects with planned releases best, where a vulnerability can stay in a release for weeks or months.
+If you fix and release continuously, you'll use less of it.
+See xref:concepts/where-vulnlog-fits.adoc[Where Vulnlog fits].
+
 == Why use Vulnlog
 
 * You don't need a server, a cloud service, an account, or a subscription.
@@ -65,5 +80,15 @@ For a list of scanners with a native format, see xref:reference/suppression.adoc
 
 xref:get-started/install.adoc[Install Vulnlog] and follow xref:get-started/quickstart-triage.adoc[Triage your first finding].
 If you don't maintain the Vulnlog file yourself, start with xref:get-started/quickstart-report.adoc[Read the impact report] or xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry].
-To find out whether Vulnlog suits your project, read xref:concepts/where-vulnlog-fits.adoc[Where Vulnlog fits].
+
+The documentation has four parts:
+
+* Tutorials teach you Vulnlog step by step with one example project, Acme Shop.
+After the first one, continue with xref:get-started/quickstart-fix.adoc[Track a vulnerability to its fix].
+* How-to guides each solve one task, for example xref:guides/triage-a-finding.adoc[Triage a new scanner finding] or xref:guides/run-in-ci.adoc[Run in CI pipelines].
+* The reference describes every field, command, and option.
+Start with xref:reference/file-format.adoc[File format] or xref:reference/cli.adoc[Vulnlog CLI].
+* The explanation pages give the reasons behind the design.
+Start with xref:concepts/data-model.adoc[The data model].
+
 If you have questions, ask in https://github.com/vulnlog/vulnlog/discussions[GitHub Discussions].
