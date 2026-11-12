@@ -152,7 +152,7 @@ tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVexContainerUpdate") {
 ----
 
 A task you register yourself doesn't read the `vulnlog` block.
-For the properties each task type needs, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+For the properties each task type needs, see xref:reference/gradle-plugin.adoc#registered-tasks[Tasks you register yourself].
 
 [[check-the-result]]
 == Check the result

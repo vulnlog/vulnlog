@@ -383,6 +383,9 @@ The task fails if `baseline` isn't set.
 One document per release and artifact needs one registered task of each type per document.
 For an example, see xref:guides/generate-openvex-documents.adoc#one-document-per-artifact[One document per release and artifact].
 
+[[registered-tasks]]
+=== Tasks you register yourself
+
 A task you register yourself doesn't take its settings from the `vulnlog` block.
 It needs these properties set:
 

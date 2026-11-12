@@ -144,7 +144,7 @@ tasks.register<VulnlogSuppressTask>("vulnlogSuppress3") {
 ----
 
 `vulnlogSuppress` writes to `build/vulnlog/suppressions`, and `vulnlogSuppress3` to `build/vulnlog/suppressions-3`.
-For the properties of a task you register yourself, see xref:reference/gradle-plugin.adoc[Gradle plugin].
+For the properties of a task you register yourself, see xref:reference/gradle-plugin.adoc#registered-tasks[Tasks you register yourself].
 
 === If you maintain several products
 
