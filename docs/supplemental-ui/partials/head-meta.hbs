@@ -1,5 +1,21 @@
 <link rel="icon" href="{{uiRootPath}}/img/favicon.ico">
 <meta name="color-scheme" content="light dark">
+{{!-- Link previews in chat tools and social networks. The description comes from the :description: attribute of the page. --}}
+<meta property="og:site_name" content="{{site.title}}">
+<meta property="og:type" content="article">
+{{#with page.title}}
+<meta property="og:title" content="{{{detag this attribute=true}}}">
+{{/with}}
+{{#with page.description}}
+<meta property="og:description" content="{{{detag this attribute=true}}}">
+{{/with}}
+{{#with page.canonicalUrl}}
+<meta property="og:url" content="{{{this}}}">
+{{/with}}
+<meta property="og:image" content="https://vulnlog.dev/img/vulnlog-overview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="{{{uiRootPath}}}/css/vendor/tabs.css">
 <link rel="stylesheet" href="{{{uiRootPath}}}/css/vulnlog-theme.css">
 <script>

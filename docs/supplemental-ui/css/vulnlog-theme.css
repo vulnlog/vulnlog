@@ -48,26 +48,29 @@
  * collapse icon of the navigation, and the chevron of the version menu in the navigation.
  * The version menu in the toolbar also holds text, so it gets a light chevron image instead.
  * Both blocks are needed: the first for the system setting, the second for the toggle.
+ * The @supports rule keeps the icons dark in browsers without light-dark(), where the page stays light.
  */
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) :is(.home-link, .nav-toggle, .nav-menu-toggle),
-  :root:not([data-theme='light']) .nav-panel-explore .context .version::after {
+@supports (color: light-dark(#000, #fff)) {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) :is(.home-link, .nav-toggle, .nav-menu-toggle),
+    :root:not([data-theme='light']) .nav-panel-explore .context .version::after {
+      filter: invert(1);
+    }
+
+    :root:not([data-theme='light']) .page-versions .version-menu-toggle {
+      background-image: url(../img/chevron-dark.svg);
+    }
+  }
+
+  :root[data-theme='dark'] :is(.home-link, .nav-toggle, .nav-menu-toggle),
+  :root[data-theme='dark'] .nav-panel-explore .context .version::after {
     filter: invert(1);
   }
 
-  :root:not([data-theme='light']) .page-versions .version-menu-toggle {
+  :root[data-theme='dark'] .page-versions .version-menu-toggle {
     background-image: url(../img/chevron-dark.svg);
   }
-}
-
-:root[data-theme='dark'] :is(.home-link, .nav-toggle, .nav-menu-toggle),
-:root[data-theme='dark'] .nav-panel-explore .context .version::after {
-  filter: invert(1);
-}
-
-:root[data-theme='dark'] .page-versions .version-menu-toggle {
-  background-image: url(../img/chevron-dark.svg);
 }
 
 /* Page, navigation, toolbar */
@@ -497,6 +500,23 @@ html .search-result-document-hit .search-result-section-title {
 .vl-footer a {
   color: inherit;
   text-decoration: underline;
+}
+
+/* Notice on pages of an older version (partials/article.hbs) */
+
+.vl-version-notice {
+  margin: 1rem 0 0;
+  padding: 0.6rem 1rem;
+  border: 1px solid light-dark(#e0b000, #8a6d00);
+  border-left-width: 4px;
+  border-radius: 3px;
+  background: light-dark(#fff8db, #2b2511);
+  color: var(--vl-text-body);
+  font-size: 0.9rem;
+}
+
+.vl-version-notice p {
+  margin: 0;
 }
 
 /* Tabbed blocks. css/vendor/tabs.css loads before this file and sets the light colours. */
