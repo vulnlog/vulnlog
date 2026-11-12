@@ -94,10 +94,10 @@ Open a pull request against the `main` branch of `vulnlog/vulnlog`.
 The user-facing docs are written in AsciiDoc under `docs/modules/ROOT/pages/` and built with
 [Antora](https://antora.org). The Gradle wrapper provisions Node.js automatically, so no separate Node install is
 required. `./gradlew docsBuild` runs `npm ci` first, which installs Antora and the search extension in the versions
-pinned in `package-lock.json`. Dependabot updates them, and CI builds the site for every such update.
+pinned in `package-lock.json`. The Antora UI is the bundle in `docs/ui`. Dependabot updates them, and CI builds the site for every such update.
 
-`./gradlew docsBuild` runs Antora against `antora-local-playbook.yml`, which reads from a sibling `vulnlog` checkout
-at `../vulnlog`. Adjust the `url:` in the playbook if your local layout differs.
+`./gradlew docsBuild` runs Antora against `antora-local-playbook.yml`, which reads the docs of the branch you have
+checked out, with your uncommitted changes. It also works in a linked Git worktree.
 
 * Build the docs:
   ```terminal
@@ -105,7 +105,7 @@ at `../vulnlog`. Adjust the `url:` in the playbook if your local layout differs.
   ```
   Output is written to `build/docs/`.
 * Preview by opening `build/docs/index.html` in a browser.
-* After editing an `.adoc` file in `../vulnlog`, rerun `./gradlew docsBuild` and refresh the browser.
+* After editing an `.adoc` file, rerun `./gradlew docsBuild` and refresh the browser.
 
 The production site is built from `antora-playbook.yml` in CI and is unaffected by local builds.
 

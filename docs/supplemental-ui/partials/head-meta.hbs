@@ -1,5 +1,6 @@
 <link rel="icon" href="{{uiRootPath}}/img/favicon.ico">
 <meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="{{{uiRootPath}}}/css/vendor/tabs.css">
 <link rel="stylesheet" href="{{{uiRootPath}}}/css/vulnlog-theme.css">
 <script>
   // Apply the theme the reader chose before the page renders, so it doesn't flash.
@@ -9,63 +10,5 @@
     if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme
   } catch (e) {}
 </script>
-<style>
-.navbar-brand > a.navbar-item:first-child {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-.navbar-brand > a.navbar-item:first-child svg {
-  display: block;
-}
-.navbar-item .icon svg {
-  vertical-align: middle;
-}
-.navbar-item.vl-source {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  line-height: 1.2;
-  font-size: 0.8rem;
-  opacity: 0.9;
-}
-.navbar-item.vl-source:hover {
-  opacity: 1;
-}
-.vl-source-icon svg {
-  display: block;
-}
-.vl-source-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 2.1em;
-}
-.vl-source-name {
-  font-weight: 500;
-}
-.vl-source-facts {
-  display: flex;
-  gap: 0.7rem;
-  font-size: 0.7rem;
-  opacity: 0;
-  transition: opacity 0.25s;
-}
-.vl-source-facts.is-loaded {
-  opacity: 0.8;
-}
-.vl-fact {
-  display: none;
-  align-items: center;
-  gap: 0.25rem;
-}
-.vl-fact.is-loaded {
-  display: inline-flex;
-}
-.footer.vl-footer {
-  text-align: center;
-}
-.vl-footer a {
-  color: inherit;
-  text-decoration: underline;
-}
-</style>
+{{!-- Tabbed blocks of the @asciidoctor/tabs extension. --}}
+<script defer src="{{{uiRootPath}}}/js/vendor/tabs.js"></script>
