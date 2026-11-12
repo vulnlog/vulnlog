@@ -14,6 +14,7 @@ The scanner, in turn, knows nothing about your analysis.
 It only learns which findings to stay quiet about, from the suppression file Vulnlog generates for it.
 For scanners with a native format, such as Trivy, that's a file in the scanner's own format, under the file name the scanner looks for.
 For the other scanners, Vulnlog writes a generic JSON file that you can feed into your own tooling.
+See xref:guides/use-generic-suppression-files.adoc[Use generic suppression files].
 xref:reference/suppression.adoc#supported-scanners[Supported scanners] lists the formats and file names.
 
 == From one entry to the scanner

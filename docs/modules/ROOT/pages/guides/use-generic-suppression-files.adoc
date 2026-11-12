@@ -1,0 +1,130 @@
+= Use generic suppression files
+
+Apply the suppressions from your Vulnlog file to a scanner that Vulnlog has no native format for.
+For Grype, Semgrep, npm audit, and GitHub Dependabot, Vulnlog writes a generic JSON file named `<reporter>.generic.json`.
+The scanner doesn't read this file, so you convert it or filter the scanner's output with it.
+
+== Before you start
+
+* A Vulnlog file with triaged entries that name the scanner under `reports`.
+See xref:guides/triage-a-finding.adoc[Triage a new scanner finding].
+* `jq`, to read the JSON file in a script.
+
+In this guide, Grype also reports Spring4Shell in Acme Shop.
+This report is an illustration, because `acme-shop.vl.yaml` doesn't have it:
+
+[source,yaml]
+----
+      - reporter: grype
+        at: 2026-04-07
+        suppress:
+          expires_at: 2027-03-31
+----
+
+== Convert the file to the scanner's ignore rules
+
+Use this method when the scanner has its own way to ignore findings.
+Grype reads ignore rules from `.grype.yaml`.
+
+. Generate the generic file:
++
+[source,console]
+----
+$ vulnlog suppress acme-shop.vl.yaml --reporter grype
+Wrote: /home/dev/acme-shop/grype.generic.json
+----
++
+The file lists the IDs that are suppressed today:
++
+[source,json]
+----
+{
+  "vulnerabilities" : [ {
+    "id" : "CVE-2022-22965",
+    "expires_at" : "2027-03-31",
+    "statement" : "Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat, but Spring advises all users to upgrade."
+  } ]
+}
+----
++
+For the fields, see xref:reference/suppression.adoc#generic-format[Generic format].
+
+. Write one ignore rule for each ID:
++
+[source,console]
+----
+$ jq '{ignore: [.vulnerabilities[] | {vulnerability: .id}]}' grype.generic.json > .grype.yaml
+----
++
+The result is JSON, which Grype reads as YAML:
++
+[source,json]
+----
+{
+  "ignore": [
+    {
+      "vulnerability": "CVE-2022-22965"
+    }
+  ]
+}
+----
+
+. Run Grype in the directory that contains `.grype.yaml`.
+
+Run both commands again after every change to the Vulnlog file, or run them in your pipeline before the scanner.
+You don't need to check `expires_at` yourself.
+Vulnlog leaves a suppression out of the file from the day after it expires.
+
+If you already keep other settings in `.grype.yaml`, write the rules to another file and copy the `ignore` list from it.
+
+== Variants
+
+=== If the scanner has no ignore rules
+
+Filter the scanner's output instead.
+npm audit names each finding by its GitHub advisory, so give the report the GHSA ID with `vuln_ids`.
+For the lodash entry of Acme Shop:
+
+[source,yaml]
+----
+      - reporter: npm-audit
+        at: 2026-03-10
+        vuln_ids: [GHSA-35jh-r3h4-6jhm]
+        suppress: {}
+----
+
+Generate the file, collect the IDs that npm audit reports, and list those without a suppression:
+
+[source,console]
+----
+$ vulnlog suppress acme-shop.vl.yaml --reporter npm-audit
+Wrote: /home/dev/acme-shop/npm-audit.generic.json
+$ npm audit --json > audit.json
+$ jq -r '[.vulnerabilities[].via[] | objects | .url | sub(".*/"; "")] | unique[]' audit.json > found.txt
+$ jq -r '.vulnerabilities[].id' npm-audit.generic.json > suppressed.txt
+$ grep -vixFf suppressed.txt found.txt
+----
+
+The last command prints the advisories that aren't suppressed and ends with exit code `0`.
+If every advisory is suppressed, it prints nothing and ends with exit code `1`.
+In a pipeline, fail the job when the command prints an ID.
+
+=== If your tooling reads one format for every scanner
+
+Pass `--format generic` to get the generic file for scanners with a native format too.
+See xref:guides/generate-suppression-files.adoc[Generate suppression files].
+
+=== If Vulnlog doesn't support your scanner
+
+Vulnlog writes suppression files only for the scanners in xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+Record the finding with the reporter `other` and name the scanner in `source`.
+The entry appears in your reports, but Vulnlog writes no suppression file for it.
+To ask for a scanner, open a discussion in https://github.com/vulnlog/vulnlog/discussions[GitHub Discussions].
+
+== Check the result
+
+. Run the scanner with the converted file, or run your filter.
+The suppressed finding no longer appears, and every other finding still does.
+
+. If a finding is missing from the generic file, run `suppress` with `-v` to see why Vulnlog left it out.
+See xref:troubleshooting.adoc#finding-still-reported[The scanner still reports a finding].

@@ -17,6 +17,7 @@
 ** xref:guides/record-a-resolution.adoc[Record a resolution]
 ** xref:guides/validate-and-format.adoc[Validate and format files]
 ** xref:guides/generate-suppression-files.adoc[Generate suppression files]
+** xref:guides/use-generic-suppression-files.adoc[Use generic suppression files]
 ** xref:guides/generate-reports.adoc[Generate reports]
 ** xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents]
 ** xref:guides/find-what-affects-a-release.adoc[Find what affects a release]
