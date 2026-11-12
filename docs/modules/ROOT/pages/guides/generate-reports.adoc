@@ -33,6 +33,10 @@ Vulnlog doesn't host or publish reports, so put the file where your readers alre
 
 . Generate the report again whenever the Vulnlog file changes, and replace the shared copy.
 
+This is the report for Acme Shop:
+
+image::impact-report.png[The impact report of Acme Shop. The About and Summary boxes are above a table with one row for each of the six vulnerabilities.]
+
 To learn to read the report, follow the tutorial xref:get-started/quickstart-report.adoc[Read the impact report].
 
 == Variants
