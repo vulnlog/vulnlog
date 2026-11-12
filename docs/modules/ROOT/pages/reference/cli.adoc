@@ -1,5 +1,6 @@
 = Vulnlog CLI
 :page-aliases: cli-overview.adoc
+:description: Reference for the vulnlog command: its subcommands, global options, filter options, and standard input and output.
 
 The `vulnlog` command reads and writes Vulnlog files.
 Each task is a command, and some commands are grouped under `report`, `modify`, and `vex`.

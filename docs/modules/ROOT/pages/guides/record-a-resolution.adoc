@@ -1,4 +1,5 @@
 = Record a resolution
+:description: Record the release that fixes a vulnerability, so your reports show it as resolved and your suppression files stop hiding the finding.
 
 Record the release that fixes a vulnerability, so your reports show it as `resolved`, your release notes list the fix, and your suppression files stop hiding the finding.
 

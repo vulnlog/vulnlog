@@ -1,5 +1,6 @@
 = Add and publish releases
 :page-aliases: guides/work-with-releases-and-tags.adoc
+:description: Add a release to your Vulnlog file when you start working on it, and mark it as published when it ships.
 
 Add each release to your Vulnlog file when you start working on it, and mark it as published when it ships.
 Entries and reports then refer to the right releases.

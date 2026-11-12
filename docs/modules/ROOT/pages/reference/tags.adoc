@@ -1,5 +1,6 @@
 = Tags
 :page-aliases: tags.adoc
+:description: Reference for tags in a Vulnlog file: how to define them and attach them to entries and release packages.
 
 Tags are labels that you define once and attach to entries and to release package URLs (PURLs).
 Typical tags name the parts of your software, such as a server, a user interface, or a container image.

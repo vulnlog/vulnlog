@@ -1,5 +1,6 @@
 = Gradle plugin
 :page-aliases: gradle-plugin.adoc
+:description: Reference for the Vulnlog Gradle plugin: its tasks, its settings, and the files it writes.
 
 The Vulnlog Gradle plugin runs the Vulnlog commands as Gradle tasks.
 The tasks read the same files and run the same checks as the xref:reference/cli.adoc[Vulnlog CLI], with the differences listed in <<differences-from-the-cli>>.

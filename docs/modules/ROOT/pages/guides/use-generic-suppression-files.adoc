@@ -1,4 +1,5 @@
 = Use generic suppression files
+:description: Apply Vulnlog suppressions to Grype, npm audit, and other scanners that Vulnlog has no native suppression format for.
 
 Apply the suppressions from your Vulnlog file to a scanner that Vulnlog has no native format for.
 For Grype, Semgrep, npm audit, and GitHub Dependabot, Vulnlog writes a generic JSON file named `<reporter>.generic.json`.

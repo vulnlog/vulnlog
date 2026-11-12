@@ -1,4 +1,5 @@
 = vulnlog report changelog
+:description: Reference for vulnlog report changelog, which lists the vulnerabilities each release fixed, as text or Markdown.
 
 `vulnlog report changelog` lists the vulnerabilities each release fixed, newest release first, as text or Markdown.
 Several Vulnlog files are merged into one report.

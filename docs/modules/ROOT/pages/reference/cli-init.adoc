@@ -1,5 +1,6 @@
 = vulnlog init
 :page-aliases: cli-init.adoc
+:description: Reference for vulnlog init, which creates a new Vulnlog file.
 
 `vulnlog init` creates a Vulnlog file with the required sections only: the schema header, `schemaVersion`, `project`, an empty `releases` list, and an empty `vulnerabilities` list.
 It writes to stdout unless you name an output file.

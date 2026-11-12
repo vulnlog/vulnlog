@@ -1,4 +1,5 @@
 = Read the impact report
+:description: Tutorial: read a Vulnlog impact report to see how vulnerabilities affect a project. You don't need to know YAML.
 
 In this tutorial, you read the impact report of the Acme Shop project to find out how vulnerabilities affect it.
 You read the team's assessment of each one and see which release fixes what.

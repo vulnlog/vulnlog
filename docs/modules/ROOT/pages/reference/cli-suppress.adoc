@@ -1,5 +1,6 @@
 = vulnlog suppress
 :page-aliases: cli-suppress.adoc
+:description: Reference for vulnlog suppress, which generates scanner suppression files from a Vulnlog file.
 
 `vulnlog suppress` generates suppression files from a Vulnlog file: one file for each reporter the entries name, except `other`.
 A suppression file lists the findings the scanner should ignore.

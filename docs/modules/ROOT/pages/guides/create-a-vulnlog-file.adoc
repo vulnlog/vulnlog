@@ -1,4 +1,5 @@
 = Create a Vulnlog file
+:description: Create the Vulnlog file of your project, add the releases you support, and commit it next to your code.
 
 Create the Vulnlog file of your project, add the releases you support, and commit it next to your code.
 

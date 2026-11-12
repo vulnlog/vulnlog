@@ -1,5 +1,6 @@
 = Run in CI pipelines
 :page-aliases: ci-integration.adoc
+:description: Run Vulnlog in GitHub Actions, GitLab CI/CD, Docker, or Gradle to check the Vulnlog file, generate suppression files, and publish the impact report.
 
 Run Vulnlog in your pipeline to check the Vulnlog file on every change, generate the suppression files before your scanner runs, and keep a current impact report.
 

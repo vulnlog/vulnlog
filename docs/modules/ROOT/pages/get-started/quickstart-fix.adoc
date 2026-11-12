@@ -1,4 +1,5 @@
 = Track a vulnerability to its fix
+:description: Tutorial: record a vulnerability that affects your software, suppress the finding until the fix ships, and record the fix.
 
 In this tutorial, you record a vulnerability that affects Acme Shop and follow it until a release fixes it.
 You keep the scanner quiet while the fix is planned, record the fix, and see what changes in the impact report, the suppression file, and the changelog.

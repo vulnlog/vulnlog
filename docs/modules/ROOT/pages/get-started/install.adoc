@@ -1,5 +1,6 @@
 = Install Vulnlog
 :page-aliases: installation.adoc
+:description: Install the Vulnlog CLI with the install script, Homebrew, or a download, or run Vulnlog in Docker, in GitHub Actions, or in a Gradle build.
 
 Install the Vulnlog CLI on your computer, or run Vulnlog in Docker, in GitHub Actions, or in a Gradle build.
 Choose the method that fits where you run Vulnlog.

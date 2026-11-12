@@ -1,4 +1,5 @@
 = Troubleshooting
+:description: Vulnlog error messages and common problems, each with its cause and the fix.
 
 Each section starts with the message you see.
 The examples use `acme-shop.vl.yaml`, and line numbers and IDs come from your own file.

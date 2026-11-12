@@ -1,4 +1,5 @@
 = vulnlog vex openvex
+:description: Reference for vulnlog vex openvex, which generates an OpenVEX document from a Vulnlog file.
 
 NOTE: OpenVEX output is incubating.
 Its options and output can change in a later release.

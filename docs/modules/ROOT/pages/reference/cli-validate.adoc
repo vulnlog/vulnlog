@@ -1,5 +1,6 @@
 = vulnlog validate
 :page-aliases: cli-validate.adoc
+:description: Reference for vulnlog validate, which checks Vulnlog files against the schema and the validation rules.
 
 `vulnlog validate` checks Vulnlog files against the schema and the validation rules, and prints every finding.
 It doesn't change the files.

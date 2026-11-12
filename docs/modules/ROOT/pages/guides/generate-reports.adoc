@@ -1,5 +1,6 @@
 = Generate reports
 :page-aliases: overview-report.adoc
+:description: Generate an HTML impact report from your Vulnlog file and share it with customers, auditors, and managers.
 
 Generate an impact report from your Vulnlog file and share it with people who don't read YAML, such as your customers, auditors, and managers.
 The report is a single HTML file that shows each vulnerability with its state, verdict, analysis, and affected releases.

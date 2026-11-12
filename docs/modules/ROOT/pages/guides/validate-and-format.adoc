@@ -1,4 +1,5 @@
 = Validate and format files
+:description: Check that your Vulnlog files are valid and in the canonical style before you commit them.
 
 Check that your Vulnlog files are valid and in the canonical style before you commit them.
 

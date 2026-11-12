@@ -1,4 +1,5 @@
 = Tag entries by component
+:description: Tag Vulnlog entries with the components of your product, and generate suppression files and reports for one component.
 
 Tag each entry with the components of your product that the vulnerability affects.
 You can then generate reports, suppression files, and OpenVEX documents for one component.

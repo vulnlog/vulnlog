@@ -1,5 +1,6 @@
 = Vulnlog and your scanner
 :page-aliases: overview-suppress.adoc
+:description: How Vulnlog works with your vulnerability scanner: which findings a generated suppression file hides, and when the scanner reports them again.
 
 Your scanner finds vulnerabilities in your dependencies, and Vulnlog records what you concluded about them.
 The two meet in the suppression file: Vulnlog writes it, and your scanner reads it.

@@ -1,4 +1,5 @@
 = Why your analysis lives in Git
+:description: Why Vulnlog keeps your vulnerability analysis in a file in your Git repository, next to the code it's about.
 
 Vulnlog keeps your analysis in a file in your Git repository, next to the code it's about.
 You can keep using an issue tracker or a vulnerability management platform alongside it.

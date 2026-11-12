@@ -1,4 +1,5 @@
 = Find what affects a release
+:description: Generate an impact report for one release to see which vulnerabilities affect it, which ones it fixes, and what the next release must fix.
 
 Generate an impact report for one release to see which vulnerabilities affect it, which ones it already fixes, and what your next release must fix.
 

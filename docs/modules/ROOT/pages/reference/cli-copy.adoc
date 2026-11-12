@@ -1,5 +1,6 @@
 = vulnlog modify copy
 :page-aliases: cli-copy.adoc
+:description: Reference for vulnlog modify copy, which copies vulnerability entries from one Vulnlog file into others.
 
 `vulnlog modify copy` copies vulnerability entries from a source Vulnlog file into one or more target files.
 In each target, a copied entry lists only the last release of that target.

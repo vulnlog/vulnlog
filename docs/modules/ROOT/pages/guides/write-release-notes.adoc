@@ -1,4 +1,5 @@
 = Write release notes
+:description: Generate the security section of your release notes from the resolutions in your Vulnlog file.
 
 Generate the security section of your release notes from the resolutions in your Vulnlog file, instead of collecting the fixes by hand.
 

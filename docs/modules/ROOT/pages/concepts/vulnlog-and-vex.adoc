@@ -1,4 +1,5 @@
 = Vulnlog and VEX
+:description: How Vulnlog verdicts become suppression files and OpenVEX documents, and how Vulnlog relates to VEX.
 
 Vulnlog turns your verdicts into two kinds of files that tools read: suppression files and OpenVEX documents.
 Both come from the same entries, but they're written for different readers and say different things.

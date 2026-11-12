@@ -1,4 +1,5 @@
 = The data model
+:description: How a Vulnlog file is built: a project, its releases, and one entry for each vulnerability, with reports, a verdict, and a resolution.
 
 When you open a Vulnlog file, you see a project, a list of releases, and a list of vulnerability entries.
 

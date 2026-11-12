@@ -1,4 +1,5 @@
 = What Vulnlog leaves out
+:description: Why a Vulnlog file has no CVSS score, CWE category, or advisory text, and what else Vulnlog leaves to other tools.
 
 The Vulnlog file has no field for a CVSS score, a CWE category, an advisory text, or the affected version ranges of a vulnerability.
 The file records what only your team knows, and leaves out what anyone can look up.

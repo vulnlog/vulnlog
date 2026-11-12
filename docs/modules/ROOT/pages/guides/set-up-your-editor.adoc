@@ -1,4 +1,5 @@
 = Set up your editor
+:description: Get validation, completion, and field descriptions for Vulnlog files in your editor with the Vulnlog JSON Schema.
 
 Get validation, completion, and field descriptions for Vulnlog files while you type.
 

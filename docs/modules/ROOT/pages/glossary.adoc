@@ -1,4 +1,5 @@
 = Glossary
+:description: Definitions of the terms the Vulnlog documentation uses, from accepted and analysis to verdict and Vulnlog file.
 
 Accepted::
 The state of an entry that is `affected`, has `disposition: wont fix`, and has no resolution.

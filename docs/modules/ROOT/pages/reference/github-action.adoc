@@ -1,4 +1,5 @@
 = GitHub Action
+:description: Reference for the Setup Vulnlog CLI action, which installs the Vulnlog CLI on a GitHub Actions runner.
 
 The Setup Vulnlog CLI action installs the Vulnlog CLI on a GitHub Actions runner and puts `vulnlog` on the `PATH`.
 After the action, every step of the job can call `vulnlog`.

@@ -1,5 +1,6 @@
 = File format
 :page-aliases: format-overview.adoc
+:description: Reference for the Vulnlog file format: the top-level keys of the YAML document, the file names, and the schema.
 
 A Vulnlog file is a YAML document with five top-level keys.
 The CLI reads it only under certain file names, and an optional first-line comment links it to the JSON schema.

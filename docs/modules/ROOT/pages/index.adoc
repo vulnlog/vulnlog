@@ -1,4 +1,5 @@
 = Vulnlog
+:description: Vulnlog is a YAML format and a CLI for recording how vulnerabilities affect your software, and for generating suppression files, reports, and OpenVEX documents.
 
 Vulnlog is a declarative format and a set of tools for describing how vulnerabilities affect your software and what you plan to do about them.
 You record your assessment once, in a Vulnlog file in your Git repository.
