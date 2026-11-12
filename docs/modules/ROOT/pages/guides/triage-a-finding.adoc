@@ -158,6 +158,10 @@ Commit the change on its own, so the Git history shows the old and the new verdi
 
 === If a customer or researcher reports a vulnerability
 
+The vulnerability needs a CVE, GHSA, RUSTSEC, or Snyk ID.
+Vulnlog can't record a finding without one, such as a flaw in your own code from a penetration test.
+See xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out].
+
 Use the reporter `other` and say where the report came from in `source`.
 `modify add` can't set `source`, so add the report in the YAML.
 An entry that `modify add --reporter other` writes fails validation with `Generic reporter without source specified` until you add `source`:

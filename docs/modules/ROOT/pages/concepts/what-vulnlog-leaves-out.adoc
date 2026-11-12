@@ -31,6 +31,17 @@ Acme Shop rates Spring4Shell `medium`, because the published exploit needs a WAR
 The advisory can't take that into account.
 When a public score influenced the rating, the analysis can say so.
 
+== Findings without a public ID
+
+An entry needs an `id` that starts with `CVE-`, `GHSA-`, `RUSTSEC-`, or `SNYK-`.
+These are the IDs that scanners report and that your customers' tools can match.
+A flaw in your own code that a penetration test, an audit, or a security researcher found has no such ID, so it can't be an entry.
+Track it in your issue tracker.
+If the flaw later gets a public ID, for example because you publish a security advisory for it, you can record it from then on.
+
+A customer or a researcher can still be the source of an entry.
+When they report a vulnerability that has a public ID, the entry gets a report with the reporter `other`.
+
 == Workflow and history stay in other tools
 
 The file also has no assignee, due date, discussion thread, or change history.

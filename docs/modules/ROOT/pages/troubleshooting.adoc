@@ -32,6 +32,9 @@ Use the CVE ID if the vulnerability has one, or the GHSA ID otherwise.
 Record internal ticket numbers in `comment` or in `resolution.ref`.
 See xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
+A finding without one of these IDs can't be an entry.
+See xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out].
+
 [[unknown-property]]
 == `+Unknown property+`
 
