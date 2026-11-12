@@ -519,6 +519,17 @@ html .search-result-document-hit .search-result-section-title {
   margin: 0;
 }
 
+/* Images: a border separates a screenshot from the page in both themes */
+
+.doc .imageblock img {
+  border: 1px solid var(--vl-border);
+  border-radius: 3px;
+}
+
+.doc .imageblock.vl-plain img {
+  border: 0;
+}
+
 /* Tabbed blocks. css/vendor/tabs.css loads before this file and sets the light colours. */
 
 .doc .tabs .tablist > ul li,
