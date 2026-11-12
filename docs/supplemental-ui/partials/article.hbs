@@ -1,0 +1,24 @@
+{{!--
+  The article partial of the default UI, with a notice above the title on pages of an older version.
+  If the page also exists in the latest version, the notice links to it. If not, it links to the start page.
+--}}
+<article class="doc">
+{{#with page.component.latest}}
+{{#unless (eq this.version @root.page.version)}}
+<aside class="vl-version-notice" role="note">
+  <p>This page describes Vulnlog {{@root.page.componentVersion.displayVersion}}. The latest version is {{this.displayVersion}}.
+  {{#if (and @root.page.latest (not @root.page.latest.missing))}}
+  <a href="{{{relativize @root.page.latest.url}}}">Read this page for {{this.displayVersion}}</a>.
+  {{else}}
+  <a href="{{{relativize this.url}}}">Go to the documentation for {{this.displayVersion}}</a>.
+  {{/if}}
+  </p>
+</aside>
+{{/unless}}
+{{/with}}
+{{#with page.title}}
+<h1 class="page">{{{this}}}</h1>
+{{/with}}
+{{{page.contents}}}
+{{> pagination}}
+</article>
