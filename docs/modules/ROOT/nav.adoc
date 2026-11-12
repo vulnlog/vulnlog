@@ -1,5 +1,6 @@
 * Tutorials
 ** xref:get-started/quickstart-triage.adoc[Triage your first finding]
+** xref:get-started/quickstart-fix.adoc[Track a vulnerability to its fix]
 ** xref:get-started/quickstart-release.adoc[Find what affects your release]
 ** xref:get-started/quickstart-report.adoc[Read the impact report]
 ** xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry]

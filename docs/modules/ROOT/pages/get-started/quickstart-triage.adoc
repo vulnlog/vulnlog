@@ -238,6 +238,6 @@ Now you can:
 
 == Next steps
 
-* Record findings that do affect your software, with a severity and a plan, in xref:guides/triage-a-finding.adoc[Triage a new scanner finding].
+* Record a finding that does affect your software and follow it until a release fixes it in xref:get-started/quickstart-fix.adoc[Track a vulnerability to its fix].
 * Point your scanner at the generated file and decide whether to commit it with xref:guides/generate-suppression-files.adoc[Generate suppression files].
 * Find out which releases a vulnerability affects in xref:get-started/quickstart-release.adoc[Find what affects your release].
