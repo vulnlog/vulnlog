@@ -27,6 +27,7 @@ Fields are listed in the order `vulnlog fmt` writes them.
 | None
 | Primary identifier.
 It must start with `CVE-`, `GHSA-`, `RUSTSEC-`, or `SNYK-`.
+Other IDs aren't supported.
 By convention, it's the CVE ID when one exists.
 
 | `name`
