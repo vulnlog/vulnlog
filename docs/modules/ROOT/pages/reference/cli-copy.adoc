@@ -75,17 +75,17 @@ For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-cod
 
 == Examples
 
-`acme-shop-4.3.vl.yaml` is the Vulnlog file of the 4.3 release line of Acme Shop.
-It defines the tags `backend` and `container`, the releases `4.3.0` and `4.3.1`, and no entries yet.
+`acme-shop-3.vl.yaml` is the Vulnlog file of the 3.x release line of Acme Shop.
+It defines the tags `backend` and `container` and the releases `3.9.0` and `3.9.1`.
 Copy the Spring4Shell entry from `acme-shop.vl.yaml` into it:
 
 [source,console]
 ----
-$ vulnlog modify copy acme-shop.vl.yaml acme-shop-4.3.vl.yaml --vuln-id CVE-2022-22965
-Copied: 1 entry to acme-shop-4.3.vl.yaml
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-3.vl.yaml --vuln-id CVE-2022-22965
+Copied: 1 entry to acme-shop-3.vl.yaml
 ----
 
-The entry in `acme-shop-4.3.vl.yaml` now lists `4.3.1`, the last release of the target:
+The entry is now at the top of `vulnerabilities` in `acme-shop-3.vl.yaml` and lists `3.9.1`, the last release of the target:
 
 [source,yaml]
 ----
@@ -94,7 +94,7 @@ vulnerabilities:
   - id: CVE-2022-22965
     name: Spring4Shell
     description: Remote code execution through data binding in Spring Framework
-    releases: [4.3.1]
+    releases: [3.9.1]
     packages: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
     reports:
       - reporter: trivy
@@ -118,16 +118,16 @@ Copy two entries into two targets at once:
 
 [source,console]
 ----
-$ vulnlog modify copy acme-shop.vl.yaml acme-shop-4.2.vl.yaml acme-shop-4.3.vl.yaml --vuln-id CVE-2022-22965 --vuln-id CVE-2022-42889
-Copied: 2 entries to acme-shop-4.2.vl.yaml
-Copied: 2 entries to acme-shop-4.3.vl.yaml
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-2.vl.yaml acme-shop-3.vl.yaml --vuln-id CVE-2022-22965 --vuln-id CVE-2022-42889
+Copied: 2 entries to acme-shop-2.vl.yaml
+Copied: 2 entries to acme-shop-3.vl.yaml
 ----
 
 An ID the source doesn't have stops the command, and no file changes:
 
 [source,console]
 ----
-$ vulnlog modify copy acme-shop.vl.yaml acme-shop-4.3.vl.yaml --vuln-id CVE-2099-0001
+$ vulnlog modify copy acme-shop.vl.yaml acme-shop-3.vl.yaml --vuln-id CVE-2099-0001
 error: vulnerability IDs not found in acme-shop.vl.yaml: CVE-2099-0001
   hint: copy only IDs the source file records
 ----

@@ -131,11 +131,11 @@ Wrote: accepted.html
 
 The report lists the lodash entry `CVE-2021-23337`.
 
-Merge the files of one project:
+Merge the files of two release lines of one project:
 
 [source,console]
 ----
-$ vulnlog report impact frontend.vl.yaml backend.vl.yaml
+$ vulnlog report impact acme-shop.vl.yaml acme-shop-3.vl.yaml
 Wrote: vulnlog-impact-report.html
 ----
 

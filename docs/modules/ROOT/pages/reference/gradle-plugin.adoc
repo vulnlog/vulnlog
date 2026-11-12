@@ -456,7 +456,7 @@ import dev.vulnlog.gradle.VulnlogCopyTask
 
 tasks.register<VulnlogCopyTask>("copySpring4Shell") {
     sourceFile = layout.projectDirectory.file("acme-shop.vl.yaml")
-    destinationFiles.from("acme-shop-4.3.vl.yaml")
+    destinationFiles.from("acme-shop-3.vl.yaml")
     vulnIds = setOf("CVE-2022-22965")
 }
 ----
