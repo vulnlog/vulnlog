@@ -437,3 +437,121 @@ html .search-result-document-hit .search-result-section-title {
     white-space: nowrap;
   }
 }
+
+/* Header: logo, link to the repository, footer */
+
+.navbar-brand > a.navbar-item:first-child {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.navbar-brand > a.navbar-item:first-child svg,
+.vl-source-icon svg {
+  display: block;
+}
+
+.navbar-item .icon svg {
+  vertical-align: middle;
+}
+
+.navbar-item.vl-source {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  line-height: 1.2;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.navbar-item.vl-source:hover {
+  opacity: 1;
+}
+
+.vl-source-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.vl-source-name {
+  font-weight: 500;
+}
+
+.vl-source-facts {
+  display: flex;
+  gap: 0.7rem;
+  font-size: 0.7rem;
+  opacity: 0.8;
+}
+
+.vl-fact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.footer.vl-footer {
+  text-align: center;
+}
+
+.vl-footer a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* Tabbed blocks. css/vendor/tabs.css loads before this file and sets the light colours. */
+
+.doc .tabs .tablist > ul li,
+.doc .tabs .tabpanel {
+  border-color: var(--vl-border);
+}
+
+.doc .tabs .tablist > ul li {
+  font-weight: 500;
+  color: var(--vl-text-muted);
+}
+
+.doc .tabs .tabpanel,
+.doc .tabs.is-loading .tablist li:first-child,
+.doc .tabs:not(.is-loading) .tablist li.is-selected,
+.doc .tabs.is-loading .tablist li:first-child::after,
+.doc .tabs:not(.is-loading) .tablist li.is-selected::after {
+  background-color: var(--vl-bg);
+}
+
+.doc .tabs:not(.is-loading) .tablist li.is-selected {
+  color: var(--vl-text-strong);
+}
+
+.doc .tabs.is-loading .tablist li:not(:first-child),
+.doc .tabs:not(.is-loading) .tablist li:not(.is-selected) {
+  background-color: var(--vl-surface-2);
+}
+
+.doc .tabs .tablist > ul li:focus-visible {
+  outline: 2px solid var(--vl-link);
+  outline-offset: -2px;
+}
+
+.doc .tabs .tabpanel > :last-child,
+.doc .tabs .tabpanel > :last-child > :last-child {
+  margin-bottom: 0;
+}
+
+/* In print, every panel shows, so no tab is lost on paper. */
+
+@media print {
+  .doc .tabs .tabpanel.is-hidden {
+    display: block;
+  }
+}
+
+/* On narrow screens the tabs wrap. A gap instead of a left margin keeps the rows aligned. */
+
+.doc .tabs .tablist > ul {
+  gap: 0.25em;
+}
+
+.doc .tabs .tablist.ulist > ul li + li {
+  margin-left: 0;
+}

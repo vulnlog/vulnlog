@@ -17,6 +17,10 @@ runs:
       run: npm ci --no-fund --no-audit
     - name: Build Antora docs
       shell: bash
+      # docs/extensions/github-facts.js reads the stars and the latest release for the header.
+      # The token only raises the rate limit of these two requests.
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       run: npx antora antora-playbook.yml
     - name: Check the docs search
       shell: bash

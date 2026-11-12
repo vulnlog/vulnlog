@@ -1,0 +1,20 @@
+= UI bundle
+
+`ui-bundle.zip` is the https://gitlab.com/antora/antora-ui-default[Antora default UI], unchanged.
+Both playbooks read it from here, so every build uses the same UI.
+
+The file comes from job 15385706035 of the `bundle-stable` job, downloaded on 2026-11-12.
+
+To update it:
+
+. Download the current bundle:
++
+[source,console]
+----
+$ curl -fsSL -o docs/ui/ui-bundle.zip "https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable"
+----
+
+. Build the site and check it in the light and the dark theme.
+The files in `docs/supplemental-ui` override partials and styles of the bundle by name and by CSS selector.
+
+. Update the job number and the date in this file.

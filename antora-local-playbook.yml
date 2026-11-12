@@ -1,3 +1,6 @@
+# Builds the docs of the branch you have checked out, with your uncommitted changes.
+# The Gradle task docsBuild uses this playbook.
+# Everything from 'asciidoc:' down is the same in antora-playbook.yml. Change both files together.
 site:
   title: Vulnlog Documentation (local)
   url: https://vulnlog.dev/docs
@@ -5,11 +8,10 @@ site:
 
 content:
   sources:
-    - url: ../vulnlog
-      branches:
-        - HEAD
-      worktrees: true
+    - url: .
+      branches: HEAD
       start_path: docs
+      edit_url: false
 
 asciidoc:
   attributes:
@@ -19,6 +21,10 @@ asciidoc:
     # Readable heading anchors: #check-the-result instead of #_check_the_result.
     idprefix: ''
     idseparator: '-'
+  extensions:
+    # Tabbed blocks, written as [tabs]. Their CSS and JavaScript are in docs/supplemental-ui (css/vendor, js/vendor).
+    # After an update of the package, copy both files again from node_modules/@asciidoctor/tabs/dist.
+    - '@asciidoctor/tabs'
 
 antora:
   extensions:
@@ -26,11 +32,14 @@ antora:
     - require: '@antora/lunr-extension'
       # Only the latest version is indexed, so results don't repeat for every release line.
       index_latest_only: true
+    # Reads the latest release, stars, and forks from GitHub once per build for the header.
+    - require: ./docs/extensions/github-facts.js
 
 ui:
   bundle:
-    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
-    snapshot: true
+    # The Antora default UI, committed to this repository, so that a change upstream can't break
+    # docs/supplemental-ui/css/vulnlog-theme.css between two builds. To update it, see docs/ui/README.adoc.
+    url: ./docs/ui/ui-bundle.zip
   supplemental_files: ./docs/supplemental-ui
 
 output:
