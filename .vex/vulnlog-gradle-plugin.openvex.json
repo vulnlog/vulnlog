@@ -3,9 +3,9 @@
   "@id": "https://vulnlog.dev/vex/849578f8-e757-4385-82a3-6aa017494e99",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-11-04T20:04:16Z",
-  "version": 6,
-  "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
+  "timestamp": "2026-11-14T17:01:14Z",
+  "version": 7,
+  "tooling": "Vulnlog Gradle plugin version 0.19.0, https://vulnlog.dev/",
   "statements": [
     {
       "vulnerability": {
@@ -41,6 +41,36 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-110879",
+        "name": "CVE-2026-110879",
+        "description": "jackson-databind does not validate the generic arguments of a class-name type ID, so input can instantiate any class.",
+        "aliases": [
+          "GHSA-m8xf-2cr7-77ph",
+          "SNYK-JAVA-TOOLSJACKSONCORE-21761838"
+        ]
+      },
+      "timestamp": "2026-11-04T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.3",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.3"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
         "name": "CVE-2026-19032",
         "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
@@ -395,6 +425,53 @@
           "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0",
           "identifiers": {
             "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-19032",
+        "name": "CVE-2026-19032",
+        "description": "jackson-databind resolves a `java.nio.file.Path` through any installed `FileSystemProvider` without a scheme allowlist.",
+        "aliases": [
+          "GHSA-wjgm-6hv5-3cvf"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
           },
           "subcomponents": [
             {
@@ -817,6 +894,53 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-59889",
+        "name": "CVE-2026-59889",
+        "description": "jackson-databind does not apply the active `@JsonView` to `@JsonUnwrapped` properties on deserialization, so input sets properties outside the view.",
+        "aliases": [
+          "GHSA-5gvw-p9qm-jgwh"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
         "name": "CVE-2026-68497",
         "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
@@ -1205,6 +1329,53 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-68497",
+        "name": "CVE-2026-68497",
+        "description": "jackson-databind parses unbounded numbers when deserializing `javax.xml.datatype` `Duration` and `XMLGregorianCalendar` values, which exhausts CPU.",
+        "aliases": [
+          "GHSA-q4xh-88c3-wmh7"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
         "name": "CVE-2026-77310",
         "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
@@ -1593,6 +1764,53 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-77310",
+        "name": "CVE-2026-77310",
+        "description": "jackson-databind still resolves DNS eagerly when deserializing `InetAddress`, an incomplete fix for CVE-2026-54514.",
+        "aliases": [
+          "GHSA-vvgp-rfg2-7rr6"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
         "name": "CVE-2026-83557",
         "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
@@ -1981,6 +2199,53 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-83557",
+        "name": "CVE-2026-83557",
+        "description": "jackson-databind's default polymorphic type validator misses `Comparable` among its unsafe base types.",
+        "aliases": [
+          "GHSA-gx83-3vf8-gh7j"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89407",
         "name": "CVE-2026-89407",
         "description": "jackson-core `NumberInput.looksLikeValidNumber()` backtracks in quadratic time on long digit strings.",
@@ -2335,6 +2600,53 @@
           "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0",
           "identifiers": {
             "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89407",
+        "name": "CVE-2026-89407",
+        "description": "jackson-core `NumberInput.looksLikeValidNumber()` backtracks in quadratic time on long digit strings.",
+        "aliases": [
+          "GHSA-p6pp-m3f8-5c89"
+        ]
+      },
+      "timestamp": "2026-08-23T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
           },
           "subcomponents": [
             {
@@ -2807,6 +3119,59 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-89425",
+        "name": "CVE-2026-89425",
+        "description": "jackson-core `UTF8DataInputJsonParser` builds invalid-token error messages without the `maxErrorTokenLength` limit.",
+        "aliases": [
+          "GHSA-7hhh-6rmp-j9qf"
+        ]
+      },
+      "timestamp": "2026-09-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-core@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-core@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
         "name": "CVE-2026-91776",
         "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
@@ -3245,6 +3610,59 @@
     },
     {
       "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91776",
+        "name": "CVE-2026-91776",
+        "description": "jackson-databind caches a deserializer per unknown `@JsonTypeInfo` type ID, so new IDs grow memory without bound.",
+        "aliases": [
+          "GHSA-wv8q-qhhj-9h54"
+        ]
+      },
+      "timestamp": "2026-09-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
         "name": "CVE-2026-91777",
         "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
@@ -3643,6 +4061,59 @@
           "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0",
           "identifiers": {
             "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.4"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.0"
+              }
+            },
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.2.2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-91777",
+        "name": "CVE-2026-91777",
+        "description": "jackson-databind resolves `@JsonIdentityInfo` forward references in quadratic time, which exhausts CPU.",
+        "aliases": [
+          "GHSA-cxp5-3px4-pw24"
+        ]
+      },
+      "timestamp": "2026-09-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
           },
           "subcomponents": [
             {
@@ -3835,6 +4306,36 @@
     },
     {
       "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17434789",
+        "description": "Server-side request forgery (SSRF) vulnerability in Jacksons `JDKFromStringDeserializer`.",
+        "aliases": [
+          "CVE-2026-54514",
+          "GHSA-hgj6-7826-r7m5"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
         "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
@@ -3971,6 +4472,36 @@
           "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0",
           "identifiers": {
             "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440306",
+        "description": "Incorrect authorization in Jackson's `BeanDeserializer._deserializeUsingPropertyBased` method.",
+        "aliases": [
+          "CVE-2026-54517",
+          "GHSA-5hh8-q8hv-fr38"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
           },
           "subcomponents": [
             {
@@ -4139,6 +4670,36 @@
     },
     {
       "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440359",
+        "description": "Incorrect authorization in jackson's `UnwrappedPropertyHandler.processUnwrappedCreatorProperties()` method.",
+        "aliases": [
+          "CVE-2026-54518",
+          "GHSA-rcqc-6cw3-h962"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
         "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
@@ -4291,6 +4852,36 @@
     },
     {
       "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440365",
+        "description": "Incomplete list of disallowed inputs in Jacksons `BasicPolymorphicTypeValidator.Builder.allowIfSubTypeIsArray()` methods.",
+        "aliases": [
+          "CVE-2026-54513",
+          "GHSA-rmj7-2vxq-3g9f"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
         "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
@@ -4443,6 +5034,36 @@
     },
     {
       "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17440597",
+        "description": "Deserialization of untrusted data in Jacksons `DatabindContext._resolveAndValidateGeneric()` method.",
+        "aliases": [
+          "CVE-2026-54512",
+          "GHSA-j3rv-43j4-c7qm"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
@@ -4595,6 +5216,36 @@
     },
     {
       "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457396",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `POJOPropertiesCollector._renameProperties()` and `BeanDeserializerFactory.addBeanProps()` methods.",
+        "aliases": [
+          "CVE-2026-54516",
+          "GHSA-9fxm-vc8v-hj55"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
         "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
         "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
@@ -4731,6 +5382,36 @@
           "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0",
           "identifiers": {
             "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.18.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1",
+              "identifiers": {
+                "purl": "pkg:maven/tools.jackson.core/jackson-databind@3.1.1"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "fixed",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://security.snyk.io/vuln/SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "name": "SNYK-JAVA-TOOLSJACKSONCORE-17457696",
+        "description": "Improperly controlled modification of dynamically-determined object attributes in Jackson's `BeanDeserializerBase.createContextual()` method.",
+        "aliases": [
+          "CVE-2026-54515",
+          "GHSA-5jmj-h7xm-6q6v"
+        ]
+      },
+      "timestamp": "2026-06-29T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0",
+          "identifiers": {
+            "purl": "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
           },
           "subcomponents": [
             {
