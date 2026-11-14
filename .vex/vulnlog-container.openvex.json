@@ -3,8 +3,8 @@
   "@id": "https://vulnlog.dev/vex/bb0af4a6-415b-4fc7-b436-ce81e0e07b7e",
   "author": "Vulnlog Dev Team",
   "role": "Document Creator",
-  "timestamp": "2026-11-04T20:04:16Z",
-  "version": 6,
+  "timestamp": "2026-11-14T14:37:13Z",
+  "version": 7,
   "tooling": "Vulnlog Gradle plugin version 0.18.0, https://vulnlog.dev/",
   "statements": [
     {
@@ -59,6 +59,40 @@
       "status": "not_affected",
       "justification": "vulnerable_code_not_in_execute_path",
       "impact_statement": "PCRE2 enters the image through the Debian base only; the entrypoint is the Vulnlog native binary, which links just libc and libz and never loads libpcre2. Nothing in the container compiles or matches PCRE2 patterns.",
+      "supplier": "Vulnlog"
+    },
+    {
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-107891",
+        "name": "CVE-2026-107891",
+        "description": "Integer overflows in musl `regcomp()` can cause an out-of-bounds heap write when compiling an untrusted regular expression."
+      },
+      "timestamp": "2026-11-14T00:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog",
+          "identifiers": {
+            "purl": "pkg:oci/vulnlog@sha256%3A6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io%2Fvulnlog%2Fvulnlog"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:apk/alpine/musl-utils@1.2.6-r2",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/musl-utils@1.2.6-r2"
+              }
+            },
+            {
+              "@id": "pkg:apk/alpine/musl@1.2.6-r2",
+              "identifiers": {
+                "purl": "pkg:apk/alpine/musl@1.2.6-r2"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "musl is the C library of the Alpine base image. Vulnlog never calls `regcomp()` or any other musl regex function. It runs its regular expressions in its own Java code.",
       "supplier": "Vulnlog"
     },
     {
