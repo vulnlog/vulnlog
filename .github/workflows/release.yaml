@@ -234,6 +234,9 @@ jobs:
     uses: ./.github/workflows/deploy-website.yml
     with:
       version: ${{ needs.version.outputs.version }}
+    secrets:
+      BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
+      BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
 
   notify-homebrew:
     name: Trigger Homebrew formula bump

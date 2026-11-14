@@ -16,6 +16,11 @@ on:
         description: "Vulnlog version rendered into the website and install script. Defaults to vulnlog-version from docs/antora.yml."
         type: string
         default: ''
+    secrets:
+      BUNNY_ACCESS_KEY:
+        required: true
+      BUNNY_STORAGE_ZONE_REGION_ENDPOINT:
+        required: true
   workflow_dispatch:
   workflow_run:
     workflows: ["Security Scanning"]
@@ -116,6 +121,8 @@ jobs:
         working-directory: _site
         run: |
           set -euo pipefail
+          : "${BUNNY_ACCESS_KEY:?secret BUNNY_ACCESS_KEY is empty}"
+          : "${BUNNY_STORAGE_ZONE_REGION_ENDPOINT:?secret BUNNY_STORAGE_ZONE_REGION_ENDPOINT is empty}"
           endpoint="${BUNNY_STORAGE_ZONE_REGION_ENDPOINT%/}"
           find . -type f -print0 | while IFS= read -r -d '' file; do
             path="${file#./}"
