@@ -98,11 +98,22 @@ releases:
       - purl: "pkg:oci/vulnlog@sha256:6b5626ea656a2beb3eedeb4cfb314198b3d427d7254dc04872bffde19319c424?repository_url=ghcr.io/vulnlog/vulnlog"
         tags: [container]
   - id: 0.19.0
+    published_at: 2026-11-14
     purls:
       - purl: "pkg:generic/vulnlog@0.19.0"
         tags: [cli]
       - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.19.0"
         tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@sha256:f140eaa9ec6381d04d1f1d5cf4181034d8759e2358d6a97af45bcd05f72d459d?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
+  - id: 0.20.0
+    purls:
+      - purl: "pkg:generic/vulnlog@0.20.0"
+        tags: [cli]
+      - purl: "pkg:maven/dev.vulnlog/gradle-plugin@0.20.0"
+        tags: [gradle plugin]
+      - purl: "pkg:oci/vulnlog@0.20.0?repository_url=ghcr.io/vulnlog/vulnlog"
+        tags: [container]
 
 vulnerabilities:
 
@@ -123,7 +134,11 @@ vulnerabilities:
     analyzed_at: 2026-11-14
     verdict: not affected
     justification: vulnerable code not in execute path
-    comment: musl 1.2.7 fixes the vulnerability. The next base image update picks up the fix.
+    resolution:
+      in: 0.19.0
+      at: 2026-11-14
+      ref: "https://github.com/vulnlog/vulnlog/pull/358"
+      note: Updated the Alpine base image, which brings musl 1.2.6-r3 with the fix.
 
   - id: CVE-2026-110879
     description: >-

@@ -3,7 +3,7 @@ import dev.vulnlog.gradle.VulnlogOpenVexTask
 import dev.vulnlog.gradle.VulnlogOpenVexUpdateTask
 
 plugins {
-    id("dev.vulnlog.plugin") version "0.18.0"
+    id("dev.vulnlog.plugin") version "0.19.0"
     id("com.github.node-gradle.node") version "7.1.0"
 }
 
