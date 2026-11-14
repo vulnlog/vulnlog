@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-11-14
+
+### ⚠ BREAKING CHANGES
+
+* **suppress:** write `dependency-check-suppressions.xml` for `dependency-check` reports with the default `--format auto`, instead of `dependency-check.generic.json`. Pass `--format generic` to keep the JSON file ([#337](https://github.com/vulnlog/vulnlog/pull/337))
+
+### Features
+
+* **suppress:** generate OWASP Dependency-Check XML suppression files, on the CLI and in the `vulnlogSuppress` Gradle task. The analysis becomes the note and `suppress.expires_at` becomes the `until` date. Only CVE IDs are written ([#337](https://github.com/vulnlog/vulnlog/pull/337))
+* **release:** attach CycloneDX SBOMs for the JVM distribution, the native binaries, the container image and the Gradle plugin to each GitHub release, and sign build provenance and SBOM attestations that you can check with `gh attestation verify` ([#328](https://github.com/vulnlog/vulnlog/pull/328))
+* **release:** The Vulnlog project publish an OpenVEX document for the CLI, the container image and the Gradle plugin, which tells your scanner which findings in Vulnlog's dependencies don't affect a release ([#326](https://github.com/vulnlog/vulnlog/pull/326))
+* **docs:** restructure the documentation into tutorials, how-to guides, reference and explanation, and add full-text search and a dark theme ([#352](https://github.com/vulnlog/vulnlog/pull/352))
+* **docs:** add an arc42 software architecture document for contributors in `devdoc/Software-Architecture.adoc`, with the goals, constraints, building blocks and architecture decisions ([#351](https://github.com/vulnlog/vulnlog/pull/351))
+
+### Security
+
+* **deps:** update Jackson to 3.2.4, so scanners no longer report CVE-2026-110879 in the CLI and the Gradle plugin. Vulnlog wasn't affected ([#348](https://github.com/vulnlog/vulnlog/pull/348))
+
+### New Contributors
+
+* @Sinkleberg made their first contribution in [#337](https://github.com/vulnlog/vulnlog/pull/337)
+
 ## [0.18.0] - 2026-10-09
 
 ### ⚠ BREAKING CHANGES
@@ -519,6 +541,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add default project setup by @ryru
 - Init by @ryru
 
+[0.19.0]: https://github.com/vulnlog/vulnlog/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/vulnlog/vulnlog/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/vulnlog/vulnlog/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/vulnlog/vulnlog/compare/v0.15.1...v0.16.0
