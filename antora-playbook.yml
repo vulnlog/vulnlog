@@ -9,16 +9,14 @@ content:
   sources:
     # The newest release line. "Edit this Page" opens the file on main, where docs changes start.
     - url: .
-      branches: release/0.18
+      branches: release/0.19
       start_path: docs
       edit_url: 'https://github.com/vulnlog/vulnlog/edit/main/{path}'
     # Older release lines. Their page paths differ from main, so they get no edit link.
     - url: .
       branches:
+        - release/0.18
         - release/0.17
-        - release/0.16
-        - release/0.15
-        - release/0.14
       start_path: docs
       edit_url: false
 
