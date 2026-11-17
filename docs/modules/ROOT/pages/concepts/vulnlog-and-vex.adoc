@@ -43,7 +43,7 @@ The table shows how an entry becomes an OpenVEX status:
 | `affected`
 | `affected`
 
-| A resolution, for its release and every later release
+| A resolution, for its release
 | `fixed`
 |===
 

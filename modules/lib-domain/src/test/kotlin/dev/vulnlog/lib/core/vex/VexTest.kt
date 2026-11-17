@@ -18,6 +18,7 @@ import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnlogFile
+import dev.vulnlog.lib.model.vex.ReleaseVexStatus
 import dev.vulnlog.lib.model.vex.Remediation
 import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.VexStatusKind
@@ -58,48 +59,48 @@ private fun affectedIn(
 class VexTest :
     FunSpec({
 
-        context("releaseStatuses") {
+        context("deriveReleaseVexStatuses") {
 
-            test("an entry applies from the first release it lists until the fix, and is fixed from then on") {
-                val entry = affectedIn(releases = listOf("1.1.0"), fixedIn = "1.2.0")
+            test("an entry applies from the first release it lists until the fix, and is fixed only there") {
+                val entry = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.2.0")
 
-                val statuses = releaseStatuses(entry, file)
+                val statuses = deriveReleaseVexStatuses(entry, file)
 
-                statuses.map { it.release } shouldContainExactly
-                    listOf(release("1.1.0"), release("1.2.0"), release("1.3.0"))
-                statuses[0].status.shouldBeInstanceOf<VexStatus.Affected>()
-                statuses[1].status shouldBe VexStatus.Fixed
-                statuses[2].status shouldBe VexStatus.Fixed
+                statuses.map { it.release.value to vexStatusKind(it.status) } shouldContainExactly
+                    listOf(
+                        "1.0.0" to VexStatusKind.AFFECTED,
+                        "1.1.0" to VexStatusKind.AFFECTED,
+                        "1.2.0" to VexStatusKind.FIXED,
+                    )
             }
 
             test("without a resolution the earliest listed release opens a range that stays affected") {
                 val entry = affectedIn(releases = listOf("1.2.0", "1.0.0"))
 
-                val statuses = releaseStatuses(entry, file)
+                val statuses = deriveReleaseVexStatuses(entry, file)
 
                 statuses.map { it.release.value } shouldContainExactly listOf("1.0.0", "1.1.0", "1.2.0", "1.3.0")
                 statuses.forEach { it.status.shouldBeInstanceOf<VexStatus.Affected>() }
             }
 
-            test("a fix declared before the first listed release wins from the fix on, as the file states it") {
+            test("a fix declared before the first listed release leaves only the fix, as the file states it") {
                 val entry = affectedIn(releases = listOf("1.2.0"), fixedIn = "1.1.0")
 
-                val statuses = releaseStatuses(entry, file)
+                val statuses = deriveReleaseVexStatuses(entry, file)
 
-                statuses.map { it.release.value } shouldContainExactly listOf("1.1.0", "1.2.0", "1.3.0")
-                statuses.all { it.status == VexStatus.Fixed } shouldBe true
+                statuses shouldContainExactly listOf(ReleaseVexStatus(release("1.1.0"), VexStatus.Fixed, null))
             }
 
             test("an entry listing no release applies nowhere") {
                 val entry = vulnerability(id = cve("CVE-2026-1234"), verdict = affected)
 
-                val statuses = releaseStatuses(entry, file)
+                val statuses = deriveReleaseVexStatuses(entry, file)
 
                 statuses.shouldBeEmpty()
             }
         }
 
-        context("releaseStatuses dates") {
+        context("deriveReleaseVexStatuses dates") {
 
             test("a verdict is dated by the analysis date, else the earliest report") {
                 val analyzed =
@@ -122,7 +123,7 @@ class VexTest :
                         verdict = affected,
                     )
 
-                val dates = listOf(analyzed, reportedOnly).map { releaseStatuses(it, file).single().since }
+                val dates = listOf(analyzed, reportedOnly).map { deriveReleaseVexStatuses(it, file).single().since }
 
                 dates shouldContainExactly listOf(LocalDate.of(2026, 4, 6), LocalDate.of(2026, 4, 1))
             }
@@ -136,7 +137,7 @@ class VexTest :
                         analyzedAt = LocalDate.of(2026, 4, 6),
                     )
 
-                val status = releaseStatuses(open, file).single()
+                val status = deriveReleaseVexStatuses(open, file).single()
 
                 status.since shouldBe LocalDate.of(2026, 4, 1)
             }
@@ -147,7 +148,7 @@ class VexTest :
                 val published = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.2.0")
                 val undated = affectedIn(releases = listOf("1.0.0"), fixedIn = "1.3.0")
 
-                val dates = listOf(dated, published, undated).map { releaseStatuses(it, file).last().since }
+                val dates = listOf(dated, published, undated).map { deriveReleaseVexStatuses(it, file).last().since }
 
                 dates shouldContainExactly listOf(LocalDate.of(2026, 4, 22), LocalDate.of(2026, 4, 20), null)
             }
@@ -155,7 +156,7 @@ class VexTest :
             test("an undated entry falls back to the day each release was published") {
                 val entry = affectedIn(releases = listOf("1.0.0"))
 
-                val statuses = releaseStatuses(entry, file)
+                val statuses = deriveReleaseVexStatuses(entry, file)
 
                 statuses.associate { it.release.value to it.since } shouldBe
                     mapOf(
@@ -192,7 +193,9 @@ class VexTest :
                     )
 
                 val statuses =
-                    listOf(affectedEntry, notAffectedEntry, openEntry).map { releaseStatuses(it, file).single().status }
+                    listOf(affectedEntry, notAffectedEntry, openEntry).map { entry ->
+                        deriveReleaseVexStatuses(entry, file).single().status
+                    }
 
                 statuses shouldContainExactly
                     listOf(
@@ -206,7 +209,7 @@ class VexTest :
                 val entry =
                     affectedIn(releases = listOf("1.0.0"), fixedIn = "1.2.0").copy(analysis = "the parser is reachable")
 
-                val status = releaseStatuses(entry, file).last().status
+                val status = deriveReleaseVexStatuses(entry, file).last().status
 
                 status shouldBe VexStatus.Fixed
             }
@@ -215,7 +218,7 @@ class VexTest :
                 val entry =
                     vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.3.0")), analysis = "  ")
 
-                val status = releaseStatuses(entry, file).single().status
+                val status = deriveReleaseVexStatuses(entry, file).single().status
 
                 status shouldBe VexStatus.UnderInvestigation(null)
             }

@@ -5,8 +5,8 @@ package dev.vulnlog.lib.core.validation
 
 import com.github.packageurl.PackageURL
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.vex.deriveReleaseVexStatuses
 import dev.vulnlog.lib.core.vex.filterReleasePurlsMatchingVulnerabilityEntryTags
-import dev.vulnlog.lib.core.vex.releaseStatuses
 import dev.vulnlog.lib.finding.FindingSeverity
 import dev.vulnlog.lib.finding.Rule
 import dev.vulnlog.lib.finding.ValidationFinding
@@ -360,7 +360,7 @@ private fun validateVulnerabilitiesAreDated(file: VulnlogFile): List<ValidationF
                 .map(ReleaseEntry::id)
                 .toSet()
         val undated =
-            releaseStatuses(vuln, file)
+            deriveReleaseVexStatuses(vuln, file)
                 .filter { status -> status.since == null && status.release in releasesWithMatchingPurls }
                 .map { status -> "'${status.release.value}'" }
         if (undated.isEmpty()) return@mapNotNull null

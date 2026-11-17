@@ -61,7 +61,8 @@ The document has statements for releases that declare `purls`, the PURLs of the 
 Without `--release`, it covers every release with a `published_at` date.
 For release PURLs, see xref:reference/project-and-releases.adoc[Project and releases].
 
-An entry gets a statement for each covered release from the earliest release it lists through every later release in the file.
+An entry gets a statement for each covered release from the earliest release it lists through the release in `resolution.in`.
+Without a resolution, the statements continue through the last release in the file.
 The statement names the release PURLs that share a tag with the entry.
 An entry without tags, or with tags that no release PURL has, isn't in the document.
 A release PURL without tags matches no entry.
@@ -86,7 +87,7 @@ A release without `purls` isn't in the document, and the command prints a `warni
 | `affected`
 | `analysis` as `status_notes`, and an `action_statement`
 
-| Release in `resolution.in` and every later release
+| Release in `resolution.in`
 | `fixed`
 | Nothing from `analysis`
 |===

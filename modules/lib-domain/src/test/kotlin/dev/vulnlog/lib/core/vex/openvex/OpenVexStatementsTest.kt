@@ -157,7 +157,7 @@ class OpenVexStatementsTest :
                     )
             }
 
-            test("an intermediate release the entry does not list gets its statement too") {
+            test("a release the entry does not list gets its statement up to the fix, and none after it") {
                 val file =
                     vulnlogFile(
                         releases =
@@ -177,7 +177,6 @@ class OpenVexStatementsTest :
                         "pkg:maven/com.acme/app@1.0.0" to VexStatusKind.AFFECTED,
                         "pkg:maven/com.acme/app@1.0.5" to VexStatusKind.AFFECTED,
                         "pkg:maven/com.acme/app@1.0.1" to VexStatusKind.FIXED,
-                        "pkg:maven/com.acme/app@1.1.0" to VexStatusKind.FIXED,
                     )
             }
 

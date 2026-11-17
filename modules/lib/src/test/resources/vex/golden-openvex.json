@@ -185,32 +185,6 @@
     },
     {
       "vulnerability": {
-        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-2222",
-        "name": "CVE-2026-2222",
-        "description": "Denial of service in example-parser"
-      },
-      "timestamp": "2026-04-20T00:00:00Z",
-      "products": [
-        {
-          "@id": "pkg:maven/com.acme/acme-cli@1.1.0",
-          "identifiers": {
-            "purl": "pkg:maven/com.acme/acme-cli@1.1.0"
-          },
-          "subcomponents": [
-            {
-              "@id": "pkg:npm/example-parser@1.0.0",
-              "identifiers": {
-                "purl": "pkg:npm/example-parser@1.0.0"
-              }
-            }
-          ]
-        }
-      ],
-      "status": "fixed",
-      "supplier": "Acme Corp"
-    },
-    {
-      "vulnerability": {
         "@id": "https://nvd.nist.gov/vuln/detail/CVE-2026-3333",
         "name": "CVE-2026-3333"
       },
