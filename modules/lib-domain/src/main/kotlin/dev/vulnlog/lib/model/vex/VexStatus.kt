@@ -60,8 +60,11 @@ sealed interface Remediation {
     data object NoneAvailable : Remediation
 }
 
-/** [since] is null when neither the entry nor the release records a date for the status. */
-data class ReleaseStatus(
+/**
+ * The VEX status one vulnerability entry has in one release. [since] is the day the status became true, or null when
+ * neither the entry nor the release records a date for it.
+ */
+data class ReleaseVexStatus(
     val release: Release,
     val status: VexStatus,
     val since: LocalDate?,
