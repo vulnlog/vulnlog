@@ -356,6 +356,22 @@ class OpenVexStatementsTest :
                 statement.status shouldBe VexStatus.UnderInvestigation("not reachable")
             }
 
+            test("names no subcomponents when fixed, because the fix release no longer ships the vulnerable packages") {
+                val entry =
+                    vulnerability(
+                        id = cve("CVE-2026-1234"),
+                        releases = listOf(release("1.0.0")),
+                        tags = listOf(APP),
+                        packages = listOf(Purl.Npm("pkg:npm/alib@1.0.0")),
+                        resolution = resolution(release = "1.0.0"),
+                    )
+
+                val statement = statementOf(entry)
+
+                statement.status shouldBe VexStatus.Fixed
+                statement.subcomponents.shouldBeEmpty()
+            }
+
             test("is left to the revision to date when neither the entry nor its named, unpublished release is dated") {
                 val entry =
                     vulnerability(id = cve("CVE-2026-1234"), releases = listOf(release("1.0.0")), tags = listOf(APP))

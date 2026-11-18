@@ -15,6 +15,7 @@ import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.vex.ReleaseVexStatus
+import dev.vulnlog.lib.model.vex.VexStatus
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaseline
 import dev.vulnlog.lib.model.vex.openvex.OpenVexCollection
 import dev.vulnlog.lib.model.vex.openvex.OpenVexEmptyReason
@@ -37,7 +38,7 @@ fun collectOpenVexStatements(
     val statements =
         statuses
             .flatMap { (vulnEntry, releaseVexStatuses) ->
-                statementsOf(vulnEntry, releaseVexStatuses, matchingPurls.getValue(vulnEntry))
+                buildStatements(vulnEntry, releaseVexStatuses, matchingPurls.getValue(vulnEntry))
             }.distinct()
             .sortedWith(
                 compareBy(
@@ -143,7 +144,8 @@ private fun scopedPurls(
         .map(PurlEntry::purl)
         .sortedBy(Purl::value)
 
-private fun statementsOf(
+/** Builds the entry's statements, one per release status. A release without purls matching the entry gets none. */
+private fun buildStatements(
     vulnEntry: VulnerabilityEntry,
     releaseVexStatuses: List<ReleaseVexStatus>,
     matchingPurls: Map<Release, List<Purl>>,
@@ -159,10 +161,24 @@ private fun statementsOf(
                     ),
                 timestamp = releaseVexStatus.since?.let(OpenVexStatementTime::Stated) ?: OpenVexStatementTime.Issued,
                 products = products,
-                subcomponents = vulnEntry.packages.sortedBy(Purl::value),
+                subcomponents = selectSubcomponents(vulnEntry, releaseVexStatus.status),
                 status = releaseVexStatus.status,
             )
         }
+    }
+
+/**
+ * Selects the entry's packages as the subcomponents of a statement, or none for [VexStatus.Fixed]. A fixed statement is
+ * about the whole product, and the fix release usually no longer ships the vulnerable packages.
+ */
+private fun selectSubcomponents(
+    vulnEntry: VulnerabilityEntry,
+    status: VexStatus,
+): List<Purl> =
+    when (status) {
+        VexStatus.Fixed -> emptyList()
+        is VexStatus.Affected, is VexStatus.NotAffected, is VexStatus.UnderInvestigation ->
+            vulnEntry.packages.sortedBy(Purl::value)
     }
 
 private fun unpublishedReleases(
