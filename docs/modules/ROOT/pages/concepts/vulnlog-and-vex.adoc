@@ -53,6 +53,7 @@ A scanner such as Trivy reads an OpenVEX document next to its own findings.
 It leaves out a finding when a statement with the status `not_affected` or `fixed` matches it, and it keeps reporting `affected` and `under_investigation` findings.
 
 A statement matches when its product is what the scanner scans, and its subcomponent is a package the scanner found in it.
+A `fixed` statement has no subcomponent, so it matches every finding of the vulnerability in the product.
 Trivy identifies a Maven project by the coordinates in `pom.xml`, so a statement for `pkg:maven/com.acme/acme-shop-server@4.3.0` applies only to a project with those coordinates.
 Trivy identifies a container image by its digest, so the statement for an image names the digest.
 An image tag such as `4.3.0` doesn't match.

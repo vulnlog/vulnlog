@@ -169,15 +169,7 @@
           "@id": "pkg:maven/com.acme/acme-cli@1.0.1",
           "identifiers": {
             "purl": "pkg:maven/com.acme/acme-cli@1.0.1"
-          },
-          "subcomponents": [
-            {
-              "@id": "pkg:npm/example-parser@1.0.0",
-              "identifiers": {
-                "purl": "pkg:npm/example-parser@1.0.0"
-              }
-            }
-          ]
+          }
         }
       ],
       "status": "fixed",

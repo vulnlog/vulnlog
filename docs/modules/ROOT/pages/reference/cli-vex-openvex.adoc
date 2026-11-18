@@ -123,7 +123,8 @@ The `action_statement` of an `affected` statement depends on `disposition` and `
 | `The risk is accepted. No fix is planned.`
 |===
 
-Each statement also carries the vulnerability ID, `aliases`, and `description`, and the `packages` of the entry as subcomponents of each product.
+Each statement also carries the vulnerability ID, `aliases`, and `description`.
+Except in a `fixed` statement, it also carries the `packages` of the entry as subcomponents of each product.
 `name`, `severity`, `comment`, and `reports` aren't written.
 
 A statement's `timestamp` is the date its status became true:
