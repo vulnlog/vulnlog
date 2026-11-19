@@ -11,6 +11,11 @@ sealed interface SuppressionEncodingProblem {
     val format: SuppressionFormat
     val id: VulnId
 
+    data class UnsupportedIdType(
+        override val format: SuppressionFormat,
+        override val id: VulnId,
+    ) : SuppressionEncodingProblem
+
     data class UnencodableReason(
         override val format: SuppressionFormat,
         override val id: VulnId,

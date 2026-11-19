@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressedVulnerability
 import dev.vulnlog.lib.model.suppression.SuppressionCollection
+import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.model.suppression.SuppressionEntry
 import dev.vulnlog.lib.model.suppression.SuppressionExclusion
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
@@ -142,6 +143,20 @@ class SuppressionMessagesTest :
 
                 failures shouldBe renderFilterProblems(problems)
             }
+        }
+
+        test("an unsupported ID has an actionable encoding failure") {
+            val id = VulnId.RustSec("RUSTSEC-2026-0001")
+
+            renderSuppressionEncodingProblems(
+                listOf(SuppressionEncodingProblem.UnsupportedIdType(SuppressionFormat.DependencyCheck, id)),
+            ) shouldBe
+                listOf(
+                    Failure(
+                        "cannot encode RUSTSEC-2026-0001 as Dependency-Check XML: unsupported vulnerability ID type",
+                        "use an ID supported by the format, or select the generic suppression format",
+                    ),
+                )
         }
 
         test("renderSuppressionWritten names the target, the format and the entry count") {

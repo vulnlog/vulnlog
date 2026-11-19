@@ -218,7 +218,7 @@ The generated `dependency-check-suppressions.xml`:
 ----
 
 Dependency-Check matches CVE IDs with `cve` rules and GHSA IDs with exact `vulnerabilityName` rules.
-The `cve` rule accepts only CVE IDs, so GHSA IDs use `vulnerabilityName`.
+The `cve` rule does not accept GHSA IDs, so they use `vulnerabilityName`.
 Each rule applies to the ID across all dependencies.
 
 The Log4Shell entry's Grype report has no `suppress` block, so `grype.generic.json` doesn't list it.
