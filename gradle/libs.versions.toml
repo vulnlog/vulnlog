@@ -4,14 +4,14 @@
 cliktVersion = "5.1.0"
 cyclonedxVersion = "3.5.1"
 graalvmNativeBuildToolsVersion = "1.1.18"
-jacksonVersion = "3.2.4"
-kotestVersion = "6.2.6"
+jacksonVersion = "3.3.0"
+kotestVersion = "6.2.7"
 kotlinVersion = "2.4.21"
 ktlintVersion = "14.2.0"
 packageUrlVersion = "1.5.0"
 # The only YAML library: it parses every file Vulnlog reads and emits every file Vulnlog writes.
 snakeYamlEngineVersion = "3.2"
-spotlessVersion = "8.10.4"
+spotlessVersion = "8.11.0"
 
 [libraries]
 clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "cliktVersion" }
