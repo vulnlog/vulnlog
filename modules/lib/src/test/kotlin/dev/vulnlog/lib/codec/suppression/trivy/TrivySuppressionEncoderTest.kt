@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.codec.suppression.trivy
 
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressionEntry
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
@@ -33,5 +34,36 @@ class TrivySuppressionEncoderTest :
 
             result shouldContain "expired_at: 2026-08-01"
             result shouldNotContain "expires_at"
+        }
+
+        test("writes the packages of an entry as purls") {
+            val input =
+                SuppressionList(
+                    format = SuppressionFormat.Trivy,
+                    entries =
+                        setOf(
+                            SuppressionEntry(
+                                id = VulnId.Cve("CVE-2022-42889"),
+                                packages = listOf(Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9")),
+                            ),
+                        ),
+                )
+
+            val result = TrivySuppressionEncoder.encode(input)
+
+            result shouldContain "purls:"
+            result shouldContain "\"pkg:maven/org.apache.commons/commons-text@1.9\""
+        }
+
+        test("leaves out purls when the entry has no packages") {
+            val input =
+                SuppressionList(
+                    format = SuppressionFormat.Trivy,
+                    entries = setOf(SuppressionEntry(id = VulnId.Cve("CVE-2022-42889"))),
+                )
+
+            val result = TrivySuppressionEncoder.encode(input)
+
+            result shouldNotContain "purls"
         }
     })

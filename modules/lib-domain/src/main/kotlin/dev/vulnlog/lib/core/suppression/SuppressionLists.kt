@@ -69,21 +69,33 @@ private fun buildList(
 ): ListWithExclusions {
     val (supported, unsupported) = suppressions.partition { it.id::class in format.vulnIdTypes }
     return ListWithExclusions(
-        list = SuppressionList(format, supported.map { entry(format, it) }.toSet()),
+        list = SuppressionList(format, supported.map { toSuppressionEntry(format, it) }.toSet()),
         exclusions = unsupported.map { SuppressionExclusion.UnsupportedIdType(it.id, format) },
     )
 }
 
-/** cargo-audit ignores bare ids, so its entries keep only the id and collapse to one per id. */
-private fun entry(
+/**
+ * cargo-audit ignores bare ids, so its entries keep only the id and collapse to one per id. Trivy limits an entry to
+ * the packages the analysis is about.
+ */
+private fun toSuppressionEntry(
     format: SuppressionFormat,
     suppression: SuppressedVulnerability,
 ): SuppressionEntry =
     when (format) {
         SuppressionFormat.CargoAudit -> SuppressionEntry(suppression.id)
-        is SuppressionFormat.Generic,
-        SuppressionFormat.Trivy,
-        SuppressionFormat.Snyk,
-        SuppressionFormat.DependencyCheck,
-        -> SuppressionEntry(suppression.id, suppression.expiresAt, suppression.analysis)
+        SuppressionFormat.Trivy ->
+            SuppressionEntry(
+                suppression.id,
+                suppression.expiresAt,
+                suppression.analysis,
+                suppression.packages,
+            )
+
+        is SuppressionFormat.Generic, SuppressionFormat.Snyk, SuppressionFormat.DependencyCheck ->
+            SuppressionEntry(
+                suppression.id,
+                suppression.expiresAt,
+                suppression.analysis,
+            )
     }

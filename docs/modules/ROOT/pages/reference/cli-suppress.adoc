@@ -97,6 +97,7 @@ $ vulnlog suppress acme-shop.vl.yaml --reporter trivy -o -
 ---
 vulnerabilities:
   - id: CVE-2022-22965
+    purls: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
     expired_at: 2027-03-31
     statement: >-
       Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,

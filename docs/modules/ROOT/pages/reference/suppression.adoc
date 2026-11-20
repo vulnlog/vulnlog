@@ -72,6 +72,24 @@ This line is an illustration, because Acme Shop has no Snyk report:
 verbose: skipped CVE-2021-23337 for .snyk: the snyk format requires SNYK ids
 ----
 
+[[packages]]
+== Packages
+
+A `.trivyignore.yaml` file limits each suppression to the entry's `packages`.
+Vulnlog writes their package URLs (PURLs) unchanged as the `purls` of the ID.
+Trivy then ignores the ID only in a package that matches one of them.
+Trivy still reports the same ID in any other package, so you can analyse it.
+
+Trivy compares the type, namespace and name of a PURL.
+A PURL with a version matches only that version.
+A PURL without a version matches every version.
+Each qualifier in the PURL, such as `arch` or `distro`, must also be in the PURL of the finding.
+If Trivy writes the PURL differently, nothing matches and Trivy reports the finding again.
+To avoid this, copy the PURLs from your scanner's output into `packages`.
+
+An entry with an empty `packages` list suppresses the ID in every package.
+The other suppression files always suppress the ID in every package.
+
 [[supported-scanners]]
 == Supported scanners
 
@@ -191,6 +209,7 @@ The generated `.trivyignore.yaml`:
 ---
 vulnerabilities:
   - id: CVE-2022-22965
+    purls: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
     expired_at: 2027-03-31
     statement: >-
       Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
