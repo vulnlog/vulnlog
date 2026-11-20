@@ -46,6 +46,25 @@ class VulnlogSuppressTaskTest :
 
         context("happy path") {
 
+            test("dependency-check writes a GHSA-only finding as native XML with the default format") {
+                val dir =
+                    gradleProject(
+                        FILES_FROM_TEST_YAML,
+                        "test.vl.yaml" to
+                            vulnlogDocument(
+                                reporter = "dependency-check",
+                                vulnId = "GHSA-aaaa-bbbb-cccc",
+                            ),
+                    )
+
+                val result = runner(dir, "vulnlogSuppress").build()
+
+                result.task(":vulnlogSuppress")?.outcome shouldBe TaskOutcome.SUCCESS
+                val xml = dir.resolve("build/vulnlog/suppressions/dependency-check-suppressions.xml").readText()
+                xml shouldContain "<vulnerabilityName>GHSA-aaaa-bbbb-cccc</vulnerabilityName>"
+                xml shouldNotContain "<cve>"
+            }
+
             test("dependency-check writes native XML with the default format") {
                 val dir =
                     gradleProject(

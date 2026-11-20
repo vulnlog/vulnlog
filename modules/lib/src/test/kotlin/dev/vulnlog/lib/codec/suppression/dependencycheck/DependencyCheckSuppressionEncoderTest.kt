@@ -84,6 +84,79 @@ class DependencyCheckSuppressionEncoderTest :
                 .getNamedItem("until") shouldBe null
         }
 
+        test("the element mapping covers exactly the IDs supported by the format") {
+            DependencyCheckSuppressionEncoder.elementNames.keys shouldBe SuppressionFormat.DependencyCheck.vulnIdTypes
+        }
+
+        test("GHSA uses vulnerabilityName instead of cve") {
+            val xml = encodeGhsa()
+
+            validateSchema(xml)
+            val document = parse(xml)
+            document.getElementsByTagName("vulnerabilityName").item(0).textContent shouldBe "GHSA-aaaa-bbbb-cccc"
+            document.getElementsByTagName("cve").length shouldBe 0
+        }
+
+        test("GHSA expiry becomes until on the following day") {
+            val xml = encodeGhsa(expiresAt = LocalDate.of(2026, 8, 1))
+
+            validateSchema(xml)
+            parse(xml)
+                .getElementsByTagName("suppress")
+                .item(0)
+                .attributes
+                .getNamedItem("until")
+                .nodeValue shouldBe
+                "2026-08-02Z"
+        }
+
+        test("GHSA without expiry has no until attribute") {
+            val xml = encodeGhsa()
+
+            parse(xml)
+                .getElementsByTagName("suppress")
+                .item(0)
+                .attributes
+                .getNamedItem("until") shouldBe null
+        }
+
+        test("GHSA notes preserve escaped analysis") {
+            val reason = "Reviewed <code> & build tooling."
+            val xml = encodeGhsa(reason = reason)
+
+            validateSchema(xml)
+            parse(xml).getElementsByTagName("notes").item(0).textContent shouldBe reason
+        }
+
+        test("mixed CVE and GHSA entries retain their respective elements") {
+            val xml =
+                SuppressionEncoder.encode(
+                    SuppressionList(
+                        SuppressionFormat.DependencyCheck,
+                        setOf(
+                            SuppressionEntry(VulnId.Cve("CVE-2026-1111")),
+                            SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
+                        ),
+                    ),
+                )
+
+            validateSchema(xml)
+            val document = parse(xml)
+            document.getElementsByTagName("cve").length shouldBe 1
+            document.getElementsByTagName("cve").item(0).textContent shouldBe "CVE-2026-1111"
+            document.getElementsByTagName("vulnerabilityName").length shouldBe 1
+            document.getElementsByTagName("vulnerabilityName").item(0).textContent shouldBe "GHSA-aaaa-bbbb-cccc"
+        }
+
+        test("GHSA exact-name rules omit regex and caseSensitive attributes") {
+            val xml = encodeGhsa()
+            val attributes = parse(xml).getElementsByTagName("vulnerabilityName").item(0).attributes
+
+            attributes.getNamedItem("regex") shouldBe null
+            attributes.getNamedItem("caseSensitive") shouldBe null
+            attributes.length shouldBe 0
+        }
+
         test("an empty list remains a schema-valid XML document") {
             val xml = SuppressionEncoder.encode(SuppressionList(SuppressionFormat.DependencyCheck, emptySet()))
 
@@ -93,6 +166,17 @@ class DependencyCheckSuppressionEncoderTest :
             xml shouldNotContain "until="
         }
     })
+
+private fun encodeGhsa(
+    expiresAt: LocalDate? = null,
+    reason: String? = null,
+): String =
+    SuppressionEncoder.encode(
+        SuppressionList(
+            SuppressionFormat.DependencyCheck,
+            setOf(SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"), expiresAt, reason)),
+        ),
+    )
 
 private fun validateSchema(xml: String) {
     val factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)

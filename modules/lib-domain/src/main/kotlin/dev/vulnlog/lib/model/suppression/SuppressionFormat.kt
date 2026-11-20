@@ -29,7 +29,7 @@ sealed interface SuppressionFormat {
 
     data object DependencyCheck : SuppressionFormat {
         override val vulnIdTypes: Set<KClass<out VulnId>>
-            get() = setOf(VulnId.Cve::class)
+            get() = setOf(VulnId.Cve::class, VulnId.Ghsa::class)
     }
 
     data object CargoAudit : SuppressionFormat {
