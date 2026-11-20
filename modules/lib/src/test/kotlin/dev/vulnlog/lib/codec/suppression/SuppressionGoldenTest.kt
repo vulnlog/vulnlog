@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.codec.suppression
 
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressionEntry
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
@@ -55,9 +56,15 @@ class SuppressionGoldenTest :
                                 id = VulnId.Cve("CVE-2026-1111"),
                                 expiresAt = EXPIRY,
                                 reason = SHORT_REASON,
+                                packages =
+                                    listOf(
+                                        Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9"),
+                                        Purl.Deb("pkg:deb/debian/libssl3@3.0.11-1?arch=amd64&distro=debian-12"),
+                                    ),
                             ),
                             SuppressionEntry(
                                 id = VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"),
+                                packages = listOf(Purl.Maven("pkg:maven/ch.qos.logback/logback-core@1.5.12")),
                                 reason = LONG_REASON,
                             ),
                         ),

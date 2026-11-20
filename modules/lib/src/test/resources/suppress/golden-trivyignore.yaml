@@ -2,9 +2,13 @@
 ---
 vulnerabilities:
   - id: CVE-2026-1111
+    purls:
+      - "pkg:maven/org.apache.commons/commons-text@1.9"
+      - "pkg:deb/debian/libssl3@3.0.11-1?arch=amd64&distro=debian-12"
     expired_at: 2026-08-01
     statement: Vulnerable code not present.
   - id: GHSA-aaaa-bbbb-cccc
+    purls: ["pkg:maven/ch.qos.logback/logback-core@1.5.12"]
     statement: >-
       Logback is a ktlint configuration dependency and never reaches the application classpath, so the deserialization gadget
       cannot be triggered.

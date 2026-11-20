@@ -83,6 +83,7 @@ private fun explodeOnVulnIds(
             expiresAt = report.suppress?.expiresAt,
             tags = vulnerability.tags,
             analysis = vulnerability.analysis ?: "",
+            packages = vulnerability.packages,
         )
     }
 }

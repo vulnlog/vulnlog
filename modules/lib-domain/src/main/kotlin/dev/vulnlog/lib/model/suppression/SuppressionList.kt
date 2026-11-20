@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.model.suppression
 
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VulnId
 import java.time.LocalDate
 
@@ -16,6 +17,11 @@ data class SuppressionEntry(
     val id: VulnId,
     val expiresAt: LocalDate? = null,
     val reason: String? = null,
+    /**
+     * Limits the suppression to these packages, so the same id in another package is still reported. Empty means
+     * every package.
+     */
+    val packages: List<Purl> = emptyList(),
 )
 
 data class SuppressionLists(
