@@ -5,6 +5,7 @@ package dev.vulnlog.lib.codec.suppression.generic
 
 import dev.vulnlog.lib.codec.suppression.generic.dto.GenericSuppressionDto
 import dev.vulnlog.lib.codec.suppression.generic.dto.GenericVulnerabilityEntryDto
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.suppression.SuppressionList
 
 internal object GenericMapper {
@@ -14,6 +15,7 @@ internal object GenericMapper {
                 .map { entry ->
                     GenericVulnerabilityEntryDto(
                         id = entry.id.id,
+                        purls = entry.packages.map(Purl::value),
                         expiredAt = entry.expiresAt,
                         statement = entry.reason,
                     )
