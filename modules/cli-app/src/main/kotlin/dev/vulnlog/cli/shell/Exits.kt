@@ -7,11 +7,13 @@ import dev.vulnlog.lib.app.AddOutcome
 import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
-import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.app.report.ImpactReportFilterRejected
+import dev.vulnlog.lib.app.report.ImpactReportOutcome
+import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
@@ -33,8 +35,8 @@ fun exitCode(failed: SuppressionOutcome.Failed): ExitCode =
 
 fun exitCode(failed: ImpactReportOutcome.Failed): ExitCode =
     when (failed) {
-        is ProjectsDiffer -> ExitCode.VALIDATION_ERROR
-        is FilterRejected -> ExitCode.INVALID_FLAG_VALUE
+        is ImpactReportProjectsDiffer -> ExitCode.VALIDATION_ERROR
+        is ImpactReportFilterRejected -> ExitCode.INVALID_FLAG_VALUE
     }
 
 fun exitCode(failed: ChangelogOutcome.Failed): ExitCode =

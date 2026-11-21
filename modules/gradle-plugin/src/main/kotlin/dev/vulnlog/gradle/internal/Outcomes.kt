@@ -7,11 +7,13 @@ import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
-import dev.vulnlog.lib.app.ImpactReportOutcome
 import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
 import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.app.report.ImpactReportFilterRejected
+import dev.vulnlog.lib.app.report.ImpactReportOutcome
+import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
 import dev.vulnlog.lib.document.InputRead
 import dev.vulnlog.lib.model.OutputWrite
 import dev.vulnlog.lib.model.vex.openvex.OpenVexBaselineRead
@@ -60,8 +62,8 @@ fun failure(failed: SuppressionOutcome.Failed): GradleException =
 
 fun failure(failed: ImpactReportOutcome.Failed): GradleException =
     when (failed) {
-        is ProjectsDiffer -> GradleException(formatFailureMessage(listOf(renderProjectsDiffer(failed))))
-        is FilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
+        is ImpactReportProjectsDiffer -> GradleException(formatFailureMessage(listOf(renderProjectsDiffer(failed))))
+        is ImpactReportFilterRejected -> GradleException(formatFailureMessage(renderFilterProblems(failed.problems)))
     }
 
 fun failure(failed: ChangelogOutcome.Failed): GradleException =

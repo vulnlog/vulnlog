@@ -7,5 +7,4 @@ import dev.vulnlog.lib.model.Project
 
 data class ProjectsDiffer(
     val projects: List<Project>,
-) : ImpactReportOutcome.Failed,
-    ChangelogOutcome.Failed
+) : ChangelogOutcome.Failed
