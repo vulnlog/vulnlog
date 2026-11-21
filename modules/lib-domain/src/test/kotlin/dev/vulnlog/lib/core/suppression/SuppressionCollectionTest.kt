@@ -10,6 +10,7 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Disposition
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReportEntry
 import dev.vulnlog.lib.model.ReporterType
@@ -264,6 +265,24 @@ class SuppressionCollectionTest :
                 val result = collect(entry("CVE-2024-0001", reports = listOf(namingReport)))
 
                 result.includedIds() shouldContainExactly listOf(cve("CVE-2024-0002"), cve("CVE-2024-0003"))
+            }
+
+            test("carries the packages of the entry into each suppression") {
+                val commonsText = Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9")
+                val withPackage =
+                    vulnerability(
+                        id = cve("CVE-2024-0001"),
+                        releases = listOf(V1),
+                        packages = listOf(commonsText),
+                        reports = listOf(report()),
+                        verdict = NOT_AFFECTED,
+                    )
+
+                val result = collect(withPackage)
+
+                result.included.values
+                    .flatten()
+                    .map { it.packages } shouldContainExactly listOf(listOf(commonsText))
             }
         }
     })

@@ -42,6 +42,7 @@ The file lists the IDs that are suppressed today:
 {
   "vulnerabilities" : [ {
     "id" : "CVE-2022-22965",
+    "purls" : [ "pkg:maven/org.springframework/spring-beans@5.3.15" ],
     "expires_at" : "2027-03-31",
     "statement" : "Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat, but Spring advises all users to upgrade."
   } ]
@@ -69,6 +70,8 @@ The result is JSON, which Grype reads as YAML:
   ]
 }
 ----
++
+These rules don't use `purls`, so Grype ignores the ID in every package.
 
 . Run Grype in the directory that contains `.grype.yaml`.
 

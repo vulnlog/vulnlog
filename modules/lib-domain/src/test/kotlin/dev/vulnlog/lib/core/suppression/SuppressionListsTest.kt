@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.suppression
 
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
@@ -19,18 +20,21 @@ import java.time.LocalDate
 
 private val CVE = VulnId.Cve("CVE-2024-0001")
 private val EXPIRY = LocalDate.of(2026, 12, 31)
+private val COMMONS_TEXT = Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9")
 
 private fun suppressed(
     id: VulnId = CVE,
     reporter: ReporterType = ReporterType.TRIVY,
     expiresAt: LocalDate? = null,
     analysis: String = "not reachable",
+    packages: List<Purl> = emptyList(),
 ) = SuppressedVulnerability(
     id = id,
     releases = listOf(Release("1.0.0")),
     reporter = reporter,
     expiresAt = expiresAt,
     analysis = analysis,
+    packages = packages,
 )
 
 class SuppressionListsTest :
@@ -108,6 +112,31 @@ class SuppressionListsTest :
                         ),
                     )
                 built.exclusions.shouldBeEmpty()
+            }
+
+            test("trivy, dependency-check and generic entries are limited to the packages of the entry, snyk not") {
+                val snykId = VulnId.Snyk("SNYK-JAVA-ORGAPACHECOMMONS-3043138")
+                val packages = listOf(COMMONS_TEXT)
+                val included =
+                    mapOf(
+                        ReporterType.TRIVY to listOf(suppressed(packages = packages)),
+                        ReporterType.DEPENDENCY_CHECK to
+                            listOf(suppressed(reporter = ReporterType.DEPENDENCY_CHECK, packages = packages)),
+                        ReporterType.GRYPE to listOf(suppressed(reporter = ReporterType.GRYPE, packages = packages)),
+                        ReporterType.SNYK to listOf(suppressed(snykId, ReporterType.SNYK, packages = packages)),
+                    )
+                val formats =
+                    mapOf(
+                        ReporterType.TRIVY to SuppressionFormat.Trivy,
+                        ReporterType.DEPENDENCY_CHECK to SuppressionFormat.DependencyCheck,
+                        ReporterType.GRYPE to SuppressionFormat.Generic(ReporterType.GRYPE),
+                        ReporterType.SNYK to SuppressionFormat.Snyk,
+                    )
+
+                val built = buildSuppressionLists(included, formats)
+
+                built.lists.map { list -> list.entries.single().packages } shouldContainExactly
+                    listOf(packages, packages, packages, emptyList())
             }
 
             test("a reporter with nothing to suppress still gets an empty list") {

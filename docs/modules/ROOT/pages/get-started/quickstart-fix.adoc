@@ -184,12 +184,15 @@ Now `.trivyignore.yaml` lists the finding, with your analysis as the reason:
 ---
 vulnerabilities:
   - id: CVE-2022-22965
+    purls: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
     expired_at: 2027-03-31
     statement: >-
       Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
       but Spring advises all users to upgrade.
 ----
 
+`purls` limits the suppression to `spring-beans` 5.3.15, the package you analysed.
+Trivy still reports Spring4Shell in any other package or version.
 31 March 2027 is the last day of the suppression.
 If the fix hasn't shipped by then, Trivy reports the finding again.
 

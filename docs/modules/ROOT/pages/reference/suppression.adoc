@@ -72,6 +72,41 @@ This line is an illustration, because Acme Shop has no Snyk report:
 verbose: skipped CVE-2021-23337 for .snyk: the snyk format requires SNYK ids
 ----
 
+[[packages]]
+== Packages
+
+Three kinds of suppression file limit each suppression to the package URLs (PURLs) in the entry's `packages`: `.trivyignore.yaml`, `dependency-check-suppressions.xml`, and the generic files.
+The scanner then ignores the ID only in a package that matches one of them.
+It still reports the same ID in any other package, so you can analyse it.
+
+If the scanner writes the PURL differently, nothing matches and the scanner reports the finding again.
+To avoid this, copy the PURLs from your scanner's output into `packages`.
+
+An entry with an empty `packages` list suppresses the ID in every package.
+The files `.snyk` and `audit.toml` always suppress the ID in every package.
+
+=== Trivy
+
+Vulnlog writes the PURLs unchanged as the `purls` of the ID.
+Trivy compares the type, namespace and name of a PURL.
+A PURL with a version matches only that version.
+A PURL without a version matches every version.
+Each qualifier in the PURL, such as `arch` or `distro`, must also be in the PURL of the finding.
+
+=== Dependency-Check
+
+Vulnlog writes one `suppress` element for each PURL, with the PURL as its `packageUrl`.
+Dependency-Check compares the whole PURL and ignores case.
+A PURL with a version matches only the same PURL, qualifiers included.
+For a PURL without a version, Vulnlog writes a pattern with `regex="true"` that matches every version.
+
+=== Generic suppression files
+
+Vulnlog writes the PURLs unchanged as the `purls` of the ID.
+No scanner reads a generic file.
+Your conversion or filter decides whether it uses the `purls`.
+See xref:guides/use-generic-suppression-files.adoc[Use generic suppression files].
+
 [[supported-scanners]]
 == Supported scanners
 
@@ -150,6 +185,12 @@ It holds one object for each ID, so an entry with two IDs in `vuln_ids` gets two
 | String
 | The vulnerability ID.
 
+| `purls`
+| List of strings
+| The entry's `packages`.
+Left out when the entry has no packages.
+See <<packages>>.
+
 | `expires_at`
 | Date, `YYYY-MM-DD`
 | The last day of the suppression.
@@ -168,6 +209,7 @@ The generated `npm-audit.generic.json` for the lodash entry, which is suppressed
 {
   "vulnerabilities" : [ {
     "id" : "CVE-2021-23337",
+    "purls" : [ "pkg:npm/lodash@4.17.20" ],
     "statement" : "The template function is only used in the admin interface, with templates that administrators write. Administrators can already change the shop configuration, so the injection gives them no additional access. The admin interface is removed in Acme Shop 5.0."
   } ]
 }
@@ -191,6 +233,7 @@ The generated `.trivyignore.yaml`:
 ---
 vulnerabilities:
   - id: CVE-2022-22965
+    purls: ["pkg:maven/org.springframework/spring-beans@5.3.15"]
     expired_at: 2027-03-31
     statement: >-
       Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat,
@@ -212,6 +255,7 @@ The generated `dependency-check-suppressions.xml`:
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <suppress>
         <notes>Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation.</notes>
+        <packageUrl>pkg:maven/org.apache.commons/commons-text@1.9</packageUrl>
         <cve>CVE-2022-42889</cve>
     </suppress>
 </suppressions>
