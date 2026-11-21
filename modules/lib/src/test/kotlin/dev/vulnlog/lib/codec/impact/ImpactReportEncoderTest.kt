@@ -18,11 +18,11 @@ import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
-import io.kotest.matchers.collections.shouldBeStrictlyIncreasing
-import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import java.time.Instant
 
@@ -32,7 +32,7 @@ private const val DEFAULT_VERSION = "1.2.3"
 
 private fun entry(
     primaryId: VulnId = VulnId.Cve("CVE-2026-1234"),
-    ids: Set<VulnId> = setOf(primaryId),
+    aliases: Set<VulnId> = emptySet(),
     state: WorkState = WorkState.OPEN,
     impact: Impact = Impact.Affected(Severity.HIGH),
     disposition: Disposition? = null,
@@ -43,7 +43,7 @@ private fun entry(
 ) = ImpactEntry(
     primaryId = primaryId,
     state = state,
-    ids = ids,
+    aliases = aliases,
     shortDescription = description,
     impact = impact,
     disposition = disposition,
@@ -52,172 +52,206 @@ private fun entry(
     fixedIn = fixedIn,
 )
 
-private fun render(
+private fun report(
     entries: List<ImpactEntry>,
     generatedAt: Instant = defaultInstant,
     vulnlogVersion: String = DEFAULT_VERSION,
     inputs: List<String> = listOf("vulnlog.vl"),
     filter: ResolvedFilter = ResolvedFilter(),
     asOf: Release? = null,
-): String =
-    ImpactReportEncoder.encode(
-        ImpactReport(
-            project = defaultProject,
-            entries = entries,
-            generatedAt = generatedAt,
-            vulnlogVersion = vulnlogVersion,
-            inputs = inputs,
-            filter = filter,
-            asOf = asOf,
-        ),
-    )
+) = ImpactReport(
+    project = defaultProject,
+    entries = entries,
+    generatedAt = generatedAt,
+    vulnlogVersion = vulnlogVersion,
+    inputs = inputs,
+    filter = filter,
+    asOf = asOf,
+)
+
+private fun readJson(text: String): JsonNode = JsonMapper.shared().readTree(text)
+
+private fun ImpactReport.json(): JsonNode = readJson(ImpactReportEncoder.encodeToJson(this))
+
+private fun JsonNode.texts(): List<String> = values().map { it.stringValue() }
 
 private fun String.embeddedData(): String = substringAfter("var VULNLOG_DATA = ").substringBefore(";\n")
 
 class ImpactReportEncoderTest :
     FunSpec({
 
-        test("fills the template, Content-Security-Policy included, with the report data") {
-            val entries = listOf(entry())
+        context("JSON") {
 
-            val html = render(entries)
+            test("names the format version, the project, the Vulnlog version, the inputs and the generation time") {
+                val generatedAt = Instant.parse("2026-05-02T08:15:30Z")
+                val report =
+                    report(
+                        listOf(entry()),
+                        generatedAt = generatedAt,
+                        vulnlogVersion = "9.9.9-test",
+                        inputs = listOf("project.vl", "deps.vl"),
+                    )
 
-            html shouldContain "<!DOCTYPE html>"
-            html shouldContain "default-src 'none'"
-            html shouldContain "Acme Web App"
-            html shouldContain "CVE-2026-1234"
-            html shouldNotContain "VULNLOG_DATA_PLACEHOLDER"
-        }
+                val json = report.json()
 
-        test("keeps text from ending the script element, and the text reads back unchanged") {
-            val hostile = "</script><script>alert(1)</script><!-- & > \u2028 \u2029"
+                json["format_version"].intValue() shouldBe 1
+                json["project"]["name"].stringValue() shouldBe "Acme Web App"
+                json["vulnlog_version"].stringValue() shouldBe "9.9.9-test"
+                json["inputs"].texts() shouldContainExactly listOf("project.vl", "deps.vl")
+                json["generated_at"].stringValue() shouldBe "2026-05-02T08:15:30Z"
+            }
 
-            val data = render(listOf(entry(analysis = hostile))).embeddedData()
+            test("writes every entry with its verdict, severity and justification") {
+                val entries =
+                    listOf(
+                        entry(primaryId = VulnId.Cve("CVE-2026-1234"), impact = Impact.Affected(Severity.HIGH)),
+                        entry(
+                            primaryId = VulnId.Cve("CVE-2026-5678"),
+                            state = WorkState.NOT_APPLICABLE,
+                            impact = Impact.NotAffected("vulnerable code not in execute path"),
+                        ),
+                    )
 
-            listOf("<", ">", "&", "\u2028", "\u2029").filter(data::contains).shouldBeEmpty()
-            JsonMapper.shared().readTree(data)["entries"][0]["analysis"].stringValue() shouldBe hostile
-        }
+                val json = report(entries).json()["entries"]
 
-        test("renders a report without entries") {
-            val entries = emptyList<ImpactEntry>()
+                json[0]["primary_id"].stringValue() shouldBe "CVE-2026-1234"
+                json[0]["verdict"].stringValue() shouldBe "affected"
+                json[0]["severity"].stringValue() shouldBe "high"
+                json[0]["verdict_detail"].isNull shouldBe true
+                json[1]["verdict"].stringValue() shouldBe "not affected"
+                json[1]["verdict_detail"].stringValue() shouldBe "vulnerable code not in execute path"
+            }
 
-            val html = render(entries)
+            test("names each state as the Vulnlog file does") {
+                val entries =
+                    WorkState.entries.mapIndexed { index, state ->
+                        entry(primaryId = VulnId.Cve("CVE-2026-000$index"), state = state)
+                    }
 
-            html shouldContain "<!DOCTYPE html>"
-            html shouldContain "\"entries\":[]"
-        }
+                val states = report(entries).json()["entries"].values().map { it["state"].stringValue() }
 
-        test("serializes every entry with its verdict and its detail") {
-            val entries =
-                listOf(
-                    entry(primaryId = VulnId.Cve("CVE-2026-1234"), impact = Impact.Affected(Severity.HIGH)),
+                states shouldContainExactly
+                    listOf("open", "under investigation", "accepted", "resolved", "not applicable")
+            }
+
+            test("writes the aliases and the fix releases") {
+                val withAliasAndFixes =
                     entry(
-                        primaryId = VulnId.Cve("CVE-2026-5678"),
-                        impact = Impact.NotAffected("vulnerable code not in execute path"),
-                    ),
-                )
+                        primaryId = VulnId.Cve("CVE-2026-1234"),
+                        aliases = setOf(VulnId.Ghsa("GHSA-abcd-1234-efgh")),
+                        fixedIn = setOf(Release("1.1.0"), Release("2.0.1")),
+                    )
 
-            val html = render(entries)
+                val json = report(listOf(withAliasAndFixes)).json()["entries"][0]
 
-            html shouldContain "CVE-2026-1234"
-            html shouldContain "\"verdict\":\"affected\""
-            html shouldContain "\"severity\":\"high\""
-            html shouldContain "CVE-2026-5678"
-            html shouldContain "\"verdict\":\"not affected\""
-            html shouldContain "vulnerable code not in execute path"
+                json["aliases"].texts() shouldContainExactly listOf("GHSA-abcd-1234-efgh")
+                json["fixed_in"].texts() shouldContainExactly listOf("1.1.0", "2.0.1")
+            }
+
+            test("names the applied filter under its canonical tokens, in the order Vulnlog declares them") {
+                val filter =
+                    ResolvedFilter(
+                        reporter = ReporterType.CARGO_AUDIT,
+                        releases = setOf(Release("1.1.0"), Release("1.2.0")),
+                        tags = setOf(Tag("production"), Tag("frontend")),
+                        states = setOf(WorkState.NOT_APPLICABLE, WorkState.OPEN),
+                        verdicts = setOf(VerdictKind.AFFECTED),
+                        dispositions = setOf(Disposition.WONT_FIX, Disposition.WILL_FIX),
+                    )
+
+                val json = report(listOf(entry()), filter = filter, asOf = Release("1.2.0")).json()["filter"]
+
+                json shouldBe
+                    readJson(
+                        """{"as_of":"1.2.0","tags":["frontend","production"],"reporter":"cargo-audit",""" +
+                            """"states":["open","not applicable"],"verdicts":["affected"],""" +
+                            """"dispositions":["will fix","wont fix"]}""",
+                    )
+            }
+
+            // Retired with issue #161; the report must not bring it back as a label.
+            test("writes the stated disposition, never the retired risk acceptable verdict") {
+                val accepted =
+                    entry(
+                        state = WorkState.ACCEPTED,
+                        impact = Impact.Affected(Severity.HIGH),
+                        disposition = Disposition.WONT_FIX,
+                    )
+
+                val text = ImpactReportEncoder.encodeToJson(report(listOf(accepted)))
+
+                readJson(text)["entries"][0]["disposition"].stringValue() shouldBe "wont fix"
+                text shouldNotContain "risk acceptable"
+            }
+
+            test("writes a null verdict while the entry is untriaged") {
+                val untriaged = entry(state = WorkState.UNDER_INVESTIGATION, impact = Impact.Unknown)
+
+                val json = report(listOf(untriaged)).json()["entries"][0]
+
+                json["verdict"].isNull shouldBe true
+            }
+
+            test("sorts entries by state, then severity") {
+                fun entry(
+                    id: String,
+                    state: WorkState,
+                    severity: Severity,
+                ) = entry(primaryId = VulnId.Cve(id), state = state, impact = Impact.Affected(severity))
+                val entries =
+                    listOf(
+                        entry("CVE-2026-0001", WorkState.RESOLVED, Severity.LOW),
+                        entry("CVE-2026-0002", WorkState.OPEN, Severity.MEDIUM),
+                        entry("CVE-2026-0003", WorkState.OPEN, Severity.CRITICAL),
+                    )
+
+                val ids = report(entries).json()["entries"].values().map { it["primary_id"].stringValue() }
+
+                ids shouldContainExactly listOf("CVE-2026-0003", "CVE-2026-0002", "CVE-2026-0001")
+            }
+
+            test("writes a report without entries") {
+                val json = report(emptyList()).json()
+
+                json["entries"].isEmpty shouldBe true
+            }
+
+            test("keeps text as written, without the escaping the HTML view needs") {
+                val text = "Used only for tests & build tooling <internal>"
+
+                val json = ImpactReportEncoder.encodeToJson(report(listOf(entry(analysis = text))))
+
+                json shouldContain text
+            }
         }
 
-        test("serializes aliases and fix releases") {
-            val withAliasAndFixes =
-                entry(
-                    primaryId = VulnId.Cve("CVE-2026-1234"),
-                    ids = setOf(VulnId.Cve("CVE-2026-1234"), VulnId.Ghsa("GHSA-abcd-1234-efgh")),
-                    fixedIn = setOf(Release("1.1.0"), Release("2.0.1")),
-                )
+        context("HTML") {
 
-            val html = render(listOf(withAliasAndFixes))
+            test("fills the template, Content-Security-Policy included, with the report data") {
+                val html = ImpactReportEncoder.encodeToHtml(report(listOf(entry())))
 
-            html shouldContain "GHSA-abcd-1234-efgh"
-            html shouldContain "1.1.0"
-            html shouldContain "2.0.1"
-        }
+                html shouldContain "<!DOCTYPE html>"
+                html shouldContain "default-src 'none'"
+                html shouldContain "Acme Web App"
+                html shouldContain "CVE-2026-1234"
+                html shouldNotContain "VULNLOG_DATA_PLACEHOLDER"
+            }
 
-        test("serializes the version, the inputs and the generation time") {
-            val generatedAt = Instant.parse("2026-05-02T08:15:30Z")
+            test("embeds the same document as the JSON output") {
+                val report = report(listOf(entry(), entry(primaryId = VulnId.Cve("CVE-2026-5678"))))
 
-            val html =
-                render(
-                    listOf(entry()),
-                    generatedAt = generatedAt,
-                    vulnlogVersion = "9.9.9-test",
-                    inputs = listOf("project.vl", "deps.vl"),
-                )
+                val embedded = ImpactReportEncoder.encodeToHtml(report).embeddedData()
 
-            html shouldContain "9.9.9-test"
-            html shouldContain "project.vl"
-            html shouldContain "deps.vl"
-            html shouldContain "2026-05-02T08:15:30Z"
-        }
+                readJson(embedded) shouldBe report.json()
+            }
 
-        test("names the applied filter under its canonical tokens, in the order Vulnlog declares them") {
-            val filter =
-                ResolvedFilter(
-                    reporter = ReporterType.CARGO_AUDIT,
-                    releases = setOf(Release("1.1.0"), Release("1.2.0")),
-                    tags = setOf(Tag("production"), Tag("frontend")),
-                    states = setOf(WorkState.NOT_APPLICABLE, WorkState.OPEN),
-                    verdicts = setOf(VerdictKind.AFFECTED),
-                    dispositions = setOf(Disposition.WONT_FIX, Disposition.WILL_FIX),
-                )
+            test("keeps text from ending the script element, and the text reads back unchanged") {
+                val hostile = "</script><script>alert(1)</script><!-- & > \u2028 \u2029"
 
-            val html = render(listOf(entry()), filter = filter, asOf = Release("1.2.0"))
+                val data = ImpactReportEncoder.encodeToHtml(report(listOf(entry(analysis = hostile)))).embeddedData()
 
-            html shouldContain
-                "\"filter\":{\"asOf\":\"1.2.0\",\"tags\":[\"frontend\",\"production\"],\"reporter\":\"cargo-audit\"," +
-                "\"states\":[\"open\",\"not applicable\"],\"verdicts\":[\"affected\"]," +
-                "\"dispositions\":[\"will fix\",\"wont fix\"]}"
-        }
-
-        // Retired with issue #161; the report must not bring it back as a label.
-        test("renders the stated disposition, never the retired risk acceptable verdict") {
-            val accepted =
-                entry(
-                    state = WorkState.ACCEPTED,
-                    impact = Impact.Affected(Severity.HIGH),
-                    disposition = Disposition.WONT_FIX,
-                )
-
-            val html = render(listOf(accepted))
-
-            html shouldContain "wont fix"
-            html shouldNotContain "risk acceptable"
-        }
-
-        test("omits the verdict while the entry is untriaged") {
-            val untriaged = entry(state = WorkState.UNDER_INVESTIGATION, impact = Impact.Unknown)
-
-            val html = render(listOf(untriaged))
-
-            html shouldContain "\"verdict\":null"
-        }
-
-        test("sorts entries by state, then severity") {
-            fun entry(
-                id: String,
-                state: WorkState,
-                severity: Severity,
-            ) = entry(primaryId = VulnId.Cve(id), state = state, impact = Impact.Affected(severity))
-            val entries =
-                listOf(
-                    entry("CVE-2026-0001", WorkState.RESOLVED, Severity.LOW),
-                    entry("CVE-2026-0002", WorkState.OPEN, Severity.MEDIUM),
-                    entry("CVE-2026-0003", WorkState.OPEN, Severity.CRITICAL),
-                )
-
-            val html = render(entries)
-
-            val positions = listOf("CVE-2026-0003", "CVE-2026-0002", "CVE-2026-0001").map(html::indexOf)
-            positions shouldNotContain -1
-            positions.shouldBeStrictlyIncreasing()
+                listOf("<", ">", "&", "\u2028", "\u2029").filter(data::contains).shouldBeEmpty()
+                readJson(data)["entries"][0]["analysis"].stringValue() shouldBe hostile
+            }
         }
     })

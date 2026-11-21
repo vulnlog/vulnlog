@@ -10,6 +10,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
+import kotlin.io.path.readText
 
 private val AFFECTED_VERDICT =
     """
@@ -89,6 +91,63 @@ class ImpactReportCommandTest :
                         html shouldContain "CVE-2026-1234"
                     }
                 }
+            }
+        }
+
+        context("output") {
+
+            test("writes HTML to vulnlog-impact-report.html in the current directory when no output is given") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempDir(prefix = "impact-cwd") { cwd ->
+                        val result = withCwd(cwd) { ImpactReportCommand().test(input.absolutePath) }
+
+                        result.statusCode shouldBe 0
+                        result.stdout shouldBe ""
+                        cwd.resolve("vulnlog-impact-report.html").readText() shouldContain "<!DOCTYPE html>"
+                    }
+                }
+            }
+
+            test("writes JSON to stdout when no output is given") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --format json")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldStartWith "{"
+                    result.stdout shouldContain "CVE-2026-1234"
+                    result.stderr shouldNotContain "Wrote: "
+                }
+            }
+
+            test("writes JSON to the output file when one is given") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".json") { output ->
+                        val result =
+                            ImpactReportCommand().test("${input.absolutePath} --format json -o ${output.absolutePath}")
+
+                        result.statusCode shouldBe 0
+                        result.stdout shouldBe ""
+                        result.stderr shouldContain "Wrote: "
+                        output.readText() shouldStartWith "{"
+                    }
+                }
+            }
+
+            test("writes HTML to stdout when the output is '-'") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} -o -")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "<!DOCTYPE html>"
+                    result.stderr shouldNotContain "Wrote: "
+                }
+            }
+
+            test("names the default of each format in the help text") {
+                val result = ImpactReportCommand().test("--help")
+
+                unwrapped(result.stdout) shouldContain
+                    "Defaults to vulnlog-impact-report.html in the current directory for html, and to stdout for json."
             }
         }
 

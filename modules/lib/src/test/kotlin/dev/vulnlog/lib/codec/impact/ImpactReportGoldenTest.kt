@@ -22,36 +22,43 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
 
-private const val GOLDEN_RESOURCE = "/report/golden-vulnlog-report-simple.html"
-private val GOLDEN_SOURCE: Path = Path.of("src/test/resources/report/golden-vulnlog-report-simple.html")
+private const val GOLDEN_DIR = "/report"
+private val GOLDEN_SOURCE_DIR: Path = Path.of("src/test/resources/report")
 
+/** Pins the bytes of both views of one report. The JSON is an API, so a changed golden JSON is a changed contract. */
 class ImpactReportGoldenTest :
     FunSpec({
         test("matches golden HTML snapshot") {
-            val actual = ImpactReportEncoder.encode(goldenFixture())
+            val actual = ImpactReportEncoder.encodeToHtml(goldenFixture())
 
-            if (shouldUpdateGolden()) {
-                Files.createDirectories(GOLDEN_SOURCE.parent)
-                Files.writeString(GOLDEN_SOURCE, actual)
-                println("Golden HTML updated at $GOLDEN_SOURCE")
-                return@test
-            }
+            actual shouldBe golden("vulnlog-report-simple.html", actual)
+        }
 
-            val expected =
-                ImpactReportGoldenTest::class.java
-                    .getResourceAsStream(GOLDEN_RESOURCE)
-                    ?.bufferedReader()
-                    ?.use { it.readText() }
-                    ?: error(
-                        "Golden HTML missing at classpath $GOLDEN_RESOURCE. " +
-                            "Run with UPDATE_GOLDEN=1 to create it.",
-                    )
+        test("matches golden JSON snapshot") {
+            val actual = ImpactReportEncoder.encodeToJson(goldenFixture())
 
-            actual shouldBe expected
+            actual shouldBe golden("impact-report.json", actual)
         }
     })
 
-private fun shouldUpdateGolden(): Boolean = System.getenv("UPDATE_GOLDEN") in listOf("1", "true")
+/** With UPDATE_GOLDEN set, writes [actual] as the new golden file and returns it, so the test passes. */
+private fun golden(
+    name: String,
+    actual: String,
+): String {
+    val fileName = "golden-$name"
+    if (System.getenv("UPDATE_GOLDEN") in listOf("1", "true")) {
+        Files.createDirectories(GOLDEN_SOURCE_DIR)
+        Files.writeString(GOLDEN_SOURCE_DIR.resolve(fileName), actual)
+        println("Golden file updated at ${GOLDEN_SOURCE_DIR.resolve(fileName)}")
+        return actual
+    }
+    return ImpactReportGoldenTest::class.java
+        .getResourceAsStream("$GOLDEN_DIR/$fileName")
+        ?.bufferedReader()
+        ?.use { it.readText() }
+        ?: error("Golden file missing at classpath $GOLDEN_DIR/$fileName. Run with UPDATE_GOLDEN=1 to create it.")
+}
 
 private fun goldenFixture() =
     ImpactReport(
@@ -61,7 +68,7 @@ private fun goldenFixture() =
                 ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-1111"),
                     state = WorkState.OPEN,
-                    ids = setOf(VulnId.Cve("CVE-2026-1111"), VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
+                    aliases = setOf(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
                     shortDescription = "Critical RCE in example-lib",
                     impact = Impact.Affected(Severity.CRITICAL),
                     disposition = Disposition.WILL_FIX,
@@ -72,7 +79,7 @@ private fun goldenFixture() =
                 ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-2222"),
                     state = WorkState.NOT_APPLICABLE,
-                    ids = setOf(VulnId.Cve("CVE-2026-2222")),
+                    aliases = emptySet(),
                     shortDescription = null,
                     impact = Impact.NotAffected("vulnerable code not in execute path"),
                     disposition = null,
@@ -83,7 +90,7 @@ private fun goldenFixture() =
                 ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-3333"),
                     state = WorkState.RESOLVED,
-                    ids = setOf(VulnId.Cve("CVE-2026-3333")),
+                    aliases = emptySet(),
                     shortDescription = "DoS via large payload",
                     impact = Impact.Affected(Severity.MEDIUM),
                     disposition = null,
@@ -94,7 +101,7 @@ private fun goldenFixture() =
                 ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-4444"),
                     state = WorkState.ACCEPTED,
-                    ids = setOf(VulnId.Cve("CVE-2026-4444")),
+                    aliases = emptySet(),
                     shortDescription = "Prototype pollution in a build-time helper",
                     impact = Impact.Affected(Severity.HIGH),
                     disposition = Disposition.WONT_FIX,
@@ -105,7 +112,7 @@ private fun goldenFixture() =
                 ImpactEntry(
                     primaryId = VulnId.Cve("CVE-2026-5555"),
                     state = WorkState.UNDER_INVESTIGATION,
-                    ids = setOf(VulnId.Cve("CVE-2026-5555")),
+                    aliases = emptySet(),
                     shortDescription = "Unbounded recursion in the XML parser",
                     impact = Impact.Unknown,
                     disposition = null,

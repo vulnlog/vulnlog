@@ -40,7 +40,8 @@ fun generateImpactReport(
 
     val encodedReport =
         when (request.format) {
-            ImpactReportFormat.HTML -> ImpactReportEncoder.encode(report)
+            ImpactReportFormat.HTML -> ImpactReportEncoder.encodeToHtml(report)
+            ImpactReportFormat.JSON -> ImpactReportEncoder.encodeToJson(report)
         }
 
     return ImpactReportOutcome.Generated(report, collected, encodedReport)

@@ -11,5 +11,5 @@ data class ImpactReportRequest(
     val filter: FilterRequest,
     val generatedAt: Instant,
     val vulnlogVersion: String,
-    val format: ImpactReportFormat = ImpactReportFormat.HTML,
+    val format: ImpactReportFormat,
 )

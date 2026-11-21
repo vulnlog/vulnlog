@@ -10,7 +10,8 @@ import dev.vulnlog.lib.model.VulnId
 data class ImpactEntry(
     val state: WorkState,
     val primaryId: VulnId,
-    val ids: Set<VulnId>,
+    /** The other IDs the vulnerability is known by, never [primaryId]. */
+    val aliases: Set<VulnId>,
     val shortDescription: String?,
     val impact: Impact,
     val disposition: Disposition?,

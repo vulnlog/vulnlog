@@ -8,6 +8,7 @@ import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
+import dev.vulnlog.lib.app.report.ImpactReportFormat
 import dev.vulnlog.lib.app.report.ImpactReportOutcome
 import dev.vulnlog.lib.app.report.ImpactReportRequest
 import dev.vulnlog.lib.app.report.generateImpactReport
@@ -78,6 +79,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                     ),
                 generatedAt = Instant.now(),
                 vulnlogVersion = BuildInfo.VERSION,
+                format = ImpactReportFormat.HTML,
             )
 
         val outcome = generateImpactReport(projects, request)

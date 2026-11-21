@@ -36,7 +36,7 @@ private fun collected(vulnerability: VulnerabilityEntry): ImpactEntry =
 private fun impactEntry(
     primaryId: VulnId = cve1,
     state: WorkState = WorkState.OPEN,
-    ids: Set<VulnId> = setOf(primaryId),
+    aliases: Set<VulnId> = emptySet(),
     impact: Impact = Impact.NotAffected("vulnerable code not in execute path"),
     disposition: Disposition? = null,
     analysis: String? = "not affected",
@@ -46,7 +46,7 @@ private fun impactEntry(
 ) = ImpactEntry(
     primaryId = primaryId,
     state = state,
-    ids = ids,
+    aliases = aliases,
     shortDescription = shortDescription,
     impact = impact,
     disposition = disposition,
@@ -66,7 +66,7 @@ class ReportingTest :
                 val entry = collected(vulnerability)
 
                 entry.primaryId shouldBe cve1
-                entry.ids shouldBe setOf(ghsa1)
+                entry.aliases shouldBe setOf(ghsa1)
             }
 
             test("takes the fix release from the resolution, and none without one") {
@@ -111,9 +111,9 @@ class ReportingTest :
             test("merges the rows of one vulnerability, uniting aliases, releases and fixes") {
                 val entries =
                     listOf(
-                        impactEntry(ids = setOf(cve1), reportFor = setOf(releaseV1), fixedIn = setOf(releaseV1)),
-                        impactEntry(ids = setOf(cve1, ghsa1), reportFor = setOf(releaseV2), fixedIn = setOf(releaseV2)),
-                        impactEntry(ids = setOf(cve1), reportFor = setOf(releaseV3), fixedIn = setOf(releaseV3)),
+                        impactEntry(reportFor = setOf(releaseV1), fixedIn = setOf(releaseV1)),
+                        impactEntry(aliases = setOf(ghsa1), reportFor = setOf(releaseV2), fixedIn = setOf(releaseV2)),
+                        impactEntry(reportFor = setOf(releaseV3), fixedIn = setOf(releaseV3)),
                     )
 
                 val merged = mergeImpactEntries(entries)
@@ -121,7 +121,7 @@ class ReportingTest :
                 merged shouldContainExactly
                     listOf(
                         impactEntry(
-                            ids = setOf(cve1, ghsa1),
+                            aliases = setOf(ghsa1),
                             reportFor = setOf(releaseV1, releaseV2, releaseV3),
                             fixedIn = setOf(releaseV1, releaseV2, releaseV3),
                         ),
