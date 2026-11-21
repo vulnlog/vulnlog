@@ -8,9 +8,9 @@ import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
-import dev.vulnlog.lib.app.ImpactReportOutcome
-import dev.vulnlog.lib.app.ImpactReportRequest
-import dev.vulnlog.lib.app.generateImpactReport
+import dev.vulnlog.lib.app.report.ImpactReportOutcome
+import dev.vulnlog.lib.app.report.ImpactReportRequest
+import dev.vulnlog.lib.app.report.generateImpactReport
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.render.Message

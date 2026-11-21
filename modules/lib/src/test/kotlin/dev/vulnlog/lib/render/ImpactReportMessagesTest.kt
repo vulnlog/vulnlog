@@ -3,9 +3,9 @@
 
 package dev.vulnlog.lib.render
 
-import dev.vulnlog.lib.app.FilterRejected
-import dev.vulnlog.lib.app.ImpactReportOutcome
-import dev.vulnlog.lib.app.ProjectsDiffer
+import dev.vulnlog.lib.app.report.ImpactReportFilterRejected
+import dev.vulnlog.lib.app.report.ImpactReportOutcome
+import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.reporting.ImpactReport
@@ -64,7 +64,7 @@ class ImpactReportMessagesTest :
         }
 
         test("a failed run reports nothing besides its failure") {
-            val failed = listOf(ProjectsDiffer(emptyList()), FilterRejected(emptyList()))
+            val failed = listOf(ImpactReportProjectsDiffer(emptyList()), ImpactReportFilterRejected(emptyList()))
 
             val messages = failed.flatMap(::renderImpactReportMessages)
 
@@ -74,7 +74,7 @@ class ImpactReportMessagesTest :
         test("differing projects name how many there are and what to do") {
             val other = Project("Other Corp", "Other App", "Other Security Team")
 
-            val failures = renderImpactReportFailure(ProjectsDiffer(listOf(ACME, other)))
+            val failures = renderImpactReportFailure(ImpactReportProjectsDiffer(listOf(ACME, other)))
 
             failures shouldContainExactly
                 listOf(
@@ -88,7 +88,7 @@ class ImpactReportMessagesTest :
         test("a rejected filter is worded like every filter problem") {
             val problems = listOf(FilterProblem.UnknownReporter("bogus"))
 
-            val failures = renderImpactReportFailure(FilterRejected(problems))
+            val failures = renderImpactReportFailure(ImpactReportFilterRejected(problems))
 
             failures shouldBe renderFilterProblems(problems)
         }

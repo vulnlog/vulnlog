@@ -3,6 +3,11 @@
 
 package dev.vulnlog.lib.app
 
+import dev.vulnlog.lib.app.report.ImpactReportFilterRejected
+import dev.vulnlog.lib.app.report.ImpactReportOutcome
+import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
+import dev.vulnlog.lib.app.report.ImpactReportRequest
+import dev.vulnlog.lib.app.report.generateImpactReport
 import dev.vulnlog.lib.codec.impact.ImpactReportEncoder
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.FilterRequest
@@ -122,7 +127,7 @@ class GenerateImpactReportTest :
 
             val outcome = generate(acme, otherProject, filter = FilterRequest(reporter = "bogus"))
 
-            outcome shouldBe ProjectsDiffer(listOf(ACME, other))
+            outcome shouldBe ImpactReportProjectsDiffer(listOf(ACME, other))
         }
 
         test("rejects every bad filter value at once") {
@@ -131,7 +136,7 @@ class GenerateImpactReportTest :
             val outcome = generate(project, filter = FilterRequest(reporter = "bogus", states = setOf("later")))
 
             outcome shouldBe
-                FilterRejected(
+                ImpactReportFilterRejected(
                     listOf(FilterProblem.UnknownReporter("bogus"), FilterProblem.UnknownStates(listOf("later"))),
                 )
         }
