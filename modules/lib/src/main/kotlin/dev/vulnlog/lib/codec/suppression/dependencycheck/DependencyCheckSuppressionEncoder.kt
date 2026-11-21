@@ -3,9 +3,12 @@
 
 package dev.vulnlog.lib.codec.suppression.dependencycheck
 
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.model.suppression.SuppressionList
 import java.time.LocalDate
+
+private const val REGEX_METACHARACTERS = "\\^$.|?*+()[]{}"
 
 internal object DependencyCheckSuppressionEncoder {
     /** XML 1.0 cannot represent these characters, even with numeric character references. */
@@ -33,14 +36,41 @@ internal object DependencyCheckSuppressionEncoder {
                 // Vulnlog includes the expiry day; Dependency-Check stops at the start of `until`.
                 val until =
                     entry.expiresAt?.let { " until=\"${it.plusDays(1).toString().removePrefix("+")}Z\"" }.orEmpty()
-                appendLine("    <suppress$until>")
-                entry.reason?.let { appendLine("        <notes>${escapeXml(it)}</notes>") }
-                appendLine("        <cve>${escapeXml(entry.id.id)}</cve>")
-                appendLine("    </suppress>")
+                // The schema allows one packageUrl per suppress element.
+                val packageUrls = entry.packages.map(::toPackageUrlElement).ifEmpty { listOf(null) }
+                packageUrls.forEach { packageUrl ->
+                    appendLine("    <suppress$until>")
+                    entry.reason?.let { appendLine("        <notes>${escapeXml(it)}</notes>") }
+                    packageUrl?.let { appendLine("        $it") }
+                    appendLine("        <cve>${escapeXml(entry.id.id)}</cve>")
+                    appendLine("    </suppress>")
+                }
             }
             appendLine("</suppressions>")
         }
     }
+
+    /**
+     * Dependency-Check compares the whole PURL, so a PURL without a version becomes a pattern that matches every
+     * version, as it does in Trivy.
+     */
+    private fun toPackageUrlElement(purl: Purl): String {
+        val value = purl.value
+        val coordinatesEnd = value.indexOfAny(charArrayOf('?', '#')).takeIf { it >= 0 } ?: value.length
+        val coordinates = value.substring(0, coordinatesEnd)
+        // Canonical PURLs encode the @ of an npm scope, so an @ in the last segment separates the version.
+        if ('@' in coordinates.substringAfterLast('/')) return "<packageUrl>${escapeXml(value)}</packageUrl>"
+        val pattern = escapeRegex(coordinates) + "@[^?#]+" + escapeRegex(value.substring(coordinatesEnd))
+        return "<packageUrl regex=\"true\">${escapeXml(pattern)}</packageUrl>"
+    }
+
+    private fun escapeRegex(text: String): String =
+        buildString {
+            text.forEach { char ->
+                if (char in REGEX_METACHARACTERS) append('\\')
+                append(char)
+            }
+        }
 
     private fun isXmlCharacter(codePoint: Int): Boolean =
         codePoint == 0x9 ||

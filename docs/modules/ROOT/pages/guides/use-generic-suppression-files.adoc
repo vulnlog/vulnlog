@@ -71,7 +71,7 @@ The result is JSON, which Grype reads as YAML:
 }
 ----
 +
-These rules don't use the `purls`, so Grype ignores the ID in every package.
+These rules don't use `purls`, so Grype ignores the ID in every package.
 
 . Run Grype in the directory that contains `.grype.yaml`.
 

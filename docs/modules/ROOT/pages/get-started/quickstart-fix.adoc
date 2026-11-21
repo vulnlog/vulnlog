@@ -176,7 +176,7 @@ vulnlog suppress vulnlog.yaml
 Wrote: /home/you/acme-shop/.trivyignore.yaml
 ----
 
-Now `.trivyignore.yaml` lists the finding in `spring-beans` 5.3.15, with your analysis as the reason:
+Now `.trivyignore.yaml` lists the finding, with your analysis as the reason:
 
 [source,yaml]
 ----
@@ -191,6 +191,8 @@ vulnerabilities:
       but Spring advises all users to upgrade.
 ----
 
+`purls` limits the suppression to `spring-beans` 5.3.15, the package you analysed.
+Trivy still reports Spring4Shell in any other package or version.
 31 March 2027 is the last day of the suppression.
 If the fix hasn't shipped by then, Trivy reports the finding again.
 

@@ -114,21 +114,29 @@ class SuppressionListsTest :
                 built.exclusions.shouldBeEmpty()
             }
 
-            test("trivy and generic entries are limited to the packages of the entry, other formats are not") {
-                val reporters = listOf(ReporterType.TRIVY, ReporterType.GRYPE, ReporterType.DEPENDENCY_CHECK)
+            test("trivy, dependency-check and generic entries are limited to the packages of the entry, snyk not") {
+                val snykId = VulnId.Snyk("SNYK-JAVA-ORGAPACHECOMMONS-3043138")
+                val packages = listOf(COMMONS_TEXT)
                 val included =
-                    reporters.associateWith { listOf(suppressed(reporter = it, packages = listOf(COMMONS_TEXT))) }
+                    mapOf(
+                        ReporterType.TRIVY to listOf(suppressed(packages = packages)),
+                        ReporterType.DEPENDENCY_CHECK to
+                            listOf(suppressed(reporter = ReporterType.DEPENDENCY_CHECK, packages = packages)),
+                        ReporterType.GRYPE to listOf(suppressed(reporter = ReporterType.GRYPE, packages = packages)),
+                        ReporterType.SNYK to listOf(suppressed(snykId, ReporterType.SNYK, packages = packages)),
+                    )
                 val formats =
                     mapOf(
                         ReporterType.TRIVY to SuppressionFormat.Trivy,
-                        ReporterType.GRYPE to SuppressionFormat.Generic(ReporterType.GRYPE),
                         ReporterType.DEPENDENCY_CHECK to SuppressionFormat.DependencyCheck,
+                        ReporterType.GRYPE to SuppressionFormat.Generic(ReporterType.GRYPE),
+                        ReporterType.SNYK to SuppressionFormat.Snyk,
                     )
 
                 val built = buildSuppressionLists(included, formats)
 
                 built.lists.map { list -> list.entries.single().packages } shouldContainExactly
-                    listOf(listOf(COMMONS_TEXT), listOf(COMMONS_TEXT), emptyList())
+                    listOf(packages, packages, packages, emptyList())
             }
 
             test("a reporter with nothing to suppress still gets an empty list") {
