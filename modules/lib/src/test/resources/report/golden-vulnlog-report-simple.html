@@ -554,7 +554,7 @@
 </footer>
 
 <script>
-    var VULNLOG_DATA = {"project":{"organization":"Acme Corp","name":"Acme Web App","author":"Security Team"},"generatedAt":"2026-05-02T10:30:00Z","vulnlogVersion":"1.2.3-test","inputs":["frontend.vl","backend.vl"],"filter":{"asOf":"1.1.0","tags":["production"],"reporter":"trivy","states":["open","accepted"],"verdicts":["affected"],"dispositions":["wont fix"]},"entries":[{"primaryId":"CVE-2026-1111","ids":["CVE-2026-1111","GHSA-aaaa-bbbb-cccc"],"state":"open","verdict":"affected","severity":"critical","disposition":"will fix","verdictDetail":null,"shortDescription":"Critical RCE in example-lib","analysis":"Confirmed exploitable on the public ingress path; patch in progress.","releases":["1.0.0","1.1.0"],"fixedIn":["1.2.0"]},{"primaryId":"CVE-2026-5555","ids":["CVE-2026-5555"],"state":"under_investigation","verdict":null,"severity":null,"disposition":null,"verdictDetail":null,"shortDescription":"Unbounded recursion in the XML parser","analysis":null,"releases":["1.1.0"],"fixedIn":[]},{"primaryId":"CVE-2026-4444","ids":["CVE-2026-4444"],"state":"accepted","verdict":"affected","severity":"high","disposition":"wont fix","verdictDetail":null,"shortDescription":"Prototype pollution in a build-time helper","analysis":"Build-time only; no upstream fix and no runtime exposure.","releases":["1.1.0"],"fixedIn":[]},{"primaryId":"CVE-2026-3333","ids":["CVE-2026-3333"],"state":"resolved","verdict":"affected","severity":"medium","disposition":null,"verdictDetail":null,"shortDescription":"DoS via large payload","analysis":"Mitigated by request size limits at the edge.","releases":["1.0.0"],"fixedIn":["1.0.1"]},{"primaryId":"CVE-2026-2222","ids":["CVE-2026-2222"],"state":"not_applicable","verdict":"not affected","severity":null,"disposition":null,"verdictDetail":"vulnerable code not in execute path","shortDescription":null,"analysis":null,"releases":["1.1.0"],"fixedIn":[]}]};
+    var VULNLOG_DATA = {"format_version":1,"project":{"organization":"Acme Corp","name":"Acme Web App","author":"Security Team"},"generated_at":"2026-05-02T10:30:00Z","vulnlog_version":"1.2.3-test","inputs":["frontend.vl","backend.vl"],"filter":{"as_of":"1.1.0","tags":["production"],"reporter":"trivy","states":["open","accepted"],"verdicts":["affected"],"dispositions":["wont fix"]},"entries":[{"primary_id":"CVE-2026-1111","aliases":["GHSA-aaaa-bbbb-cccc"],"state":"open","verdict":"affected","severity":"critical","disposition":"will fix","verdict_detail":null,"short_description":"Critical RCE in example-lib","analysis":"Confirmed exploitable on the public ingress path; patch in progress.","releases":["1.0.0","1.1.0"],"fixed_in":["1.2.0"]},{"primary_id":"CVE-2026-5555","aliases":[],"state":"under investigation","verdict":null,"severity":null,"disposition":null,"verdict_detail":null,"short_description":"Unbounded recursion in the XML parser","analysis":null,"releases":["1.1.0"],"fixed_in":[]},{"primary_id":"CVE-2026-4444","aliases":[],"state":"accepted","verdict":"affected","severity":"high","disposition":"wont fix","verdict_detail":null,"short_description":"Prototype pollution in a build-time helper","analysis":"Build-time only; no upstream fix and no runtime exposure.","releases":["1.1.0"],"fixed_in":[]},{"primary_id":"CVE-2026-3333","aliases":[],"state":"resolved","verdict":"affected","severity":"medium","disposition":null,"verdict_detail":null,"short_description":"DoS via large payload","analysis":"Mitigated by request size limits at the edge.","releases":["1.0.0"],"fixed_in":["1.0.1"]},{"primary_id":"CVE-2026-2222","aliases":[],"state":"not applicable","verdict":"not affected","severity":null,"disposition":null,"verdict_detail":"vulnerable code not in execute path","short_description":null,"analysis":null,"releases":["1.1.0"],"fixed_in":[]}]};
     (function () {
         var COLUMN_META = {
             ids: {label: 'IDs', width: '16%', tooltip: 'Vulnerability identifiers (CVE, GHSA, SNYK)'},
@@ -563,7 +563,7 @@
             releases: {label: 'Releases', width: '16%', tooltip: 'Affected releases (and fix releases when available)'}
         };
 
-        var STATE_ORDER = ['open', 'under_investigation', 'accepted', 'resolved', 'not_applicable'];
+        var STATE_ORDER = ['open', 'under investigation', 'accepted', 'resolved', 'not applicable'];
         var SEVERITY_ORDER = ['critical', 'high', 'medium', 'low'];
 
         var SEVERITY_TOOLTIPS = {
@@ -582,7 +582,7 @@
             d.project.organization + ' · ' + d.project.author;
 
         renderMetaList(d);
-        renderFooterVersion(d.vulnlogVersion);
+        renderFooterVersion(d.vulnlog_version);
 
         var cols = ['ids', 'state', 'details', 'releases'];
         renderColgroup(cols);
@@ -599,7 +599,7 @@
 
         function renderMetaList(d) {
             var dl = document.getElementById('report-meta-list');
-            appendDt(dl, 'Generated', renderTimestamp(d.generatedAt));
+            appendDt(dl, 'Generated', renderTimestamp(d.generated_at));
             if (d.inputs && d.inputs.length > 0) {
                 appendDt(dl, 'Inputs', d.inputs.join(', '));
             }
@@ -632,7 +632,7 @@
         function formatFilter(f) {
             if (!f) return '';
             var parts = [];
-            if (f.asOf) parts.push('as of=' + f.asOf);
+            if (f.as_of) parts.push('as of=' + f.as_of);
             if (f.tags && f.tags.length > 0) parts.push('tags=' + f.tags.join(','));
             if (f.reporter) parts.push('reporter=' + f.reporter);
             if (f.states && f.states.length > 0) parts.push('state=' + f.states.join(','));
@@ -776,15 +776,15 @@
         // Row stripe rule:
         //   resolved              -> green (positive)
         //   accepted              -> violet; never grey, an accepted risk is not a closed one
-        //   not_applicable        -> grey (muted)
-        //   under_investigation   -> no stripe
+        //   not applicable        -> grey (muted)
+        //   under investigation   -> no stripe
         //   open + severity       -> severity colour (critical/high/medium/low)
         //   open (otherwise)      -> no stripe
         function rowToneFor(e) {
             if (e.state === 'resolved') return 'positive';
             if (e.state === 'accepted') return 'accepted';
-            if (e.state === 'not_applicable') return 'muted';
-            if (e.state === 'under_investigation') return null;
+            if (e.state === 'not applicable') return 'muted';
+            if (e.state === 'under investigation') return null;
             if (e.severity && SEVERITY_ORDER.indexOf(e.severity) !== -1) return e.severity;
             return null;
         }
@@ -806,11 +806,8 @@
 
         function buildIdsCell(td, e) {
             td.className = 'col-ids';
-            td.appendChild(document.createTextNode(e.primaryId));
-            var aliases = (e.ids || []).filter(function (id) {
-                return id !== e.primaryId;
-            });
-            aliases.forEach(function (id) {
+            td.appendChild(document.createTextNode(e.primary_id));
+            e.aliases.forEach(function (id) {
                 td.appendChild(document.createElement('br'));
                 var span = document.createElement('span');
                 span.className = 'alias';
@@ -839,10 +836,10 @@
                 var verdictSpan = document.createElement('span');
                 verdictSpan.appendChild(labelSpan('Verdict'));
                 verdictSpan.appendChild(document.createTextNode(label_(e.verdict)));
-                if (e.verdictDetail) {
+                if (e.verdict_detail) {
                     var note = document.createElement('span');
                     note.className = 'details-note';
-                    note.textContent = e.verdictDetail;
+                    note.textContent = e.verdict_detail;
                     verdictSpan.appendChild(note);
                 }
                 meta.appendChild(verdictSpan);
@@ -873,11 +870,11 @@
             td.appendChild(meta);
 
             // Description (only if present)
-            if (e.shortDescription) {
+            if (e.short_description) {
                 var desc = document.createElement('div');
                 desc.className = 'details-block';
                 desc.appendChild(labelSpan('Description'));
-                desc.appendChild(document.createTextNode(e.shortDescription));
+                desc.appendChild(document.createTextNode(e.short_description));
                 td.appendChild(desc);
             }
 
@@ -895,14 +892,14 @@
 
         function buildReleasesCell(td, e) {
             td.appendChild(document.createTextNode((e.releases || []).join(', ')));
-            if (e.fixedIn && e.fixedIn.length > 0) {
+            if (e.fixed_in && e.fixed_in.length > 0) {
                 var line = document.createElement('span');
                 line.className = 'releases-fixed';
                 var lbl = document.createElement('span');
                 lbl.className = 'releases-fixed-label';
                 lbl.textContent = 'Fixed in';
                 line.appendChild(lbl);
-                line.appendChild(document.createTextNode(e.fixedIn.join(', ')));
+                line.appendChild(document.createTextNode(e.fixed_in.join(', ')));
                 td.appendChild(line);
             }
             return td;
@@ -916,8 +913,8 @@
         }
 
         function label_(v) {
-            // Display "under_investigation" as the shorter "Investigating" everywhere.
-            if (v === 'under_investigation') return 'Investigating';
+            // Display "under investigation" as the shorter "Investigating" everywhere.
+            if (v === 'under investigation') return 'Investigating';
             if (typeof v !== 'string' || v.length === 0) return String(v);
             var s = v.replace(/_/g, ' ');
             return s.charAt(0).toUpperCase() + s.slice(1);

@@ -29,7 +29,7 @@ private fun entry(release: String) =
     ImpactEntry(
         state = WorkState.OPEN,
         primaryId = VulnId.Cve("CVE-2026-0001"),
-        ids = emptySet(),
+        aliases = emptySet(),
         shortDescription = null,
         impact = Impact.Affected(Severity.HIGH),
         disposition = null,

@@ -19,9 +19,12 @@ import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 
+private const val FORMAT_VERSION = 1
+
 internal object ImpactReportMapper {
     fun toDto(report: ImpactReport): ImpactReportDto =
         ImpactReportDto(
+            formatVersion = FORMAT_VERSION,
             project =
                 ProjectDto(
                     organization = report.project.organization,
@@ -57,8 +60,8 @@ internal object ImpactReportMapper {
     private fun toImpactEntryDto(entry: ImpactEntry): ImpactEntryDto =
         ImpactEntryDto(
             primaryId = entry.primaryId.id,
-            ids = entry.ids.map { it.id },
-            state = entry.state.name.lowercase(),
+            aliases = entry.aliases.map { it.id },
+            state = entry.state.canonical(),
             verdict = verdictLabel(entry.impact),
             severity = severityLabel(entry.impact),
             disposition = entry.disposition?.let { canonical(it) },

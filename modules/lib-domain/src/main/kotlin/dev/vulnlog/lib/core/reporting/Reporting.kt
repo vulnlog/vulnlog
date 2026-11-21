@@ -25,7 +25,7 @@ fun collectImpactEntries(vulnlogFile: VulnlogFile): Set<ImpactEntry> =
             ImpactEntry(
                 state = findWorkState(vuln),
                 primaryId = vuln.id,
-                ids = vuln.aliases.toSet(),
+                aliases = vuln.aliases.toSet(),
                 shortDescription = vuln.description,
                 impact = defineImpact(vuln),
                 disposition = findDisposition(vuln.verdict),
@@ -60,7 +60,7 @@ private fun mergeTwo(
     b: ImpactEntry,
 ): ImpactEntry =
     a.copy(
-        ids = a.ids + b.ids,
+        aliases = a.aliases + b.aliases,
         shortDescription = a.shortDescription ?: b.shortDescription,
         reportFor = a.reportFor + b.reportFor,
         fixedIn = a.fixedIn + b.fixedIn,

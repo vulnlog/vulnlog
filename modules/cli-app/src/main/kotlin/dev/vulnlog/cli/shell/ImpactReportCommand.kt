@@ -10,8 +10,10 @@ import com.github.ajalt.clikt.parameters.options.OptionCallTransformContext
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.enum
 import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
+import dev.vulnlog.lib.app.report.ImpactReportFormat
 import dev.vulnlog.lib.app.report.ImpactReportOutcome
 import dev.vulnlog.lib.app.report.ImpactReportRequest
 import dev.vulnlog.lib.app.report.generateImpactReport
@@ -30,7 +32,7 @@ import java.time.Instant
 
 class ImpactReportCommand : CliktCommand(name = "impact") {
     override fun help(context: Context): String =
-        "Generate an HTML report of how vulnerabilities affect this project. " +
+        "Generate a report of how vulnerabilities affect this project, as HTML or JSON. " +
             "Several Vulnlog files are merged into one report and must share the same project metadata."
 
     override fun helpEpilog(context: Context): String =
@@ -48,21 +50,31 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
         |Merge several files of the same project into one report.
         |
         |vulnlog report impact frontend.vl.yaml backend.vl.yaml
+        |
+        |Write the report as JSON to a file.
+        |
+        |vulnlog report impact vulnlog.yaml --format json > impact.json
         """.trimMargin()
 
     val inputs: List<FileInputOption> by vulnlogFileInputs(
         "Vulnlog file(s), or '-' to read from stdin, to create the report from.",
     )
 
-    val output: FileOutputOption by option(
+    val output: FileOutputOption? by option(
         "-o",
         "--output",
         metavar = "<path>",
         help =
-            "Output file path, or '-' to write to stdout. " +
-                "Defaults to vulnlog-impact-report.html in the current directory.",
+            "Output file path, or '-' to write to stdout. Defaults to vulnlog-impact-report.html in the " +
+                "current directory for html, and to stdout for json.",
     ).convert(conversion = OptionCallTransformContext::toOutputFileOption)
-        .default(FileOutputOption.File(Path.of("vulnlog-impact-report.html")))
+
+    val format: ImpactReportFormat by option(
+        "--format",
+        metavar = "<format>",
+        help = "Output format: html or json. Defaults to html.",
+    ).enum<ImpactReportFormat> { it.token }
+        .default(ImpactReportFormat.HTML)
 
     val filterOptions by FilterOptions()
 
@@ -86,6 +98,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
                     ),
                 generatedAt = Instant.now(),
                 vulnlogVersion = BuildInfo.VERSION,
+                format = format,
             )
 
         val outcome = generateImpactReport(projects, request)
@@ -96,8 +109,16 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
         }
     }
 
+    /** HTML is opened in a browser, so it goes to a file. Data formats go to stdout, so they can be piped. */
+    private fun resolveOutput(): FileOutputOption =
+        output ?: when (format) {
+            ImpactReportFormat.HTML ->
+                FileOutputOption.File(Path.of(System.getProperty("user.dir"), "vulnlog-impact-report.html"))
+            ImpactReportFormat.JSON -> FileOutputOption.Stdout
+        }
+
     private fun write(content: String) {
-        when (val target = output) {
+        when (val target = resolveOutput()) {
             is FileOutputOption.File -> {
                 writeOrFail(writeOutput(target.path, content))
                 echoMessage(Message.Status(formatStatus(StatusVerb.WROTE, target.path.toString())))
