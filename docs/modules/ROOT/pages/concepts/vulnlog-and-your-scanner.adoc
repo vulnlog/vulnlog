@@ -57,7 +57,13 @@ This applies as soon as you record the resolution, even if its release hasn't sh
 A scanner that checks the current release then reports the finding again, because that release still has the vulnerable package.
 With `--as-of` and the release the scanner checks, the resolution doesn't count yet, and a `suppress` block on the report still applies.
 
-The exact rules, including expiry, are in xref:reference/suppression.adoc[Suppression].
+A suppression is as narrow as the analysis behind it.
+The Text4Shell analysis is about Commons Text 1.9 in the server, which never calls the vulnerable function.
+If another part of Acme Shop later ships Commons Text, or another version of it, the analysis says nothing about that use.
+So `dependency-check-suppressions.xml` names the package of the entry, and Dependency-Check reports Text4Shell anywhere else.
+You analyse the new use before the finding goes quiet.
+
+The exact rules, including expiry and packages, are in xref:reference/suppression.adoc[Suppression].
 
 == Generated files follow the Vulnlog file
 

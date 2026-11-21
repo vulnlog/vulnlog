@@ -309,6 +309,15 @@ Add the scanner's ID to the report's `vuln_ids`.
 | Reporter `other` gets no suppression file.
 |===
 
+If `.trivyignore.yaml` or `dependency-check-suppressions.xml` lists the ID and the scanner still reports the finding, the finding is in a package that the entry's `packages` doesn't name.
+Compare the PURL in the finding with `packages`:
+
+* It's the same package and version, written differently: copy the PURL from the finding into `packages`.
+* It's another package or version, and your analysis holds for it too: add its PURL to `packages`.
+* Your analysis doesn't hold for it: analyse the finding again and update the entry.
+
+See xref:reference/suppression.adoc#packages[Packages].
+
 If no line names the entry, check that it qualifies at all.
 An entry that isn't `not affected` needs a `suppress` block on the scanner's report.
 For the full rules, see xref:reference/suppression.adoc#rules[Suppression rules].

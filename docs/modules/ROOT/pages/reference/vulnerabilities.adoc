@@ -67,6 +67,8 @@ Each ID must be defined in `releases` at the top level.
 | None
 | The package URLs (PURLs) of the dependencies that contain the vulnerability.
 Your scanner's output usually includes them.
+Suppression files limit a suppression to these packages.
+See xref:reference/suppression.adoc#packages[Packages].
 
 | `reports`
 | List of <<report-entry,report entries>>

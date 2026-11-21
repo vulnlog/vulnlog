@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.codec.suppression.dependencycheck
 
 import dev.vulnlog.lib.codec.suppression.SuppressionEncoder
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressionEntry
 import dev.vulnlog.lib.model.suppression.SuppressionFormat
@@ -84,6 +85,64 @@ class DependencyCheckSuppressionEncoderTest :
                 .getNamedItem("until") shouldBe null
         }
 
+        test("writes one schema-valid suppress element for each package of an entry") {
+            val packages =
+                listOf(
+                    Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9"),
+                    Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.8"),
+                )
+            val entry = SuppressionEntry(VulnId.Cve("CVE-2022-42889"), reason = "not reachable", packages = packages)
+            val list = SuppressionList(SuppressionFormat.DependencyCheck, setOf(entry))
+
+            val xml = SuppressionEncoder.encode(list)
+
+            validateSchema(xml)
+            val document = parse(xml)
+            document.getElementsByTagName("suppress").length shouldBe 2
+            document.getElementsByTagName("cve").length shouldBe 2
+            document.getElementsByTagName("notes").length shouldBe 2
+            document.textsOf("packageUrl") shouldBe packages.map { it.value }
+        }
+
+        test("a PURL with a version matches that exact PURL") {
+            val purl = Purl.Deb("pkg:deb/debian/libssl3@3.0.11-1?arch=amd64&distro=debian-12")
+            val list = SuppressionList(SuppressionFormat.DependencyCheck, setOf(suppressedIn(purl)))
+
+            val xml = SuppressionEncoder.encode(list)
+
+            xml shouldContain
+                "<packageUrl>pkg:deb/debian/libssl3@3.0.11-1?arch=amd64&amp;distro=debian-12</packageUrl>"
+        }
+
+        listOf(
+            Triple(
+                "pkg:maven/org.springframework/spring-beans",
+                "pkg:maven/org.springframework/spring-beans@5.3.15",
+                "pkg:maven/org.springframework/spring-beans-extra@5.3.15",
+            ),
+            Triple("pkg:npm/%40babel/core", "pkg:npm/%40babel/core@7.24.0", "pkg:npm/%40babel/core-js@7.24.0"),
+            Triple(
+                "pkg:deb/debian/xz-utils?arch=amd64",
+                "pkg:deb/debian/xz-utils@5.4.1?arch=amd64",
+                "pkg:deb/debian/xz-utils@5.4.1?arch=arm64",
+            ),
+        ).forEach { (versionless, found, otherPackage) ->
+            test("a PURL without a version becomes a pattern that matches every version: $versionless") {
+                val list =
+                    SuppressionList(SuppressionFormat.DependencyCheck, setOf(suppressedIn(Purl.Generic(versionless))))
+
+                val xml = SuppressionEncoder.encode(list)
+
+                validateSchema(xml)
+                val packageUrl = parse(xml).getElementsByTagName("packageUrl").item(0)
+                packageUrl.attributes.getNamedItem("regex").nodeValue shouldBe "true"
+                val pattern = Regex(packageUrl.textContent)
+                pattern.matches(found) shouldBe true
+                pattern.matches(versionless) shouldBe false
+                pattern.matches(otherPackage) shouldBe false
+            }
+        }
+
         test("an empty list remains a schema-valid XML document") {
             val xml = SuppressionEncoder.encode(SuppressionList(SuppressionFormat.DependencyCheck, emptySet()))
 
@@ -93,6 +152,11 @@ class DependencyCheckSuppressionEncoderTest :
             xml shouldNotContain "until="
         }
     })
+
+private fun suppressedIn(purl: Purl) = SuppressionEntry(VulnId.Cve("CVE-2026-1111"), packages = listOf(purl))
+
+private fun Document.textsOf(tagName: String): List<String> =
+    getElementsByTagName(tagName).let { nodes -> (0 until nodes.length).map { nodes.item(it).textContent } }
 
 private fun validateSchema(xml: String) {
     val factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)

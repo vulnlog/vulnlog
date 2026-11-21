@@ -36,7 +36,15 @@ class SuppressionGoldenTest :
                 SuppressionList(
                     SuppressionFormat.DependencyCheck,
                     setOf(
-                        SuppressionEntry(VulnId.Cve("CVE-2026-1111"), EXPIRY, SHORT_REASON),
+                        SuppressionEntry(
+                            VulnId.Cve("CVE-2026-1111"),
+                            EXPIRY,
+                            SHORT_REASON,
+                            listOf(
+                                Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9"),
+                                Purl.Deb("pkg:deb/debian/libssl3?arch=amd64&distro=debian-12"),
+                            ),
+                        ),
                         SuppressionEntry(VulnId.Cve("CVE-2026-2222"), reason = "Used only for tests & build tooling."),
                     ),
                 )
