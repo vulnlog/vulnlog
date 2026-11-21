@@ -114,23 +114,21 @@ class SuppressionListsTest :
                 built.exclusions.shouldBeEmpty()
             }
 
-            test("only trivy entries are limited to the packages of the entry") {
+            test("trivy and generic entries are limited to the packages of the entry, other formats are not") {
+                val reporters = listOf(ReporterType.TRIVY, ReporterType.GRYPE, ReporterType.DEPENDENCY_CHECK)
                 val included =
-                    mapOf(
-                        ReporterType.TRIVY to listOf(suppressed(packages = listOf(COMMONS_TEXT))),
-                        ReporterType.GRYPE to
-                            listOf(suppressed(reporter = ReporterType.GRYPE, packages = listOf(COMMONS_TEXT))),
-                    )
+                    reporters.associateWith { listOf(suppressed(reporter = it, packages = listOf(COMMONS_TEXT))) }
                 val formats =
                     mapOf(
                         ReporterType.TRIVY to SuppressionFormat.Trivy,
                         ReporterType.GRYPE to SuppressionFormat.Generic(ReporterType.GRYPE),
+                        ReporterType.DEPENDENCY_CHECK to SuppressionFormat.DependencyCheck,
                     )
 
                 val built = buildSuppressionLists(included, formats)
 
                 built.lists.map { list -> list.entries.single().packages } shouldContainExactly
-                    listOf(listOf(COMMONS_TEXT), emptyList())
+                    listOf(listOf(COMMONS_TEXT), listOf(COMMONS_TEXT), emptyList())
             }
 
             test("a reporter with nothing to suppress still gets an empty list") {

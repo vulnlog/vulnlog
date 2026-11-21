@@ -75,11 +75,11 @@ verbose: skipped CVE-2021-23337 for .snyk: the snyk format requires SNYK ids
 [[packages]]
 == Packages
 
-A `.trivyignore.yaml` file limits each suppression to the entry's `packages`.
+A `.trivyignore.yaml` file and a generic file limit each suppression to the entry's `packages`.
 Vulnlog writes their package URLs (PURLs) unchanged as the `purls` of the ID.
-Trivy then ignores the ID only in a package that matches one of them.
-Trivy still reports the same ID in any other package, so you can analyse it.
 
+Trivy ignores the ID only in a package that matches one of them.
+Trivy still reports the same ID in any other package, so you can analyse it.
 Trivy compares the type, namespace and name of a PURL.
 A PURL with a version matches only that version.
 A PURL without a version matches every version.
@@ -87,8 +87,12 @@ Each qualifier in the PURL, such as `arch` or `distro`, must also be in the PURL
 If Trivy writes the PURL differently, nothing matches and Trivy reports the finding again.
 To avoid this, copy the PURLs from your scanner's output into `packages`.
 
+No scanner reads a generic file.
+Your conversion or filter decides whether it uses the `purls`.
+See xref:guides/use-generic-suppression-files.adoc[Use generic suppression files].
+
 An entry with an empty `packages` list suppresses the ID in every package.
-The other suppression files always suppress the ID in every package.
+The files `.snyk`, `dependency-check-suppressions.xml` and `audit.toml` always suppress the ID in every package.
 
 [[supported-scanners]]
 == Supported scanners
@@ -168,6 +172,12 @@ It holds one object for each ID, so an entry with two IDs in `vuln_ids` gets two
 | String
 | The vulnerability ID.
 
+| `purls`
+| List of strings
+| The entry's `packages`.
+Left out when the entry has no packages.
+See <<packages>>.
+
 | `expires_at`
 | Date, `YYYY-MM-DD`
 | The last day of the suppression.
@@ -186,6 +196,7 @@ The generated `npm-audit.generic.json` for the lodash entry, which is suppressed
 {
   "vulnerabilities" : [ {
     "id" : "CVE-2021-23337",
+    "purls" : [ "pkg:npm/lodash@4.17.20" ],
     "statement" : "The template function is only used in the admin interface, with templates that administrators write. Administrators can already change the shop configuration, so the injection gives them no additional access. The admin interface is removed in Acme Shop 5.0."
   } ]
 }

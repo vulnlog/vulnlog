@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.codec.suppression
 
+import dev.vulnlog.lib.model.Purl
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressionEntry
@@ -28,6 +29,29 @@ class SuppressionEncoderTest :
                   "vulnerabilities" : [ {
                     "id" : "CVE-2026-1111",
                     "expires_at" : "2026-08-01",
+                    "statement" : "not reachable"
+                  } ]
+                }
+                """.trimIndent()
+        }
+
+        test("the generic format writes the packages of an entry as purls") {
+            val entry =
+                SuppressionEntry(
+                    VulnId.Cve("CVE-2022-42889"),
+                    reason = "not reachable",
+                    packages = listOf(Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9")),
+                )
+            val list = SuppressionList(SuppressionFormat.Generic(ReporterType.GRYPE), setOf(entry))
+
+            val content = SuppressionEncoder.encode(list)
+
+            content shouldBe
+                """
+                {
+                  "vulnerabilities" : [ {
+                    "id" : "CVE-2022-42889",
+                    "purls" : [ "pkg:maven/org.apache.commons/commons-text@1.9" ],
                     "statement" : "not reachable"
                   } ]
                 }

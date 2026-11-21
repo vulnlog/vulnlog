@@ -75,8 +75,8 @@ private fun buildList(
 }
 
 /**
- * cargo-audit ignores bare ids, so its entries keep only the id and collapse to one per id. Trivy limits an entry to
- * the packages the analysis is about.
+ * cargo-audit ignores bare ids, so its entries keep only the id and collapse to one per id. Trivy and the generic
+ * format limit an entry to the packages the analysis is about.
  */
 private fun toSuppressionEntry(
     format: SuppressionFormat,
@@ -84,7 +84,7 @@ private fun toSuppressionEntry(
 ): SuppressionEntry =
     when (format) {
         SuppressionFormat.CargoAudit -> SuppressionEntry(suppression.id)
-        SuppressionFormat.Trivy ->
+        is SuppressionFormat.Generic, SuppressionFormat.Trivy ->
             SuppressionEntry(
                 suppression.id,
                 suppression.expiresAt,
@@ -92,7 +92,7 @@ private fun toSuppressionEntry(
                 suppression.packages,
             )
 
-        is SuppressionFormat.Generic, SuppressionFormat.Snyk, SuppressionFormat.DependencyCheck ->
+        SuppressionFormat.Snyk, SuppressionFormat.DependencyCheck ->
             SuppressionEntry(
                 suppression.id,
                 suppression.expiresAt,
