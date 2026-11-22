@@ -75,6 +75,6 @@ fun severityOf(impact: Impact): Severity? =
 internal fun defineImpact(vulnEntry: VulnerabilityEntry): Impact =
     when (val verdict = vulnEntry.verdict) {
         is Verdict.Affected -> Impact.Affected(verdict.severity)
-        is Verdict.NotAffected -> Impact.NotAffected(verdict.justification.value)
+        is Verdict.NotAffected -> Impact.NotAffected(verdict.justification)
         Verdict.UnderInvestigation -> Impact.Unknown
     }

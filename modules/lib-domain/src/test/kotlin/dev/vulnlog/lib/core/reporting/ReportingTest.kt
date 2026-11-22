@@ -37,7 +37,7 @@ private fun impactEntry(
     primaryId: VulnId = cve1,
     state: WorkState = WorkState.OPEN,
     aliases: Set<VulnId> = emptySet(),
-    impact: Impact = Impact.NotAffected("vulnerable code not in execute path"),
+    impact: Impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
     disposition: Disposition? = null,
     analysis: String? = "not affected",
     reportFor: Set<Release> = setOf(releaseV1),
@@ -93,7 +93,7 @@ class ReportingTest :
 
                 val entry = collected(vulnerability(id = cve1, verdict = Verdict.NotAffected(justification)))
 
-                entry.impact shouldBe Impact.NotAffected(justification.value)
+                entry.impact shouldBe Impact.NotAffected(justification)
                 entry.disposition.shouldBeNull()
             }
 

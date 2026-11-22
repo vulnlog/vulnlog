@@ -9,6 +9,7 @@ import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Changelog
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
@@ -114,7 +115,10 @@ class ChangelogEncoderTest :
             test("states that a vulnerability was judged not affected") {
                 val changelog =
                     changelogOf(
-                        entries = listOf(entry(impact = Impact.NotAffected("Vulnerable code not present"))),
+                        entries =
+                            listOf(
+                                entry(impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_NOT_PRESENT)),
+                            ),
                     )
 
                 val rendered = ChangelogEncoder.encodeText(changelog, ChangelogDetail.FULL)

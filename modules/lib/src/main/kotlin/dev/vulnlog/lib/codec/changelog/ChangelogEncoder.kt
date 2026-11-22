@@ -3,13 +3,13 @@
 
 package dev.vulnlog.lib.codec.changelog
 
+import dev.vulnlog.lib.codec.report.labelImpact
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.model.reporting.Changelog
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.model.reporting.ChangelogEntry
 import dev.vulnlog.lib.model.reporting.ChangelogRelease
 import dev.vulnlog.lib.model.reporting.ChangelogSummary
-import dev.vulnlog.lib.model.reporting.Impact
 
 private const val UNRELEASED = "unreleased"
 
@@ -90,7 +90,7 @@ private fun sentence(text: String): String = if (text.isEmpty() || text.last() i
 private fun qualifier(entry: ChangelogEntry): String {
     val aliases = entry.aliases.joinToString(", ") { it.id }
     val also = if (aliases.isEmpty()) "" else ", also $aliases"
-    return "(${impactLabel(entry.impact)}$also)"
+    return "(${labelImpact(entry.impact)}$also)"
 }
 
 private fun textDescription(
@@ -102,10 +102,3 @@ private fun description(entry: ChangelogEntry): String? =
     listOfNotNull(entry.name?.let { "\"$it\"" }, entry.description)
         .joinToString(" ")
         .takeIf { it.isNotEmpty() }
-
-private fun impactLabel(impact: Impact): String =
-    when (impact) {
-        is Impact.Affected -> canonical(impact.severity)
-        is Impact.NotAffected -> "not affected"
-        Impact.Unknown -> "not triaged"
-    }

@@ -171,6 +171,27 @@ class DtoV1MapperTest :
                     )
             }
 
+            test("reads every justification by the token of the file and writes it back the same") {
+                val tokens =
+                    listOf(
+                        "component not present",
+                        "inline mitigations already exist",
+                        "vulnerable code cannot be controlled by adversary",
+                        "vulnerable code not in execute path",
+                        "vulnerable code not present",
+                    )
+                val entries =
+                    tokens.mapIndexed { index, token ->
+                        vulnerabilityDto("CVE-2021-$index", verdict = "not affected").copy(justification = token)
+                    }
+
+                val file = toDomain(v1Dto(vulnerabilities = entries))
+                val rewritten = DtoV1Mapper.toDto(file).vulnerabilities.map { it.justification }
+
+                file.vulnerabilities.map { it.verdict } shouldBe VexJustification.entries.map(Verdict::NotAffected)
+                rewritten shouldBe tokens
+            }
+
             test("reads the legacy risk acceptable verdict as affected and wont fix, and writes it back so") {
                 val legacy = v1Dto(vulnerabilities = listOf(vulnerabilityDto("CVE-2021-1", "risk acceptable", "low")))
 

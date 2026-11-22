@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
+import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ImpactEntry
@@ -179,7 +180,7 @@ class ImpactReportEncoderTest :
                         entry(
                             primaryId = VulnId.Cve("CVE-2026-5678"),
                             state = WorkState.NOT_APPLICABLE,
-                            impact = Impact.NotAffected("vulnerable code not in execute path"),
+                            impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
                         ),
                     )
 
@@ -188,9 +189,9 @@ class ImpactReportEncoderTest :
                 json[0]["primary_id"].stringValue() shouldBe "CVE-2026-1234"
                 json[0]["verdict"].stringValue() shouldBe "affected"
                 json[0]["severity"].stringValue() shouldBe "high"
-                json[0]["verdict_detail"].isNull shouldBe true
+                json[0]["justification"].isNull shouldBe true
                 json[1]["verdict"].stringValue() shouldBe "not affected"
-                json[1]["verdict_detail"].stringValue() shouldBe "vulnerable code not in execute path"
+                json[1]["justification"].stringValue() shouldBe "vulnerable code not in execute path"
             }
 
             test("names each state as the Vulnlog file does") {
@@ -253,14 +254,6 @@ class ImpactReportEncoderTest :
 
                 readJson(text)["entries"][0]["disposition"].stringValue() shouldBe "wont fix"
                 text shouldNotContain "risk acceptable"
-            }
-
-            test("writes a null verdict while the entry is untriaged") {
-                val untriaged = entry(state = WorkState.UNDER_INVESTIGATION, impact = Impact.Unknown)
-
-                val json = report(listOf(untriaged)).json()["entries"][0]
-
-                json["verdict"].isNull shouldBe true
             }
 
             test("sorts entries by state, then severity") {
@@ -392,7 +385,7 @@ class ImpactReportEncoderTest :
                 val notAffected =
                     entry(
                         state = WorkState.NOT_APPLICABLE,
-                        impact = Impact.NotAffected("Vulnerable code cannot be controlled by adversary"),
+                        impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY),
                         description = "RCE in example-lib",
                         analysis = null,
                     )
@@ -400,12 +393,12 @@ class ImpactReportEncoderTest :
                 val entry = singleEntry(report(listOf(notAffected)).table())
 
                 facts(entry).map { it[1] } shouldContainExactly
-                    listOf("not affected", "Vulnerable code cannot be controlled by adversary")
+                    listOf("not affected", "vulnerable code cannot be controlled by adversary")
                 paragraphs(entry) shouldBe "RCE in example-lib"
             }
 
             test("wraps a long justification within the Impact column of a narrow table") {
-                val justification = "Vulnerable code cannot be controlled by adversary"
+                val justification = VexJustification.VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY
                 val notAffected = entry(state = WorkState.NOT_APPLICABLE, impact = Impact.NotAffected(justification))
 
                 val text = report(listOf(notAffected)).table(TextLayout(80, colors = false))
@@ -413,7 +406,7 @@ class ImpactReportEncoderTest :
                 val impact = facts(singleEntry(text)).map { it[1] }
                 text.lines().maxOf { it.length } shouldBe 80
                 impact.first() shouldBe "not affected"
-                impact.drop(1).joinToString(" ") shouldBe justification
+                impact.drop(1).joinToString(" ") shouldBe "vulnerable code cannot be controlled by adversary"
             }
 
             test("writes only the facts of an entry without description, justification or analysis") {

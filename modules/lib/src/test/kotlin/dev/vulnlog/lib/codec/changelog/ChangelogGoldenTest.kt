@@ -7,6 +7,7 @@ import dev.vulnlog.lib.core.reporting.summarize
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Changelog
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
@@ -72,7 +73,7 @@ private val publishedEntries =
     listOf(
         ChangelogEntry(
             primaryId = VulnId.Cve("CVE-2026-3333"),
-            impact = Impact.NotAffected("Vulnerable code not present"),
+            impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_NOT_PRESENT),
             note = "Updated the dependency anyway.",
         ),
     )

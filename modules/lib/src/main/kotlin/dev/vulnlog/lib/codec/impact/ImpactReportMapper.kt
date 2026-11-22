@@ -6,13 +6,17 @@ package dev.vulnlog.lib.codec.impact
 import dev.vulnlog.lib.codec.impact.dto.FilterDto
 import dev.vulnlog.lib.codec.impact.dto.ImpactEntryDto
 import dev.vulnlog.lib.codec.impact.dto.ImpactReportDto
-import dev.vulnlog.lib.codec.impact.dto.ProjectDto
+import dev.vulnlog.lib.codec.report.formatGeneratedAt
+import dev.vulnlog.lib.codec.report.labelJustification
+import dev.vulnlog.lib.codec.report.labelSeverity
+import dev.vulnlog.lib.codec.report.labelVerdict
+import dev.vulnlog.lib.codec.report.sortInDeclaredOrder
+import dev.vulnlog.lib.codec.report.sortTagValues
+import dev.vulnlog.lib.codec.report.toProjectDto
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.reporting.ImpactReport
-import dev.vulnlog.lib.core.reporting.severityOf
 import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ImpactEntry
 
 private const val FORMAT_VERSION = 1
@@ -21,13 +25,8 @@ internal object ImpactReportMapper {
     fun toDto(report: ImpactReport): ImpactReportDto =
         ImpactReportDto(
             formatVersion = FORMAT_VERSION,
-            project =
-                ProjectDto(
-                    organization = report.project.organization,
-                    name = report.project.name,
-                    author = report.project.author,
-                ),
-            generatedAt = report.generatedAt.toString(),
+            project = toProjectDto(report.project),
+            generatedAt = formatGeneratedAt(report.generatedAt),
             vulnlogVersion = report.vulnlogVersion,
             inputs = report.inputs,
             filter = toFilterDto(report.filter, report.asOf),
@@ -52,30 +51,13 @@ internal object ImpactReportMapper {
             primaryId = entry.primaryId.id,
             aliases = entry.aliases.map { it.id },
             state = entry.state.canonical(),
-            verdict = verdictLabel(entry.impact),
-            severity = severityLabel(entry.impact),
+            verdict = labelVerdict(entry.impact),
+            severity = labelSeverity(entry.impact),
             disposition = entry.disposition?.let { canonical(it) },
-            verdictDetail = verdictDetail(entry.impact),
-            shortDescription = entry.shortDescription,
+            justification = labelJustification(entry.impact),
+            description = entry.shortDescription,
             analysis = entry.analysis,
             releases = entry.reportFor.map { it.value },
             fixedIn = entry.fixedIn.map { it.value },
         )
-
-    // Null while untriaged: the state column already reads "Investigating".
-    private fun verdictLabel(impact: Impact): String? =
-        when (impact) {
-            is Impact.Affected -> "affected"
-            is Impact.NotAffected -> "not affected"
-            is Impact.Unknown -> null
-        }
-
-    private fun severityLabel(impact: Impact): String? = severityOf(impact)?.let(::canonical)
-
-    private fun verdictDetail(impact: Impact): String? =
-        when (impact) {
-            is Impact.NotAffected -> impact.reason
-            is Impact.Affected -> null
-            is Impact.Unknown -> null
-        }
 }

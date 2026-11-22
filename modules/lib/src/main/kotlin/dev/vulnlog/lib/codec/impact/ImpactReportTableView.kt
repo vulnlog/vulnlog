@@ -17,6 +17,8 @@ import com.github.ajalt.mordant.table.grid
 import com.github.ajalt.mordant.table.table
 import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.terminal.TerminalRecorder
+import dev.vulnlog.lib.codec.report.sortInDeclaredOrder
+import dev.vulnlog.lib.codec.report.sortTagValues
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.core.reporting.severityOf
