@@ -10,6 +10,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
 
 class ChangelogReportCommandTest :
     FunSpec({
@@ -62,6 +63,24 @@ class ChangelogReportCommandTest :
                     result.stdout shouldContain "## [1.1.0] - 2026-03-20"
                     result.stdout shouldContain "### Security"
                 }
+            }
+
+            test("writes JSON with every field, also when brief") {
+                withTempFile(content = changelogDocument()) { input ->
+                    val result = ChangelogReportCommand().test("${input.absolutePath} --format json --brief")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldStartWith "{"
+                    result.stdout shouldContain "\"primary_id\" : \"CVE-2026-1111\""
+                    result.stdout shouldContain "Updated auth-middleware"
+                }
+            }
+
+            test("names json and the reach of brief in the help text") {
+                val result = ChangelogReportCommand().test("--help")
+
+                unwrapped(result.stdout) shouldContain "'json' holds every field and the metadata of the run"
+                unwrapped(result.stdout) shouldContain "Applies to text and markdown. JSON always holds every field."
             }
 
             test("rejects an unknown format") {
@@ -123,6 +142,30 @@ class ChangelogReportCommandTest :
                     result.statusCode shouldBe 0
                     result.stdout shouldBe ""
                     result.stderr shouldContain "info: no fixed vulnerabilities to report"
+                }
+            }
+
+            test("still writes a JSON document without releases to stdout when no vulnerability records a resolution") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ChangelogReportCommand().test("${input.absolutePath} --format json")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldContain "\"releases\" : [ ]"
+                    result.stderr shouldContain "info: no fixed vulnerabilities to report"
+                }
+            }
+
+            test("still writes a JSON document without releases to the output file when nothing was fixed") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "changelog", suffix = ".json") { output ->
+                        val result =
+                            ChangelogReportCommand().test(
+                                "${input.absolutePath} --format json -o ${output.absolutePath}",
+                            )
+
+                        result.statusCode shouldBe 0
+                        output.readText() shouldContain "\"releases\" : [ ]"
+                    }
                 }
             }
 

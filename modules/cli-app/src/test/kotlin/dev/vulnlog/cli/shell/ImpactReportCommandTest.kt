@@ -35,9 +35,6 @@ private val WILL_FIX_VERDICT =
     |    disposition: will fix
     """.trimMargin()
 
-/** Clikt wraps option help to the terminal width, and the wrap points shift as flags are added. */
-private fun unwrapped(help: String): String = help.replace(Regex("\\s+"), " ")
-
 class ImpactReportCommandTest :
     FunSpec({
 

@@ -12,6 +12,7 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.enum
+import dev.vulnlog.cli.BuildInfo
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
 import dev.vulnlog.lib.app.report.ChangelogFormat
 import dev.vulnlog.lib.app.report.ChangelogOutcome
@@ -28,6 +29,7 @@ import dev.vulnlog.lib.render.formatStatus
 import dev.vulnlog.lib.render.renderChangelogFailure
 import dev.vulnlog.lib.render.renderChangelogMessages
 import dev.vulnlog.lib.render.renderWritten
+import java.time.Instant
 
 class ChangelogReportCommand : CliktCommand(name = "changelog") {
     override fun help(context: Context): String =
@@ -45,6 +47,10 @@ class ChangelogReportCommand : CliktCommand(name = "changelog") {
         |Report the release that is about to ship, ready to paste into a changelog file.
         |
         |vulnlog report changelog vulnlog.yaml --fixed-in 1.2.0 --format markdown
+        |
+        |Write the changelog as JSON for another tool.
+        |
+        |vulnlog report changelog vulnlog.yaml --format json -o changelog.json
         |
         |Merge several files of the same project into one report.
         |
@@ -76,13 +82,16 @@ class ChangelogReportCommand : CliktCommand(name = "changelog") {
             Output format for the report.
             'text' (default) reads in a terminal.
             'markdown' renders one section per release, ready to paste into a changelog file.
+            'json' holds every field and the metadata of the run, for other tools to read.
             """.trimIndent(),
     ).enum<ChangelogFormat> { it.token }
         .default(ChangelogFormat.TEXT)
 
     val brief: Boolean by option(
         "--brief",
-        help = "List identifiers and severity only, without descriptions and resolution details.",
+        help =
+            "List identifiers and severity only, without descriptions and resolution details. " +
+                "Applies to text and markdown. JSON always holds every field.",
     ).flag()
 
     val filterOptions by FilterOptions()
@@ -100,13 +109,16 @@ class ChangelogReportCommand : CliktCommand(name = "changelog") {
                     ),
                 format = format,
                 detail = if (brief) ChangelogDetail.BRIEF else ChangelogDetail.FULL,
+                generatedAt = Instant.now(),
+                vulnlogVersion = BuildInfo.VERSION,
             )
 
         val outcome = generateChangelog(projects, request)
         renderChangelogMessages(outcome).forEach(::echoMessage)
         when (outcome) {
             is ChangelogOutcome.Failed -> failWith(renderChangelogFailure(outcome), exitCode(outcome))
-            is ChangelogOutcome.NothingFixed -> Unit
+            // A tool that reads JSON needs a document, also one without releases. Text and markdown stay empty.
+            is ChangelogOutcome.NothingFixed -> if (format == ChangelogFormat.JSON) write(outcome.content)
             is ChangelogOutcome.Fixed -> write(outcome.content)
         }
     }

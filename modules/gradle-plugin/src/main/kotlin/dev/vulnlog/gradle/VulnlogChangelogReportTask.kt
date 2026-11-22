@@ -33,6 +33,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import java.time.Instant
 
 @CacheableTask
 abstract class VulnlogChangelogReportTask : DefaultTask() {
@@ -79,6 +80,8 @@ abstract class VulnlogChangelogReportTask : DefaultTask() {
                     ),
                 format = ChangelogFormat.fromToken(format.getOrElse(ChangelogFormat.TEXT.token)),
                 detail = if (brief.getOrElse(false)) ChangelogDetail.BRIEF else ChangelogDetail.FULL,
+                generatedAt = Instant.now(),
+                vulnlogVersion = BuildInfo.VERSION,
             )
 
         val outcome = generateChangelog(projects, request)

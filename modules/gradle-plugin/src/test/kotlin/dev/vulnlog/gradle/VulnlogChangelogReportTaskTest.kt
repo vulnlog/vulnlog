@@ -98,6 +98,15 @@ class VulnlogChangelogReportTaskTest :
                 dir.resolve("build/vulnlog/vulnlog-changelog.md").readText() shouldContain "## [1.1.0] - 2026-03-20"
             }
 
+            test("writes JSON to vulnlog-changelog.json") {
+                val dir = changelogProject("""format = "json"""")
+
+                val result = runner(dir, "vulnlogChangelogReport").build()
+
+                result.task(":vulnlogChangelogReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-changelog.json").readText() shouldContain "\"format_version\" : 1"
+            }
+
             test("fails on an unknown format") {
                 val dir = changelogProject("""format = "yaml"""")
 

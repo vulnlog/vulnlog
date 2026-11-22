@@ -152,3 +152,6 @@ internal inline fun <R> withStdin(
         System.setIn(original)
     }
 }
+
+/** Clikt wraps option help to the terminal width, and the wrap points shift as flags are added. */
+internal fun unwrapped(help: String): String = help.replace(Regex("\\s+"), " ")

@@ -21,7 +21,7 @@ sealed interface ChangelogOutcome {
         override val content: String,
     ) : Generated
 
-    /** No release in scope shipped a fix; whether to write the empty changelog anyway is the driver's call. */
+    /** No release in scope shipped a fix. Whether to write the empty changelog anyway is the driver's call. */
     data class NothingFixed(
         override val filter: ResolvedFilter,
         override val changelog: Changelog,

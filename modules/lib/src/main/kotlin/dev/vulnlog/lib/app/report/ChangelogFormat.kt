@@ -9,6 +9,7 @@ enum class ChangelogFormat(
 ) {
     TEXT("text", "txt"),
     MARKDOWN("markdown", "md"),
+    JSON("json", "json"),
     ;
 
     companion object {
