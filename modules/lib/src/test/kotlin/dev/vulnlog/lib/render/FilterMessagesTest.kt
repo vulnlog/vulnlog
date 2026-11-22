@@ -10,6 +10,7 @@ import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.VerdictKind
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -87,6 +88,28 @@ class FilterMessagesTest :
                 )
         }
 
+        test("names every unknown ID, and how to pass one when it is blank") {
+            val problems =
+                listOf(
+                    FilterProblem.UnknownVulnIds(listOf("CVE-2099-0001", "CVE-2099-0002")),
+                    FilterProblem.BlankVulnId,
+                )
+
+            val failures = renderFilterProblems(problems)
+
+            failures shouldBe
+                listOf(
+                    Failure(
+                        "Vulnerability ID not found: CVE-2099-0001, CVE-2099-0002",
+                        "No entry in the input has this ID or alias",
+                    ),
+                    Failure(
+                        "Vulnerability ID must not be blank",
+                        "Pass the ID or an alias of an entry, for example CVE-2021-44228",
+                    ),
+                )
+        }
+
         test("reports one verbose message per active filter dimension, under its canonical tokens") {
             val filter =
                 ResolvedFilter(
@@ -97,6 +120,7 @@ class FilterMessagesTest :
                     verdicts = setOf(VerdictKind.NOT_AFFECTED),
                     dispositions = setOf(Disposition.WONT_FIX),
                     fixedIn = release("2.0.0"),
+                    vulnIds = setOf(VulnId.Ghsa("GHSA-jfh8-c2jp-5v3q"), VulnId.Cve("CVE-2021-44228")),
                 )
 
             val messages = renderFilterResolution(filter)
@@ -110,6 +134,7 @@ class FilterMessagesTest :
                     "verdict filter: not affected",
                     "disposition filter: wont fix",
                     "fixed-in filter: 2.0.0",
+                    "vuln-id filter: CVE-2021-44228, GHSA-jfh8-c2jp-5v3q",
                 ).map(Message::Verbose)
         }
 

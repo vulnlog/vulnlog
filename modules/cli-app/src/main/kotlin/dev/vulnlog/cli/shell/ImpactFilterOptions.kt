@@ -45,4 +45,15 @@ class ImpactFilterOptions : OptionGroup() {
             """.trimIndent(),
     ).multiple()
         .unique()
+
+    val vulnIdsRequest: Set<String> by option(
+        "--vuln-id",
+        metavar = "<vuln-id>",
+        help =
+            """
+            Filter on vulnerability ID, matching the ID or an alias of an entry.
+            Use multiple times to filter on multiple IDs.
+            """.trimIndent(),
+    ).multiple()
+        .unique()
 }

@@ -11,5 +11,7 @@ data class FilterRequest(
     val states: Set<String> = emptySet(),
     val verdicts: Set<String> = emptySet(),
     val dispositions: Set<String> = emptySet(),
+    /** Vulnerability IDs, each matching the primary ID or an alias of an entry. */
+    val vulnIds: Set<String> = emptySet(),
     val fixedIn: String? = null,
 )

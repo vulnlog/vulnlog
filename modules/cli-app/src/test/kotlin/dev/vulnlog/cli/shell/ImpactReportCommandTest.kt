@@ -479,6 +479,56 @@ class ImpactReportCommandTest :
             }
         }
 
+        context("vuln-id filter") {
+
+            test("fails on an ID that no input holds") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --vuln-id CVE-2099-0001")
+
+                    result.statusCode shouldBe ExitCode.INVALID_FLAG_VALUE.code
+                    result.stderr shouldContain "Vulnerability ID not found: CVE-2099-0001"
+                    result.stderr shouldNotContain "dev.vulnlog"
+                }
+            }
+
+            test("reports only the requested ID, compared without case") {
+                withTempFile(prefix = "vulnlog-1x", content = vulnlogDocument(vulnId = "CVE-2026-1234")) { f1 ->
+                    withTempFile(prefix = "vulnlog-2x", content = vulnlogDocument(vulnId = "CVE-2026-5678")) { f2 ->
+                        val args = "${f1.absolutePath} ${f2.absolutePath} --format json --vuln-id cve-2026-5678"
+
+                        val result = ImpactReportCommand().test(args)
+
+                        result.statusCode shouldBe 0
+                        result.stdout shouldContain "\"primary_id\" : \"CVE-2026-5678\""
+                        result.stdout shouldNotContain "\"primary_id\" : \"CVE-2026-1234\""
+                    }
+                }
+            }
+
+            test("repeating the flag selects the union of both IDs") {
+                withTempFile(prefix = "vulnlog-1x", content = vulnlogDocument(vulnId = "CVE-2026-1234")) { f1 ->
+                    withTempFile(prefix = "vulnlog-2x", content = vulnlogDocument(vulnId = "CVE-2026-5678")) { f2 ->
+                        val args =
+                            "${f1.absolutePath} ${f2.absolutePath} --format json " +
+                                "--vuln-id CVE-2026-5678 --vuln-id CVE-2026-1234"
+
+                        val result = ImpactReportCommand().test(args)
+
+                        result.statusCode shouldBe 0
+                        result.stdout shouldContain "\"primary_id\" : \"CVE-2026-1234\""
+                        result.stdout shouldContain "\"primary_id\" : \"CVE-2026-5678\""
+                    }
+                }
+            }
+
+            test("says in the help text that an alias matches too") {
+                val result = ImpactReportCommand().test("--help")
+
+                unwrapped(result.stdout) shouldContain
+                    "Filter on vulnerability ID, matching the ID or an alias of an entry."
+            }
+        }
+
         context("filter validation") {
 
             test("fails on an unknown reporter") {

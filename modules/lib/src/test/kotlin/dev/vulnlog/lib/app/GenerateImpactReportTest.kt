@@ -130,6 +130,21 @@ class GenerateImpactReportTest :
             outcome.report.entries.map { it.primaryId } shouldContainExactly listOf(cve("CVE-2026-0002"))
         }
 
+        test("reports only the requested IDs, an ID that one of several files holds being enough") {
+            val frontend = loaded(fileWith("CVE-2026-0001"), "frontend.vl.yaml")
+            val backend = loaded(fileWith("CVE-2026-0002"), "backend.vl.yaml")
+
+            val outcome =
+                generate(
+                    frontend,
+                    backend,
+                    filter = FilterRequest(vulnIds = setOf("cve-2026-0002")),
+                ).generated()
+
+            outcome.report.entries.map { it.primaryId } shouldContainExactly listOf(cve("CVE-2026-0002"))
+            outcome.report.filter shouldBe ResolvedFilter(vulnIds = setOf(cve("CVE-2026-0002")))
+        }
+
         test("as of the deployed release, a fix that ships later still reads as open") {
             val project = loaded(fileWith("CVE-2026-0001", resolution = resolution("2.0.0")))
 

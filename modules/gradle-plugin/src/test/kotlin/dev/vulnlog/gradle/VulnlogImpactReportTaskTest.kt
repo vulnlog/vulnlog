@@ -419,6 +419,58 @@ class VulnlogImpactReportTaskTest :
                 dir.resolve("build/vulnlog/vulnlog-impact-report.html").readText() shouldNotContain "CVE-2026-1234"
             }
 
+            test("an ID filter keeps only the requested entries") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("a.vl.yaml", "b.vl.yaml")
+                                report {
+                                    impact {
+                                        format = "json"
+                                        vulnIds = setOf("CVE-2026-5678")
+                                    }
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "a.vl.yaml" to vulnlogDocument(vulnId = "CVE-2026-1234"),
+                        "b.vl.yaml" to vulnlogDocument(vulnId = "CVE-2026-5678"),
+                    )
+
+                val result = runner(dir, "vulnlogImpactReport").build()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                val report = dir.resolve("build/vulnlog/vulnlog-impact-report.json").readText()
+                report shouldContain "\"primary_id\" : \"CVE-2026-5678\""
+                report shouldNotContain "\"primary_id\" : \"CVE-2026-1234\""
+            }
+
+            test("fails on an ID that no input holds") {
+                val dir =
+                    gradleProject(
+                        buildFile(
+                            """
+                            vulnlog {
+                                files.from("test.vl.yaml")
+                                report {
+                                    impact {
+                                        vulnIds = setOf("CVE-2099-0001")
+                                    }
+                                }
+                            }
+                            """.trimIndent(),
+                        ),
+                        "test.vl.yaml" to vulnlogDocument(),
+                    )
+
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.FAILED
+                result.output shouldContain "Vulnerability ID not found: CVE-2099-0001"
+            }
+
             test("fails on an unknown tag") {
                 val dir =
                     gradleProject(

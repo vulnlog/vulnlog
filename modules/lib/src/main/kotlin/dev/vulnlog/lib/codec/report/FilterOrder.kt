@@ -14,3 +14,6 @@ internal inline fun <reified T : Enum<T>> sortInDeclaredOrder(selected: Set<T>):
 
 /** Tags have no declared order, so every view lists them alphabetically. */
 internal fun sortTagValues(filter: ResolvedFilter): List<String> = filter.tags.map { it.value }.sorted()
+
+/** IDs have no declared order either, so every view lists them alphabetically, as the files spell them. */
+internal fun sortVulnIdValues(filter: ResolvedFilter): List<String> = filter.vulnIds.map { it.id }.sorted()

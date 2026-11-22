@@ -50,6 +50,10 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
         |
         |vulnlog report impact vulnlog.yaml --as-of 1.1.0
         |
+        |Report only two vulnerabilities, each by its ID or an alias.
+        |
+        |vulnlog report impact vulnlog.yaml --vuln-id CVE-2021-44228 --vuln-id CVE-2022-22965
+        |
         |Merge several files of the same project into one report.
         |
         |vulnlog report impact frontend.vl.yaml backend.vl.yaml
@@ -103,6 +107,7 @@ class ImpactReportCommand : CliktCommand(name = "impact") {
                         states = impactFilterOptions.statesRequest,
                         verdicts = impactFilterOptions.verdictsRequest,
                         dispositions = impactFilterOptions.dispositionsRequest,
+                        vulnIds = impactFilterOptions.vulnIdsRequest,
                     ),
                 generatedAt = Instant.now(),
                 vulnlogVersion = BuildInfo.VERSION,
