@@ -3,7 +3,7 @@
 
 package dev.vulnlog.gradle
 
-import dev.vulnlog.lib.app.ChangelogFormatRequest
+import dev.vulnlog.lib.app.report.ChangelogFormat
 import dev.vulnlog.lib.app.report.ImpactReportFormat
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -79,7 +79,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.description = "Report which vulnerabilities each release fixed."
             task.group = "vulnlog"
             task.files.from(extension.files)
-            task.format.convention(changelog.format.orElse("text"))
+            task.format.convention(changelog.format.orElse(ChangelogFormat.TEXT.token))
             task.brief.convention(changelog.brief.orElse(false))
             task.fixedIn.convention(changelog.fixedIn)
             task.reporter.convention(changelog.reporter)
@@ -116,7 +116,7 @@ class VulnlogPlugin : Plugin<Project> {
 /** Default report location, named after the format so the extension always matches the content. */
 private fun Project.changelogReportFile(formatToken: String): RegularFile =
     layout.buildDirectory
-        .file("vulnlog/vulnlog-changelog.${ChangelogFormatRequest.fromToken(formatToken).fileExtension}")
+        .file("vulnlog/vulnlog-changelog.${ChangelogFormat.fromToken(formatToken).fileExtension}")
         .get()
 
 /** Default report location, named after the format so the extension always matches the content. */

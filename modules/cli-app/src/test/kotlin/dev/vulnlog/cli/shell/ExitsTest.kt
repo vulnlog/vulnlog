@@ -4,12 +4,13 @@
 package dev.vulnlog.cli.shell
 
 import dev.vulnlog.lib.app.AddOutcome
-import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.InitOutcome
-import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.app.report.ChangelogFilterRejected
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogProjectsDiffer
 import dev.vulnlog.lib.app.report.ImpactReportFilterRejected
 import dev.vulnlog.lib.app.report.ImpactReportOutcome
 import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
@@ -43,7 +44,7 @@ class ExitsTest :
         test("in both reports, differing projects are a validation error and a rejected filter a bad flag value") {
             val failedImpactReport =
                 listOf(ImpactReportProjectsDiffer(emptyList()), ImpactReportFilterRejected(emptyList()))
-            val failedChangelog = listOf(ProjectsDiffer(emptyList()), FilterRejected(emptyList()))
+            val failedChangelog = listOf(ChangelogProjectsDiffer(emptyList()), ChangelogFilterRejected(emptyList()))
             val impact: List<ImpactReportOutcome.Failed> = failedImpactReport
             val changelog: List<ChangelogOutcome.Failed> = failedChangelog
 

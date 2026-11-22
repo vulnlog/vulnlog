@@ -8,5 +8,4 @@ import dev.vulnlog.lib.core.filter.FilterProblem
 data class FilterRejected(
     val problems: List<FilterProblem>,
 ) : OpenVexOutcome.Failed,
-    SuppressionOutcome.Failed,
-    ChangelogOutcome.Failed
+    SuppressionOutcome.Failed

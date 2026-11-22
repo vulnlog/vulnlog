@@ -3,6 +3,12 @@
 
 package dev.vulnlog.lib.app
 
+import dev.vulnlog.lib.app.report.ChangelogFilterRejected
+import dev.vulnlog.lib.app.report.ChangelogFormat
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogProjectsDiffer
+import dev.vulnlog.lib.app.report.ChangelogRequest
+import dev.vulnlog.lib.app.report.generateChangelog
 import dev.vulnlog.lib.codec.changelog.ChangelogEncoder
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.FilterRequest
@@ -60,7 +66,7 @@ private fun loaded(
 private fun generate(
     vararg projects: ValidVulnlogProject,
     filter: FilterRequest = FilterRequest(),
-    format: ChangelogFormatRequest = ChangelogFormatRequest.Text,
+    format: ChangelogFormat = ChangelogFormat.TEXT,
 ): ChangelogOutcome = generateChangelog(projects.toList(), ChangelogRequest(filter, format, ChangelogDetail.FULL))
 
 class GenerateChangelogTest :
@@ -69,7 +75,7 @@ class GenerateChangelogTest :
         test("lists what each release fixed, encoded in the requested format") {
             val project = loaded(fixedIn("2.0.0", "CVE-2026-0001"), fixedIn("3.0.0", "CVE-2026-0002"))
 
-            val outcome = generate(project, format = ChangelogFormatRequest.Markdown)
+            val outcome = generate(project, format = ChangelogFormat.MARKDOWN)
 
             val fixed = outcome.shouldBeInstanceOf<ChangelogOutcome.Fixed>()
             fixed.changelog.releases.map { it.fixedIn } shouldContainExactly listOf(release("3.0.0"), release("2.0.0"))
@@ -103,7 +109,7 @@ class GenerateChangelogTest :
 
             val outcome = generate(acme, otherProject, filter = FilterRequest(fixedIn = "9.9.9"))
 
-            outcome shouldBe ProjectsDiffer(listOf(ACME, other))
+            outcome shouldBe ChangelogProjectsDiffer(listOf(ACME, other))
         }
 
         test("rejects a release the files do not declare") {
@@ -112,7 +118,7 @@ class GenerateChangelogTest :
             val outcome = generate(project, filter = FilterRequest(fixedIn = "9.9.9"))
 
             outcome shouldBe
-                FilterRejected(
+                ChangelogFilterRejected(
                     listOf(
                         FilterProblem.UnknownRelease(
                             release("9.9.9"),

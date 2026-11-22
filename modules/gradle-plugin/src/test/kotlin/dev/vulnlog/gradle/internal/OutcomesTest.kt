@@ -3,14 +3,14 @@
 
 package dev.vulnlog.gradle.internal
 
-import dev.vulnlog.lib.app.ChangelogOutcome
 import dev.vulnlog.lib.app.CopyOutcome
 import dev.vulnlog.lib.app.FilterRejected
 import dev.vulnlog.lib.app.FormatOutcome
 import dev.vulnlog.lib.app.InitOutcome
 import dev.vulnlog.lib.app.OpenVexOutcome
-import dev.vulnlog.lib.app.ProjectsDiffer
 import dev.vulnlog.lib.app.SuppressionOutcome
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogProjectsDiffer
 import dev.vulnlog.lib.app.report.ImpactReportOutcome
 import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
 import dev.vulnlog.lib.core.filter.FilterProblem
@@ -69,7 +69,7 @@ class OutcomesTest :
                     ),
                 )
             val differChangelog =
-                ProjectsDiffer(
+                ChangelogProjectsDiffer(
                     listOf(
                         Project("Acme", "App", "Team"),
                         Project("Other", "App", "Team"),

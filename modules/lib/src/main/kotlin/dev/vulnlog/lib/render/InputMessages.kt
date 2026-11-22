@@ -3,7 +3,7 @@
 
 package dev.vulnlog.lib.render
 
-import dev.vulnlog.lib.app.ProjectsDiffer
+import dev.vulnlog.lib.app.report.ChangelogProjectsDiffer
 import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
 import dev.vulnlog.lib.document.InputRead
 
@@ -19,7 +19,7 @@ fun renderInputFailure(failed: InputRead.Failed): Failure {
 
 fun renderProjectsDiffer(failed: ImpactReportProjectsDiffer): Failure = projectsDifferFailure(failed.projects.size)
 
-fun renderProjectsDiffer(failed: ProjectsDiffer): Failure = projectsDifferFailure(failed.projects.size)
+fun renderProjectsDiffer(failed: ChangelogProjectsDiffer): Failure = projectsDifferFailure(failed.projects.size)
 
 private fun projectsDifferFailure(projectCount: Int): Failure =
     Failure(

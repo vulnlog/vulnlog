@@ -8,10 +8,10 @@ import dev.vulnlog.gradle.internal.log
 import dev.vulnlog.gradle.internal.vulnlogFileInputs
 import dev.vulnlog.gradle.internal.writeOrFail
 import dev.vulnlog.gradle.validation.validateInputOrFail
-import dev.vulnlog.lib.app.ChangelogFormatRequest
-import dev.vulnlog.lib.app.ChangelogOutcome
-import dev.vulnlog.lib.app.ChangelogRequest
-import dev.vulnlog.lib.app.generateChangelog
+import dev.vulnlog.lib.app.report.ChangelogFormat
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogRequest
+import dev.vulnlog.lib.app.report.generateChangelog
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.io.writeOutput
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
@@ -77,7 +77,7 @@ abstract class VulnlogChangelogReportTask : DefaultTask() {
                         tags = tags.get(),
                         fixedIn = fixedIn.orNull,
                     ),
-                format = ChangelogFormatRequest.fromToken(format.getOrElse("text")),
+                format = ChangelogFormat.fromToken(format.getOrElse(ChangelogFormat.TEXT.token)),
                 detail = if (brief.getOrElse(false)) ChangelogDetail.BRIEF else ChangelogDetail.FULL,
             )
 
