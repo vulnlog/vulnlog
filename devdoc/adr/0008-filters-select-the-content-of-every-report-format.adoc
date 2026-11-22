@@ -1,0 +1,34 @@
+[#adr-8]
+= ADR-8: Filters Select the Content of Every Report Format
+
+Status:: Accepted
+
+Context:: A report comes in several formats.
+The impact report is HTML, JSON or a table, and the changelog report is text, Markdown or JSON.
+The options of a report command do one of two things.
+Filters such as `--as-of`, `--state` and `--vuln-id` select which entries a report contains and the state it shows for them.
+Presentation options such as `--brief`, the table width and the colours change how a view for people looks.
+Tools read the JSON, so it must be clear which of the options the JSON follows.
+
+Decision:: Filters select the content of every format, JSON included.
+The JSON report names the filters it applied in its `filter` object.
+Presentation options apply only to the formats for people.
+JSON ignores them and always holds every field of the entries it contains.
+
+Alternatives::
+* JSON always holds every entry, and tools filter it themselves.
+Vulnlog would silently ignore filters a user passed.
+A tool can't redo `--as-of`, because it changes the state of an entry and needs the release order of the Vulnlog file.
+A JSON report shared to answer an inquiry about one vulnerability would hold the analysis of every entry.
+* Presentation options apply to JSON too.
+`--brief` would drop fields, so a tool couldn't rely on the shape of the document.
+
+Positive Consequences::
+* The format changes only how a report looks, never what it contains.
+The HTML report embeds the same JSON document.
+* A shared JSON report holds only the entries the filters selected.
+* A tool learns the scope of the data from the `filter` object.
+
+Negative Consequences::
+* A tool that needs every entry must run the report without filters.
+* Each new option must be either a filter or a presentation option, and its documentation must say which.
