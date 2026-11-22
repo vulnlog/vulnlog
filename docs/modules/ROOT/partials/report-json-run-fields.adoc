@@ -1,0 +1,22 @@
+// The fields every JSON report starts with. Both report reference pages include these table rows.
+
+| `format_version`
+| Number
+| The version of this layout, currently `1`.
+A change that can break a reader increases it.
+
+| `project`
+| Object
+| `organization`, `name`, and `author` from the `project` block.
+
+| `generated_at`
+| String
+| When the report was generated, as an ISO 8601 time in UTC, to the second.
+
+| `vulnlog_version`
+| String
+| The version of Vulnlog that wrote the report.
+
+| `inputs`
+| List of strings
+| The input file names, in the order you gave them.

@@ -4,7 +4,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Introduction
 
 The Vulnlog project helps teams and individuals manage the continuous stream of software vulnerability reports.
-With Vulnlog, they record their analysis of the impact of reported software vulnerabilities in a concise YAML format and generate all relevant artefacts from it: suppression (ignore) files, HTML reports and VEX documents.
+With Vulnlog, they record their analysis of the impact of reported software vulnerabilities in a concise YAML format and generate all relevant artefacts from it: suppression (ignore) files, reports as HTML, JSON and text, and VEX documents.
 Vulnlog is not a security scanner itself.
 
 This document describes the software architecture of the Vulnlog project.

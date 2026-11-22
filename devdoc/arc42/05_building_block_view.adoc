@@ -63,6 +63,7 @@ The project follows a data-oriented programming (DOP) approach.
 
 |`codec`
 |Contains one generator per output format.
+`codec.report` holds what every report writes the same way, such as the project, the labels and the JSON writer, so the reports stay alike.
 
 |`io`
 |Reads input files and writes output files.

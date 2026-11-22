@@ -47,10 +47,10 @@ $ vulnlog -v report impact acme-shop.vl.yaml --as-of 4.3.0
 | Generate suppression files for your scanners.
 
 | xref:reference/cli-report-impact.adoc[`vulnlog report impact`]
-| Generate an HTML report of how vulnerabilities affect your releases.
+| Report how vulnerabilities affect your releases, as HTML, JSON, or a table.
 
 | xref:reference/cli-report-changelog.adoc[`vulnlog report changelog`]
-| List the vulnerabilities each release fixed, as text or Markdown.
+| List the vulnerabilities each release fixed, as text, Markdown, or JSON.
 
 | xref:reference/cli-vex-openvex.adoc[`vulnlog vex openvex`]
 | Generate OpenVEX documents, which tell your customers' tools whether a release is affected by a vulnerability.
