@@ -1,14 +1,14 @@
 = vulnlog report changelog
-:description: Reference for vulnlog report changelog, which lists the vulnerabilities each release fixed, as text or Markdown.
+:description: Reference for vulnlog report changelog, which lists the vulnerabilities each release fixed, as text, Markdown, or JSON.
 
-`vulnlog report changelog` lists the vulnerabilities each release fixed, newest release first, as text or Markdown.
+`vulnlog report changelog` lists the vulnerabilities each release fixed, newest release first, as text, Markdown, or JSON.
 Several Vulnlog files are merged into one report.
 
 == Synopsis
 
 [source]
 ----
-vulnlog report changelog <inputs>... [-o <path>] [--fixed-in <release-id>] [--format text|markdown] [--brief] [<filter-options>]
+vulnlog report changelog <inputs>... [-o <path>] [--fixed-in <release-id>] [--format text|markdown|json] [--brief] [<filter-options>]
 ----
 
 == Arguments and options
@@ -35,15 +35,19 @@ For how files are merged, see xref:reference/cli.adoc#input-files[Input files].
 | List only the vulnerabilities this release fixed.
 
 | `--format`
-| `text` or `markdown`
+| `text`, `markdown`, or `json`
 | `text`
 | `text` is for reading in a terminal.
 `markdown` writes a `## [<release>] - <date>` section, or `## [<release>] - unreleased` for a release without `published_at`, with a `### Security` subsection for each release, to paste into a changelog file.
+`json` is for other tools to read.
+See <<json>>.
 
 | `--brief`
 | none
 | off
 | List only the IDs, aliases, and severities.
+It applies to `text` and `markdown`.
+`json` always holds every field.
 
 | `--reporter`, `--as-of`, `--tag`
 | See xref:reference/cli.adoc#filters[Filter options]
@@ -67,9 +71,101 @@ A `not affected` entry shows `not affected` in place of the severity.
 Without `--brief`, it also shows the `name` and `description` of the entry, and the `note` and `ref` of its `resolution`.
 For these fields, see xref:reference/vulnerabilities.adoc[Vulnerabilities].
 
-If no entry qualifies, the command writes nothing, prints `info: no fixed vulnerabilities to report` unless `-q` is set, and exits with `0`.
+If no entry qualifies, the command prints `info: no fixed vulnerabilities to report` unless `-q` is set, and exits with `0`.
+For `text` and `markdown`, it writes nothing.
+For `json`, it writes a report with an empty `releases` list, so a tool that reads it always gets JSON.
 
-The report contains no timestamp, so the same input always gives the same output.
+The `text` and `markdown` reports contain no timestamp, so the same input always gives the same output.
+The `json` report names the time it was generated.
+
+[[json]]
+=== JSON
+
+The JSON report holds every field of every entry, whatever `--brief` says, and the details of the run.
+
+[cols="2,1,4"]
+|===
+| Field | Type | Description
+
+include::partial$report-json-run-fields.adoc[]
+
+| `filter`
+| Object
+| The filters you applied: `as_of`, `tags`, `reporter`, and `fixed_in`.
+A filter you didn't set is `null` or an empty list.
+
+| `releases`
+| List of objects
+| One object for each release that fixed a vulnerability, newest first.
+|===
+
+Each release has these fields:
+
+[cols="2,1,4"]
+|===
+| Field | Type | Description
+
+| `release`
+| String
+| The release ID.
+
+| `published_at`
+| String or `null`
+| The `published_at` date of the release, or `null` while it's unreleased.
+
+| `summary`
+| Object
+| `total`, the number of fixes, and `by_severity`, the number of fixes for each severity, most severe first.
+A severity without fixes is left out.
+
+| `entries`
+| List of objects
+| One object for each fix, most severe first.
+|===
+
+Each entry has these fields:
+
+[cols="2,1,4"]
+|===
+| Field | Type | Description
+
+| `primary_id`
+| String
+| The ID of the entry.
+
+| `aliases`
+| List of strings
+| The other IDs of the vulnerability.
+
+| `name`
+| String or `null`
+| The `name` of the entry.
+
+| `description`
+| String or `null`
+| The `description` of the entry.
+
+| `verdict`
+| String or `null`
+| `affected` or `not affected`.
+`null` while the entry is `under investigation`.
+
+| `severity`
+| String or `null`
+| The severity of an `affected` entry, for example `high`.
+
+| `justification`
+| String or `null`
+| The `justification` of a `not affected` entry, for example `vulnerable code not present`.
+
+| `note`
+| String or `null`
+| The `note` of the `resolution`.
+
+| `ref`
+| String or `null`
+| The `ref` of the `resolution`.
+|===
 
 == Exit codes
 
@@ -155,6 +251,51 @@ Acme Corp / Acme Shop
   1 fixed: 1 critical
   CVE-2021-44228 (critical, also GHSA-jfh8-c2jp-5v3q) "Log4Shell" Remote code execution through JNDI lookups in Apache Log4j
     fix: Updated log4j-core from 2.14.1 to 2.17.1
+----
+
+Write the report as JSON for another tool:
+
+[source,console,subs="attributes+"]
+----
+$ vulnlog report changelog acme-shop.vl.yaml --format json
+{
+  "format_version" : 1,
+  "project" : {
+    "organization" : "Acme Corp",
+    "name" : "Acme Shop",
+    "author" : "Acme Product Security Team"
+  },
+  "generated_at" : "2026-06-16T09:30:00Z",
+  "vulnlog_version" : "{vulnlog-version}",
+  "inputs" : [ "acme-shop.vl.yaml" ],
+  "filter" : {
+    "as_of" : null,
+    "tags" : [ ],
+    "reporter" : null,
+    "fixed_in" : null
+  },
+  "releases" : [ {
+    "release" : "4.3.0",
+    "published_at" : "2026-06-15",
+    "summary" : {
+      "total" : 1,
+      "by_severity" : {
+        "critical" : 1
+      }
+    },
+    "entries" : [ {
+      "primary_id" : "CVE-2021-44228",
+      "aliases" : [ "GHSA-jfh8-c2jp-5v3q" ],
+      "name" : "Log4Shell",
+      "description" : "Remote code execution through JNDI lookups in Apache Log4j",
+      "verdict" : "affected",
+      "severity" : "critical",
+      "justification" : null,
+      "note" : "Updated log4j-core from 2.14.1 to 2.17.1",
+      "ref" : null
+    } ]
+  } ]
+}
 ----
 
 Write the Markdown report to a file:

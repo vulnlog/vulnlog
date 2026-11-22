@@ -81,6 +81,19 @@ Acme Corp / Acme Shop
   CVE-2022-22965 (medium)
 ----
 
+=== If a tool builds your release notes
+
+Add `--format json`, and write the report to a file with `-o`:
+
+[source,console]
+----
+$ vulnlog report changelog acme-shop.vl.yaml --fixed-in 4.4.0 --format json -o security-4.4.0.json
+Wrote: security-4.4.0.json
+----
+
+The JSON report holds every field of each fix, also the `ref` and the `note` of its resolution.
+For the fields, see xref:reference/cli-report-changelog.adoc#json[vulnlog report changelog].
+
 === If you need every release
 
 Leave out `--fixed-in`.
@@ -95,7 +108,7 @@ They must have the same `project` values.
 === If you use the Gradle plugin
 
 Run `vulnlogChangelogReport`.
-It writes `build/vulnlog/vulnlog-changelog.txt`, or `vulnlog-changelog.md` when you set `format` to `markdown`:
+It writes `build/vulnlog/vulnlog-changelog.txt`, or `vulnlog-changelog.md` when you set `format` to `markdown` and `vulnlog-changelog.json` for `json`:
 
 [source,kotlin]
 ----

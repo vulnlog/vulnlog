@@ -238,7 +238,7 @@ vulnlog {
 [[vulnlogImpactReport]]
 === vulnlogImpactReport
 
-Writes the HTML impact report of every file in `files`, merged into one report.
+Writes the impact report of every file in `files`, merged into one report.
 
 [cols="2,1,2,4"]
 |===
@@ -246,8 +246,14 @@ Writes the HTML impact report of every file in `files`, merged into one report.
 
 | `outputFile`
 | File
-| `build/vulnlog/vulnlog-impact-report.html`
+| `build/vulnlog/vulnlog-impact-report.html`, or `.json` for `json` and `.txt` for `table`
 | File to write.
+
+| `format`
+| String
+| `html`
+| `html`, `json`, or `table`.
+The table is 120 characters wide and has no colours.
 
 | `states`
 | Set of strings
@@ -263,6 +269,11 @@ Writes the HTML impact report of every file in `files`, merged into one report.
 | Set of strings
 | all entries
 | As for `--disposition`.
+
+| `vulnIds`
+| Set of strings
+| all entries
+| As for `--vuln-id`.
 |===
 
 The task also accepts the properties in <<filter-properties>>.
@@ -290,13 +301,13 @@ Writes the changelog report of every file in `files`, merged into one report.
 
 | `outputFile`
 | File
-| `build/vulnlog/vulnlog-changelog.txt`, or `.md` for `markdown`
+| `build/vulnlog/vulnlog-changelog.txt`, or `.md` for `markdown` and `.json` for `json`
 | File to write.
 
 | `format`
 | String
 | `text`
-| `text` or `markdown`.
+| `text`, `markdown`, or `json`.
 
 | `brief`
 | Boolean
@@ -311,8 +322,9 @@ Writes the changelog report of every file in `files`, merged into one report.
 
 The task also accepts the properties in <<filter-properties>>.
 
-Unlike the CLI, the task also writes the file when no entry qualifies.
-The file is then empty for `markdown`, and holds only the organisation and project name for `text`.
+The task writes the file also when no entry qualifies, for every format.
+The file is then empty for `markdown`, holds only the organisation and project name for `text`, and has an empty `releases` list for `json`.
+The CLI writes only the `json` report in that case.
 
 [source,kotlin]
 ----

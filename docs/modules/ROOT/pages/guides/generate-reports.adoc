@@ -62,6 +62,7 @@ Wrote: carried-risk.html
 * `--disposition "wont fix"` lists the risks you accepted, for a periodic risk review.
 * `--verdict "not affected"` lists what you ruled out and why, for an auditor.
 * `--tag container` limits the report to one component.
+* `--vuln-id CVE-2021-44228` lists only the vulnerabilities a customer asked about. Repeat it for each ID. An alias works too.
 
 For all options and values, see xref:reference/cli-report-impact.adoc[vulnlog report impact].
 
@@ -77,6 +78,30 @@ Wrote: all-lines.html
 ----
 
 For how Vulnlog combines the files, see xref:reference/cli.adoc#input-files[Input files].
+
+=== If another tool reads the report
+
+Add `--format json`.
+The JSON report goes to stdout, so you can pipe it or write it to a file with `-o`:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --format json -o acme-shop-impact.json
+Wrote: acme-shop-impact.json
+----
+
+For the fields, see xref:reference/cli-report-impact.adoc#output[vulnlog report impact].
+
+=== If you want to read the report in a terminal
+
+Add `--format table`:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --format table
+----
+
+For how the table looks in a terminal and in a file, see xref:reference/cli-report-impact.adoc#output[vulnlog report impact].
 
 === If you use Docker
 
@@ -98,6 +123,8 @@ It writes `build/vulnlog/vulnlog-impact-report.html` by default:
 ----
 $ ./gradlew vulnlogImpactReport
 ----
+
+To write JSON or a table, set `format` to `json` or `table`.
 
 For the filter settings of the task, see xref:reference/gradle-plugin.adoc[Gradle plugin].
 

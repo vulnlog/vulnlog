@@ -1,15 +1,16 @@
 = vulnlog report impact
 :page-aliases: cli-report.adoc
-:description: Reference for vulnlog report impact, which generates an HTML report of the state, verdict, and severity of each vulnerability.
+:description: Reference for vulnlog report impact, which reports the state, verdict, and severity of each vulnerability as HTML, JSON, or a table.
 
-`vulnlog report impact` generates an HTML report of the entries in one or more Vulnlog files: their state, verdict, severity, and the releases they affect.
+`vulnlog report impact` reports the entries in one or more Vulnlog files: their state, verdict, severity, and the releases they affect.
+It writes an HTML file for people, JSON for other tools, or a table for the terminal.
 Several files are merged into one report.
 
 == Synopsis
 
 [source]
 ----
-vulnlog report impact <inputs>... [-o <path>] [<filter-options>] [--state <state>]... [--verdict <verdict>]... [--disposition <disposition>]...
+vulnlog report impact <inputs>... [-o <path>] [--format html|json|table] [<filter-options>] [--state <state>]... [--verdict <verdict>]... [--disposition <disposition>]... [--vuln-id <vuln-id>]...
 ----
 
 == Arguments and options
@@ -27,9 +28,17 @@ For how files are merged, see xref:reference/cli.adoc#input-files[Input files].
 
 | `-o`, `--output`
 | A file path, or `-`
-| `vulnlog-impact-report.html`
-| File to write, in the current directory by default.
-`-` writes the HTML to stdout.
+| `vulnlog-impact-report.html` for `html`, stdout for `json` and `table`
+| File to write.
+`-` writes to stdout.
+
+| `--format`
+| `html`, `json`, or `table`
+| `html`
+| `html` is a file that opens in a browser.
+`json` is for other tools to read.
+`table` is for reading in a terminal.
+See <<output>>.
 
 | `--reporter`, `--as-of`, `--tag`
 | See xref:reference/cli.adoc#filters[Filter options]
@@ -55,6 +64,13 @@ With `--as-of`, the state at that release counts.
 | all entries
 | Select `affected` entries with this disposition. Repeatable.
 Entries without a disposition don't match either value.
+
+| `--vuln-id`
+| A vulnerability ID, for example `CVE-2021-44228`
+| all entries
+| Select the entry with this `id` or with this ID in its `aliases`. Repeatable.
+Upper and lower case don't matter.
+An ID that no input file has stops the command.
 |===
 
 Repeat an option to select entries that match any of its values.
@@ -62,23 +78,117 @@ Different options combine, so an entry must match each of them.
 For the states and what they mean, see xref:reference/verdicts-and-justifications.adoc#states[States].
 For global options and standard input and output, see xref:reference/cli.adoc#global-options[Global options] and xref:reference/cli.adoc#stdin[Standard input and output].
 
+[[output]]
 == Output
 
-The report is one HTML file that opens offline in a browser.
+All formats show the same entries in the same order.
+The entries are sorted by state, in the order `open`, `under investigation`, `accepted`, `resolved`, and `not applicable`.
+Within a state, they're sorted by severity and then by ID.
+
+=== HTML
+
+The HTML report is one file that opens offline in a browser.
 It shows:
 
 * The organisation, project, and author, the generation time, the input files, and the filters you applied.
 * A summary with the total number of entries, the number in each state, and the severities of the _Open_ (state `open`) and _Accepted_ (state `accepted`) entries.
 * A table with a row for each entry: its IDs, its state, the details (verdict, severity, disposition, justification, description, and analysis), and the affected releases.
 
-The rows are sorted by state, in the order `open`, `under investigation`, `accepted`, `resolved`, and `not applicable`.
-Within a state, they're sorted by severity and then by ID.
-
 This is the report for `acme-shop.vl.yaml` without filters:
 
 image::impact-report.png["The impact report of Acme Shop. The About and Summary boxes are above a table with one row for each of the six vulnerabilities. Select the image to open it in full size.",link=self]
 
-A filter that selects no entry produces a report with an empty table.
+=== JSON
+
+The JSON report holds the same information as the HTML report, for scripts, dashboards, and other tools.
+It's written to stdout unless you give `-o`.
+
+[cols="2,1,4"]
+|===
+| Field | Type | Description
+
+include::partial$report-json-run-fields.adoc[]
+
+| `filter`
+| Object
+| The filters you applied: `as_of`, `tags`, `reporter`, `states`, `verdicts`, `dispositions`, and `vuln_ids`.
+A filter you didn't set is `null` or an empty list.
+
+| `entries`
+| List of objects
+| One object for each entry, in the order above.
+|===
+
+Each entry has these fields:
+
+[cols="2,1,4"]
+|===
+| Field | Type | Description
+
+| `primary_id`
+| String
+| The ID of the entry.
+
+| `aliases`
+| List of strings
+| The other IDs of the vulnerability.
+
+| `state`
+| String
+| The state, for example `open`.
+
+| `verdict`
+| String or `null`
+| `affected` or `not affected`.
+`null` while the entry is `under investigation`.
+
+| `severity`
+| String or `null`
+| The severity of an `affected` entry, for example `high`.
+
+| `disposition`
+| String or `null`
+| `will fix` or `wont fix`, if the entry states one.
+
+| `justification`
+| String or `null`
+| The `justification` of a `not affected` entry, for example `vulnerable code not present`.
+
+| `description`
+| String or `null`
+| The `description` of the entry.
+
+| `analysis`
+| String or `null`
+| The `analysis` of the entry.
+
+| `releases`
+| List of strings
+| The releases the entry affects.
+
+| `fixed_in`
+| List of strings
+| The releases that fix the vulnerability.
+|===
+
+For the fields of an entry in the Vulnlog file, see xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+=== Table
+
+The table report shows the summary of the HTML report as lines of text, then a table with a heading for each state.
+Each entry is a block with:
+
+* Its ID, and its aliases below it.
+* Its impact: the severity, `not affected` with the justification below it, or `not triaged`.
+* Its disposition, the releases it affects, and the releases that fix it.
+* Its description and its analysis, below the other columns.
+
+In a terminal, the table fits the width of the window, between 80 and 120 characters, and uses colours.
+Written to a file or a pipe, it's always 120 characters wide and has no colours, so the same input gives the same file.
+
+=== Empty reports
+
+A filter that selects no entry produces a report without entries.
 The command never fails because of what the report contains.
 
 == Exit codes
@@ -98,7 +208,7 @@ For the general errors, see xref:reference/exit-codes-and-messages.adoc#exit-cod
 | A file doesn't pass validation, or the files have different `project` blocks.
 
 | `5`
-| A filter names an unknown reporter, release, tag, state, verdict, or disposition.
+| A filter names an unknown reporter, release, tag, state, verdict, disposition, or vulnerability ID.
 |===
 
 == Examples
@@ -136,12 +246,77 @@ Wrote: accepted.html
 
 The report lists the lodash entry `CVE-2021-23337`.
 
+Report the two vulnerabilities a customer asked about, one of them by its alias:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --vuln-id GHSA-jfh8-c2jp-5v3q --vuln-id CVE-2022-22965 -o inquiry.html
+Wrote: inquiry.html
+----
+
+The report lists Log4Shell, whose alias is `GHSA-jfh8-c2jp-5v3q`, and Spring4Shell.
+An ID that Acme Shop doesn't record stops the command:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --vuln-id CVE-2099-0001
+error: Vulnerability ID not found: CVE-2099-0001
+  hint: No entry in the input has this ID or alias
+----
+
 Merge the files of two release lines of one project:
 
 [source,console]
 ----
 $ vulnlog report impact acme-shop.vl.yaml acme-shop-3.vl.yaml
 Wrote: vulnlog-impact-report.html
+----
+
+Pass the entries that are still `open` to another tool as JSON:
+
+[source,console,subs="attributes+"]
+----
+$ vulnlog report impact acme-shop.vl.yaml --state open --format json
+{
+  "format_version" : 1,
+  "project" : {
+    "organization" : "Acme Corp",
+    "name" : "Acme Shop",
+    "author" : "Acme Product Security Team"
+  },
+  "generated_at" : "2026-06-16T09:30:00Z",
+  "vulnlog_version" : "{vulnlog-version}",
+  "inputs" : [ "acme-shop.vl.yaml" ],
+  "filter" : {
+    "as_of" : null,
+    "tags" : [ ],
+    "reporter" : null,
+    "states" : [ "open" ],
+    "verdicts" : [ ],
+    "dispositions" : [ ],
+    "vuln_ids" : [ ]
+  },
+  "entries" : [ {
+    "primary_id" : "CVE-2022-22965",
+    "aliases" : [ ],
+    "state" : "open",
+    "verdict" : "affected",
+    "severity" : "medium",
+    "disposition" : "will fix",
+    "justification" : null,
+    "description" : "Remote code execution through data binding in Spring Framework",
+    "analysis" : "Acme Shop runs as a Spring Boot executable JAR on JDK 17. The published exploit needs a WAR deployment on Apache Tomcat, but Spring advises all users to upgrade.",
+    "releases" : [ "4.2.0", "4.3.0" ],
+    "fixed_in" : [ ]
+  } ]
+}
+----
+
+Show the entries that were still `open` in 4.2.0 as a table in the terminal:
+
+[source,console]
+----
+$ vulnlog report impact acme-shop.vl.yaml --as-of 4.2.0 --state open --format table
 ----
 
 Files of different projects stop the command:
