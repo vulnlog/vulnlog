@@ -114,6 +114,36 @@
     "allDeclaredMethods": true
   },
   {
+    "name": "dev.vulnlog.lib.codec.changelog.dto.ChangelogReportDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.lib.codec.changelog.dto.FilterDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.lib.codec.changelog.dto.ChangelogReleaseDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.lib.codec.changelog.dto.ChangelogSummaryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "dev.vulnlog.lib.codec.changelog.dto.ChangelogEntryDto",
+    "allDeclaredFields": true,
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
     "name": "kotlin.collections.EmptySet",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,

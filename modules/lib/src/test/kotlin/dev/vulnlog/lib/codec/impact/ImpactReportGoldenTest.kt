@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.codec.impact
 
+import dev.vulnlog.lib.codec.readOrUpdateGolden
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.model.Disposition
@@ -19,12 +20,7 @@ import dev.vulnlog.lib.model.reporting.ImpactEntry
 import dev.vulnlog.lib.model.reporting.WorkState
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Instant
-
-private const val GOLDEN_DIR = "/report"
-private val GOLDEN_SOURCE_DIR: Path = Path.of("src/test/resources/report")
 
 /** Pins the bytes of every view of one report. The JSON is an API, so a changed golden JSON is a changed contract. */
 class ImpactReportGoldenTest :
@@ -32,40 +28,21 @@ class ImpactReportGoldenTest :
         test("matches golden HTML snapshot") {
             val actual = ImpactReportEncoder.encodeToHtml(goldenFixture())
 
-            actual shouldBe golden("vulnlog-report-simple.html", actual)
+            actual shouldBe readOrUpdateGolden("golden-vulnlog-report-simple.html", actual)
         }
 
         test("matches golden JSON snapshot") {
             val actual = ImpactReportEncoder.encodeToJson(goldenFixture())
 
-            actual shouldBe golden("impact-report.json", actual)
+            actual shouldBe readOrUpdateGolden("golden-impact-report.json", actual)
         }
 
         test("matches golden table snapshot") {
             val actual = ImpactReportEncoder.encodeToTable(goldenFixture(), TextLayout.PLAIN)
 
-            actual shouldBe golden("impact-report-table.txt", actual)
+            actual shouldBe readOrUpdateGolden("golden-impact-report-table.txt", actual)
         }
     })
-
-/** With UPDATE_GOLDEN set, writes [actual] as the new golden file and returns it, so the test passes. */
-private fun golden(
-    name: String,
-    actual: String,
-): String {
-    val fileName = "golden-$name"
-    if (System.getenv("UPDATE_GOLDEN") in listOf("1", "true")) {
-        Files.createDirectories(GOLDEN_SOURCE_DIR)
-        Files.writeString(GOLDEN_SOURCE_DIR.resolve(fileName), actual)
-        println("Golden file updated at ${GOLDEN_SOURCE_DIR.resolve(fileName)}")
-        return actual
-    }
-    return ImpactReportGoldenTest::class.java
-        .getResourceAsStream("$GOLDEN_DIR/$fileName")
-        ?.bufferedReader()
-        ?.use { it.readText() }
-        ?: error("Golden file missing at classpath $GOLDEN_DIR/$fileName. Run with UPDATE_GOLDEN=1 to create it.")
-}
 
 private fun goldenFixture() =
     ImpactReport(

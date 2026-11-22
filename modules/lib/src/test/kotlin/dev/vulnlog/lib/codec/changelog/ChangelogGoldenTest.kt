@@ -3,10 +3,15 @@
 
 package dev.vulnlog.lib.codec.changelog
 
+import dev.vulnlog.lib.codec.readOrUpdateGolden
+import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.reporting.ChangelogReport
 import dev.vulnlog.lib.core.reporting.summarize
 import dev.vulnlog.lib.model.Project
 import dev.vulnlog.lib.model.Release
+import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Changelog
@@ -16,40 +21,33 @@ import dev.vulnlog.lib.model.reporting.ChangelogRelease
 import dev.vulnlog.lib.model.reporting.Impact
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import java.nio.file.Files
-import java.nio.file.Path
+import java.time.Instant
 import java.time.LocalDate
-
-private const val GOLDEN_RESOURCE = "/report/golden-changelog.md"
-private val GOLDEN_SOURCE: Path = Path.of("src/test/resources/report/golden-changelog.md")
 
 class ChangelogGoldenTest :
     FunSpec({
         test("matches golden Markdown snapshot") {
             val actual = ChangelogEncoder.encodeMarkdown(goldenFixture(), ChangelogDetail.FULL)
 
-            if (shouldUpdateGolden()) {
-                Files.createDirectories(GOLDEN_SOURCE.parent)
-                Files.writeString(GOLDEN_SOURCE, actual)
-                println("Golden Markdown updated at $GOLDEN_SOURCE")
-                return@test
-            }
+            actual shouldBe readOrUpdateGolden("golden-changelog.md", actual)
+        }
 
-            val expected =
-                ChangelogGoldenTest::class.java
-                    .getResourceAsStream(GOLDEN_RESOURCE)
-                    ?.bufferedReader()
-                    ?.use { it.readText() }
-                    ?: error(
-                        "Golden Markdown missing at classpath $GOLDEN_RESOURCE. " +
-                            "Run with UPDATE_GOLDEN=1 to create it.",
-                    )
+        test("matches golden JSON snapshot") {
+            val report =
+                ChangelogReport(
+                    changelog = goldenFixture(),
+                    generatedAt = Instant.parse("2026-05-02T10:30:00Z"),
+                    vulnlogVersion = "1.2.3-test",
+                    inputs = listOf("frontend.vl", "backend.vl"),
+                    filter = ResolvedFilter(reporter = ReporterType.TRIVY, tags = setOf(Tag("production"))),
+                    asOf = Release("1.2.0"),
+                )
 
-            actual shouldBe expected
+            val actual = ChangelogEncoder.encodeJson(report)
+
+            actual shouldBe readOrUpdateGolden("golden-changelog.json", actual)
         }
     })
-
-private fun shouldUpdateGolden(): Boolean = System.getenv("UPDATE_GOLDEN") in listOf("1", "true")
 
 private val unreleasedEntries =
     listOf(

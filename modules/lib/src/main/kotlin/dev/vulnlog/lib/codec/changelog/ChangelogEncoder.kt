@@ -4,7 +4,9 @@
 package dev.vulnlog.lib.codec.changelog
 
 import dev.vulnlog.lib.codec.report.labelImpact
+import dev.vulnlog.lib.codec.report.writeReportJson
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.reporting.ChangelogReport
 import dev.vulnlog.lib.model.reporting.Changelog
 import dev.vulnlog.lib.model.reporting.ChangelogDetail
 import dev.vulnlog.lib.model.reporting.ChangelogEntry
@@ -14,6 +16,9 @@ import dev.vulnlog.lib.model.reporting.ChangelogSummary
 private const val UNRELEASED = "unreleased"
 
 object ChangelogEncoder {
+    /** Every field of every entry, whatever detail the readable formats use, so a consumer picks what it needs. */
+    fun encodeJson(report: ChangelogReport): String = writeReportJson(ChangelogMapper.toDto(report))
+
     fun encodeText(
         changelog: Changelog,
         detail: ChangelogDetail,

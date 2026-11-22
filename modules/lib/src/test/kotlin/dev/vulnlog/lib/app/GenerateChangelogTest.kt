@@ -13,6 +13,7 @@ import dev.vulnlog.lib.codec.changelog.ChangelogEncoder
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
+import dev.vulnlog.lib.core.reporting.ChangelogReport
 import dev.vulnlog.lib.document.validated
 import dev.vulnlog.lib.document.validation.ValidVulnlogProject
 import dev.vulnlog.lib.document.yaml.YamlWriter
@@ -32,8 +33,10 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import java.time.Instant
 
 private val ACME = Project("Acme Corp", "Acme Web App", "Acme Corp Security Team")
+private val GENERATED_AT: Instant = Instant.parse("2026-05-02T10:30:00Z")
 
 /** Reported for 1.0.0, so users ran it before the release that fixed it. */
 private fun fixedIn(
@@ -67,7 +70,11 @@ private fun generate(
     vararg projects: ValidVulnlogProject,
     filter: FilterRequest = FilterRequest(),
     format: ChangelogFormat = ChangelogFormat.TEXT,
-): ChangelogOutcome = generateChangelog(projects.toList(), ChangelogRequest(filter, format, ChangelogDetail.FULL))
+): ChangelogOutcome =
+    generateChangelog(
+        projects.toList(),
+        ChangelogRequest(filter, format, ChangelogDetail.FULL, GENERATED_AT, "1.2.3-test"),
+    )
 
 class GenerateChangelogTest :
     FunSpec({
@@ -80,6 +87,25 @@ class GenerateChangelogTest :
             val fixed = outcome.shouldBeInstanceOf<ChangelogOutcome.Fixed>()
             fixed.changelog.releases.map { it.fixedIn } shouldContainExactly listOf(release("3.0.0"), release("2.0.0"))
             fixed.content shouldBe ChangelogEncoder.encodeMarkdown(fixed.changelog, ChangelogDetail.FULL)
+        }
+
+        test("encodes JSON with the run that generated it") {
+            val project = loaded(fixedIn("2.0.0"))
+            val filter = FilterRequest(asOf = "2.0.0")
+
+            val outcome = generate(project, filter = filter, format = ChangelogFormat.JSON)
+
+            val fixed = outcome.shouldBeInstanceOf<ChangelogOutcome.Fixed>()
+            val report =
+                ChangelogReport(
+                    changelog = fixed.changelog,
+                    generatedAt = GENERATED_AT,
+                    vulnlogVersion = "1.2.3-test",
+                    inputs = listOf(project.inputDocument.filename),
+                    filter = fixed.filter,
+                    asOf = release("2.0.0"),
+                )
+            fixed.content shouldBe ChangelogEncoder.encodeJson(report)
         }
 
         test("applies the filter before collecting") {

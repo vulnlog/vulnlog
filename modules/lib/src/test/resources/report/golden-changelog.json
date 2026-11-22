@@ -1,0 +1,67 @@
+{
+  "format_version" : 1,
+  "project" : {
+    "organization" : "Acme Corp",
+    "name" : "Acme Web App",
+    "author" : "Security Team"
+  },
+  "generated_at" : "2026-05-02T10:30:00Z",
+  "vulnlog_version" : "1.2.3-test",
+  "inputs" : [ "frontend.vl", "backend.vl" ],
+  "filter" : {
+    "as_of" : "1.2.0",
+    "tags" : [ "production" ],
+    "reporter" : "trivy",
+    "fixed_in" : null
+  },
+  "releases" : [ {
+    "release" : "1.2.0",
+    "published_at" : null,
+    "summary" : {
+      "total" : 2,
+      "by_severity" : {
+        "high" : 1,
+        "low" : 1
+      }
+    },
+    "entries" : [ {
+      "primary_id" : "CVE-2026-1111",
+      "aliases" : [ "GHSA-aaaa-bbbb-cccc" ],
+      "name" : "Log4Shell",
+      "description" : "Remote code execution in example-lib",
+      "verdict" : "affected",
+      "severity" : "high",
+      "justification" : null,
+      "note" : "Updated example-lib from 2.3.0 to 2.4.0",
+      "ref" : "https://issues.example.com/SEC-1"
+    }, {
+      "primary_id" : "CVE-2026-2222",
+      "aliases" : [ ],
+      "name" : null,
+      "description" : "Denial of service via large payload",
+      "verdict" : "affected",
+      "severity" : "low",
+      "justification" : null,
+      "note" : null,
+      "ref" : null
+    } ]
+  }, {
+    "release" : "1.1.0",
+    "published_at" : "2026-03-20",
+    "summary" : {
+      "total" : 1,
+      "by_severity" : { }
+    },
+    "entries" : [ {
+      "primary_id" : "CVE-2026-3333",
+      "aliases" : [ ],
+      "name" : null,
+      "description" : null,
+      "verdict" : "not affected",
+      "severity" : null,
+      "justification" : "vulnerable code not present",
+      "note" : "Updated the dependency anyway.",
+      "ref" : null
+    } ]
+  } ]
+}
