@@ -10,6 +10,7 @@ import dev.vulnlog.lib.app.report.ImpactReportProjectsDiffer
 import dev.vulnlog.lib.app.report.ImpactReportRequest
 import dev.vulnlog.lib.app.report.generateImpactReport
 import dev.vulnlog.lib.codec.impact.ImpactReportEncoder
+import dev.vulnlog.lib.codec.impact.TextLayout
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.core.filter.ResolvedFilter
@@ -108,9 +109,16 @@ class GenerateImpactReportTest :
         test("encodes the report in the requested format") {
             val project = loaded(fileWith("CVE-2026-0001"))
 
-            val outcome = generate(project, format = ImpactReportFormat.JSON).generated()
+            val outcomes = ImpactReportFormat.entries.associateWith { generate(project, format = it).generated() }
 
-            outcome.content shouldBe ImpactReportEncoder.encodeToJson(outcome.report)
+            outcomes.mapValues { it.value.content } shouldBe
+                outcomes.mapValues { (format, outcome) ->
+                    when (format) {
+                        ImpactReportFormat.HTML -> ImpactReportEncoder.encodeToHtml(outcome.report)
+                        ImpactReportFormat.JSON -> ImpactReportEncoder.encodeToJson(outcome.report)
+                        ImpactReportFormat.TABLE -> ImpactReportEncoder.encodeToTable(outcome.report, TextLayout.PLAIN)
+                    }
+                }
         }
 
         test("filters each file before merging") {

@@ -55,7 +55,7 @@ class VulnlogPlugin : Plugin<Project> {
         }
 
         project.tasks.register("vulnlogImpactReport", VulnlogImpactReportTask::class.java) { task ->
-            task.description = "Generate an impact report as HTML or JSON."
+            task.description = "Generate an impact report as HTML, JSON or a table."
             task.group = "vulnlog"
             task.files.from(extension.files)
             task.format.convention(

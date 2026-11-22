@@ -42,6 +42,7 @@ fun generateImpactReport(
         when (request.format) {
             ImpactReportFormat.HTML -> ImpactReportEncoder.encodeToHtml(report)
             ImpactReportFormat.JSON -> ImpactReportEncoder.encodeToJson(report)
+            ImpactReportFormat.TABLE -> ImpactReportEncoder.encodeToTable(report, request.textLayout)
         }
 
     return ImpactReportOutcome.Generated(report, collected, encodedReport)

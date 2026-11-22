@@ -11,13 +11,9 @@ import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.core.reporting.severityOf
-import dev.vulnlog.lib.core.severityOrder
-import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
-import dev.vulnlog.lib.model.VerdictKind
 import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ImpactEntry
-import dev.vulnlog.lib.model.reporting.WorkState
 
 private const val FORMAT_VERSION = 1
 
@@ -35,27 +31,21 @@ internal object ImpactReportMapper {
             vulnlogVersion = report.vulnlogVersion,
             inputs = report.inputs,
             filter = toFilterDto(report.filter, report.asOf),
-            entries = report.entries.sortedWith(entrySortComparator).map(::toImpactEntryDto),
+            entries = report.entries.sortedWith(impactEntryOrder).map(::toImpactEntryDto),
         )
 
-    /** In the order Vulnlog declares the values, not the order requested, so equal filters read the same. */
     private fun toFilterDto(
         filter: ResolvedFilter,
         asOf: Release?,
     ): FilterDto =
         FilterDto(
             asOf = asOf?.value,
-            tags = filter.tags.map { it.value }.sorted(),
+            tags = sortTagValues(filter),
             reporter = filter.reporter?.canonical(),
-            states = WorkState.entries.filter { it in filter.states }.map { it.canonical() },
-            verdicts = VerdictKind.entries.filter { it in filter.verdicts }.map { it.canonical() },
-            dispositions = Disposition.entries.filter { it in filter.dispositions }.map { canonical(it) },
+            states = sortInDeclaredOrder(filter.states).map { it.canonical() },
+            verdicts = sortInDeclaredOrder(filter.verdicts).map { it.canonical() },
+            dispositions = sortInDeclaredOrder(filter.dispositions).map { canonical(it) },
         )
-
-    private val entrySortComparator: Comparator<ImpactEntry> =
-        compareBy<ImpactEntry> { stateOrder(it.state) }
-            .thenBy { severityOrder(severityOf(it.impact)) }
-            .thenBy { it.primaryId.id }
 
     private fun toImpactEntryDto(entry: ImpactEntry): ImpactEntryDto =
         ImpactEntryDto(
@@ -87,15 +77,5 @@ internal object ImpactReportMapper {
             is Impact.NotAffected -> impact.reason
             is Impact.Affected -> null
             is Impact.Unknown -> null
-        }
-
-    // Actionable first, unknown-is-work second, then live risk, then the two nothing-to-do states.
-    private fun stateOrder(state: WorkState): Int =
-        when (state) {
-            WorkState.OPEN -> 0
-            WorkState.UNDER_INVESTIGATION -> 1
-            WorkState.ACCEPTED -> 2
-            WorkState.RESOLVED -> 3
-            WorkState.NOT_APPLICABLE -> 4
         }
 }

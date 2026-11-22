@@ -9,6 +9,7 @@ enum class ImpactReportFormat(
 ) {
     HTML("html", "html"),
     JSON("json", "json"),
+    TABLE("table", "txt"),
     ;
 
     companion object {

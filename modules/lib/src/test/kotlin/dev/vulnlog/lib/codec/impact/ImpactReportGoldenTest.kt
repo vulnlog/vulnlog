@@ -25,7 +25,7 @@ import java.time.Instant
 private const val GOLDEN_DIR = "/report"
 private val GOLDEN_SOURCE_DIR: Path = Path.of("src/test/resources/report")
 
-/** Pins the bytes of both views of one report. The JSON is an API, so a changed golden JSON is a changed contract. */
+/** Pins the bytes of every view of one report. The JSON is an API, so a changed golden JSON is a changed contract. */
 class ImpactReportGoldenTest :
     FunSpec({
         test("matches golden HTML snapshot") {
@@ -38,6 +38,12 @@ class ImpactReportGoldenTest :
             val actual = ImpactReportEncoder.encodeToJson(goldenFixture())
 
             actual shouldBe golden("impact-report.json", actual)
+        }
+
+        test("matches golden table snapshot") {
+            val actual = ImpactReportEncoder.encodeToTable(goldenFixture(), TextLayout.PLAIN)
+
+            actual shouldBe golden("impact-report-table.txt", actual)
         }
     })
 

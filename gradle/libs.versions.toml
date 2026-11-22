@@ -8,8 +8,8 @@ jacksonVersion = "3.3.0"
 kotestVersion = "6.2.7"
 kotlinVersion = "2.4.21"
 ktlintVersion = "14.2.0"
+mordantVersion = "3.0.2"
 packageUrlVersion = "1.5.0"
-# The only YAML library: it parses every file Vulnlog reads and emits every file Vulnlog writes.
 snakeYamlEngineVersion = "3.2"
 spotlessVersion = "8.11.0"
 
@@ -23,6 +23,7 @@ kotestAssertionsCoreJvm = { module = "io.kotest:kotest-assertions-core-jvm", ver
 kotestRunnerJunit5Jvm = { module = "io.kotest:kotest-runner-junit5-jvm", version.ref = "kotestVersion" }
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
 ktlintGradle = { module = "org.jlleitschuh.gradle:ktlint-gradle", version.ref = "ktlintVersion" }
+mordantCore = { module = "com.github.ajalt.mordant:mordant-core", version.ref = "mordantVersion" }
 packageUrl = { module = "com.github.package-url:packageurl-java", version.ref = "packageUrlVersion"}
 snakeyamlEngine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeYamlEngineVersion" }
 spotlessGradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotlessVersion" }

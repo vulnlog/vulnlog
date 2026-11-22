@@ -111,12 +111,21 @@ class VulnlogImpactReportTaskTest :
                 report shouldContain "\"primary_id\" : \"CVE-2026-1234\""
             }
 
+            test("writes the table to a .txt default output file") {
+                val dir = gradleProject(impactBuildFile("""format = "table""""), "test.vl.yaml" to vulnlogDocument())
+
+                val result = runner(dir, "vulnlogImpactReport").build()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                dir.resolve("build/vulnlog/vulnlog-impact-report.txt").readText() shouldContain "│ CVE-2026-1234"
+            }
+
             test("fails on an unknown format") {
                 val dir = gradleProject(impactBuildFile("""format = "yaml""""), "test.vl.yaml" to vulnlogDocument())
 
                 val result = runner(dir, "vulnlogImpactReport").buildAndFail()
 
-                result.output shouldContain "Unknown impact report format 'yaml'. Valid values: html, json."
+                result.output shouldContain "Unknown impact report format 'yaml'. Valid values: html, json, table."
             }
         }
 
