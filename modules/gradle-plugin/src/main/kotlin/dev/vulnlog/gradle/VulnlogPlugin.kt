@@ -4,6 +4,7 @@
 package dev.vulnlog.gradle
 
 import dev.vulnlog.lib.app.ChangelogFormatRequest
+import dev.vulnlog.lib.app.report.ImpactReportFormat
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
@@ -54,9 +55,13 @@ class VulnlogPlugin : Plugin<Project> {
         }
 
         project.tasks.register("vulnlogImpactReport", VulnlogImpactReportTask::class.java) { task ->
-            task.description = "Generate an HTML impact report."
+            task.description = "Generate an impact report as HTML or JSON."
             task.group = "vulnlog"
             task.files.from(extension.files)
+            task.format.convention(
+                extension.report.impact.format
+                    .orElse(ImpactReportFormat.HTML.token),
+            )
             task.reporter.convention(extension.report.impact.reporter)
             task.asOf.convention(extension.report.impact.asOf)
             task.tags.convention(extension.report.impact.tags)
@@ -64,9 +69,8 @@ class VulnlogPlugin : Plugin<Project> {
             task.verdicts.convention(extension.report.impact.verdicts)
             task.dispositions.convention(extension.report.impact.dispositions)
             task.outputFile.convention(
-                extension.report.impact.outputFile.orElse(
-                    project.layout.buildDirectory.file("vulnlog/vulnlog-impact-report.html"),
-                ),
+                extension.report.impact.outputFile
+                    .orElse(task.format.map { token -> project.impactReportFile(token) }),
             )
         }
 
@@ -113,6 +117,12 @@ class VulnlogPlugin : Plugin<Project> {
 private fun Project.changelogReportFile(formatToken: String): RegularFile =
     layout.buildDirectory
         .file("vulnlog/vulnlog-changelog.${ChangelogFormatRequest.fromToken(formatToken).fileExtension}")
+        .get()
+
+/** Default report location, named after the format so the extension always matches the content. */
+private fun Project.impactReportFile(formatToken: String): RegularFile =
+    layout.buildDirectory
+        .file("vulnlog/vulnlog-impact-report.${ImpactReportFormat.fromToken(formatToken).fileExtension}")
         .get()
 
 private fun Project.propertyOrNull(name: String): String? = providers.gradleProperty(name).orNull

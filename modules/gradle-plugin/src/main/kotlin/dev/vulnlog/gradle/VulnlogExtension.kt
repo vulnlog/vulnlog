@@ -84,6 +84,7 @@ abstract class VulnlogReportExtension
 
 interface VulnlogImpactReportExtension {
     val outputFile: RegularFileProperty
+    val format: Property<String>
     val reporter: Property<String>
     val asOf: Property<String>
     val tags: SetProperty<String>

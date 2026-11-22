@@ -9,6 +9,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
+import io.kotest.matchers.string.shouldStartWith
 import org.gradle.testkit.runner.TaskOutcome
 
 private val FILES_FROM_TEST_YAML =
@@ -16,6 +17,21 @@ private val FILES_FROM_TEST_YAML =
         """
         vulnlog {
             files.from("test.vl.yaml")
+        }
+        """.trimIndent(),
+    )
+
+/** Wraps [settings] in a `report { impact { } }` block on a single input file. */
+private fun impactBuildFile(settings: String) =
+    buildFile(
+        """
+        vulnlog {
+            files.from("test.vl.yaml")
+            report {
+                impact {
+                    $settings
+                }
+            }
         }
         """.trimIndent(),
     )
@@ -79,6 +95,28 @@ class VulnlogImpactReportTaskTest :
 
                 result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
                 dir.resolve("build/vulnlog/vulnlog-impact-report.html").exists() shouldBe true
+            }
+        }
+
+        context("format") {
+
+            test("writes JSON to a default output file named after the format") {
+                val dir = gradleProject(impactBuildFile("""format = "json""""), "test.vl.yaml" to vulnlogDocument())
+
+                val result = runner(dir, "vulnlogImpactReport").build()
+
+                result.task(":vulnlogImpactReport")?.outcome shouldBe TaskOutcome.SUCCESS
+                val report = dir.resolve("build/vulnlog/vulnlog-impact-report.json").readText()
+                report shouldStartWith "{"
+                report shouldContain "\"primary_id\" : \"CVE-2026-1234\""
+            }
+
+            test("fails on an unknown format") {
+                val dir = gradleProject(impactBuildFile("""format = "yaml""""), "test.vl.yaml" to vulnlogDocument())
+
+                val result = runner(dir, "vulnlogImpactReport").buildAndFail()
+
+                result.output shouldContain "Unknown impact report format 'yaml'. Valid values: html, json."
             }
         }
 
