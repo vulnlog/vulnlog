@@ -41,6 +41,9 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
     abstract val files: ConfigurableFileCollection
 
     @get:Input
+    abstract val format: Property<String>
+
+    @get:Input
     @get:Optional
     abstract val reporter: Property<String>
 
@@ -79,7 +82,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                     ),
                 generatedAt = Instant.now(),
                 vulnlogVersion = BuildInfo.VERSION,
-                format = ImpactReportFormat.HTML,
+                format = ImpactReportFormat.fromToken(format.get()),
             )
 
         val outcome = generateImpactReport(projects, request)
