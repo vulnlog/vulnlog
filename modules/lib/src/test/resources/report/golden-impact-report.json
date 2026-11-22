@@ -14,7 +14,8 @@
     "reporter" : "trivy",
     "states" : [ "open", "accepted" ],
     "verdicts" : [ "affected" ],
-    "dispositions" : [ "wont fix" ]
+    "dispositions" : [ "wont fix" ],
+    "vuln_ids" : [ ]
   },
   "entries" : [ {
     "primary_id" : "CVE-2026-1111",

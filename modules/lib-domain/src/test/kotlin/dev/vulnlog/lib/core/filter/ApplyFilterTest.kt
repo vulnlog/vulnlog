@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.fixtures.cve
+import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.report
 import dev.vulnlog.lib.fixtures.resolution
@@ -103,6 +104,32 @@ class ApplyFilterTest :
                 val result = file.applyFilter(filter)
 
                 result.vulnerabilities shouldHaveSize 2
+            }
+        }
+
+        context("vulnIds") {
+
+            test("keeps only the vulnerabilities with a requested ID, several IDs selecting their union") {
+                val file =
+                    vulnlogFile(
+                        vulnerabilities =
+                            listOf(openVulnerability(), acceptedVulnerability(), notApplicableVulnerability()),
+                    )
+                val filter = ResolvedFilter(vulnIds = setOf(first, cve("CVE-2024-0003")))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities.map { it.id } shouldBe listOf(first, cve("CVE-2024-0003"))
+            }
+
+            test("keeps a vulnerability whose alias is requested, also spelt in another case") {
+                val withAlias = vulnerability(first, aliases = listOf(ghsa("GHSA-abcd-efgh-ijkl")))
+                val file = vulnlogFile(vulnerabilities = listOf(withAlias, acceptedVulnerability()))
+                val filter = ResolvedFilter(vulnIds = setOf(ghsa("GHSA-ABCD-EFGH-IJKL")))
+
+                val result = file.applyFilter(filter)
+
+                result.vulnerabilities.map { it.id } shouldBe listOf(first)
             }
         }
 

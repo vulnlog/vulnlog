@@ -3,10 +3,13 @@
 
 package dev.vulnlog.lib.core.filter
 
+import dev.vulnlog.lib.fixtures.cve
+import dev.vulnlog.lib.fixtures.ghsa
 import dev.vulnlog.lib.fixtures.release
 import dev.vulnlog.lib.fixtures.releaseEntry
 import dev.vulnlog.lib.fixtures.tag
 import dev.vulnlog.lib.fixtures.tagEntry
+import dev.vulnlog.lib.fixtures.vulnerability
 import dev.vulnlog.lib.fixtures.vulnlogFile
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.ReporterType
@@ -55,6 +58,7 @@ class ResolveFilterTest :
                     verdicts = setOf("bogus"),
                     dispositions = setOf("andere"),
                     fixedIn = "8.8.8",
+                    vulnIds = setOf("CVE-0000-0000"),
                 )
 
             val outcome = resolve(request)
@@ -68,6 +72,7 @@ class ResolveFilterTest :
                     FilterProblem.UnknownVerdicts(listOf("bogus")),
                     FilterProblem.UnknownDispositions(listOf("andere")),
                     FilterProblem.UnknownRelease(release("8.8.8"), threeReleases),
+                    FilterProblem.UnknownVulnIds(listOf("CVE-0000-0000")),
                 )
         }
 
@@ -155,6 +160,42 @@ class ResolveFilterTest :
                 val outcome = resolve(FilterRequest(tags = setOf("")))
 
                 outcome.problems() shouldBe listOf(FilterProblem.BlankTag(twoTags))
+            }
+        }
+
+        context("vulnIds") {
+
+            fun fileWithLog4Shell() =
+                vulnlogFile(
+                    vulnerabilities =
+                        listOf(vulnerability(cve("CVE-2021-44228"), aliases = listOf(ghsa("GHSA-jfh8-c2jp-5v3q")))),
+                )
+
+            test("resolves an ID and an alias in any case to the spelling of the file that holds them") {
+                val outcome =
+                    resolve(
+                        FilterRequest(vulnIds = setOf("cve-2021-44228", "GHSA-JFH8-C2JP-5V3Q")),
+                        fileWithLog4Shell(),
+                    )
+
+                outcome.filter().vulnIds shouldBe setOf(cve("CVE-2021-44228"), ghsa("GHSA-jfh8-c2jp-5v3q"))
+            }
+
+            test("names every ID no file holds, sorted, and none of the known ones") {
+                val outcome =
+                    resolve(
+                        FilterRequest(vulnIds = setOf("CVE-2099-0002", "CVE-2021-44228", "CVE-2099-0001")),
+                        fileWithLog4Shell(),
+                    )
+
+                outcome.problems() shouldBe
+                    listOf(FilterProblem.UnknownVulnIds(listOf("CVE-2099-0001", "CVE-2099-0002")))
+            }
+
+            test("rejects a blank ID") {
+                val outcome = resolve(FilterRequest(vulnIds = setOf(" ")), fileWithLog4Shell())
+
+                outcome.problems() shouldBe listOf(FilterProblem.BlankVulnId)
             }
         }
 

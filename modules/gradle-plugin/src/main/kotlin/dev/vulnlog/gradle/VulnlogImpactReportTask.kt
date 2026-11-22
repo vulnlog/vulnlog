@@ -63,6 +63,9 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
     @get:Input
     abstract val dispositions: SetProperty<String>
 
+    @get:Input
+    abstract val vulnIds: SetProperty<String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -79,6 +82,7 @@ abstract class VulnlogImpactReportTask : DefaultTask() {
                         states = states.get(),
                         verdicts = verdicts.get(),
                         dispositions = dispositions.get(),
+                        vulnIds = vulnIds.get(),
                     ),
                 generatedAt = Instant.now(),
                 vulnlogVersion = BuildInfo.VERSION,

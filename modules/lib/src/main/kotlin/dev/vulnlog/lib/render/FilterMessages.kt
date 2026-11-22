@@ -35,6 +35,9 @@ fun renderFilterResolution(filter: ResolvedFilter): List<Message> =
             .takeIf { it.isNotEmpty() }
             ?.let { dispositions -> "disposition filter: ${dispositions.joinToString(", ") { canonical(it) }}" },
         filter.fixedIn?.let { release -> "fixed-in filter: ${release.value}" },
+        filter.vulnIds
+            .takeIf { it.isNotEmpty() }
+            ?.let { vulnIds -> "vuln-id filter: ${vulnIds.map { it.id }.sorted().joinToString(", ")}" },
     ).map(Message::Verbose)
 
 private fun message(problem: FilterProblem): String =
@@ -47,6 +50,8 @@ private fun message(problem: FilterProblem): String =
         is FilterProblem.UnknownStates -> "Invalid state: ${problem.requested.joinToString(", ")}"
         is FilterProblem.UnknownVerdicts -> "Invalid verdict: ${problem.requested.joinToString(", ")}"
         is FilterProblem.UnknownDispositions -> "Invalid disposition: ${problem.requested.joinToString(", ")}"
+        FilterProblem.BlankVulnId -> "Vulnerability ID must not be blank"
+        is FilterProblem.UnknownVulnIds -> "Vulnerability ID not found: ${problem.requested.joinToString(", ")}"
     }
 
 private fun hint(problem: FilterProblem): String =
@@ -61,6 +66,8 @@ private fun hint(problem: FilterProblem): String =
         is FilterProblem.UnknownStates -> "Supported states: ${workStateTokens()}"
         is FilterProblem.UnknownVerdicts -> "Supported verdicts: ${verdictKindTokens()}"
         is FilterProblem.UnknownDispositions -> "Supported dispositions: ${dispositionTokens()}"
+        FilterProblem.BlankVulnId -> "Pass the ID or an alias of an entry, for example CVE-2021-44228"
+        is FilterProblem.UnknownVulnIds -> "No entry in the input has this ID or alias"
     }
 
 private fun knownReleases(known: List<Release>): String = "Known releases: ${known.joinToString(", ") { it.value }}"

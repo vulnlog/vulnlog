@@ -14,4 +14,7 @@ data class FilterDto(
     val states: List<String>,
     val verdicts: List<String>,
     val dispositions: List<String>,
+    /** The requested vulnerability IDs. Each one matches the primary ID or an alias of an entry. */
+    @param:JsonProperty("vuln_ids")
+    val vulnIds: List<String>,
 )

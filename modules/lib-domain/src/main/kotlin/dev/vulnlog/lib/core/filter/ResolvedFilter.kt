@@ -8,6 +8,7 @@ import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.WorkState
 
 /**
@@ -17,6 +18,9 @@ import dev.vulnlog.lib.model.reporting.WorkState
  * covers everything shipped up to and including it. An empty set means the dimension is inactive.
  *
  * [fixedIn] is a single release matched against the release a fix shipped in, not a window.
+ *
+ * [vulnIds] holds the requested IDs as the files spell them. An entry matches when its primary ID or one of its
+ * aliases is among them.
  */
 data class ResolvedFilter(
     val reporter: ReporterType? = null,
@@ -25,5 +29,6 @@ data class ResolvedFilter(
     val states: Set<WorkState> = emptySet(),
     val verdicts: Set<VerdictKind> = emptySet(),
     val dispositions: Set<Disposition> = emptySet(),
+    val vulnIds: Set<VulnId> = emptySet(),
     val fixedIn: Release? = null,
 )

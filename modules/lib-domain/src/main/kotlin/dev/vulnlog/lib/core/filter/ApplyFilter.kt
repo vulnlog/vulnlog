@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.core.filter
 
+import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.findDisposition
 import dev.vulnlog.lib.core.findWorkState
 import dev.vulnlog.lib.core.kind
@@ -42,4 +43,10 @@ private fun ResolvedFilter.matches(vuln: VulnerabilityEntry): Boolean =
         (states.isEmpty() || findWorkState(vuln) in states) &&
         (verdicts.isEmpty() || vuln.verdict.kind() in verdicts) &&
         (dispositions.isEmpty() || findDisposition(vuln.verdict) in dispositions) &&
-        (fixedIn == null || vuln.resolution?.release == fixedIn)
+        (fixedIn == null || vuln.resolution?.release == fixedIn) &&
+        matchesVulnId(vuln)
+
+/** Another file can spell the same ID in another case, so IDs are compared without case. */
+private fun ResolvedFilter.matchesVulnId(vuln: VulnerabilityEntry): Boolean =
+    vulnIds.isEmpty() ||
+        (listOf(vuln.id) + vuln.aliases).any { id -> vulnIds.any { it.canonical() == id.canonical() } }

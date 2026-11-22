@@ -4,12 +4,14 @@
 package dev.vulnlog.lib.core.filter
 
 import dev.vulnlog.lib.core.canonical
+import dev.vulnlog.lib.core.canonicalVulnId
 import dev.vulnlog.lib.core.parseReporter
 import dev.vulnlog.lib.model.Disposition
 import dev.vulnlog.lib.model.Release
 import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnlogFile
 import dev.vulnlog.lib.model.reporting.WorkState
 
@@ -25,9 +27,18 @@ fun resolveFilter(
     val verdicts = resolveVerdicts(request.verdicts)
     val dispositions = resolveDispositions(request.dispositions)
     val fixedIn = resolveRelease(request.fixedIn, files)
+    val vulnIds = resolveVulnIds(request.vulnIds, files)
     val problems =
-        reporter.problems + releases.problems + tags.problems + states.problems + verdicts.problems +
-            dispositions.problems + fixedIn.problems
+        buildList {
+            addAll(reporter.problems)
+            addAll(releases.problems)
+            addAll(tags.problems)
+            addAll(states.problems)
+            addAll(verdicts.problems)
+            addAll(dispositions.problems)
+            addAll(fixedIn.problems)
+            addAll(vulnIds.problems)
+        }
 
     return if (problems.isEmpty()) {
         FilterOutcome.Resolved(
@@ -39,6 +50,7 @@ fun resolveFilter(
                 verdicts = verdicts.value,
                 dispositions = dispositions.value,
                 fixedIn = fixedIn.value,
+                vulnIds = vulnIds.value,
             ),
         )
     } else {
@@ -151,4 +163,25 @@ internal fun resolveTags(
     if (unknown.isNotEmpty()) return Dimension(emptySet(), listOf(FilterProblem.UnknownTags(unknown, known)))
 
     return Dimension(tags)
+}
+
+/**
+ * Like a release, one file holding the ID is enough. IDs are compared without case, because advisories and scanners
+ * spell them differently, and the resolved IDs keep the spelling of the files.
+ */
+private fun resolveVulnIds(
+    values: Set<String>,
+    files: List<VulnlogFile>,
+): Dimension<Set<VulnId>> {
+    if (values.isEmpty()) return Dimension(emptySet())
+    if (values.any { it.isBlank() }) return Dimension(emptySet(), listOf(FilterProblem.BlankVulnId))
+
+    val known =
+        files
+            .flatMap { file -> file.vulnerabilities.flatMap { listOf(it.id) + it.aliases } }
+            .associateBy { it.canonical() }
+    val unknown = values.filterNot { canonicalVulnId(it) in known }.sorted()
+    if (unknown.isNotEmpty()) return Dimension(emptySet(), listOf(FilterProblem.UnknownVulnIds(unknown)))
+
+    return Dimension(values.mapNotNull { known[canonicalVulnId(it)] }.toSet())
 }

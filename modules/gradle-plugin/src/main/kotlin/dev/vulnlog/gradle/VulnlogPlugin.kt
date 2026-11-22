@@ -68,6 +68,7 @@ class VulnlogPlugin : Plugin<Project> {
             task.states.convention(extension.report.impact.states)
             task.verdicts.convention(extension.report.impact.verdicts)
             task.dispositions.convention(extension.report.impact.dispositions)
+            task.vulnIds.convention(extension.report.impact.vulnIds)
             task.outputFile.convention(
                 extension.report.impact.outputFile
                     .orElse(task.format.map { token -> project.impactReportFile(token) }),

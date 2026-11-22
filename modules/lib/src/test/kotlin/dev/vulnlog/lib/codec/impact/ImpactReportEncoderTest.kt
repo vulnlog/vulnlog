@@ -220,7 +220,7 @@ class ImpactReportEncoderTest :
                 json["fixed_in"].texts() shouldContainExactly listOf("1.1.0", "2.0.1")
             }
 
-            test("names the applied filter under its canonical tokens, in the order Vulnlog declares them") {
+            test("names the applied filter under its canonical tokens, in declared order, the tags and IDs sorted") {
                 val filter =
                     ResolvedFilter(
                         reporter = ReporterType.CARGO_AUDIT,
@@ -229,6 +229,7 @@ class ImpactReportEncoderTest :
                         states = setOf(WorkState.NOT_APPLICABLE, WorkState.OPEN),
                         verdicts = setOf(VerdictKind.AFFECTED),
                         dispositions = setOf(Disposition.WONT_FIX, Disposition.WILL_FIX),
+                        vulnIds = setOf(VulnId.Ghsa("GHSA-abcd-1234-efgh"), VulnId.Cve("CVE-2026-1234")),
                     )
 
                 val json = report(listOf(entry()), filter = filter, asOf = Release("1.2.0")).json()["filter"]
@@ -237,7 +238,8 @@ class ImpactReportEncoderTest :
                     readJson(
                         """{"as_of":"1.2.0","tags":["frontend","production"],"reporter":"cargo-audit",""" +
                             """"states":["open","not applicable"],"verdicts":["affected"],""" +
-                            """"dispositions":["will fix","wont fix"]}""",
+                            """"dispositions":["will fix","wont fix"],""" +
+                            """"vuln_ids":["CVE-2026-1234","GHSA-abcd-1234-efgh"]}""",
                     )
             }
 
@@ -292,7 +294,12 @@ class ImpactReportEncoderTest :
         context("table") {
 
             test("names the project, the generation time, the inputs, the filter and the Vulnlog version") {
-                val filter = ResolvedFilter(states = setOf(WorkState.OPEN), tags = setOf(Tag("frontend")))
+                val filter =
+                    ResolvedFilter(
+                        states = setOf(WorkState.OPEN),
+                        tags = setOf(Tag("frontend")),
+                        vulnIds = setOf(VulnId.Cve("CVE-2026-1234")),
+                    )
                 val report =
                     report(
                         listOf(entry()),
@@ -310,7 +317,7 @@ class ImpactReportEncoderTest :
                     mapOf(
                         "Generated" to "2026-05-02 08:15:30 UTC",
                         "Inputs" to "project.vl, deps.vl",
-                        "Filter" to "as of 1.2.0; tags frontend; state open",
+                        "Filter" to "as of 1.2.0; tags frontend; state open; vuln-id CVE-2026-1234",
                         "Vulnlog" to "1.2.3",
                     )
             }

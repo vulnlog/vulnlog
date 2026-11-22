@@ -19,6 +19,7 @@ import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.terminal.TerminalRecorder
 import dev.vulnlog.lib.codec.report.sortInDeclaredOrder
 import dev.vulnlog.lib.codec.report.sortTagValues
+import dev.vulnlog.lib.codec.report.sortVulnIdValues
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.reporting.ImpactReport
 import dev.vulnlog.lib.core.reporting.severityOf
@@ -133,6 +134,7 @@ private fun describeFilter(
             describeFilterValues("state", sortInDeclaredOrder(filter.states).map { it.canonical() }),
             describeFilterValues("verdict", sortInDeclaredOrder(filter.verdicts).map { it.canonical() }),
             describeFilterValues("disposition", sortInDeclaredOrder(filter.dispositions).map { canonical(it) }),
+            describeFilterValues("vuln-id", sortVulnIdValues(filter)),
         ).map(::sanitize)
     return if (dimensions.isEmpty()) "none" else fillLines(dimensions, separator = "; ", width = width)
 }

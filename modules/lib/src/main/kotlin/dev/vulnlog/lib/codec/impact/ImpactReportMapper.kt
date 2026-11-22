@@ -12,6 +12,7 @@ import dev.vulnlog.lib.codec.report.labelSeverity
 import dev.vulnlog.lib.codec.report.labelVerdict
 import dev.vulnlog.lib.codec.report.sortInDeclaredOrder
 import dev.vulnlog.lib.codec.report.sortTagValues
+import dev.vulnlog.lib.codec.report.sortVulnIdValues
 import dev.vulnlog.lib.codec.report.toProjectDto
 import dev.vulnlog.lib.core.canonical
 import dev.vulnlog.lib.core.filter.ResolvedFilter
@@ -44,6 +45,7 @@ internal object ImpactReportMapper {
             states = sortInDeclaredOrder(filter.states).map { it.canonical() },
             verdicts = sortInDeclaredOrder(filter.verdicts).map { it.canonical() },
             dispositions = sortInDeclaredOrder(filter.dispositions).map { canonical(it) },
+            vulnIds = sortVulnIdValues(filter),
         )
 
     private fun toImpactEntryDto(entry: ImpactEntry): ImpactEntryDto =

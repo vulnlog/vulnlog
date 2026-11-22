@@ -54,4 +54,11 @@ sealed interface FilterProblem {
     data class UnknownDispositions(
         val requested: List<String>,
     ) : FilterProblem
+
+    data object BlankVulnId : FilterProblem
+
+    /** The requested IDs as given, because no file spells them. */
+    data class UnknownVulnIds(
+        val requested: List<String>,
+    ) : FilterProblem
 }
