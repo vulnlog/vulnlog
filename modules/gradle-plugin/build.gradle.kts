@@ -69,6 +69,8 @@ tasks.named<ShadowJar>("shadowJar") {
     relocate("tools.jackson", "dev.vulnlog.shaded.tools.jackson")
     relocate("com.fasterxml.jackson.annotation", "dev.vulnlog.shaded.com.fasterxml.jackson.annotation")
     relocate("com.github.packageurl", "dev.vulnlog.shaded.com.github.packageurl")
+    relocate("com.github.ajalt.mordant", "dev.vulnlog.shaded.com.github.ajalt.mordant")
+    relocate("com.github.ajalt.colormath", "dev.vulnlog.shaded.com.github.ajalt.colormath")
     mergeServiceFiles()
 }
 

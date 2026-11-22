@@ -13,6 +13,7 @@ dependencies {
     api(libs.snakeyamlEngine)
     api(libs.packageUrl)
     implementation(libs.jacksonKotlin)
+    implementation(libs.mordantCore)
 
     testFixturesApi(testFixtures(project(":lib-domain")))
 

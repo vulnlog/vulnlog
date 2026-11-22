@@ -3,6 +3,7 @@
 
 package dev.vulnlog.lib.app.report
 
+import dev.vulnlog.lib.codec.impact.TextLayout
 import dev.vulnlog.lib.core.filter.FilterRequest
 import java.time.Instant
 
@@ -12,4 +13,6 @@ data class ImpactReportRequest(
     val generatedAt: Instant,
     val vulnlogVersion: String,
     val format: ImpactReportFormat,
+    /** Only the table format reads it. The HTML and JSON views have no width. */
+    val textLayout: TextLayout = TextLayout.PLAIN,
 )

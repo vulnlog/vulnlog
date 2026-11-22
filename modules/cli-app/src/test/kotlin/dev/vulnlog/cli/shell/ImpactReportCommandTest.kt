@@ -4,11 +4,13 @@
 package dev.vulnlog.cli.shell
 
 import com.github.ajalt.clikt.testing.test
+import com.github.ajalt.mordant.rendering.AnsiLevel
 import dev.vulnlog.lib.fixtures.ValidationDocuments
 import dev.vulnlog.lib.fixtures.vulnlogDocument
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.string.shouldStartWith
 import kotlin.io.path.readText
@@ -119,6 +121,62 @@ class ImpactReportCommandTest :
                 }
             }
 
+            test("writes the plain table to stdout when no output is given and stdout is no terminal") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result = ImpactReportCommand().test("${input.absolutePath} --format table")
+
+                    result.statusCode shouldBe 0
+                    result.stdout shouldStartWith "Vulnerability Impact Report: "
+                    result.stdout shouldContain "│ CVE-2026-1234"
+                    result.stdout
+                        .lines()
+                        .first { it.startsWith("┌") }
+                        .length shouldBe 120
+                    result.stdout shouldNotContain "\u001B["
+                    result.stdout shouldEndWith "┘\n"
+                    result.stderr shouldNotContain "Wrote: "
+                }
+            }
+
+            test("fits the table to the terminal width and colors it when stdout is a terminal") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    val result =
+                        ImpactReportCommand().test(
+                            "${input.absolutePath} --format table",
+                            ansiLevel = AnsiLevel.ANSI16,
+                            width = 90,
+                            outputInteractive = true,
+                        )
+
+                    val plain = result.stdout.replace(Regex("\u001B\\[[0-9;]*m"), "")
+
+                    result.statusCode shouldBe 0
+                    plain.lines().first { it.startsWith("┌") }.length shouldBe 90
+                    result.stdout shouldContain "\u001B["
+                }
+            }
+
+            test("writes the plain table to the output file, also when stdout is a terminal") {
+                withTempFile(content = vulnlogDocument()) { input ->
+                    withTempFile(prefix = "report", suffix = ".txt") { output ->
+                        val result =
+                            ImpactReportCommand().test(
+                                "${input.absolutePath} --format table -o ${output.absolutePath}",
+                                ansiLevel = AnsiLevel.ANSI16,
+                                width = 90,
+                                outputInteractive = true,
+                            )
+
+                        val table = output.readText()
+
+                        result.statusCode shouldBe 0
+                        table shouldNotContain "\u001B["
+                        table.lines().first { it.startsWith("┌") }.length shouldBe 120
+                        table shouldEndWith "┘\n"
+                    }
+                }
+            }
+
             test("writes JSON to the output file when one is given") {
                 withTempFile(content = vulnlogDocument()) { input ->
                     withTempFile(prefix = "report", suffix = ".json") { output ->
@@ -147,7 +205,8 @@ class ImpactReportCommandTest :
                 val result = ImpactReportCommand().test("--help")
 
                 unwrapped(result.stdout) shouldContain
-                    "Defaults to vulnlog-impact-report.html in the current directory for html, and to stdout for json."
+                    "Defaults to vulnlog-impact-report.html in the current directory for html, " +
+                    "and to stdout for json and table."
             }
         }
 

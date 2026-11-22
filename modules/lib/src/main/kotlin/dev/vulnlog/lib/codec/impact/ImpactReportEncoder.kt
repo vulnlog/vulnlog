@@ -16,6 +16,11 @@ object ImpactReportEncoder {
     fun encodeToJson(report: ImpactReport): String =
         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(ImpactReportMapper.toDto(report))
 
+    fun encodeToTable(
+        report: ImpactReport,
+        layout: TextLayout,
+    ): String = ImpactReportTableView.render(report, layout)
+
     fun encodeToHtml(report: ImpactReport): String {
         val json = mapper.writeValueAsString(ImpactReportMapper.toDto(report))
         return loadTemplate().replace(DATA_PLACEHOLDER, escapeForScript(json))
