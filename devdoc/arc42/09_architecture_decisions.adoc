@@ -18,3 +18,5 @@ include::../adr/0005-provide-a-gradle-plugin.adoc[leveloffset=+2]
 include::../adr/0006-implement-in-kotlin-on-the-jvm.adoc[leveloffset=+2]
 
 include::../adr/0007-publish-as-open-source-under-apache-2-0.adoc[leveloffset=+2]
+
+include::../adr/0008-filters-select-the-content-of-every-report-format.adoc[leveloffset=+2]
