@@ -554,7 +554,7 @@
 </footer>
 
 <script>
-    var VULNLOG_DATA = {"format_version":1,"project":{"organization":"Acme Corp","name":"Acme Web App","author":"Security Team"},"generated_at":"2026-05-02T10:30:00Z","vulnlog_version":"1.2.3-test","inputs":["frontend.vl","backend.vl"],"filter":{"as_of":"1.1.0","tags":["production"],"reporter":"trivy","states":["open","accepted"],"verdicts":["affected"],"dispositions":["wont fix"]},"entries":[{"primary_id":"CVE-2026-1111","aliases":["GHSA-aaaa-bbbb-cccc"],"state":"open","verdict":"affected","severity":"critical","disposition":"will fix","verdict_detail":null,"short_description":"Critical RCE in example-lib","analysis":"Confirmed exploitable on the public ingress path; patch in progress.","releases":["1.0.0","1.1.0"],"fixed_in":["1.2.0"]},{"primary_id":"CVE-2026-5555","aliases":[],"state":"under investigation","verdict":null,"severity":null,"disposition":null,"verdict_detail":null,"short_description":"Unbounded recursion in the XML parser","analysis":null,"releases":["1.1.0"],"fixed_in":[]},{"primary_id":"CVE-2026-4444","aliases":[],"state":"accepted","verdict":"affected","severity":"high","disposition":"wont fix","verdict_detail":null,"short_description":"Prototype pollution in a build-time helper","analysis":"Build-time only; no upstream fix and no runtime exposure.","releases":["1.1.0"],"fixed_in":[]},{"primary_id":"CVE-2026-3333","aliases":[],"state":"resolved","verdict":"affected","severity":"medium","disposition":null,"verdict_detail":null,"short_description":"DoS via large payload","analysis":"Mitigated by request size limits at the edge.","releases":["1.0.0"],"fixed_in":["1.0.1"]},{"primary_id":"CVE-2026-2222","aliases":[],"state":"not applicable","verdict":"not affected","severity":null,"disposition":null,"verdict_detail":"vulnerable code not in execute path","short_description":null,"analysis":null,"releases":["1.1.0"],"fixed_in":[]}]};
+    var VULNLOG_DATA = {"format_version":1,"project":{"organization":"Acme Corp","name":"Acme Web App","author":"Security Team"},"generated_at":"2026-05-02T10:30:00Z","vulnlog_version":"1.2.3-test","inputs":["frontend.vl","backend.vl"],"filter":{"as_of":"1.1.0","tags":["production"],"reporter":"trivy","states":["open","accepted"],"verdicts":["affected"],"dispositions":["wont fix"]},"entries":[{"primary_id":"CVE-2026-1111","aliases":["GHSA-aaaa-bbbb-cccc"],"state":"open","verdict":"affected","severity":"critical","disposition":"will fix","justification":null,"description":"Critical RCE in example-lib","analysis":"Confirmed exploitable on the public ingress path; patch in progress.","releases":["1.0.0","1.1.0"],"fixed_in":["1.2.0"]},{"primary_id":"CVE-2026-5555","aliases":[],"state":"under investigation","verdict":null,"severity":null,"disposition":null,"justification":null,"description":"Unbounded recursion in the XML parser","analysis":null,"releases":["1.1.0"],"fixed_in":[]},{"primary_id":"CVE-2026-4444","aliases":[],"state":"accepted","verdict":"affected","severity":"high","disposition":"wont fix","justification":null,"description":"Prototype pollution in a build-time helper","analysis":"Build-time only; no upstream fix and no runtime exposure.","releases":["1.1.0"],"fixed_in":[]},{"primary_id":"CVE-2026-3333","aliases":[],"state":"resolved","verdict":"affected","severity":"medium","disposition":null,"justification":null,"description":"DoS via large payload","analysis":"Mitigated by request size limits at the edge.","releases":["1.0.0"],"fixed_in":["1.0.1"]},{"primary_id":"CVE-2026-2222","aliases":[],"state":"not applicable","verdict":"not affected","severity":null,"disposition":null,"justification":"vulnerable code not in execute path","description":null,"analysis":null,"releases":["1.1.0"],"fixed_in":[]}]};
     (function () {
         var COLUMN_META = {
             ids: {label: 'IDs', width: '16%', tooltip: 'Vulnerability identifiers (CVE, GHSA, SNYK)'},
@@ -836,10 +836,10 @@
                 var verdictSpan = document.createElement('span');
                 verdictSpan.appendChild(labelSpan('Verdict'));
                 verdictSpan.appendChild(document.createTextNode(label_(e.verdict)));
-                if (e.verdict_detail) {
+                if (e.justification) {
                     var note = document.createElement('span');
                     note.className = 'details-note';
-                    note.textContent = e.verdict_detail;
+                    note.textContent = label_(e.justification);
                     verdictSpan.appendChild(note);
                 }
                 meta.appendChild(verdictSpan);
@@ -870,11 +870,11 @@
             td.appendChild(meta);
 
             // Description (only if present)
-            if (e.short_description) {
+            if (e.description) {
                 var desc = document.createElement('div');
                 desc.className = 'details-block';
                 desc.appendChild(labelSpan('Description'));
-                desc.appendChild(document.createTextNode(e.short_description));
+                desc.appendChild(document.createTextNode(e.description));
                 td.appendChild(desc);
             }
 

@@ -96,7 +96,7 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "dev.vulnlog.lib.codec.impact.dto.ProjectDto",
+    "name": "dev.vulnlog.lib.codec.report.dto.ProjectDto",
     "allDeclaredFields": true,
     "allDeclaredConstructors": true,
     "allDeclaredMethods": true

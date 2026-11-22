@@ -12,6 +12,7 @@ import dev.vulnlog.lib.model.ReporterType
 import dev.vulnlog.lib.model.Severity
 import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.VerdictKind
+import dev.vulnlog.lib.model.VexJustification
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.reporting.Impact
 import dev.vulnlog.lib.model.reporting.ImpactEntry
@@ -87,7 +88,7 @@ private fun goldenFixture() =
                     state = WorkState.NOT_APPLICABLE,
                     aliases = emptySet(),
                     shortDescription = null,
-                    impact = Impact.NotAffected("vulnerable code not in execute path"),
+                    impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH),
                     disposition = null,
                     analysis = null,
                     reportFor = setOf(Release("1.1.0")),

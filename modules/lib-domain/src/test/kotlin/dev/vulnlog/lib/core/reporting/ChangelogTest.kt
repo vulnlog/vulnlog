@@ -176,7 +176,13 @@ class ChangelogTest :
             }
 
             test("counts an entry without a severity in the total only") {
-                val entries = listOf(ChangelogEntry(primaryId = first, impact = Impact.NotAffected("reason")))
+                val entries =
+                    listOf(
+                        ChangelogEntry(
+                            primaryId = first,
+                            impact = Impact.NotAffected(VexJustification.VULNERABLE_CODE_NOT_PRESENT),
+                        ),
+                    )
 
                 val summary = summarize(entries)
 

@@ -836,10 +836,10 @@
                 var verdictSpan = document.createElement('span');
                 verdictSpan.appendChild(labelSpan('Verdict'));
                 verdictSpan.appendChild(document.createTextNode(label_(e.verdict)));
-                if (e.verdict_detail) {
+                if (e.justification) {
                     var note = document.createElement('span');
                     note.className = 'details-note';
-                    note.textContent = e.verdict_detail;
+                    note.textContent = label_(e.justification);
                     verdictSpan.appendChild(note);
                 }
                 meta.appendChild(verdictSpan);
@@ -870,11 +870,11 @@
             td.appendChild(meta);
 
             // Description (only if present)
-            if (e.short_description) {
+            if (e.description) {
                 var desc = document.createElement('div');
                 desc.className = 'details-block';
                 desc.appendChild(labelSpan('Description'));
-                desc.appendChild(document.createTextNode(e.short_description));
+                desc.appendChild(document.createTextNode(e.description));
                 td.appendChild(desc);
             }
 

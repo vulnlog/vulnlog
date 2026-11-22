@@ -1,7 +1,7 @@
 // Copyright the Vulnlog contributors
 // SPDX-License-Identifier: Apache-2.0
 
-package dev.vulnlog.lib.codec.impact.dto
+package dev.vulnlog.lib.codec.report.dto
 
 data class ProjectDto(
     val organization: String,

@@ -38,11 +38,6 @@ import dev.vulnlog.lib.model.Tag
 import dev.vulnlog.lib.model.TagEntry
 import dev.vulnlog.lib.model.Verdict
 import dev.vulnlog.lib.model.VexJustification
-import dev.vulnlog.lib.model.VexJustification.COMPONENT_NOT_PRESENT
-import dev.vulnlog.lib.model.VexJustification.INLINE_MITIGATIONS_ALREADY_EXIST
-import dev.vulnlog.lib.model.VexJustification.VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY
-import dev.vulnlog.lib.model.VexJustification.VULNERABLE_CODE_NOT_IN_EXECUTE_PATH
-import dev.vulnlog.lib.model.VexJustification.VULNERABLE_CODE_NOT_PRESENT
 import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.VulnerabilityEntry
 import dev.vulnlog.lib.model.VulnlogFile
@@ -317,14 +312,8 @@ object DtoV1Mapper {
         }
 
     private fun parseVexJustification(justification: String?): VexJustification =
-        when (justification) {
-            "component not present" -> COMPONENT_NOT_PRESENT
-            "inline mitigations already exist" -> INLINE_MITIGATIONS_ALREADY_EXIST
-            "vulnerable code cannot be controlled by adversary" -> VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY
-            "vulnerable code not in execute path" -> VULNERABLE_CODE_NOT_IN_EXECUTE_PATH
-            "vulnerable code not present" -> VULNERABLE_CODE_NOT_PRESENT
-            else -> throw IllegalArgumentException("Invalid justification: $justification")
-        }
+        VexJustification.entries.firstOrNull { canonical(it) == justification }
+            ?: throw IllegalArgumentException("Invalid justification: $justification")
 
     private fun verdictToString(verdict: Verdict): String? =
         when (verdict) {
@@ -344,17 +333,7 @@ object DtoV1Mapper {
 
     private fun justificationToString(verdict: Verdict): String? =
         when (verdict) {
-            is Verdict.NotAffected -> {
-                when (verdict.justification) {
-                    COMPONENT_NOT_PRESENT -> "component not present"
-                    INLINE_MITIGATIONS_ALREADY_EXIST -> "inline mitigations already exist"
-                    VULNERABLE_CODE_CANNOT_BE_CONTROLLED_BY_ADVERSARY ->
-                        "vulnerable code cannot be controlled by adversary"
-
-                    VULNERABLE_CODE_NOT_IN_EXECUTE_PATH -> "vulnerable code not in execute path"
-                    VULNERABLE_CODE_NOT_PRESENT -> "vulnerable code not present"
-                }
-            }
+            is Verdict.NotAffected -> canonical(verdict.justification)
 
             else -> null
         }

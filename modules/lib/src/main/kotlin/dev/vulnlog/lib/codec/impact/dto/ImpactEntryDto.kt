@@ -13,10 +13,9 @@ data class ImpactEntryDto(
     val verdict: String?,
     val severity: String?,
     val disposition: String?,
-    @param:JsonProperty("verdict_detail")
-    val verdictDetail: String?,
-    @param:JsonProperty("short_description")
-    val shortDescription: String?,
+    /** The justification of an entry that is not affected. */
+    val justification: String?,
+    val description: String?,
     val analysis: String?,
     val releases: List<String>,
     @param:JsonProperty("fixed_in")

@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.model.reporting
 
 import dev.vulnlog.lib.model.Severity
+import dev.vulnlog.lib.model.VexJustification
 
 sealed interface Impact {
     data object Unknown : Impact
@@ -13,6 +14,6 @@ sealed interface Impact {
     ) : Impact
 
     data class NotAffected(
-        val reason: String,
+        val justification: VexJustification,
     ) : Impact
 }
