@@ -3,14 +3,14 @@
 
 package dev.vulnlog.lib.render
 
-import dev.vulnlog.lib.app.ChangelogOutcome
-import dev.vulnlog.lib.app.FilterRejected
-import dev.vulnlog.lib.app.ProjectsDiffer
+import dev.vulnlog.lib.app.report.ChangelogFilterRejected
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogProjectsDiffer
 import dev.vulnlog.lib.finding.FindingSeverity
 
 fun renderChangelogMessages(outcome: ChangelogOutcome): List<Message> =
     when (outcome) {
-        is ProjectsDiffer, is FilterRejected -> emptyList()
+        is ChangelogProjectsDiffer, is ChangelogFilterRejected -> emptyList()
 
         is ChangelogOutcome.Fixed -> generatedMessages(outcome)
 
@@ -21,8 +21,8 @@ fun renderChangelogMessages(outcome: ChangelogOutcome): List<Message> =
 
 fun renderChangelogFailure(failed: ChangelogOutcome.Failed): List<Failure> =
     when (failed) {
-        is ProjectsDiffer -> listOf(renderProjectsDiffer(failed))
-        is FilterRejected -> renderFilterProblems(failed.problems)
+        is ChangelogProjectsDiffer -> listOf(renderProjectsDiffer(failed))
+        is ChangelogFilterRejected -> renderFilterProblems(failed.problems)
     }
 
 private fun generatedMessages(outcome: ChangelogOutcome.Generated): List<Message> {

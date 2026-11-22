@@ -3,9 +3,9 @@
 
 package dev.vulnlog.lib.render
 
-import dev.vulnlog.lib.app.ChangelogOutcome
-import dev.vulnlog.lib.app.FilterRejected
-import dev.vulnlog.lib.app.ProjectsDiffer
+import dev.vulnlog.lib.app.report.ChangelogFilterRejected
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogProjectsDiffer
 import dev.vulnlog.lib.core.filter.FilterProblem
 import dev.vulnlog.lib.core.filter.ResolvedFilter
 import dev.vulnlog.lib.model.Project
@@ -55,7 +55,7 @@ class ChangelogMessagesTest :
         }
 
         test("a failed run reports nothing besides its failure") {
-            val failed = listOf(ProjectsDiffer(emptyList()), FilterRejected(emptyList()))
+            val failed = listOf(ChangelogProjectsDiffer(emptyList()), ChangelogFilterRejected(emptyList()))
 
             val messages = failed.flatMap(::renderChangelogMessages)
 
@@ -64,9 +64,9 @@ class ChangelogMessagesTest :
 
         test("words differing projects and a rejected filter like the impact report") {
             val problems = listOf(FilterProblem.UnknownReporter("bogus"))
-            val differ = ProjectsDiffer(listOf(ACME, ACME.copy(name = "Other")))
+            val differ = ChangelogProjectsDiffer(listOf(ACME, ACME.copy(name = "Other")))
 
-            val failures = listOf(differ, FilterRejected(problems)).map(::renderChangelogFailure)
+            val failures = listOf(differ, ChangelogFilterRejected(problems)).map(::renderChangelogFailure)
 
             failures shouldBe listOf(listOf(renderProjectsDiffer(differ)), renderFilterProblems(problems))
         }

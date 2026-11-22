@@ -11,12 +11,12 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.choice
+import com.github.ajalt.clikt.parameters.types.enum
 import dev.vulnlog.cli.shell.validation.validateInputOrFail
-import dev.vulnlog.lib.app.ChangelogFormatRequest
-import dev.vulnlog.lib.app.ChangelogOutcome
-import dev.vulnlog.lib.app.ChangelogRequest
-import dev.vulnlog.lib.app.generateChangelog
+import dev.vulnlog.lib.app.report.ChangelogFormat
+import dev.vulnlog.lib.app.report.ChangelogOutcome
+import dev.vulnlog.lib.app.report.ChangelogRequest
+import dev.vulnlog.lib.app.report.generateChangelog
 import dev.vulnlog.lib.core.filter.FilterRequest
 import dev.vulnlog.lib.io.FileInputOption
 import dev.vulnlog.lib.io.FileOutputOption
@@ -69,7 +69,7 @@ class ChangelogReportCommand : CliktCommand(name = "changelog") {
         help = "Report only the vulnerabilities this release shipped a fix for.",
     )
 
-    val format: ChangelogFormatRequest by option(
+    val format: ChangelogFormat by option(
         "--format",
         help =
             """
@@ -77,8 +77,8 @@ class ChangelogReportCommand : CliktCommand(name = "changelog") {
             'text' (default) reads in a terminal.
             'markdown' renders one section per release, ready to paste into a changelog file.
             """.trimIndent(),
-    ).choice(ChangelogFormatRequest.byToken, ignoreCase = true)
-        .default(ChangelogFormatRequest.Text)
+    ).enum<ChangelogFormat> { it.token }
+        .default(ChangelogFormat.TEXT)
 
     val brief: Boolean by option(
         "--brief",
