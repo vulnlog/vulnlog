@@ -12,7 +12,8 @@ docker run --rm -v $(pwd):/work ghcr.io/vulnlog/vulnlog validate /work/acme-shop
 
 ## Build locally
 
-Make sure the native image is available under `build/native/nativeCompile/vulnlog`. If not use the Graal 25 JDK to build it with `./gradlew nativeCompile --no-configuration-cache` first.
+Make sure the native image is available under `build/native/nativeCompile/vulnlog`. If not, build it first as described
+in [Build the native binary](../CONTRIBUTING.md#build-the-native-binary).
 
 Build the Docker image locally:
 
