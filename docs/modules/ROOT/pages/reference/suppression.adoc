@@ -131,7 +131,7 @@ Every other reporter except `other` gets a file in the generic Vulnlog JSON form
 | `dependency-check`
 | OWASP Dependency-Check
 | `dependency-check-suppressions.xml`
-| CVE
+| CVE, GHSA
 
 | `cargo-audit`
 | cargo-audit
@@ -165,6 +165,8 @@ Every other reporter except `other` gets a file in the generic Vulnlog JSON form
 |===
 
 In the generic format, the file of a reporter is `<reporter>.generic.json`, for example `trivy.generic.json`.
+
+Dependency-Check matches CVE IDs with `cve` rules and GHSA IDs with exact `vulnerabilityName` rules.
 
 Every format except `audit.toml` carries the entry's `analysis` as the reason and the expiry date.
 The `audit.toml` file lists only the IDs.

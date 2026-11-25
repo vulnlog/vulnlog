@@ -4,6 +4,7 @@
 package dev.vulnlog.lib.codec.suppression.dependencycheck
 
 import dev.vulnlog.lib.model.Purl
+import dev.vulnlog.lib.model.VulnId
 import dev.vulnlog.lib.model.suppression.SuppressionEncodingProblem
 import dev.vulnlog.lib.model.suppression.SuppressionList
 import java.time.LocalDate
@@ -11,10 +12,13 @@ import java.time.LocalDate
 private const val REGEX_METACHARACTERS = "\\^$.|?*+()[]{}"
 
 internal object DependencyCheckSuppressionEncoder {
-    /** XML 1.0 cannot represent these characters, even with numeric character references. */
+    /** Check all entries, including lists constructed directly rather than through format filtering. */
     fun validate(list: SuppressionList): List<SuppressionEncodingProblem> =
         list.entries.flatMap { entry ->
             buildList {
+                if (elementName(entry.id) == null) {
+                    add(SuppressionEncodingProblem.UnsupportedIdType(list.format, entry.id))
+                }
                 entry.reason
                     ?.codePoints()
                     ?.filter { !isXmlCharacter(it) }
@@ -36,13 +40,15 @@ internal object DependencyCheckSuppressionEncoder {
                 // Vulnlog includes the expiry day; Dependency-Check stops at the start of `until`.
                 val until =
                     entry.expiresAt?.let { " until=\"${it.plusDays(1).toString().removePrefix("+")}Z\"" }.orEmpty()
+                // validate() rejects unsupported IDs before encoding begins, even for direct callers.
+                val element = requireNotNull(elementName(entry.id))
                 // The schema allows one packageUrl per suppress element.
                 val packageUrls = entry.packages.map(::toPackageUrlElement).ifEmpty { listOf(null) }
                 packageUrls.forEach { packageUrl ->
                     appendLine("    <suppress$until>")
                     entry.reason?.let { appendLine("        <notes>${escapeXml(it)}</notes>") }
                     packageUrl?.let { appendLine("        $it") }
-                    appendLine("        <cve>${escapeXml(entry.id.id)}</cve>")
+                    appendLine("        <$element>${escapeXml(entry.id.id)}</$element>")
                     appendLine("    </suppress>")
                 }
             }
@@ -70,6 +76,13 @@ internal object DependencyCheckSuppressionEncoder {
                 if (char in REGEX_METACHARACTERS) append('\\')
                 append(char)
             }
+        }
+
+    private fun elementName(id: VulnId): String? =
+        when (id) {
+            is VulnId.Cve -> "cve"
+            is VulnId.Ghsa -> "vulnerabilityName"
+            is VulnId.RustSec, is VulnId.Snyk -> null
         }
 
     private fun isXmlCharacter(codePoint: Int): Boolean =

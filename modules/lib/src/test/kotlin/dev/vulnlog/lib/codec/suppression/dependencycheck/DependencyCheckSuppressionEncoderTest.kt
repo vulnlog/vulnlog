@@ -143,6 +143,156 @@ class DependencyCheckSuppressionEncoderTest :
             }
         }
 
+        test("the encoder accepts every ID supported by the format") {
+            val ids = listOf(VulnId.Cve("CVE-2026-1111"), VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"))
+
+            ids.map { it::class }.toSet() shouldBe SuppressionFormat.DependencyCheck.vulnIdTypes
+            ids.forEach { id ->
+                val list = SuppressionList(SuppressionFormat.DependencyCheck, setOf(SuppressionEntry(id)))
+
+                SuppressionEncoder.validate(list) shouldBe emptyList()
+                validateSchema(SuppressionEncoder.encode(list))
+            }
+        }
+
+        test("GHSA writes one schema-valid suppression with notes and expiry for each package") {
+            val packages =
+                listOf(
+                    Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.9"),
+                    Purl.Maven("pkg:maven/org.apache.commons/commons-text@1.8"),
+                )
+            val entry =
+                SuppressionEntry(
+                    VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"),
+                    LocalDate.of(2026, 8, 1),
+                    "Only <test> tooling & builds.",
+                    packages,
+                )
+            val list = SuppressionList(SuppressionFormat.DependencyCheck, setOf(entry))
+
+            val xml = SuppressionEncoder.encode(list)
+
+            validateSchema(xml)
+            val document = parse(xml)
+            document.getElementsByTagName("suppress").length shouldBe 2
+            document.getElementsByTagName("cve").length shouldBe 0
+            document.textsOf("vulnerabilityName") shouldBe List(2) { "GHSA-aaaa-bbbb-cccc" }
+            document.textsOf("notes") shouldBe List(2) { "Only <test> tooling & builds." }
+            document.textsOf("packageUrl") shouldBe packages.map { it.value }
+            val suppressions = document.getElementsByTagName("suppress")
+            for (index in 0 until suppressions.length) {
+                suppressions
+                    .item(index)
+                    .attributes
+                    .getNamedItem("until")
+                    .nodeValue shouldBe "2026-08-02Z"
+            }
+        }
+
+        listOf(
+            Triple(
+                "pkg:maven/org.springframework/spring-beans",
+                "pkg:maven/org.springframework/spring-beans@5.3.15",
+                "pkg:maven/org.springframework/spring-beans-extra@5.3.15",
+            ),
+            Triple("pkg:npm/%40babel/core", "pkg:npm/%40babel/core@7.24.0", "pkg:npm/%40babel/core-js@7.24.0"),
+            Triple(
+                "pkg:deb/debian/xz-utils?arch=amd64",
+                "pkg:deb/debian/xz-utils@5.4.1?arch=amd64",
+                "pkg:deb/debian/xz-utils@5.4.1?arch=arm64",
+            ),
+        ).forEach { (versionless, found, otherPackage) ->
+            test("GHSA retains versionless package matching without making its ID a regex: $versionless") {
+                val entry =
+                    SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"), packages = listOf(Purl.Generic(versionless)))
+                val list = SuppressionList(SuppressionFormat.DependencyCheck, setOf(entry))
+
+                val xml = SuppressionEncoder.encode(list)
+
+                validateSchema(xml)
+                val document = parse(xml)
+                val packageUrl = document.getElementsByTagName("packageUrl").item(0)
+                packageUrl.attributes.getNamedItem("regex").nodeValue shouldBe "true"
+                val pattern = Regex(packageUrl.textContent)
+                pattern.matches(found) shouldBe true
+                pattern.matches(versionless) shouldBe false
+                pattern.matches(otherPackage) shouldBe false
+                val id = document.getElementsByTagName("vulnerabilityName").item(0)
+                id.textContent shouldBe "GHSA-aaaa-bbbb-cccc"
+                id.attributes.length shouldBe 0
+                document.getElementsByTagName("cve").length shouldBe 0
+            }
+        }
+
+        test("GHSA uses vulnerabilityName instead of cve") {
+            val xml = encodeGhsa()
+
+            validateSchema(xml)
+            val document = parse(xml)
+            document.getElementsByTagName("vulnerabilityName").item(0).textContent shouldBe "GHSA-aaaa-bbbb-cccc"
+            document.getElementsByTagName("cve").length shouldBe 0
+        }
+
+        test("GHSA expiry becomes until on the following day") {
+            val xml = encodeGhsa(expiresAt = LocalDate.of(2026, 8, 1))
+
+            validateSchema(xml)
+            parse(xml)
+                .getElementsByTagName("suppress")
+                .item(0)
+                .attributes
+                .getNamedItem("until")
+                .nodeValue shouldBe
+                "2026-08-02Z"
+        }
+
+        test("GHSA without expiry has no until attribute") {
+            val xml = encodeGhsa()
+
+            parse(xml)
+                .getElementsByTagName("suppress")
+                .item(0)
+                .attributes
+                .getNamedItem("until") shouldBe null
+        }
+
+        test("GHSA notes preserve escaped analysis") {
+            val reason = "Reviewed <code> & build tooling."
+            val xml = encodeGhsa(reason = reason)
+
+            validateSchema(xml)
+            parse(xml).getElementsByTagName("notes").item(0).textContent shouldBe reason
+        }
+
+        test("mixed CVE and GHSA entries retain their respective elements") {
+            val xml =
+                SuppressionEncoder.encode(
+                    SuppressionList(
+                        SuppressionFormat.DependencyCheck,
+                        setOf(
+                            SuppressionEntry(VulnId.Cve("CVE-2026-1111")),
+                            SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc")),
+                        ),
+                    ),
+                )
+
+            validateSchema(xml)
+            val document = parse(xml)
+            document.getElementsByTagName("cve").length shouldBe 1
+            document.getElementsByTagName("cve").item(0).textContent shouldBe "CVE-2026-1111"
+            document.getElementsByTagName("vulnerabilityName").length shouldBe 1
+            document.getElementsByTagName("vulnerabilityName").item(0).textContent shouldBe "GHSA-aaaa-bbbb-cccc"
+        }
+
+        test("GHSA exact-name rules omit regex and caseSensitive attributes") {
+            val xml = encodeGhsa()
+            val attributes = parse(xml).getElementsByTagName("vulnerabilityName").item(0).attributes
+
+            attributes.getNamedItem("regex") shouldBe null
+            attributes.getNamedItem("caseSensitive") shouldBe null
+            attributes.length shouldBe 0
+        }
+
         test("an empty list remains a schema-valid XML document") {
             val xml = SuppressionEncoder.encode(SuppressionList(SuppressionFormat.DependencyCheck, emptySet()))
 
@@ -157,6 +307,17 @@ private fun suppressedIn(purl: Purl) = SuppressionEntry(VulnId.Cve("CVE-2026-111
 
 private fun Document.textsOf(tagName: String): List<String> =
     getElementsByTagName(tagName).let { nodes -> (0 until nodes.length).map { nodes.item(it).textContent } }
+
+private fun encodeGhsa(
+    expiresAt: LocalDate? = null,
+    reason: String? = null,
+): String =
+    SuppressionEncoder.encode(
+        SuppressionList(
+            SuppressionFormat.DependencyCheck,
+            setOf(SuppressionEntry(VulnId.Ghsa("GHSA-aaaa-bbbb-cccc"), expiresAt, reason)),
+        ),
+    )
 
 private fun validateSchema(xml: String) {
     val factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
