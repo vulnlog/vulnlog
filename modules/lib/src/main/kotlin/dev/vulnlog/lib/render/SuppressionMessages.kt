@@ -59,6 +59,13 @@ fun renderSuppressionEncodingProblems(problems: List<SuppressionEncodingProblem>
                 formatName(problem.format)
             }
         when (problem) {
+            is SuppressionEncodingProblem.UnsupportedIdType ->
+                Failure(
+                    "cannot encode ${problem.id.canonical()} as $format: unsupported vulnerability ID type",
+                    "use a supported ID such as ${requiredIdTypes(problem.format)}, " +
+                        "or select the generic suppression format",
+                )
+
             is SuppressionEncodingProblem.UnencodableReason -> {
                 val character =
                     "U+" +
