@@ -1,0 +1,373 @@
+= Scan an SBOM with OpenVEX
+:description: Tutorial: write a minimal CycloneDX 1.7 SBOM by hand, generate an OpenVEX document with Vulnlog, and see how Trivy and Grype match its statements to the SBOM.
+
+In this tutorial, you scan a software bill of materials (SBOM) with Trivy and an OpenVEX document from Vulnlog, and you see which parts of the SBOM decide whether a statement applies.
+An SBOM is a list of the packages in an artifact.
+OpenVEX documents tell your customers' tools whether a release is affected by a vulnerability.
+You don't need an SBOM generator, because you write a minimal SBOM by hand.
+At the end, you scan the same release with Grype.
+It takes about 20 minutes.
+
+The example is the Acme Shop server 4.3.0.
+It uses Apache Commons Text 1.9, which has the Text4Shell vulnerability (`CVE-2022-42889`).
+You record that the vulnerability doesn't affect the server.
+
+== Before you start
+
+* Install the Vulnlog CLI.
+For instructions, see xref:get-started/install.adoc[Install Vulnlog].
+* Install Trivy.
+For instructions, see the https://trivy.dev/[Trivy documentation].
+This tutorial uses Trivy 0.76.2.
+* To try Grype, install it too.
+For instructions, see the https://github.com/anchore/grype[Grype documentation].
+This tutorial uses Grype 0.122.1.
+* Make sure you have internet access.
+Trivy and Grype download their vulnerability databases.
+
+== Write the SBOM
+
+Create an empty directory and change to it:
+
+[source,bash]
+----
+mkdir acme-shop-sbom
+cd acme-shop-sbom
+----
+
+Run every command in this tutorial from this directory.
+
+Create a file named `acme-shop-server.cdx.json` with this content:
+
+[source,json]
+----
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "bom-ref": "acme-shop-server",
+      "type": "application",
+      "group": "com.acme",
+      "name": "acme-shop-server",
+      "version": "4.3.0",
+      "purl": "pkg:maven/com.acme/acme-shop-server@4.3.0"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "commons-text",
+      "type": "library",
+      "group": "org.apache.commons",
+      "name": "commons-text",
+      "version": "1.9",
+      "purl": "pkg:maven/org.apache.commons/commons-text@1.9"
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "acme-shop-server",
+      "dependsOn": ["commons-text"]
+    }
+  ]
+}
+----
+
+This is a valid SBOM in the CycloneDX 1.7 format, with three parts:
+
+* `metadata.component` is the root component: the artifact the SBOM describes, the Acme Shop server 4.3.0.
+* `components` lists the packages in it, here Commons Text 1.9.
+* `dependencies` says that the server depends on Commons Text.
+Each entry refers to components by their `bom-ref`.
+
+Each component has a package URL (PURL), a standard way to name a package, its ecosystem, and its version in one string.
+Scanners compare these PURLs with the PURLs in an OpenVEX document.
+For the parts of a PURL, see xref:concepts/package-urls.adoc[Package URLs].
+
+== Scan the SBOM
+
+Scan the SBOM with Trivy:
+
+[source,bash]
+----
+trivy sbom acme-shop-server.cdx.json
+----
+
+The first scan takes a moment, because Trivy downloads its database.
+Trivy warns that a third-party SBOM may lead to inaccurate results, because a tool other than Trivy wrote it.
+You can ignore the warning in this tutorial.
+Trivy then lists `CVE-2022-42889` in `org.apache.commons:commons-text` 1.9, with the severity `CRITICAL`.
+
+== Create the Vulnlog file
+
+Create a Vulnlog file:
+
+[source,bash]
+----
+vulnlog init --organization "Acme Corp" --name "Acme Shop" --author "Acme Product Security Team" -o vulnlog.yaml
+----
+
+[source]
+----
+Created: vulnlog.yaml
+----
+
+Open `vulnlog.yaml` in your editor.
+Replace the line `releases: []` with a tag and the release:
+
+[source,yaml]
+----
+tags:
+  - id: backend
+    description: Java server application
+
+releases:
+  - id: 4.3.0
+    published_at: 2026-06-15
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.3.0"
+        tags: [backend]
+----
+
+The release PURL is the PURL of the root component in the SBOM.
+
+== Record your verdict
+
+Suppose you've analysed the finding.
+Text4Shell needs the `StringSubstitutor` class, and the Acme Shop server only uses `StringEscapeUtils`.
+
+Record the finding and your verdict:
+
+[source,bash]
+----
+vulnlog modify add vulnlog.yaml --vuln-id CVE-2022-42889 \
+  --name Text4Shell \
+  --alias GHSA-599f-7c49-w659 \
+  --description "Remote code execution through string interpolation in Apache Commons Text" \
+  --package "pkg:maven/org.apache.commons/commons-text@1.9" \
+  --reporter trivy --tag backend \
+  --analysis "Acme Shop only uses StringEscapeUtils from Commons Text. The server never calls StringSubstitutor, which performs the vulnerable interpolation." \
+  --verdict "not affected" \
+  --justification "vulnerable code not in execute path"
+----
+
+[source]
+----
+Added: CVE-2022-42889 to vulnlog.yaml
+----
+
+`GHSA-599f-7c49-w659` is the GitHub advisory for the same vulnerability.
+Grype reports this ID instead of the CVE, so you record it as an alias.
+
+The entry and the release PURL share the tag `backend`, so the entry's statement names this PURL.
+
+== Generate the OpenVEX document
+
+Generate the document:
+
+[source,bash]
+----
+vulnlog vex openvex vulnlog.yaml
+----
+
+[source]
+----
+Wrote: vex.json
+----
+
+Open `vex.json`.
+These are the parts of its statement that a scanner matches:
+
+[source,json]
+----
+      "vulnerability": {
+        "@id": "https://nvd.nist.gov/vuln/detail/CVE-2022-42889",
+        "name": "CVE-2022-42889",
+        "description": "Remote code execution through string interpolation in Apache Commons Text",
+        "aliases": [
+          "GHSA-599f-7c49-w659"
+        ]
+      },
+      "products": [
+        {
+          "@id": "pkg:maven/com.acme/acme-shop-server@4.3.0",
+          "identifiers": {
+            "purl": "pkg:maven/com.acme/acme-shop-server@4.3.0"
+          },
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/org.apache.commons/commons-text@1.9",
+              "identifiers": {
+                "purl": "pkg:maven/org.apache.commons/commons-text@1.9"
+              }
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+----
+
+== Scan with the OpenVEX document
+
+Scan the SBOM again, and pass the document to Trivy:
+
+[source,bash]
+----
+trivy sbom --vex vex.json --show-suppressed acme-shop-server.cdx.json
+----
+
+The list of vulnerabilities is empty.
+The table Suppressed Vulnerabilities lists `CVE-2022-42889` with the status `not_affected`, the justification `vulnerable_code_not_in_execute_path`, and the source `vex.json`.
+
+== See how the statement matches
+
+Trivy applies the statement because three things in it match the SBOM and the finding:
+
+[cols="1,2,2"]
+|===
+| Statement | Must equal | In this tutorial
+
+| `vulnerability`
+| The ID the scanner reports, in `name`, `@id`, or `aliases`
+| `CVE-2022-42889`
+
+| `products`
+| The PURL of the root component, `metadata.component.purl`
+| `pkg:maven/com.acme/acme-shop-server@4.3.0`
+
+| `subcomponents`
+| The PURL of the vulnerable component
+| `pkg:maven/org.apache.commons/commons-text@1.9`
+|===
+
+Trivy connects the vulnerable component to the root through `dependencies`.
+It follows the path from Commons Text up to the server, and it applies a statement whose product is a component on that path.
+
+To see that the product decides, change the version of the root component.
+In `acme-shop-server.cdx.json`, change `4.3.0` to `4.4.0` in `metadata.component.version` and `metadata.component.purl`.
+Then scan again:
+
+[source,bash]
+----
+trivy sbom --vex vex.json --show-suppressed acme-shop-server.cdx.json
+----
+
+Trivy reports `CVE-2022-42889` again, because the document has no statement for 4.4.0.
+Your verdict is about 4.3.0, and a scanner doesn't carry it over to other releases.
+Change the version back to `4.3.0`.
+
+If you delete the `dependencies` section, Trivy reports the finding too, because it can't connect Commons Text to the server.
+
+With Trivy 0.76.2, a statement about the root doesn't apply to packages of another ecosystem, and a statement about a container image doesn't apply to the SBOM of the image.
+Here, the root and Commons Text are both Maven packages, so the statement applies.
+These limitations come from how Trivy reads an SBOM.
+See xref:concepts/vulnlog-and-vex.adoc#scanner-support[What depends on the scanner].
+
+[[scan-with-grype]]
+== Scan with Grype
+
+Grype doesn't use the root component of a CycloneDX SBOM.
+So the statement for the Maven PURL doesn't apply when Grype scans `acme-shop-server.cdx.json`.
+Grype names the product after the source of an SBOM in the Syft JSON format, as `pkg:generic/<name>@<version>`.
+Syft JSON is the format of the SBOM generator Syft.
+You prepare the release for Grype with one more release PURL.
+
+Create a file named `acme-shop-server.syft.json` with this content:
+
+[source,json]
+----
+{
+  "artifacts": [
+    {
+      "id": "commons-text",
+      "name": "commons-text",
+      "version": "1.9",
+      "type": "java-archive",
+      "foundBy": "",
+      "locations": [],
+      "licenses": [],
+      "language": "java",
+      "cpes": [],
+      "purl": "pkg:maven/org.apache.commons/commons-text@1.9"
+    }
+  ],
+  "artifactRelationships": [],
+  "source": {
+    "id": "acme-shop-server",
+    "name": "acme-shop-server",
+    "version": "4.3.0",
+    "type": "directory",
+    "metadata": { "path": "." }
+  },
+  "distro": {},
+  "descriptor": { "name": "handwritten", "version": "1" },
+  "schema": {
+    "version": "16.1.0",
+    "url": "https://raw.githubusercontent.com/anchore/syft/main/schema/json/schema-16.1.0.json"
+  }
+}
+----
+
+It lists the same package as the CycloneDX SBOM.
+In `source`, `name` and `version` make the product `pkg:generic/acme-shop-server@4.3.0`.
+
+Add this PURL to the release in `vulnlog.yaml`, with the same tag:
+
+[source,yaml]
+----
+    purls:
+      - purl: "pkg:maven/com.acme/acme-shop-server@4.3.0"
+        tags: [backend]
+      - purl: "pkg:generic/acme-shop-server@4.3.0"
+        tags: [backend]
+----
+
+Generate the document again:
+
+[source,bash]
+----
+vulnlog vex openvex vulnlog.yaml
+----
+
+[source]
+----
+Wrote: vex.json
+----
+
+The statement now names both PURLs as products.
+
+Scan the Syft SBOM with Grype and the document:
+
+[source,bash]
+----
+grype sbom:acme-shop-server.syft.json --vex vex.json --show-suppressed
+----
+
+[source]
+----
+NAME          INSTALLED  FIXED IN  TYPE          VULNERABILITY        SEVERITY  EPSS          RISK
+commons-text  1.9        1.10.0    java-archive  GHSA-599f-7c49-w659  Critical  95.2% (99th)  89.5  (suppressed by VEX)
+----
+
+Grype reports the vulnerability as `GHSA-599f-7c49-w659` and marks it as suppressed by VEX.
+It matches the ID through the alias, the product through the source of the SBOM, and the subcomponent through the PURL of Commons Text.
+The EPSS and risk values depend on the current Grype database.
+Without `--show-suppressed`, Grype shows `No vulnerabilities found`.
+
+Trivy still applies the statement to the CycloneDX SBOM, because the statement keeps the Maven PURL.
+
+== What you've learned
+
+Now you can:
+
+* Write a minimal CycloneDX SBOM with a root component, its packages, and their dependencies.
+* Name the release PURL after the root component of the SBOM.
+* Tell which parts of an SBOM a scanner matches against an OpenVEX statement.
+* Prepare a release for Trivy and Grype in the same document.
+
+== Next steps
+
+* Choose the PURLs your customers' scanners see in xref:guides/add-and-publish-releases.adoc#choose-purls[Choose the PURL of each artifact].
+* Publish the document with your releases in xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents].
+* Learn how scanners use the document in xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX].

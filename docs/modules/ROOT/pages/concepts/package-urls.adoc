@@ -1,0 +1,136 @@
+= Package URLs
+:description: What a package URL (PURL) is, how Vulnlog and scanners use it to connect your verdicts to findings, and how it differs from a CPE.
+
+Vulnlog names every package and every artifact with a package URL (PURL), a standard way to name a package, its ecosystem, and its version in one string.
+PURLs connect your entries to what scanners find, so a PURL that's off by one character can stop a verdict from reaching a scan.
+
+== The parts of a PURL
+
+A PURL has this form:
+
+[source]
+----
+pkg:<type>/<namespace>/<name>@<version>?<qualifiers>#<subpath>
+----
+
+Two PURLs from Acme Shop show most of the parts.
+The second is the 4.3.0 container image, as a scanner writes it:
+
+[source]
+----
+pkg:maven/org.apache.commons/commons-text@1.9
+pkg:oci/acme-shop@sha256%3A23a5bff22a95119dc4bcef9422a20038eb3c2fd355f03928b02791273ff1cc27?repository_url=ghcr.io%2Facme%2Facme-shop
+----
+
+[cols="1,3,2"]
+|===
+| Part | What it says | In Acme Shop
+
+| Type
+| The ecosystem, for example `maven`, `npm`, `pypi`, `deb`, `oci`, or `golang`.
+The type `generic` is for software without an ecosystem.
+| `maven`, `oci`
+
+| Namespace
+| The group the name belongs to, if the ecosystem has one.
+For Maven, it's the `groupId`, for npm the scope, and for Debian packages the vendor, such as `debian`.
+| `org.apache.commons`
+
+| Name
+| The name of the package.
+| `commons-text`, `acme-shop`
+
+| Version
+| The version of the package.
+For a container image, it's the digest.
+| `1.9`, `sha256%3A23a5...`
+
+| Qualifiers
+| Extra facts in `key=value` form, for example the repository or the architecture.
+| `repository_url=ghcr.io%2Facme%2Facme-shop`
+
+| Subpath
+| A path inside the package.
+It's rarely used.
+| None
+|===
+
+Special characters in a part are percent-encoded.
+The colon in an image digest becomes `%3A`, and the slash in a repository URL becomes `%2F`.
+In a Vulnlog file, you can write the digest as `sha256:...`.
+Vulnlog encodes it in the OpenVEX documents it generates.
+
+The parts come from the package manager or the registry.
+The `groupId`, `artifactId`, and `version` in a `pom.xml` give the Maven PURL, and the name and version in a `package.json` give the npm PURL.
+So you can write the PURL of a package from the package itself, without looking it up anywhere.
+For the full rules, see the https://github.com/package-url/purl-spec[PURL specification].
+
+== Where Vulnlog uses PURLs
+
+A Vulnlog file has PURLs in two places, and they play different roles:
+
+* `packages` in an entry names the package that contains the vulnerability, for example Commons Text 1.9.
+Some suppression files use it to limit a suppression to that package.
+In an OpenVEX document, it becomes the subcomponent of a statement.
+* `purls` in a release names an artifact you ship, for example the Acme Shop container image.
+In an OpenVEX document, it becomes the product of a statement.
+
+`vulnlog validate` checks that each PURL is valid.
+It doesn't check that the package exists or that a scanner writes it the same way.
+
+== How a scanner compares PURLs
+
+A scanner gives every package and artifact it scans a PURL, and compares it with the PURLs in an OpenVEX statement.
+Trivy and Grype compare two PURLs this way:
+
+* The type, namespace, and name must be equal.
+* A PURL without a version matches every version.
+Otherwise, the versions must be equal.
+This is why `vulnlog validate` warns about a release PURL without a version.
+* Every qualifier in the statement's PURL must also be in the scanned PURL.
+Qualifiers that the statement leaves out don't matter.
+The statement for `pkg:oci/acme-shop@sha256%3A23a5...` matches the image although the scanner adds `repository_url`.
+
+The scanner decides which PURL a package gets.
+Two scanners can write the same package in different ways.
+For a Debian package with an epoch, for example, Trivy puts the epoch in the qualifier `epoch`, and Grype puts it in the version.
+The scanner also decides which PURL the scanned artifact gets.
+See xref:guides/add-and-publish-releases.adoc#choose-purls[Choose the PURL of each artifact].
+
+[[purls-and-cpes]]
+== PURLs and CPEs
+
+A CPE (Common Platform Enumeration) is an older naming scheme for software.
+The National Vulnerability Database (NVD) uses CPEs in its CVE records to say which products a vulnerability affects.
+Commons Text 1.9 is `cpe:2.3:a:apache:commons_text:1.9:*:*:*:*:*:*:*` as a CPE.
+
+[cols="1,2,2"]
+|===
+| | PURL | CPE
+
+| Names
+| A package, as its package manager distributes it
+| A product, as the NVD lists it
+
+| Comes from
+| The package manager's coordinates
+| The vendor and product names in the NVD dictionary
+
+| Ecosystem
+| Part of the PURL
+| Not part of the CPE
+
+| From the package alone
+| You can write it
+| A tool has to guess the vendor and product
+|===
+
+Because a CPE doesn't say which ecosystem a package comes from, a scanner that matches by CPE has to guess.
+It can report a vulnerability for a package that only shares a name with the affected product, or miss one whose CPE names a different vendor.
+A PURL names exactly one package, so matching by PURL avoids these guesses.
+
+Vulnlog uses PURLs only.
+If a scanner reports a finding through a CPE, record the PURL of the package the scanner names.
+
+* xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX]
+* xref:reference/project-and-releases.adoc#purl-entry[PURL entry]

@@ -93,6 +93,7 @@ See xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex].
 
 A PURL identifies a software package in a standard format, `pkg:<type>/<namespace>/<name>@<version>`.
 See the https://github.com/package-url/purl-spec[PURL specification].
+For how Vulnlog and scanners use PURLs, see xref:concepts/package-urls.adoc[Package URLs].
 
 [cols="2,2,1,1,4"]
 |===

@@ -225,6 +225,7 @@ Now you can:
 
 == Next steps
 
+* See how a scanner matches the document against an SBOM in xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX].
 * Publish the document with your releases and keep it up to date in xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents].
 * List the artifacts of all your releases in xref:guides/add-and-publish-releases.adoc[Add and publish releases].
 * Learn when to use OpenVEX and when suppression files in xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX].
