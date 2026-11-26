@@ -17,6 +17,38 @@ Canonical style::
 The one layout in which Vulnlog commands write a Vulnlog file.
 See xref:reference/cli-fmt.adoc[vulnlog fmt].
 
+cargo-audit::
+A command-line tool of the RustSec project that checks the `Cargo.lock` of a Rust project against the RustSec Advisory Database.
+Vulnlog writes `audit.toml` suppression files for it.
+Vulnlog isn't affiliated with cargo-audit or the RustSec project.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+CPE::
+Common Platform Enumeration, a naming scheme for products that the NVD uses in its CVE records, for example `cpe:2.3:a:apache:commons_text:1.9:*:*:*:*:*:*:*`.
+Unlike a PURL, a CPE doesn't name the ecosystem of a package.
+Vulnlog doesn't use CPEs.
+See xref:concepts/package-urls.adoc#purls-and-cpes[PURLs and CPEs].
+
+CVE::
+Common Vulnerabilities and Exposures, a public catalogue that gives each known vulnerability an ID such as `CVE-2022-42889`.
+The CVE Program assigns the IDs, and most scanners report vulnerabilities by them.
+Vulnlog accepts CVE IDs as entry IDs and aliases.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+CVSS::
+Common Vulnerability Scoring System, a score from 0.0 to 10.0 for how severe a vulnerability is in general.
+Vulnlog doesn't store CVSS scores, because your severity rates the vulnerability for your software.
+See xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out].
+
+CWE::
+Common Weakness Enumeration, a list of types of software weakness, such as injection.
+Vulnlog doesn't store CWE categories.
+See xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out].
+
+CycloneDX::
+A standard format for SBOMs.
+See xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX].
+
 Disposition::
 What you plan to do about a vulnerability that affects you: `will fix` or `wont fix`.
 See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
@@ -33,6 +65,24 @@ Generic suppression file::
 A JSON suppression file, named `<reporter>.generic.json`, that Vulnlog writes for reporters without a native format.
 See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
 
+GHSA::
+The ID of an advisory in the GitHub Advisory Database, for example `GHSA-599f-7c49-w659`.
+Grype and GitHub Dependabot report vulnerabilities by GHSA IDs.
+Vulnlog accepts GHSA IDs as entry IDs and aliases.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+GitHub Dependabot::
+A GitHub feature that alerts you to vulnerable dependencies in a repository.
+Vulnlog writes a generic suppression file for it.
+Vulnlog isn't affiliated with GitHub.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+Grype::
+An open-source vulnerability scanner by Anchore that also reads OpenVEX documents.
+Vulnlog writes a generic suppression file for it, and Grype reads the OpenVEX documents that Vulnlog generates.
+Vulnlog isn't affiliated with Grype or Anchore.
+See xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX].
+
 Impact report::
 An HTML page that shows which releases each vulnerability affects, how severely, and its state.
 See xref:reference/cli-report-impact.adoc[vulnlog report impact].
@@ -45,6 +95,17 @@ Not applicable::
 The state of an entry that is `not affected` and has no resolution.
 See xref:reference/verdicts-and-justifications.adoc#states[States].
 
+npm audit::
+A command of the npm CLI that checks the dependencies of a JavaScript project for vulnerabilities.
+Vulnlog writes a generic suppression file for it.
+Vulnlog isn't affiliated with npm.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+NVD::
+National Vulnerability Database, the database of the US National Institute of Standards and Technology (NIST) that adds CVSS scores and CPEs to CVE records.
+In OpenVEX documents, Vulnlog links each CVE to its NVD page.
+See xref:concepts/package-urls.adoc#purls-and-cpes[PURLs and CPEs].
+
 Open::
 The state of an entry that is `affected`, has no resolution, and isn't marked `wont fix`.
 See xref:reference/verdicts-and-justifications.adoc#states[States].
@@ -54,9 +115,22 @@ A JSON format for VEX statements.
 Vulnlog's OpenVEX output is incubating.
 See xref:reference/cli-vex-openvex.adoc[vulnlog vex openvex].
 
+OWASP Dependency-Check::
+An open-source scanner of the OWASP Foundation that finds known vulnerabilities in the dependencies of a project.
+Vulnlog writes `dependency-check-suppressions.xml` suppression files for it.
+Vulnlog isn't affiliated with Dependency-Check or OWASP.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
+OWASP Dependency-Track::
+An open-source platform of the OWASP Foundation that tracks the components and known vulnerabilities of many projects from their SBOMs.
+Vulnlog isn't affiliated with Dependency-Track or OWASP.
+See xref:concepts/where-vulnlog-fits.adoc[Where Vulnlog fits].
+
 Package URL (PURL)::
-A standard identifier for a software package, for example `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`.
-See xref:reference/project-and-releases.adoc[Project and releases].
+A standard identifier for a software package that names its ecosystem, name, and version, for example `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1`.
+Unlike a CPE, it identifies exactly one package.
+Vulnlog uses PURLs for the packages in entries and the artifacts of releases.
+See xref:concepts/package-urls.adoc[Package URLs].
 
 Project::
 The organisation, project name, and author of a Vulnlog file, recorded in `project`.
@@ -87,13 +161,38 @@ Resolved::
 The state of an entry with a verdict and a resolution.
 See xref:reference/verdicts-and-justifications.adoc#states[States].
 
+RUSTSEC::
+The ID of an advisory in the RustSec Advisory Database for Rust packages, in the form `RUSTSEC-<year>-<number>`.
+cargo-audit reports vulnerabilities by RUSTSEC IDs.
+Vulnlog accepts RUSTSEC IDs as entry IDs and aliases.
+See xref:reference/vulnerabilities.adoc[Vulnerabilities].
+
+SBOM::
+Software bill of materials, a list of the packages in an artifact, in a format such as CycloneDX.
+SBOM generators such as Syft and Trivy create SBOMs, and scanners read them.
+Vulnlog doesn't generate SBOMs.
+See xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX].
+
 Schema header::
 The optional first-line comment that points editors to the Vulnlog JSON schema.
 See xref:reference/file-format.adoc[File format].
 
+Semgrep::
+A code scanner by Semgrep, Inc. that also checks dependencies for known vulnerabilities.
+Vulnlog writes a generic suppression file for it.
+Vulnlog isn't affiliated with Semgrep.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
+
 Severity::
 How severe a vulnerability is for your software: `low`, `medium`, `high`, or `critical`.
+It can differ from the CVSS score, which rates the vulnerability in general.
 See xref:reference/verdicts-and-justifications.adoc[Verdicts and justifications].
+
+Snyk::
+A commercial security platform by Snyk Ltd that scans dependencies and reports vulnerabilities by its own IDs, for example `SNYK-JS-LODASH-1040724`.
+Vulnlog writes `.snyk` suppression files for it and accepts Snyk IDs as entry IDs and aliases.
+Vulnlog isn't affiliated with Snyk.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
 
 State::
 A label that Vulnlog derives from an entry's verdict, disposition, and resolution.
@@ -107,9 +206,21 @@ Suppression file::
 A file that Vulnlog generates so a scanner ignores a finding, for example `.trivyignore.yaml`.
 See xref:reference/suppression.adoc[Suppression].
 
+Syft::
+An open-source SBOM generator by Anchore.
+Grype reads the SBOMs it creates.
+Vulnlog isn't affiliated with Syft or Anchore.
+See xref:get-started/quickstart-openvex-sbom.adoc#scan-with-grype[Scan with Grype].
+
 Tag::
 A label you define in `tags` and attach to entries and release PURLs.
 See xref:reference/tags.adoc[Tags].
+
+Trivy::
+An open-source vulnerability scanner by Aqua Security that also generates SBOMs and reads OpenVEX documents.
+Vulnlog writes `.trivyignore.yaml` suppression files for it, and Trivy reads the OpenVEX documents that Vulnlog generates.
+Vulnlog isn't affiliated with Trivy or Aqua Security.
+See xref:reference/suppression.adoc#supported-scanners[Supported scanners].
 
 Under investigation::
 The state of an entry without a verdict.

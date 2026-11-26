@@ -107,6 +107,9 @@ With Trivy 0.76.2, statements don't apply when a scan sees the artifact in one o
 * A Go module in the `go.mod` of another project.
 * An image scanned from its software bill of materials (SBOM), the list of packages in the image, with `trivy sbom`.
 
+These limitations come from how Trivy identifies artifacts, not from the OpenVEX document.
+See xref:concepts/vulnlog-and-vex.adoc#scanner-support[What depends on the scanner].
+
 For a Gradle or npm application, publish it as a container image and use the image PURL.
 The statements then apply to every package in the image, including the libraries in a JAR.
 

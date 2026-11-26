@@ -27,6 +27,7 @@ It doesn't depend on a particular scanner, and you publish it with your releases
 It names each product by its package URL (PURL), and the vulnerable package in it.
 It covers entries with any verdict, including `affected` entries and entries still `under investigation`, because a customer needs to know about the risks as much as about the false alarms.
 A `suppress` block has no effect on it, so an entry you silence in your own scanner is still `affected` in the document.
+For what a PURL is, see xref:concepts/package-urls.adoc[Package URLs].
 
 The table shows how an entry becomes an OpenVEX status:
 
@@ -61,10 +62,48 @@ This is why each release in the Vulnlog file lists the PURLs of its artifacts, a
 Which artifacts Trivy can identify depends on the ecosystem.
 See xref:guides/add-and-publish-releases.adoc#choose-purls[Choose the PURL of each artifact].
 
+When a scanner reads a software bill of materials (SBOM), the list of packages in an artifact, the SBOM names the product.
+Trivy uses the PURL of the root component of the SBOM and of every component on the path from the vulnerable package up to it.
+Grype names the product differently.
+See <<scanner-support,What depends on the scanner>>.
+To try both, see xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX].
+
 Tags decide which release PURLs an entry's statements name.
 The XZ Utils finding is about a Debian package in the Acme Shop container image, `pkg:oci/acme-shop`.
 The server JAR doesn't contain it, so the entry has only the tag `container`, and so does the container PURL of each release.
 An entry without a tag gets no statement.
+
+[[scanner-support]]
+== What depends on the scanner
+
+Vulnlog writes the statements, and the scanner decides whether they apply.
+It decides which PURL the scanned artifact and each package get, which components it treats as the product, and how it compares them.
+For how PURLs are compared, see xref:concepts/package-urls.adoc[Package URLs].
+So when a statement doesn't apply, the cause can be in the Vulnlog file or in the scanner.
+In the Vulnlog file, it's often a missing tag or a release PURL that your customers' scanner doesn't see.
+
+Trivy marks its VEX support as experimental, so its behaviour can change between versions.
+See the Trivy documentation https://trivy.dev/latest/docs/supply-chain/vex/[Vulnerability Exploitability Exchange (VEX)].
+With Trivy 0.76.2, these limitations come from how Trivy reads an SBOM:
+
+* A statement about a container image doesn't apply when you scan the SBOM of the image instead of the image.
+The same statement applies when you scan the image itself.
+See the Trivy discussion https://github.com/aquasecurity/trivy/discussions/10467[Different result for VEX between SBOM and image scanning].
+* A statement whose product is the root component of an SBOM applies only to packages of the root's ecosystem.
+For a root `pkg:maven/com.acme/acme-shop-server@4.3.0`, it applies to Maven packages, but not to an npm package in the same SBOM.
+See the Trivy discussion https://github.com/aquasecurity/trivy/discussions/11330[OpenVEX statements whose product is the SBOM root component are ignored by `trivy sbom` for packages of other ecosystems].
+
+The Trivy pull request https://github.com/aquasecurity/trivy/pull/11304[fix(sbom): set all OS orphan pkgs to parent] proposes a fix for both.
+
+Grype reads an SBOM differently.
+It doesn't use the root component of a CycloneDX SBOM to name the product.
+It names the product only after the source of a Syft JSON SBOM, as `pkg:generic/<name>@<version>`.
+So a statement about your application or image doesn't apply when Grype scans a CycloneDX SBOM, although the statement and the SBOM are both valid.
+See the Grype issue https://github.com/anchore/grype/issues/3476[What is actually being matched (Syft SBOM, Grype and vex)].
+
+A document that a scanner doesn't apply today is still correct.
+It tells your customers whether a release is affected, and a later scanner version can apply it.
+For how to check what a scanner applies, see xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX].
 
 == Why the dates matter
 
@@ -83,5 +122,7 @@ Because both files come from the same entry, a verdict you record reaches your s
 Suppression files keep your own pipeline quiet, and the OpenVEX document gives your customers the same verdict for the releases you ship.
 
 * xref:get-started/quickstart-openvex.adoc[Share your analysis with OpenVEX]
+* xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX]
 * xref:guides/generate-openvex-documents.adoc[Generate OpenVEX documents]
 * xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
+* xref:concepts/package-urls.adoc[Package URLs]

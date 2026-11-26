@@ -5,6 +5,7 @@
 ** xref:get-started/quickstart-report.adoc[Read the impact report]
 ** xref:get-started/quickstart-inquiry.adoc[Answer a vulnerability inquiry]
 ** xref:get-started/quickstart-openvex.adoc[Share your analysis with OpenVEX]
+** xref:get-started/quickstart-openvex-sbom.adoc[Scan an SBOM with OpenVEX]
 
 * How-to guides
 ** xref:get-started/install.adoc[Install Vulnlog]
@@ -55,4 +56,5 @@
 ** xref:concepts/why-git.adoc[Why your analysis lives in Git]
 ** xref:concepts/vulnlog-and-your-scanner.adoc[Vulnlog and your scanner]
 ** xref:concepts/vulnlog-and-vex.adoc[Vulnlog and VEX]
+** xref:concepts/package-urls.adoc[Package URLs]
 ** xref:concepts/what-vulnlog-leaves-out.adoc[What Vulnlog leaves out]
