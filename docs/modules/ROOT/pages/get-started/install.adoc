@@ -15,7 +15,7 @@ Install script::
 +
 --
 On Linux and macOS, the install script downloads the latest release and installs it for your user.
-It needs `curl` and `unzip`.
+It needs `curl`, `unzip`, and `sha256sum` or `shasum`.
 
 . Run the script:
 +
@@ -25,6 +25,7 @@ $ curl -fsSL vulnlog.dev/install | sh
 ----
 +
 The script detects your operating system and processor and installs the native binary to `~/.local/bin`.
+It checks the download against the `SHA256SUMS` file of the release and stops if they don't match.
 If `~/.local/bin` doesn't exist, it uses `~/bin`.
 
 . If the script reports that the directory isn't in your `PATH`, add the `export` line it prints to your shell configuration, and open a new terminal.
