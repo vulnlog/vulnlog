@@ -17,13 +17,8 @@ updates:
       include: "scope"
     cooldown:
       default-days: 7
+    # All actions use commit SHA pins. Dependabot bumps the SHA and the version comment together.
     groups:
-      # SHA-pinned, so each bump needs a manual check against the upstream release.
-      security-scanners:
-        patterns:
-          - "snyk/actions*"
-          - "aquasecurity/trivy-action"
-          - "github/codeql-action*"
       github-actions:
         patterns:
           - "*"
