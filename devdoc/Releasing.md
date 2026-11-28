@@ -1,214 +1,159 @@
 # Releasing
 
+You release by pushing a version tag. [GitHub Actions pipelines](GitHub-Action-Pipelines.md#release) explains what
+each tag publishes.
+
+## Branches
+
+- `main` holds all development, including the docs of the next release.
+- `release/<major.minor>`, for example `release/0.19`, starts at the release commit of `v<major.minor>.0`. It holds
+  the published docs and website of that release line and the fixes for its patch releases.
+
 ## Developer builds
 
-Running or building locally without passing a version produces a developer build automatically:
+A build without a version gets `SNAPSHOT+<git short hash>`, so you can trace it to its commit:
 
 ```terminal
 ./gradlew :cli-app:run
-# prints: Vulnlog SNAPSHOT+a1b2c3d
 ```
 
-The version is `SNAPSHOT+<git-short-hash>`, so it is always traceable to a specific commit.
+## Release a minor version
 
-## How the release pipeline works
+The examples release `v0.20.0`.
 
-Releases are driven by version tags. Pushing a tag matching `v[0-9]+.[0-9]+.[0-9]+` (final) or
-`v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+` (release candidate) starts the
-[`release.yaml`](../.github/workflows/release.yaml) pipeline. It publishes in stages, ordered
-so that nothing irreversible happens while an earlier stage can still fail:
+### 1. Prepare the release
 
-1. **Gate**: `./gradlew check :buildSrc:check` and the three native images (Linux, macOS,
-   Windows) build in parallel. If anything fails, nothing is published.
-2. **GitHub release**: created as pre-release with the JVM distribution zip, the three native
-   image zips, the SBOMs of the JVM distribution, the native images and the Gradle plugin, the
-   install scripts, and `SHA256SUMS` attached. Their build provenance and SBOM attestations are
-   signed before the release is created. A GitHub release can still be edited or deleted if
-   something is wrong; an attestation cannot be retracted.
-3. **Docker image, website deploy, and Homebrew formula bump** run in parallel. The Docker
-   stage also attests the image and its SBOM and attaches the container SBOM to the GitHub
-   release.
-4. **Gradle plugin**: the jar and its SBOM are attested, then the plugin is published to the
-   Gradle Plugin Portal last, because a Portal publication cannot be retracted.
-5. **Announcement**: a GitHub Discussions post, once everything else is out.
+Create the preparation branch:
 
-The pipeline compares the pushed tag against all existing version tags. Only the highest
-version ("latest") deploys the website, moves the Docker `:latest` tag, and bumps the
-Homebrew formula. A bug fix release for an older minor (for example `v0.15.1` after `v0.16.0`
-is out) skips those stages automatically; a bug fix for the current minor runs them.
+```terminal
+git switch main
+git pull
+git switch -c release-prep/0.20.0
+```
 
-| Stage                           | Latest final | Patch of older minor | RC tag  |
-|---------------------------------|--------------|----------------------|---------|
-| Check and native images (gate)  | yes          | yes                  | yes     |
-| GitHub release (pre-release)    | yes          | yes                  | yes     |
-| Docker image `:<version>`       | yes          | yes                  | yes     |
-| Docker image `:latest`          | yes          | skipped              | skipped |
-| Website and docs deploy         | yes          | skipped              | skipped |
-| Homebrew formula bump dispatch  | yes          | skipped              | skipped |
-| Gradle plugin publication       | yes          | yes                  | skipped |
-| GitHub Discussions announcement | yes          | yes                  | skipped |
+Then:
 
-The pipeline never writes to the repository: `CHANGELOG.md` and the docs version are prepared
-by the maintainer in a release preparation PR before tagging.
-
-## Branch model
-
-- **`main`**: all development, including documentation for the next release.
-- **`release/<major.minor>`** (for example `release/0.16`): created from the release commit
-  when `v<major.minor>.0` is cut. Holds everything related to that release line: the published
-  docs (Antora sources them from the branches listed in
-  [`antora-playbook.yml`](../antora-playbook.yml)) and the cherry-picked fixes for patch
-  releases.
-
-## Feature release (vX.Y.0)
-
-### 1. Open the release preparation PR
-
-All changes to `main` go through PRs, including release preparation.
-
-- Create a branch from `main`, for example `release-prep/0.16.0`.
-- Bump `version` and `vulnlog-version` in `docs/antora.yml` to the new version.
-- Add the upcoming `release/0.16` branch to the `branches` list in `antora-playbook.yml`
-  (and drop the oldest entry if its docs should no longer be published).
-- Update the changelog. The new version is passed with `--tag` because the git tag does not
-  exist yet:
+- In `docs/antora.yml`, set `version` to `0.20` and `vulnlog-version` to `0.20.0`.
+- In `antora-playbook.yml`, add `release/0.20` to the branches. Remove the oldest one if its docs shouldn't stay
+  online.
+- Add the changelog section. The tag doesn't exist yet, so pass it with `--tag`:
 
   ```terminal
   git-cliff --config .github/changelog.toml \
-    --unreleased --tag v0.16.0 \
+    --unreleased --tag v0.20.0 \
     --github-token "$(gh auth token)" \
     --prepend CHANGELOG.md
   ```
 
-- Add the compare link for the new version at the top of the link block at the bottom of
-  `CHANGELOG.md`, following the existing convention (label without the `v` prefix, URL tags
-  with it):
+- Add the compare link at the top of the link block at the end of `CHANGELOG.md`:
 
   ```
-  [0.16.0]: https://github.com/vulnlog/vulnlog/compare/v0.15.1...v0.16.0
+  [0.20.0]: https://github.com/vulnlog/vulnlog/compare/v0.19.0...v0.20.0
   ```
 
-- `git-cliff` renders squashed PR titles verbatim, so fix any typos in the new section (see
-  [Pull Requests](Pull-Requests.md) for the title conventions).
-- Open the PR, get it green, and merge it.
+- git-cliff copies the PR titles as they are, so fix typos in the new section. See [Pull Requests](Pull-Requests.md).
 
-### 2. Optional: validate with a release candidate
+Open the PR and merge it.
 
-To validate the final binaries before cutting the release, tag the merge commit with an RC
-version first:
+### 2. Optionally, test a release candidate
+
+A release candidate publishes the binaries and a Docker image `:0.20.0-rc1`, and nothing else:
 
 ```terminal
-git checkout main && git pull
-git tag v0.16.0-rc1
-git push origin v0.16.0-rc1
+git switch main
+git pull
+git tag v0.20.0-rc1
+git push origin v0.20.0-rc1
 ```
 
-- The pipeline publishes a GitHub pre-release with all binaries and a Docker `:0.16.0-rc1`
-  image; everything else is skipped (see the table above).
-- Test the RC artifacts manually.
-- If the RC reveals a problem, fix it on `main` through a PR and push a fresh RC tag
-  (`v0.16.0-rc2`, and so on).
-- RC tags and their GitHub pre-releases can be deleted once the final release is out.
+Test the artifacts. If you find a problem, fix it on `main` through a PR and tag `v0.20.0-rc2`. Delete the release
+candidates once the final release is out.
 
-### 3. Create the release branch, then tag
+### 3. Create the release branch and tag
 
-The release branch must exist before the tag is pushed, because the website deploy builds the
-docs from the branches listed in `antora-playbook.yml`.
+Create the release branch first. The website deploy reads the docs and the website from it.
 
 ```terminal
-git checkout main && git pull
-git branch release/0.16
-git push origin release/0.16
-git tag v0.16.0
-git push origin v0.16.0
+git switch main
+git pull
+git switch -c release/0.20
+git push origin release/0.20
+git tag v0.20.0
+git push origin v0.20.0
 ```
 
-The pipeline runs all stages, including the ones skipped for the RC.
+### 4. Publish the GitHub release
 
-### 4. Finish the GitHub release
+The release starts as pre-release. Its body has GitHub's generated list of changes and a link to `CHANGELOG.md`.
 
-The release lands as pre-release. Its body contains GitHub's auto-generated "What's Changed"
-list plus a link to `CHANGELOG.md`.
+- Edit the body: fix typos, add highlights, and link to the docs. For notes grouped by commit type, run
+  `git-cliff --config .github/release-notes.toml --latest --github-token "$(gh auth token)"` and paste the output.
+- Untick "Set as a pre-release". For a patch of an older minor version, also untick "Set as the latest release".
 
-- Review the body in the GitHub UI and refine it: fix typos, add highlights, link to docs.
-- For a richer draft grouped by conventional-commit type, generate it locally and paste it in:
+### 5. Check the release
 
-  ```terminal
-  git-cliff --config .github/release-notes.toml \
-    --latest --github-token "$(gh auth token)"
-  ```
-
-- Un-flag the pre-release toggle to publish the release.
-
-### 5. After the release
-
-- Check that the Homebrew tap opened and merged its bump PR in
+- The Homebrew tap opened and merged its bump PR in
   [vulnlog/homebrew-vulnlog](https://github.com/vulnlog/homebrew-vulnlog).
-- Spot-check https://vulnlog.dev, the Docker `:latest` tag, and the
-  [Gradle Plugin Portal](https://plugins.gradle.org/plugin/dev.vulnlog.plugin) listing.
+- https://vulnlog.dev shows the new version.
+- The Docker image `:latest` and the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/dev.vulnlog.plugin)
+  have the new version.
 
-## Bug fix release (vX.Y.Z)
+## Release a patch version
 
-Fixes always land on `main` first (through normal PRs), then reach the release line by
-cherry-pick. The tag is pushed on the release branch.
+The examples release `v0.19.1`. Fixes land on `main` first and reach the release branch by cherry-pick.
 
-### 1. Open the patch preparation PR against the release branch
+### 1. Prepare the patch
 
-- Create a branch from `release/0.15`, for example `release-prep/0.15.1`.
-- Cherry-pick the fix commits from `main`.
-- Bump `vulnlog-version` in `docs/antora.yml` to `0.15.1` (leave `version` at `0.15`).
-- Prepend the changelog section, run from this branch so git-cliff picks up the cherry-picked
-  commits since `v0.15.0`:
+```terminal
+git switch release/0.19
+git pull
+git switch -c release-prep/0.19.1
+git cherry-pick <commit>
+```
+
+Then:
+
+- In `docs/antora.yml`, set `vulnlog-version` to `0.19.1`. Leave `version` at `0.19`.
+- Add the changelog section from this branch, so git-cliff sees the cherry-picked commits:
 
   ```terminal
   git-cliff --config .github/changelog.toml \
-    --unreleased --tag v0.15.1 \
+    --unreleased --tag v0.19.1 \
     --github-token "$(gh auth token)" \
     --prepend CHANGELOG.md
   ```
 
-- Add the compare link (`[0.15.1]: .../compare/v0.15.0...v0.15.1`) and fix typos as for a
-  feature release.
-- Open the PR against `release/0.15` and merge it.
+- Add the compare link `[0.19.1]: https://github.com/vulnlog/vulnlog/compare/v0.19.0...v0.19.1` and fix typos.
 
-### 2. Tag the patch release
+Open the PR against `release/0.19` and merge it.
+
+### 2. Tag the patch
 
 ```terminal
-git checkout release/0.15 && git pull
-git tag v0.15.1
-git push origin v0.15.1
+git switch release/0.19
+git pull
+git tag v0.19.1
+git push origin v0.19.1
 ```
 
-An RC first (`v0.15.1-rc1`) works here too, if the patch warrants validation.
+A release candidate, `v0.19.1-rc1`, works here too.
 
-The pipeline detects automatically whether `v0.15.1` is the highest version overall and skips
-the website deploy, the Docker `:latest` tag, and the Homebrew bump when it is not (see the
-table above). The GitHub release, the versioned Docker image, the Gradle plugin, and the
-announcement are published either way.
+### 3. Finish
 
-### 3. Port the changelog to main
+- Publish the GitHub release as in step 4 of a minor version.
+- `CHANGELOG.md` on `main` records every release. Add the same section and compare link there through a PR.
 
-`CHANGELOG.md` on `main` is the complete record of every release. Add the same `0.15.1`
-section and compare link there through a small PR.
+## Fix the live docs or website
 
-Then finish the GitHub release as described in the feature release steps.
+The live docs, website, and JSON schemas come from the release branch of the latest release.
 
-## Documentation
+1. Fix it on `main` through a PR. Once merged, check the result on https://stage.vulnlog.dev.
+2. Cherry-pick the fix to the newest release branch through a PR.
+3. Run [`deploy-website.yml`](../.github/workflows/deploy-website.yml) manually in the Actions tab.
 
-The published docs at https://vulnlog.dev/docs are built from the `release/*` branches listed
-in `antora-playbook.yml`; `main` is not a docs source. Docs for the next release are written
-on `main` and go live when the next release branch is created.
+The install scripts come from the assets of the latest release, so a change to them goes live with the next release.
 
-To fix the live docs between releases:
+## Delete stale files from the website
 
-- Fix them on `main` through a normal PR.
-- Cherry-pick the fix to the newest release branch through a PR.
-- Trigger the [`deploy-website.yml`](../.github/workflows/deploy-website.yml) workflow
-  manually from the Actions tab.
-
-## Manual website deployment
-
-The website and docs deploy automatically on releases of the latest version and refresh
-weekly after the security scan. For anything in between, trigger the
-[`deploy-website.yml`](../.github/workflows/deploy-website.yml) workflow manually from the
-Actions tab.
+Every website deploy lists the files in Bunny Storage that the site no longer has. Check that list in the log of the
+last deploy. If you want them gone, run `deploy-website.yml` manually with `delete-stale` ticked.
