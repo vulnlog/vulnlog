@@ -73,6 +73,7 @@ jobs:
             docs_relevant:
               - 'docs/**'
               - 'antora-playbook.yml'
+              - 'antora-local-playbook.yml'
               - 'package.json'
               - 'package-lock.json'
               - '.github/actions/build-docs/**'
@@ -117,6 +118,9 @@ jobs:
           fetch-depth: 0
       - name: Build docs
         uses: ./.github/actions/build-docs
+        with:
+          # The published playbook reads only the release branches, so a PR's docs changes need the local one.
+          playbook: ${{ github.event_name == 'pull_request' && 'antora-local-playbook.yml' || 'antora-playbook.yml' }}
 
   native-image:
     needs: [ detect-changes ]

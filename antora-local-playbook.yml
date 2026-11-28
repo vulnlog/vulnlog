@@ -13,6 +13,11 @@ content:
       start_path: docs
       edit_url: false
 
+runtime:
+  log:
+    # Fails the build on errors such as a broken xref. Warnings, such as an unreachable GitHub API, don't fail it.
+    failure_level: error
+
 asciidoc:
   attributes:
     # Previous and next page links at the bottom of each page, in navigation order.

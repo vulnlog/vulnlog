@@ -1,4 +1,4 @@
-# Builds the published site from the release branches. CI uses this playbook.
+# Builds the published site from the release branches. The website deploy and CI on `main` use this playbook.
 # Everything from 'asciidoc:' down is the same in antora-local-playbook.yml. Change both files together.
 site:
   title: Vulnlog Documentation
