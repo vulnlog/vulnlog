@@ -38,7 +38,7 @@ $ vulnlog --version
 vulnlog version {vulnlog-version}
 ----
 
-Native binaries are available for Linux on x86-64, macOS on Apple silicon, and Windows on x86-64.
+Native binaries are available for Linux on x86-64 and ARM64, macOS on Apple silicon, and Windows on x86-64.
 On other platforms, the script installs the JVM distribution instead, which needs Java 21 or later.
 To install the JVM distribution on a platform that has a native binary, pass `--jvm`:
 
@@ -80,7 +80,7 @@ Download::
 --
 Use this method on Windows, or when you can't run the install script.
 
-. On the https://github.com/vulnlog/vulnlog/releases[Vulnlog releases page], download the archive for your platform: `vulnlog-linux-amd64.zip`, `vulnlog-macos-aarch64.zip`, or `vulnlog-windows-amd64.zip`.
+. On the https://github.com/vulnlog/vulnlog/releases[Vulnlog releases page], download the archive for your platform: `vulnlog-linux-amd64.zip`, `vulnlog-linux-aarch64.zip`, `vulnlog-macos-aarch64.zip`, or `vulnlog-windows-amd64.zip`.
 . Extract the archive.
 . Move the `vulnlog` binary (`vulnlog.exe` on Windows) to a directory in your `PATH`.
 . Run `vulnlog --version` to check the installation.

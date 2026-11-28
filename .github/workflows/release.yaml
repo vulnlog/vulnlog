@@ -68,6 +68,8 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact-name: vulnlog-linux-amd64
+          - os: ubuntu-24.04-arm
+            artifact-name: vulnlog-linux-aarch64
           - os: macos-latest
             artifact-name: vulnlog-macos-aarch64
           - os: windows-latest

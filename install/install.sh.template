@@ -72,7 +72,7 @@ info "Detected platform: ${PLATFORM}"
 # -------------------------------------------------
 # Pick distribution
 # -------------------------------------------------
-SUPPORTED_NATIVE="linux-amd64 macos-aarch64 windows-amd64"
+SUPPORTED_NATIVE="linux-amd64 linux-aarch64 macos-aarch64 windows-amd64"
 case " $SUPPORTED_NATIVE " in
   *" $PLATFORM "*) ;;
   *)
