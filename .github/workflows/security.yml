@@ -12,9 +12,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  VULNLOG_VERSION: "0.19.0"
-
 jobs:
   vulnlog:
     name: Generate Vulnlog files
@@ -26,10 +23,9 @@ jobs:
         with:
           persist-credentials: false
 
+      # Installs the latest release, so the scan uses what users run.
       - name: Set up Vulnlog CLI
         uses: vulnlog/setup-vulnlog@50f94e5255fa62f3fbfa3204f17d4ade01723711 # v1.0.0
-        with:
-          version: ${{ env.VULNLOG_VERSION }}
 
       - name: Generate suppression files
         run: vulnlog suppress vulnlog.yaml
@@ -63,7 +59,7 @@ jobs:
             vulnlog-changelog-report.txt
 
   artifacts:
-    name: Build release artifacts
+    name: Build artifacts from main
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -140,7 +136,7 @@ jobs:
           sarif_file: snyk-results.sarif
 
   trivy:
-    name: Trivy Release Artifacts
+    name: Trivy artifacts from main
     needs: [ vulnlog, artifacts ]
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -206,7 +202,8 @@ jobs:
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
-          image-ref: ghcr.io/${{ github.repository }}:${{ env.VULNLOG_VERSION }}
+          # `:latest` moves only with the latest final release.
+          image-ref: ghcr.io/${{ github.repository }}:latest
           format: sarif
           output: trivy-image-results.sarif
           trivyignores: .trivyignore.yaml
