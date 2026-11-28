@@ -1,7 +1,7 @@
 [versions]
 # Disable until fully supported in JDK 25 with Kotlin 2.3.0
 #detektVersion = "1.23.7"
-cliktVersion = "5.2.0"
+cliktVersion = "5.2.1"
 cyclonedxVersion = "3.5.1"
 graalvmNativeBuildToolsVersion = "1.1.19"
 jacksonVersion = "3.3.0"
