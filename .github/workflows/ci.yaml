@@ -127,4 +127,42 @@ jobs:
 
   perf-test:
     needs: [ native-image ]
-    uses: ./.github/workflows/perf-test.yaml
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Fetch native binary
+        uses: ./.github/actions/fetch-native-binary
+      - name: Install hyperfine
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y hyperfine
+      - name: Run perf test
+        run: ./perf/perf-test.sh
+      - name: Upload perf results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: perf-results
+          path: perf/results/*.json
+          retention-days: 30
+
+  # The required status check, so adding or renaming a job doesn't touch the branch rules.
+  # Skipped jobs count as passed.
+  ci-ok:
+    if: always()
+    needs: [ pr-validation, detect-changes, check, docs, native-image, perf-test ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the results of all jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          case " $RESULTS " in
+            *" failure "* | *" cancelled "*) exit 1 ;;
+          esac
