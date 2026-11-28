@@ -5,6 +5,9 @@ name: Deploy website and docs
 # - workflow_dispatch for manual deploys from main
 # - workflow_run after the weekly security scan, to refresh the bundled reports
 # - push to main changing .vex/, so updated VEX documents go live without waiting for the next scan
+#
+# Every run lists the files in the storage zone that the site no longer has. Only a manual run
+# with `delete-stale` deletes them, because the zone may hold files this workflow never uploaded.
 
 on:
   push:
@@ -17,6 +20,11 @@ on:
         type: string
         default: ''
   workflow_dispatch:
+    inputs:
+      delete-stale:
+        description: "Delete the files in Bunny Storage that the site no longer has. Check the list of an earlier run first."
+        type: boolean
+        default: false
   # Safe here: Security Scanning runs only on schedule and dispatch, never on pull requests, so the
   # downloaded reports never come from untrusted code.
   workflow_run: # zizmor: ignore[dangerous-triggers]
@@ -152,5 +160,42 @@ jobs:
               --header "AccessKey: ${BUNNY_ACCESS_KEY}" \
               --upload-file "${file}" \
               "${endpoint}/${path}"
+            echo
+          done
+      - name: Find stale files in Bunny Storage
+        env:
+          BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
+          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
+          DELETE_STALE: ${{ inputs.delete-stale }}
+        working-directory: _site
+        run: |
+          set -euo pipefail
+          endpoint="${BUNNY_STORAGE_ZONE_REGION_ENDPOINT%/}"
+          # Percent-encodes each segment of the path `$1`, so names such as `a b.txt` work in a URL.
+          encode() { jq -rn --arg path "$1" '$path | split("/") | map(@uri) | join("/")'; }
+          # Prints the path of every file below the directory `$1`: empty for the root, else ending in `/`.
+          list_files() {
+            curl --silent --show-error --fail-with-body --header "AccessKey: ${BUNNY_ACCESS_KEY}" "${endpoint}/$(encode "$1")" \
+              | jq -r '.[] | [(if .IsDirectory then "d" else "f" end), .ObjectName] | @tsv' \
+              | while IFS=$'\t' read -r kind name; do
+                  if [ "$kind" = d ]; then list_files "$1$name/"; else printf '%s\n' "$1$name"; fi
+                done
+          }
+          stale=$(list_files "" | while IFS= read -r path; do [ -f "$path" ] || printf '%s\n' "$path"; done)
+          if [ -z "$stale" ]; then
+            echo "No stale files."
+            exit 0
+          fi
+          echo "Files in Bunny Storage that the site no longer has:"
+          printf '%s\n' "$stale"
+          if [ "$DELETE_STALE" != true ]; then
+            echo "::notice::$(printf '%s\n' "$stale" | wc -l) stale files in Bunny Storage. To delete them, run this workflow manually with delete-stale."
+            exit 0
+          fi
+          printf '%s\n' "$stale" | while IFS= read -r path; do
+            echo "Deleting ${path}"
+            curl --silent --show-error --fail-with-body --request DELETE \
+              --header "AccessKey: ${BUNNY_ACCESS_KEY}" \
+              "${endpoint}/$(encode "$path")"
             echo
           done
