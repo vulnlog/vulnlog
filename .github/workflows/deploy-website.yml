@@ -13,7 +13,7 @@ on:
   workflow_call:
     inputs:
       version:
-        description: "Vulnlog version rendered into the website and install script. Defaults to vulnlog-version from docs/antora.yml."
+        description: "Version of the release the site shows. Defaults to the highest final version tag."
         type: string
         default: ''
   workflow_dispatch:
@@ -46,6 +46,37 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Resolve the latest release
+        id: release
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        # Without an input, the same rule as the `version` job of `release.yaml`: the highest final version tag.
+        run: |
+          VERSION="$VERSION_INPUT"
+          if [ -z "$VERSION" ]; then
+            TAG=$(git tag --list 'v*' --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+            VERSION="${TAG#v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "::error::No final version tag found."
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "branch=release/${VERSION%.*}" >> "$GITHUB_OUTPUT"
+      # `main` may already hold the website and schema changes of the next release.
+      # The docs come from the release branches too (`antora-playbook.yml`). `.vex/` stays as checked out.
+      - name: Take the site sources from the release branch
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
+        run: git restore --source="origin/${BRANCH}" -- website schema
+      # The release pipeline renders them, so the site serves the files that `SHA256SUMS` lists.
+      - name: Download the install scripts of the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          gh release download "v${VERSION}" --repo "$GITHUB_REPOSITORY" --dir _release \
+            --pattern install-vulnlog.sh --pattern uninstall-vulnlog.sh
       - name: Build docs
         uses: ./.github/actions/build-docs
       - name: Resolve security report run id
@@ -82,19 +113,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compose site
         env:
-          VERSION_INPUT: ${{ inputs.version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.release.outputs.version }}
         run: |
-          VERSION="$VERSION_INPUT"
-          if [ -z "$VERSION" ]; then
-            TAG=$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" -q .tag_name 2>/dev/null || true)
-            VERSION="${TAG#v}"
-          fi
-          if [ -z "$VERSION" ]; then
-            VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
-          fi
           mkdir -p _site/docs _site/schema _site/vex
-          cp -r website/index.html website/css website/favicon.ico website/img website/robots.txt website/sitemap.xml website/.well-known website/bunnycdn_errors _site/
+          cp -r website/. _site/
           cp -r build/docs/* _site/docs/
           # Also served at /docs, where the relative redirect would resolve against /.
           sed -i 's|<meta charset="utf-8">|&<base href="/docs/">|' _site/docs/index.html
@@ -110,9 +132,8 @@ jobs:
           else
             echo "Skipping changelog report bundle (no artifact downloaded)."
           fi
-          sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
-              install/install.sh.template > _site/install
-          cp install/uninstall.sh.template _site/uninstall
+          cp _release/install-vulnlog.sh _site/install
+          cp _release/uninstall-vulnlog.sh _site/uninstall
           sed -i "s/VULNLOG_VERSION/${VERSION}/g" _site/index.html
       - name: Upload site to Bunny Storage
         env:
