@@ -1,13 +1,20 @@
 name: Build docs
 description: >-
-  Builds the Antora docs site into build/docs with the toolchain pinned in package-lock.json, and fails if the site has 
-  no search index or no search box. Needs a checkout with fetch-depth 0, because antora-playbook.yml reads the release branches.
+  Builds the Antora docs site into build/docs with the toolchain pinned in package-lock.json, and fails if the site has
+  no search index or no search box. With `antora-playbook.yml` it needs a checkout with `fetch-depth: 0`, because that
+  playbook reads the release branches.
+
+inputs:
+  playbook:
+    description: "`antora-playbook.yml` for the published site, `antora-local-playbook.yml` for the checked-out commit."
+    required: false
+    default: antora-playbook.yml
 
 runs:
   using: composite
   steps:
     - name: Set up Node.js
-      uses: actions/setup-node@v7
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: 'lts/*'
         cache: npm
@@ -21,7 +28,8 @@ runs:
       # The token only raises the rate limit of these two requests.
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      run: npx antora antora-playbook.yml
+        PLAYBOOK: ${{ inputs.playbook }}
+      run: npx antora "$PLAYBOOK"
     - name: Check the docs search
       shell: bash
       run: |

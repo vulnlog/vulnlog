@@ -22,17 +22,19 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Check DCO sign-off
         if: github.event.pull_request.user.login != 'dependabot[bot]'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          base="${{ github.event.pull_request.base.sha }}"
-          head="${{ github.event.pull_request.head.sha }}"
           failed=false
 
-          for sha in $(git rev-list --no-merges "$base".."$head"); do
+          for sha in $(git rev-list --no-merges "$BASE_SHA".."$HEAD_SHA"); do
             if ! git log -1 --format='%B' "$sha" | grep -q '^Signed-off-by:'; then
               echo "::error::Commit $sha is missing a Signed-off-by trailer."
               failed=true
@@ -46,20 +48,6 @@ jobs:
             echo "See CONTRIBUTING.md for details."
             exit 1
           fi
-      - name: Validate PR title
-        uses: amannn/action-semantic-pull-request@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            docs
-            refactor
-            perf
-            test
-            chore
-            ci
 
   detect-changes:
     if: github.event_name == 'pull_request'
@@ -69,10 +57,8 @@ jobs:
       native_relevant: ${{ steps.filter.outputs.native_relevant }}
       docs_relevant: ${{ steps.filter.outputs.docs_relevant }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
       - name: Detect native-image-relevant changes
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -88,6 +74,7 @@ jobs:
             docs_relevant:
               - 'docs/**'
               - 'antora-playbook.yml'
+              - 'antora-local-playbook.yml'
               - 'package.json'
               - 'package-lock.json'
               - '.github/actions/build-docs/**'
@@ -97,24 +84,18 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Check
         run: ./gradlew check :buildSrc:check
-      - name: Check VEX documents are up to date
-        run: |
-          ./gradlew updateVexDocuments
-          if [ -n "$(git status --porcelain -- .vex)" ]; then
-            git status --porcelain -- .vex
-            echo "::error::.vex/ does not match vulnlog.yaml. Run './gradlew updateVexDocuments' and commit the result."
-            exit 1
-          fi
 
   docs:
     needs: [ detect-changes ]
     if: |
-      always() && (
+      !cancelled() && (
         github.event_name == 'workflow_dispatch' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'pull_request' && needs.detect-changes.outputs.docs_relevant == 'true')
@@ -123,17 +104,21 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # antora-playbook.yml reads the release branches.
           fetch-depth: 0
       - name: Build docs
         uses: ./.github/actions/build-docs
+        with:
+          # The published playbook reads only the release branches, so a PR's docs changes need the local one.
+          playbook: ${{ github.event_name == 'pull_request' && 'antora-local-playbook.yml' || 'antora-playbook.yml' }}
 
   native-image:
     needs: [ detect-changes ]
     if: |
-      always() && (
+      !cancelled() && (
         github.event_name == 'workflow_dispatch' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'pull_request' && needs.detect-changes.outputs.native_relevant == 'true')
@@ -142,4 +127,42 @@ jobs:
 
   perf-test:
     needs: [ native-image ]
-    uses: ./.github/workflows/perf-test.yaml
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Fetch native binary
+        uses: ./.github/actions/fetch-native-binary
+      - name: Install hyperfine
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y hyperfine
+      - name: Run perf test
+        run: ./perf/perf-test.sh
+      - name: Upload perf results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: perf-results
+          path: perf/results/*.json
+          retention-days: 30
+
+  # The required status check, so adding or renaming a job doesn't touch the branch rules.
+  # Skipped jobs count as passed.
+  ci-ok:
+    if: always()
+    needs: [ pr-validation, detect-changes, check, docs, native-image, perf-test ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the results of all jobs
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          case " $RESULTS " in
+            *" failure "* | *" cancelled "*) exit 1 ;;
+          esac

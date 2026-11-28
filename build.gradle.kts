@@ -3,6 +3,8 @@ import dev.vulnlog.gradle.VulnlogOpenVexTask
 import dev.vulnlog.gradle.VulnlogOpenVexUpdateTask
 
 plugins {
+    // For the `check` lifecycle task, which runs `checkVexDocuments`.
+    base
     id("dev.vulnlog.plugin") version "0.19.0"
     id("com.github.node-gradle.node") version "7.1.0"
 }
@@ -88,7 +90,13 @@ vulnlog {
 // VEX Hub crawls .vex/ and serves one document per package, so each artifact gets one covering all published releases.
 val vexArtifactTaskSuffixByTag = mapOf("cli" to "Cli", "container" to "Container", "gradle plugin" to "GradlePlugin")
 
-val vexDocumentUpdates = vexArtifactTaskSuffixByTag.map { (tag, taskSuffix) ->
+class VexDocument(
+    val update: TaskProvider<VulnlogOpenVexUpdateTask>,
+    val generated: Provider<RegularFile>,
+    val committed: RegularFile,
+)
+
+val vexDocuments = vexArtifactTaskSuffixByTag.map { (tag, taskSuffix) ->
     val fileName = "vulnlog-${tag.replace(' ', '-')}.openvex.json"
     val baselineFile = layout.projectDirectory.file(".vex/$fileName")
 
@@ -101,16 +109,44 @@ val vexDocumentUpdates = vexArtifactTaskSuffixByTag.map { (tag, taskSuffix) ->
         outputFile = layout.buildDirectory.file("vulnlog/vex/$fileName")
     }
 
-    tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVex${taskSuffix}Update") {
+    val update = tasks.register<VulnlogOpenVexUpdateTask>("vulnlogOpenVex${taskSuffix}Update") {
         group = "vulnlog"
         description = "Updates the committed OpenVEX document of the $tag artifact"
         generatedFile = openVex.flatMap { it.outputFile }
         baseline = baselineFile
     }
+
+    VexDocument(update, openVex.flatMap { it.outputFile }, baselineFile)
 }
 
 tasks.register("updateVexDocuments") {
     group = "vulnlog"
     description = "Updates the committed VEX documents in .vex/ of all artifacts"
-    dependsOn(vexDocumentUpdates)
+    dependsOn(vexDocuments.map { it.update })
+}
+
+val checkVexDocuments = tasks.register("checkVexDocuments") {
+    group = "verification"
+    description = "Fails when a committed VEX document in .vex/ doesn't match vulnlog.yaml"
+    // Plain pairs, so the task action doesn't capture the build script (configuration cache).
+    val documents = vexDocuments.map { it.generated to it.committed }
+    inputs.files(documents.map { it.first })
+    inputs.files(documents.map { it.second })
+    doLast {
+        val stale = documents
+            .filter { (generated, committed) ->
+                val file = committed.asFile
+                !file.exists() || file.readText() != generated.get().asFile.readText()
+            }
+            .map { (_, committed) -> committed.asFile.name }
+        if (stale.isNotEmpty()) {
+            throw GradleException(
+                "Out of date in .vex/: ${stale.joinToString()}. Run './gradlew updateVexDocuments' and commit the result.",
+            )
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(checkVexDocuments)
 }

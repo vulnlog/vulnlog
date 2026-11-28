@@ -1,0 +1,34 @@
+name: Deploy staging website
+
+# Deploys main to https://stage.vulnlog.dev, so you can review the site of the next release before
+# it ships. Production keeps showing the latest release.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - 'docs/**'
+      - 'schema/**'
+      - '.vex/**'
+      - 'antora-playbook.yml'
+      - 'antora-local-playbook.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/actions/build-docs/**'
+      - '.github/workflows/deploy-website.yml'
+      - '.github/workflows/deploy-stage.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # Only main. A second branch would overwrite the staging site of the first.
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/deploy-website.yml
+    with:
+      stage: true

@@ -1,0 +1,4 @@
+rules:
+  # Suggests `$/` for local actions. `./` is the syntax every reader knows.
+  self-repository:
+    disable: true

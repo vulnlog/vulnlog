@@ -1,10 +1,15 @@
 name: Deploy website and docs
 
-# Single implementation of the website deploy. Invoked four ways:
+# Single implementation of the website deploy. Invoked five ways:
 # - workflow_call from release.yaml on final release tags
+# - workflow_call from deploy-stage.yaml with `stage`, which deploys `main` to the staging site
 # - workflow_dispatch for manual deploys from main
 # - workflow_run after the weekly security scan, to refresh the bundled reports
 # - push to main changing .vex/, so updated VEX documents go live without waiting for the next scan
+#
+# Every run lists the files in the storage zone that the site no longer has. On production, only a
+# manual run with `delete-stale` deletes them, because the zone may hold files this workflow never
+# uploaded. The workflow owns the staging zone, so a staging deploy always deletes them.
 
 on:
   push:
@@ -13,16 +18,22 @@ on:
   workflow_call:
     inputs:
       version:
-        description: "Vulnlog version rendered into the website and install script. Defaults to vulnlog-version from docs/antora.yml."
+        description: "Version of the release the site shows. Defaults to the highest final version tag."
         type: string
         default: ''
-    secrets:
-      BUNNY_ACCESS_KEY:
-        required: true
-      BUNNY_STORAGE_ZONE_REGION_ENDPOINT:
-        required: true
+      stage:
+        description: "Deploy main to the staging site instead of the latest release to production."
+        type: boolean
+        default: false
   workflow_dispatch:
-  workflow_run:
+    inputs:
+      delete-stale:
+        description: "Delete the files in Bunny Storage that the site no longer has. Check the list of an earlier run first."
+        type: boolean
+        default: false
+  # Safe here: Security Scanning runs only on schedule and dispatch, never on pull requests, so the
+  # downloaded reports never come from untrusted code.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: ["Security Scanning"]
     types: [completed]
     branches: [main]
@@ -36,30 +47,71 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # `website` holds the production secrets and allows `main` and version tags. `stage` holds the
+    # staging secrets and allows only `main`.
     environment:
-      name: website
-      url: https://vulnlog.dev
+      name: ${{ inputs.stage && 'stage' || 'website' }}
+      url: ${{ inputs.stage && 'https://stage.vulnlog.dev' || 'https://vulnlog.dev' }}
     concurrency:
-      group: website
+      group: ${{ inputs.stage && 'stage' || 'website' }}
       cancel-in-progress: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
+      - name: Resolve the latest release
+        id: release
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+        # Without an input, the same rule as the `version` job of `release.yaml`: the highest final version tag.
+        run: |
+          VERSION="$VERSION_INPUT"
+          if [ -z "$VERSION" ]; then
+            TAG=$(git tag --list 'v*' --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+            VERSION="${TAG#v}"
+          fi
+          if [ -z "$VERSION" ]; then
+            echo "::error::No final version tag found."
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "branch=release/${VERSION%.*}" >> "$GITHUB_OUTPUT"
+      # `main` may already hold the website and schema changes of the next release.
+      # The docs come from the release branches too (`antora-playbook.yml`). `.vex/` stays as checked out.
+      - name: Take the site sources from the release branch
+        if: ${{ !inputs.stage }}
+        env:
+          BRANCH: ${{ steps.release.outputs.branch }}
+        run: git restore --source="origin/${BRANCH}" -- website schema
+      # The release pipeline renders them, so the site serves the files that `SHA256SUMS` lists.
+      # Staging leaves them out, so no untested install script runs from the vulnlog.dev domain.
+      - name: Download the install scripts of the release
+        if: ${{ !inputs.stage }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          gh release download "v${VERSION}" --repo "$GITHUB_REPOSITORY" --dir _release \
+            --pattern install-vulnlog.sh --pattern uninstall-vulnlog.sh
       - name: Build docs
         uses: ./.github/actions/build-docs
+        with:
+          # Staging shows the docs of the next release, which only `main` has.
+          playbook: ${{ inputs.stage && 'antora-local-playbook.yml' || 'antora-playbook.yml' }}
       - name: Resolve security report run id
         id: report-run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "run-id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_run" ]; then
+            echo "run-id=${TRIGGER_RUN_ID}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           run_id=$(gh run list \
-            --repo "${{ github.repository }}" \
+            --repo "$GITHUB_REPOSITORY" \
             --workflow=security.yml \
             --status=success \
             --branch=main \
@@ -74,7 +126,7 @@ jobs:
           fi
       - name: Download latest security reports
         if: steps.report-run.outputs.run-id != ''
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: reports
           path: _report
@@ -82,19 +134,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Compose site
         env:
-          VERSION_INPUT: ${{ inputs.version }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.release.outputs.version }}
+          STAGE: ${{ inputs.stage }}
         run: |
-          VERSION="$VERSION_INPUT"
-          if [ -z "$VERSION" ]; then
-            TAG=$(gh api "repos/${{ github.repository }}/releases/latest" -q .tag_name 2>/dev/null || true)
-            VERSION="${TAG#v}"
-          fi
-          if [ -z "$VERSION" ]; then
-            VERSION=$(awk -F"'" '/vulnlog-version:/{print $2; exit}' docs/antora.yml)
-          fi
           mkdir -p _site/docs _site/schema _site/vex
-          cp -r website/index.html website/css website/favicon.ico website/img website/robots.txt website/sitemap.xml website/.well-known website/bunnycdn_errors _site/
+          cp -r website/. _site/
           cp -r build/docs/* _site/docs/
           # Also served at /docs, where the relative redirect would resolve against /.
           sed -i 's|<meta charset="utf-8">|&<base href="/docs/">|' _site/docs/index.html
@@ -110,14 +154,15 @@ jobs:
           else
             echo "Skipping changelog report bundle (no artifact downloaded)."
           fi
-          sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
-              install/install.sh.template > _site/install
-          cp install/uninstall.sh.template _site/uninstall
+          if [ "$STAGE" != true ]; then
+            cp _release/install-vulnlog.sh _site/install
+            cp _release/uninstall-vulnlog.sh _site/uninstall
+          fi
           sed -i "s/VULNLOG_VERSION/${VERSION}/g" _site/index.html
       - name: Upload site to Bunny Storage
         env:
-          BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
-          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
+          BUNNY_ACCESS_KEY: ${{ inputs.stage && secrets.BUNNY_STAGE_ACCESS_KEY || secrets.BUNNY_ACCESS_KEY }}
+          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ inputs.stage && secrets.BUNNY_STAGE_STORAGE_ZONE_REGION_ENDPOINT || secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
         working-directory: _site
         run: |
           set -euo pipefail
@@ -131,5 +176,42 @@ jobs:
               --header "AccessKey: ${BUNNY_ACCESS_KEY}" \
               --upload-file "${file}" \
               "${endpoint}/${path}"
+            echo
+          done
+      - name: Find stale files in Bunny Storage
+        env:
+          BUNNY_ACCESS_KEY: ${{ inputs.stage && secrets.BUNNY_STAGE_ACCESS_KEY || secrets.BUNNY_ACCESS_KEY }}
+          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ inputs.stage && secrets.BUNNY_STAGE_STORAGE_ZONE_REGION_ENDPOINT || secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
+          DELETE_STALE: ${{ inputs.stage || inputs.delete-stale }}
+        working-directory: _site
+        run: |
+          set -euo pipefail
+          endpoint="${BUNNY_STORAGE_ZONE_REGION_ENDPOINT%/}"
+          # Percent-encodes each segment of the path `$1`, so names such as `a b.txt` work in a URL.
+          encode() { jq -rn --arg path "$1" '$path | split("/") | map(@uri) | join("/")'; }
+          # Prints the path of every file below the directory `$1`: empty for the root, else ending in `/`.
+          list_files() {
+            curl --silent --show-error --fail-with-body --header "AccessKey: ${BUNNY_ACCESS_KEY}" "${endpoint}/$(encode "$1")" \
+              | jq -r '.[] | [(if .IsDirectory then "d" else "f" end), .ObjectName] | @tsv' \
+              | while IFS=$'\t' read -r kind name; do
+                  if [ "$kind" = d ]; then list_files "$1$name/"; else printf '%s\n' "$1$name"; fi
+                done
+          }
+          stale=$(list_files "" | while IFS= read -r path; do [ -f "$path" ] || printf '%s\n' "$path"; done)
+          if [ -z "$stale" ]; then
+            echo "No stale files."
+            exit 0
+          fi
+          echo "Files in Bunny Storage that the site no longer has:"
+          printf '%s\n' "$stale"
+          if [ "$DELETE_STALE" != true ]; then
+            echo "::notice::$(printf '%s\n' "$stale" | wc -l) stale files in Bunny Storage. To delete them, run this workflow manually with delete-stale."
+            exit 0
+          fi
+          printf '%s\n' "$stale" | while IFS= read -r path; do
+            echo "Deleting ${path}"
+            curl --silent --show-error --fail-with-body --request DELETE \
+              --header "AccessKey: ${BUNNY_ACCESS_KEY}" \
+              "${endpoint}/$(encode "$path")"
             echo
           done

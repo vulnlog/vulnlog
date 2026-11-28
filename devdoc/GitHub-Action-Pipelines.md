@@ -1,211 +1,156 @@
-# GitHub Action Pipelines
+# GitHub Actions pipelines
 
-Four pipelines drive the project:
+The workflow files in `.github/workflows/` are the source of truth. This page explains why they work the way they do,
+and what you keep up by hand: repository settings, pinned versions, and conventions.
 
-| Pipeline          | File                                                            | Trigger                                                   |
-|-------------------|-----------------------------------------------------------------|-----------------------------------------------------------|
-| CI                | [`ci.yaml`](../.github/workflows/ci.yaml)                       | Pull requests, pushes to `main`, manual                   |
-| Release           | [`release.yaml`](../.github/workflows/release.yaml)             | Tags matching `vx.y.z` or `vx.y.z-rcN`                    |
-| Website deploy    | [`deploy-website.yml`](../.github/workflows/deploy-website.yml) | Called by Release, manual, weekly after Security Scanning |
-| Security Scanning | [`security.yml`](../.github/workflows/security.yml)             | Weekly schedule, manual                                   |
+## Workflows
+
+| Workflow                                                              | Runs on                                                    | Does                                                    |
+|-----------------------------------------------------------------------|------------------------------------------------------------|---------------------------------------------------------|
+| [`ci.yaml`](../.github/workflows/ci.yaml)                             | Pull requests, pushes to `main`, manual                    | Checks the build, builds the docs and the native image  |
+| [`pr-title.yaml`](../.github/workflows/pr-title.yaml)                 | Pull requests, also when you edit the title                | Checks the conventional commit prefix of the PR title   |
+| [`lint-workflows.yaml`](../.github/workflows/lint-workflows.yaml)     | Pull requests and pushes to `main` that change `.github/`  | Runs actionlint and zizmor                              |
+| [`codeql.yaml`](../.github/workflows/codeql.yaml)                     | Pull requests, pushes to `main`, weekly                    | Analyses the Kotlin code                                |
+| [`release.yaml`](../.github/workflows/release.yaml)                   | Version tags                                               | Publishes a release                                     |
+| [`deploy-website.yml`](../.github/workflows/deploy-website.yml)       | Releases, manual, after the security scan, `.vex/` changes | Deploys https://vulnlog.dev                             |
+| [`deploy-stage.yaml`](../.github/workflows/deploy-stage.yaml)         | Pushes to `main` that change the site, manual              | Deploys `main` to https://stage.vulnlog.dev             |
+| [`security.yml`](../.github/workflows/security.yml)                   | Weekly, manual                                             | Scans with Snyk and Trivy                               |
+| [`dependency-graph.yaml`](../.github/workflows/dependency-graph.yaml) | Pushes to `main`                                           | Submits the Gradle dependencies to GitHub               |
+
+The workflows share these parts:
+
+- [`build-native.yaml`](../.github/workflows/build-native.yaml) builds the native image. CI and the release call it.
+- [`setup-jvm`](../.github/actions/setup-jvm/action.yml) installs Java 21 to run Gradle. The build itself compiles
+  with the Java 25 toolchain.
+- [`build-docs`](../.github/actions/build-docs/action.yml) builds the docs site and fails if the search is missing.
+- [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) downloads the native binary of an
+  earlier job.
 
 ## CI
 
-Validates pull requests and main-branch pushes. CI never publishes anything; all publishing
-happens in the Release pipeline.
+CI never publishes anything.
 
-The `native-image` and `docs` jobs are conditional: they always run on `main` pushes and
-`workflow_dispatch`, but on pull requests only when the diff touches files relevant to them
-(detected via `dorny/paths-filter`). `perf-test` depends on `native-image` and inherits this gate.
-
-```mermaid
-flowchart TD
-    PR{{Pull request}}
-    PUSH{{Push to main}}
-    DISP{{Manual}}
-    PR --> PRV[pr-validation<br/>DCO + PR title]
-    PR --> DC[detect-changes<br/>paths-filter]
-    PR --> CHK[check<br/>./gradlew check]
-    PUSH --> CHK
-    DISP --> CHK
-    DC --> NI[native-image<br/>build-native.yaml]
-    DC --> DOCS[docs<br/>build-docs action]
-    PUSH --> DOCS
-    DISP --> DOCS
-    PUSH --> NI
-    DISP --> NI
-    NI --> PT[perf-test<br/>perf-test.yaml]
-```
-
-### Job details
-
-- **pr-validation**: verifies every commit in the PR has a `Signed-off-by` trailer (DCO) and
-  validates the PR title against the conventional-commits prefixes. Dependabot PRs are exempt
-  from the DCO check because bot commits carry no sign-off.
-- **detect-changes**: sets the `native_relevant` output if the PR touches any of:
-  `modules/lib/src/main/resources/META-INF/native-image/**`,
-  `modules/lib/src/main/kotlin/dev/vulnlog/lib/document/**`,
-  `modules/lib/src/main/kotlin/dev/vulnlog/lib/codec/**`, `modules/cli-app/**`,
-  `modules/lib/build.gradle.kts`, `modules/lib-domain/build.gradle.kts`, `gradle/libs.versions.toml`, `buildSrc/**`.
-  Sets the `docs_relevant` output if the PR touches any of: `docs/**`, `antora-playbook.yml`,
-  `package.json`, `package-lock.json`, `.github/actions/build-docs/**`.
-- **check**: runs `./gradlew check :buildSrc:check` (compile, lint, unit tests, JVM integration
-  tests, build logic tests, SBOMs of the CLI and the Gradle plugin) on Java 21 / Temurin via the
-  [`setup-jvm`](../.github/actions/setup-jvm/action.yml) composite action. Every SBOM task
-  validates its output against the CycloneDX schema and fails when the root purl does not match
-  the products of the artifact's OpenVEX document in `.vex/`.
-- **docs**: builds the docs site with the [`build-docs`](../.github/actions/build-docs/action.yml)
-  composite action, exactly as the website deploy does, and fails if the site has no search
-  index or no search box. Dependabot's npm updates of Antora and the search extension go through
-  this job.
-- **native-image**: calls [`build-native.yaml`](../.github/workflows/build-native.yaml) with
-  default inputs; uploads the Linux binary as artifact `vulnlog-linux-amd64` and its SBOM as
-  `sbom-vulnlog-linux-amd64`.
-- **perf-test**: calls [`perf-test.yaml`](../.github/workflows/perf-test.yaml), which downloads
-  `vulnlog-linux-amd64`, installs `hyperfine`, and runs
-  [`perf/perf-test.sh`](../perf/perf-test.sh): 1 warmup plus 3 runs against `perf/perf.vl.yaml`
-  for each of `validate`, `report`, `suppress`. Fails if any command's mean exceeds 1000 ms.
-  Results uploaded as `perf-results` (30-day retention).
+- `ci-ok` is the required status check. It fails when another CI job failed or was cancelled. Skipped jobs count as
+  passed. You can add or rename CI jobs without touching the branch rules.
+- On pull requests, `native-image` and `docs` run only when the PR changes relevant files. The `detect-changes` job
+  lists them.
+- On pull requests, `docs` builds the PR's own docs with `antora-local-playbook.yml` and fails on errors such as a
+  broken xref. On `main`, it builds the published site from the release branches with `antora-playbook.yml`.
+- The DCO check skips Dependabot PRs, because bot commits carry no sign-off.
+- `perf-test` fails when a command's mean runtime exceeds 1000 ms. To run it on demand, start CI manually. To try
+  another threshold, run `perf/perf-test.sh` locally with `THRESHOLD_MS` set.
+- `./gradlew check` also runs `checkVexDocuments`, which fails when `.vex/` doesn't match `vulnlog.yaml`.
 
 ## Release
 
-Triggered by version tags. The stages are ordered by reversibility: nothing is published
-before the gate (check plus all native builds) passes, and the Gradle Plugin Portal
-publication runs last because it cannot be retracted. Release candidate tags
-(e.g. `v0.16.0-rc1`) run only the gate, the GitHub pre-release, and the versioned Docker
-image. The `version` job also detects whether the pushed tag is the highest version overall;
-a bug fix release for an older minor skips the website deploy, the Docker `:latest` tag, and
-the Homebrew bump so none of them move backwards. The pipeline does not touch `CHANGELOG.md`
-and does not render the GitHub-release body; both are prepared by the maintainer in a release
-preparation PR before tagging (see [Releasing](Releasing.md)).
+A pushed version tag starts the release. See [Releasing](Releasing.md) for the steps. The stages run so that the
+ones that are hardest to undo come last:
 
-```mermaid
-flowchart TD
-    TAG{{Tag vx.y.z or vx.y.z-rcN}}
-    TAG --> VER[version<br/>strip v, detect rc and latest]
-    TAG --> CHK[check<br/>./gradlew check]
-    VER --> BNI[build-native-images<br/>matrix: linux / macos / windows]
-    CHK --> REL[publish-release<br/>GitHub pre-release + artifacts]
-    BNI --> REL
-    REL --> PDR[publish-docker<br/>ghcr.io :version + :latest]
-    REL --> DW[deploy-website<br/>latest only]
-    REL --> NHB[notify-homebrew<br/>latest only]
-    PDR --> PGP[publish-gradle-plugin<br/>final only, last]
-    DW --> PGP
-    NHB --> PGP
-    PGP --> ANN[announce<br/>GitHub discussion]
-```
+1. Gate: `./gradlew check :buildSrc:check` and the four native images. If one fails, nothing is published.
+2. GitHub release, as pre-release, with the binaries, SBOMs, install scripts, `SHA256SUMS`, and their attestations.
+   You can still edit or delete a release, but not an attestation.
+3. Docker image, website deploy, and Homebrew bump, in parallel. The Docker stage adds the container SBOM to the
+   release.
+4. Gradle plugin, last, because you can't take back a Gradle Plugin Portal publication.
+5. Announcement in GitHub Discussions.
 
-### Job details
+The `version` job decides what a tag publishes. "Latest" means the highest final version tag.
 
-- **version**: resolves the version (tag without the leading `v`), whether the tag is a final
-  release (`final=true`) or a release candidate (`-rcN` suffix), and whether it is the highest
-  version tag overall (`latest=true`). All other jobs consume these outputs, so the RC and
-  latest logic lives in one place.
-- **check**: same `./gradlew check :buildSrc:check` as in CI; part of the gate so a broken
-  commit cannot be released even if it was tagged by mistake.
-- **build-native-images**: matrix call of
-  [`build-native.yaml`](../.github/workflows/build-native.yaml) for `ubuntu-latest`,
-  `macos-latest`, and `windows-latest`.
-- **publish-release**: builds the JVM distribution zip and the SBOMs of the CLI and the Gradle
-  plugin, re-zips the three native binaries, downloads the native image SBOM built on Linux,
-  and renders the install scripts. It writes `SHA256SUMS` for these assets, attests their
-  build provenance and the SBOMs of the JVM distribution and the native images, and creates a
-  GitHub release marked `prerelease: true`. The body is GitHub's auto-generated "What's
-  Changed" (`generate_release_notes: true`) plus a link to `CHANGELOG.md`; the maintainer
-  refines it in the UI before un-flagging the pre-release.
-- **publish-docker**: downloads the Linux native binary via the
-  [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) composite action
-  and pushes `ghcr.io/<repo>:<version>`; the floating `:latest` tag is added only when the
-  tag is the latest version. `docker/metadata-action` sets the tags and the OCI labels such as
-  `org.opencontainers.image.source` and `org.opencontainers.image.revision`. The job attests
-  the image's build provenance, scans the pushed image with Syft, replaces the Java components
-  Syft reads from the binary with the native image SBOM (`:cli-app:cyclonedxContainerBom`),
-  attests that SBOM, and attaches it to the GitHub release. Both attestations are pushed to
-  GHCR as OCI referrers, so the version tag stays a single manifest.
-- **deploy-website**: calls [`deploy-website.yml`](../.github/workflows/deploy-website.yml)
-  with the release version. Latest version only.
-- **notify-homebrew**: calls `POST /repos/vulnlog/homebrew-vulnlog/dispatches` with
-  `event_type=vulnlog-release` and `client_payload[version]=<version>` (authenticated via the
-  `HOMEBREW_DISPATCH_TOKEN` secret). The tap's `bump-formula.yml` then recomputes the SHA256s,
-  patches `vulnlog.rb`, and opens a bump PR. Depends on `publish-release` so the zip URLs are
-  live before the tap fetches them. Latest version only.
-- **publish-gradle-plugin**: builds the shadow jar, attests its build provenance and its SBOM
-  from the GitHub release, then runs `:gradle-plugin:publishPlugins`, which uploads the
-  attested jar. Depends on all other publish jobs so the irreversible Portal publication
-  happens only when everything else succeeded; it still runs when the latest-only jobs were
-  skipped for a bug fix release of an older minor. The Gradle plugin's `:lib` dependency is
-  shaded into the published jar (see
-  [`modules/gradle-plugin/build.gradle.kts`](../modules/gradle-plugin/build.gradle.kts)) so no
-  separate `:lib` artifact needs publishing. Final tags only.
-- **announce**: opens an Announcement discussion via `abirismyname/create-discussion` (pinned
-  by SHA). Runs last so the announcement never points at a half-published release.
+| Stage                         | Latest final | Patch of an older minor | Release candidate |
+|-------------------------------|--------------|-------------------------|-------------------|
+| Gate and GitHub pre-release   | yes          | yes                     | yes               |
+| Docker image `:<version>`     | yes          | yes                     | yes               |
+| Docker image `:latest`        | yes          | no                      | no                |
+| Website deploy, Homebrew bump | yes          | no                      | no                |
+| Gradle plugin, announcement   | yes          | yes                     | no                |
+
+The release never writes to the repository. You prepare `CHANGELOG.md` and the docs version in a PR before you tag.
+
+The container SBOM combines what Syft finds in the image with the native image SBOM, because Syft can't read the
+dependencies inside a native binary. The image attestations go to GHCR as OCI referrers, so the version tag stays a
+single manifest.
 
 ## Website deploy
 
-Single implementation of the website deploy. It builds the Antora docs with the
-[`build-docs`](../.github/actions/build-docs/action.yml) composite action, composes the
-static site (website, docs, JSON schemas, install scripts, latest security report), and
-uploads it to the Bunny storage zone behind `vulnlog.dev`.
+The site always shows the latest release, whatever started the deploy:
 
-Invoked three ways:
+- The version is the highest final version tag, or the input of the release.
+- `website/` and `schema/` come from the release branch of that version, like the docs. `main` may already hold
+  changes for the next release.
+- The install scripts are the assets of the GitHub release, so the site serves the files that `SHA256SUMS` lists.
+- `.vex/` comes from the commit that started the deploy: `main`, or the tag of a release.
+- The security reports come from the last successful scan on `main`.
 
-- **workflow_call** from the Release pipeline on final tags, with the release version as
-  input.
-- **workflow_dispatch** for manual deploys from `main` (e.g. quick doc fixes).
-- **workflow_run** after a successful weekly Security Scanning run, so the bundled security
-  report stays fresh.
+Every deploy lists the files in the storage zone that the site no longer has. It deletes them only when you run it
+manually with `delete-stale`, because the zone may hold files the workflow never uploaded.
 
-When no version input is given, the version is read from `vulnlog-version` in
-`docs/antora.yml`. The version is rendered into the install script and replaces the
-`VULNLOG_VERSION` placeholder in `website/index.html`.
+The staging site shows `main`, so you can review the site of the next release before it ships. `deploy-stage.yaml`
+calls the same deploy with `stage`, which changes four things:
 
-## Security
+- `website/`, `schema/`, and the docs come from `main`. The docs use `antora-local-playbook.yml`.
+- The install scripts stay off staging, so no untested install script runs from the vulnlog.dev domain.
+- The deploy deletes stale files without asking, because the workflow owns the staging zone.
+- The upload uses the `stage` environment and its secrets.
 
-Weekly scan that mirrors the way downstream consumers would invoke Vulnlog: a `suppress` step
-generates ignore files via the released Docker image, then Snyk and Trivy run in parallel
-against the workspace using those files.
+The deploy doesn't purge the CDN cache. The purge API needs the bunny.net account API key, which has full access to
+the account, so it stays out of CI. Keep the cache time of HTML, JSON, and the install scripts short in the pull
+zone settings.
 
-```mermaid
-flowchart TD
-    SCH{{Weekly / Manual}}
-    SCH --> SUP[suppress<br/>vulnlog suppress vulnlog.yaml]
-    SUP --> SNYK[snyk<br/>Snyk Open Source]
-    SUP --> TRV[trivy<br/>Trivy filesystem scan]
-    SNYK --> SARIF1[(SARIF to GitHub Code Scanning)]
-    TRV --> SARIF2[(SARIF to GitHub Code Scanning)]
-```
+## Scans
 
-### Job details
+- `security.yml` installs the latest Vulnlog release, generates the suppression files from `vulnlog.yaml`, and runs
+  Snyk and Trivy with them. Trivy scans the jars built from `main` and the image `:latest`. The website shows the
+  reports of the last scan.
+- `codeql.yaml` compiles with `--no-build-cache`, because CodeQL analyses only the code a build compiles.
+- `dependency-graph.yaml` gives the Gradle dependencies to the dependency graph and the Dependabot alerts. GitHub
+  doesn't read Gradle builds by itself.
 
-- **suppress**: runs the released Vulnlog Docker image with
-  `suppress vulnlog.yaml --output-dir /work` to produce `.snyk` and `.trivyignore.yaml`, then
-  uploads them as the `suppressions` artifact. Also generates the HTML report that the website
-  deploy bundles as `security-report.html`.
-- **snyk**: runs the Snyk Gradle action with `--policy-path=.snyk --all-sub-projects`; uploads
-  results as SARIF under category `snyk`. Requires the `SNYK_API_KEY` secret.
-- **trivy**: runs the Trivy filesystem scan with `trivyignores: .trivyignore.yaml`; uploads
-  results as SARIF under category `trivy`.
+All results go to code scanning in the Security tab.
 
-Both scanner jobs require `security-events: write` to upload SARIF.
+## Conventions
 
-## Shared building blocks
+zizmor checks most of these on every change to `.github/`:
 
-Common steps are factored out so each pipeline references them by name instead of inlining
-their definitions.
+- Pin every action to a full commit SHA with the version as a comment. Dependabot bumps both.
+- Pass values to `run` blocks through `env`, never as `${{ }}`, so no value can turn into shell code.
+- Check out with `persist-credentials: false`. No job pushes.
+- Keep the permissions of each workflow read-only and let each job ask for more.
+- When a zizmor finding is safe, add `# zizmor: ignore[<audit>]` with the reason next to it.
 
-| File                                                                       | Kind              | Purpose                                                                                                                                                                                                                                                                                                                          |
-|----------------------------------------------------------------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`build-native.yaml`](../.github/workflows/build-native.yaml)              | Reusable workflow | GraalVM 25 setup and `:cli-app:nativeCompile`, uploaded as `<artifact-name>`; on Linux also `:cli-app:cyclonedxNativeBom`, uploaded as `sbom-<artifact-name>`. Inputs: `os`, `artifact-name`, `app-version` (leading `v` stripped), `retention-days`. Used by `ci.yaml`, `release.yaml`, and `perf-test.yaml` (standalone mode). |
-| [`perf-test.yaml`](../.github/workflows/perf-test.yaml)                    | Reusable workflow | Runs `perf/perf-test.sh` (hyperfine) against the native binary. Inputs: `artifact-name`, `threshold-ms`. Also exposes `workflow_dispatch` for standalone runs, in which case it first calls `build-native.yaml` to produce the binary.                                                                                           |
-| [`deploy-website.yml`](../.github/workflows/deploy-website.yml)            | Reusable workflow | Bunny Storage deploy of website and docs. Input: `version` (defaults to `vulnlog-version` from `docs/antora.yml`). Used by `release.yaml` and standalone via `workflow_dispatch` and `workflow_run`.                                                                                                                             |
-| [`setup-jvm`](../.github/actions/setup-jvm/action.yml)                     | Composite action  | Java 21 Temurin + Gradle setup. Used by the `check` jobs, `publish-release`, and `publish-gradle-plugin`.                                                                                                                                                                                                                        |
-| [`build-docs`](../.github/actions/build-docs/action.yml)                   | Composite action  | Node.js setup with npm cache, `npm ci` of the docs toolchain pinned in `package-lock.json` (Antora and `@antora/lunr-extension`), `npx antora antora-playbook.yml` into `build/docs`, then fails if `build/docs/search-index.js` or the search box is missing. Needs a checkout with `fetch-depth: 0`. Used by the CI `docs` job and `deploy-website.yml`. |
-| [`fetch-native-binary`](../.github/actions/fetch-native-binary/action.yml) | Composite action  | Downloads the native-image artifact and marks it executable. Input: `artifact-name` (default `vulnlog-linux-amd64`). Used by `publish-docker` and `perf-test.yaml`.                                                                                                                                                              |
+Dependabot doesn't bump these versions, so bump them yourself now and then:
 
-### Running perf-test standalone
+- actionlint in `lint-workflows.yaml`
+- zizmor in `lint-workflows.yaml`. A new release can add audits, so expect new findings.
 
-`perf-test.yaml` can be triggered manually from the Actions tab. The `build` job runs first
-(calls `build-native.yaml`), then `perf` benchmarks the freshly built binary. When invoked
-from `ci.yaml`, the `build` job is skipped and `perf` consumes the artifact uploaded by CI's
-`native-image` job. The default threshold (1000 ms) is overridable per run.
+## Repository settings
+
+Part of the security lives in the repository settings. Keep them as listed here.
+
+Environments hold the publishing secrets. A job gets them only when it names the environment and runs on an allowed
+branch or tag. The website deploy is a reusable workflow, so it sees only the secrets of its environment, never the
+repository secrets:
+
+| Environment | Secrets                                                                | Branches and tags        |
+|-------------|------------------------------------------------------------------------|--------------------------|
+| `website`   | `BUNNY_ACCESS_KEY`, `BUNNY_STORAGE_ZONE_REGION_ENDPOINT`               | Branch `main`, tags `v*` |
+| `release`   | `GRADLE_PLUGIN_KEY`, `GRADLE_PLUGIN_SECRET`, `HOMEBREW_DISPATCH_TOKEN` | Tags `v*`                |
+| `stage`     | `BUNNY_STAGE_ACCESS_KEY`, `BUNNY_STAGE_STORAGE_ZONE_REGION_ENDPOINT`   | Branch `main`            |
+
+`SNYK_API_KEY` is the only repository secret.
+
+Rulesets:
+
+- `main` and `release/*` require a pull request and the status checks `ci-ok` and `PR title`.
+- Only maintainers can create, update, or delete `v*` tags. A tag starts a release, so this decides who can publish.
+
+Actions:
+
+- Require actions to be pinned to a full-length commit SHA.
+- Give `GITHUB_TOKEN` read permissions only by default.
+- Keep automatic dependency submission off for Gradle, so the Gradle dependencies aren't submitted twice.
+
+Bunny:
+
+- The staging pull zone sends `X-Robots-Tag: noindex` through an edge rule, so search engines skip staging. Staging
+  serves the same files as production, so a `robots.txt` in the repository can't do this.
+- The staging pull zone caches only briefly, so a push shows within seconds.
