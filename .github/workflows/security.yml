@@ -123,9 +123,11 @@ jobs:
           args: --sarif-file-output=snyk-results.sarif --policy-path=.snyk --all-sub-projects --configuration-matching='^(runtimeClasspath|shaded)$' --severity-threshold=medium
 
       - name: Verify Snyk produced a report
+        env:
+          SNYK_OUTCOME: ${{ steps.snyk.outcome }}
         run: |
           if [ ! -s snyk-results.sarif ]; then
-            echo "::error::Snyk wrote no SARIF (outcome: ${{ steps.snyk.outcome }}); the scan errored out."
+            echo "::error::Snyk wrote no SARIF (outcome: ${SNYK_OUTCOME}). The scan errored out."
             exit 1
           fi
 

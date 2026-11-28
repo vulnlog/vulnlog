@@ -1,0 +1,52 @@
+name: Lint workflows
+
+on:
+  pull_request:
+    paths: ['.github/**']
+  push:
+    branches: [main]
+    paths: ['.github/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: stable
+          cache: false
+      # Go verifies the module against its checksum database. Dependabot doesn't bump this version.
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
+      # Also runs shellcheck, which the runner has, on every `run` block.
+      - name: Run actionlint
+        run: '"$(go env GOPATH)/bin/actionlint"'
+
+  zizmor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Fails on findings instead of uploading them to code scanning. The configuration is in `.github/zizmor.yml`.
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@1b4550e929643b8b26a62303c6bd64814271a4f1 # v0.9.2
+        with:
+          advanced-security: false
+          # A new zizmor release can add audits, so bump it on purpose.
+          version: 1.33.1

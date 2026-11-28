@@ -22,7 +22,9 @@ on:
       BUNNY_STORAGE_ZONE_REGION_ENDPOINT:
         required: true
   workflow_dispatch:
-  workflow_run:
+  # Safe here: Security Scanning runs only on schedule and dispatch, never on pull requests, so the
+  # downloaded reports never come from untrusted code.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: ["Security Scanning"]
     types: [completed]
     branches: [main]
@@ -54,13 +56,14 @@ jobs:
         id: report-run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRIGGER_RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            echo "run-id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_run" ]; then
+            echo "run-id=${TRIGGER_RUN_ID}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           run_id=$(gh run list \
-            --repo "${{ github.repository }}" \
+            --repo "$GITHUB_REPOSITORY" \
             --workflow=security.yml \
             --status=success \
             --branch=main \
@@ -88,7 +91,7 @@ jobs:
         run: |
           VERSION="$VERSION_INPUT"
           if [ -z "$VERSION" ]; then
-            TAG=$(gh api "repos/${{ github.repository }}/releases/latest" -q .tag_name 2>/dev/null || true)
+            TAG=$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" -q .tag_name 2>/dev/null || true)
             VERSION="${TAG#v}"
           fi
           if [ -z "$VERSION" ]; then

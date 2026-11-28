@@ -27,7 +27,7 @@ jobs:
       - name: Resolve version from tag
         id: resolve
         run: |
-          TAG="${{ github.ref_name }}"
+          TAG="$GITHUB_REF_NAME"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
           case "$TAG" in
             *-rc*) FINAL=false ;;
@@ -36,7 +36,7 @@ jobs:
           echo "final=$FINAL" >> "$GITHUB_OUTPUT"
           # A bug fix release for an older minor (e.g. v0.15.1 after v0.16.0)
           # must not move :latest, the website, or the Homebrew formula.
-          HIGHEST=$(git ls-remote --tags --refs "https://github.com/${{ github.repository }}" \
+          HIGHEST=$(git ls-remote --tags --refs "https://github.com/${GITHUB_REPOSITORY}" \
             | awk -F/ '{print $NF}' \
             | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
             | sort -V | tail -n 1)
@@ -83,6 +83,8 @@ jobs:
     needs: [ version, check, build-native-images ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     permissions:
       contents: write
       id-token: write
@@ -95,7 +97,7 @@ jobs:
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Build JVM distribution and SBOMs
-        run: ./gradlew :cli-app:distZip :cli-app:cyclonedxDirectBom :gradle-plugin:cyclonedxDirectBom -PappVersion="${{ needs.version.outputs.version }}"
+        run: ./gradlew :cli-app:distZip :cli-app:cyclonedxDirectBom :gradle-plugin:cyclonedxDirectBom -PappVersion="$VERSION"
       - name: Download native images
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -110,11 +112,11 @@ jobs:
         run: |
           for dir in native-images/vulnlog-*/; do
             name=$(basename "$dir")
-            (cd "$dir" && zip "../${name}.zip" *)
+            (cd "$dir" && zip "../${name}.zip" ./*)
           done
       - name: Render install scripts
         run: |
-          sed "s|^VERSION=\".*\"|VERSION=\"${{ needs.version.outputs.version }}\"|" \
+          sed "s|^VERSION=\".*\"|VERSION=\"${VERSION}\"|" \
               install/install.sh.template > install-vulnlog.sh
           cp install/uninstall.sh.template uninstall-vulnlog.sh
           chmod +x install-vulnlog.sh uninstall-vulnlog.sh
@@ -157,6 +159,8 @@ jobs:
     needs: [ version, publish-release ]
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     permissions:
       contents: write
       packages: write
@@ -218,7 +222,9 @@ jobs:
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Build container SBOM
-        run: ./gradlew :cli-app:cyclonedxContainerBom -PappVersion="${{ needs.version.outputs.version }}" -PimageDigest="${{ steps.build.outputs.digest }}"
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: ./gradlew :cli-app:cyclonedxContainerBom -PappVersion="$VERSION" -PimageDigest="$IMAGE_DIGEST"
       - name: Attest container SBOM
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
@@ -231,7 +237,7 @@ jobs:
       - name: Attach container SBOM
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload --clobber "${{ github.ref_name }}" modules/cli-app/build/sbom/vulnlog-container-*.cdx.json
+        run: gh release upload --clobber "$GITHUB_REF_NAME" modules/cli-app/build/sbom/vulnlog-container-*.cdx.json
 
   deploy-website:
     name: Deploy website and docs
@@ -257,10 +263,11 @@ jobs:
       - name: Trigger homebrew formula bump
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_DISPATCH_TOKEN }}
+          VERSION: ${{ needs.version.outputs.version }}
         run: |
           gh api repos/vulnlog/homebrew-vulnlog/dispatches \
             -f event_type=vulnlog-release \
-            -f client_payload[version]="${{ needs.version.outputs.version }}"
+            -f client_payload[version]="$VERSION"
 
   publish-gradle-plugin:
     name: Publish Gradle plugin
@@ -275,6 +282,8 @@ jobs:
       needs.notify-homebrew.result != 'failure'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
     permissions:
       contents: read
       id-token: write
@@ -288,11 +297,11 @@ jobs:
         uses: ./.github/actions/setup-jvm
       # Built before publishing, so the attested jar is the one publishPlugins uploads.
       - name: Build Gradle plugin
-        run: ./gradlew :gradle-plugin:shadowJar -PappVersion="${{ needs.version.outputs.version }}"
+        run: ./gradlew :gradle-plugin:shadowJar -PappVersion="$VERSION"
       - name: Download Gradle plugin SBOM
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release download "${{ github.ref_name }}" --pattern 'vulnlog-gradle-plugin-*.cdx.json' --dir modules/gradle-plugin/build/sbom
+        run: gh release download "$GITHUB_REF_NAME" --pattern 'vulnlog-gradle-plugin-*.cdx.json' --dir modules/gradle-plugin/build/sbom
       - name: Attest Gradle plugin
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
@@ -306,7 +315,7 @@ jobs:
         env:
           GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PLUGIN_KEY }}
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PLUGIN_SECRET }}
-        run: ./gradlew :gradle-plugin:publishPlugins -PappVersion="${{ needs.version.outputs.version }}"
+        run: ./gradlew :gradle-plugin:publishPlugins -PappVersion="$VERSION"
 
   announce:
     name: Announce release
