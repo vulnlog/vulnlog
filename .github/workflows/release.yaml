@@ -249,7 +249,7 @@ jobs:
       contents: read
       actions: read
     uses: ./.github/workflows/deploy-website.yml
-    # The Bunny secrets come from the `website` environment of the called job.
+    # The Bunny secrets come from the environment of the called job.
     with:
       version: ${{ needs.version.outputs.version }}
 

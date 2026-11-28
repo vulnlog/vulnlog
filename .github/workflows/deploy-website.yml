@@ -1,13 +1,15 @@
 name: Deploy website and docs
 
-# Single implementation of the website deploy. Invoked four ways:
+# Single implementation of the website deploy. Invoked five ways:
 # - workflow_call from release.yaml on final release tags
+# - workflow_call from deploy-stage.yaml with `stage`, which deploys `main` to the staging site
 # - workflow_dispatch for manual deploys from main
 # - workflow_run after the weekly security scan, to refresh the bundled reports
 # - push to main changing .vex/, so updated VEX documents go live without waiting for the next scan
 #
-# Every run lists the files in the storage zone that the site no longer has. Only a manual run
-# with `delete-stale` deletes them, because the zone may hold files this workflow never uploaded.
+# Every run lists the files in the storage zone that the site no longer has. On production, only a
+# manual run with `delete-stale` deletes them, because the zone may hold files this workflow never
+# uploaded. The workflow owns the staging zone, so a staging deploy always deletes them.
 
 on:
   push:
@@ -19,6 +21,10 @@ on:
         description: "Version of the release the site shows. Defaults to the highest final version tag."
         type: string
         default: ''
+      stage:
+        description: "Deploy main to the staging site instead of the latest release to production."
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       delete-stale:
@@ -41,12 +47,13 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    # Holds `BUNNY_ACCESS_KEY` and `BUNNY_STORAGE_ZONE_REGION_ENDPOINT` and allows only `main` and version tags.
+    # `website` holds the production secrets and allows `main` and version tags. `stage` holds the
+    # staging secrets and allows only `main`.
     environment:
-      name: website
-      url: https://vulnlog.dev
+      name: ${{ inputs.stage && 'stage' || 'website' }}
+      url: ${{ inputs.stage && 'https://stage.vulnlog.dev' || 'https://vulnlog.dev' }}
     concurrency:
-      group: website
+      group: ${{ inputs.stage && 'stage' || 'website' }}
       cancel-in-progress: false
     steps:
       - name: Checkout
@@ -74,11 +81,14 @@ jobs:
       # `main` may already hold the website and schema changes of the next release.
       # The docs come from the release branches too (`antora-playbook.yml`). `.vex/` stays as checked out.
       - name: Take the site sources from the release branch
+        if: ${{ !inputs.stage }}
         env:
           BRANCH: ${{ steps.release.outputs.branch }}
         run: git restore --source="origin/${BRANCH}" -- website schema
       # The release pipeline renders them, so the site serves the files that `SHA256SUMS` lists.
+      # Staging leaves them out, so no untested install script runs from the vulnlog.dev domain.
       - name: Download the install scripts of the release
+        if: ${{ !inputs.stage }}
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.release.outputs.version }}
@@ -87,6 +97,9 @@ jobs:
             --pattern install-vulnlog.sh --pattern uninstall-vulnlog.sh
       - name: Build docs
         uses: ./.github/actions/build-docs
+        with:
+          # Staging shows the docs of the next release, which only `main` has.
+          playbook: ${{ inputs.stage && 'antora-local-playbook.yml' || 'antora-playbook.yml' }}
       - name: Resolve security report run id
         id: report-run
         env:
@@ -122,6 +135,7 @@ jobs:
       - name: Compose site
         env:
           VERSION: ${{ steps.release.outputs.version }}
+          STAGE: ${{ inputs.stage }}
         run: |
           mkdir -p _site/docs _site/schema _site/vex
           cp -r website/. _site/
@@ -140,13 +154,15 @@ jobs:
           else
             echo "Skipping changelog report bundle (no artifact downloaded)."
           fi
-          cp _release/install-vulnlog.sh _site/install
-          cp _release/uninstall-vulnlog.sh _site/uninstall
+          if [ "$STAGE" != true ]; then
+            cp _release/install-vulnlog.sh _site/install
+            cp _release/uninstall-vulnlog.sh _site/uninstall
+          fi
           sed -i "s/VULNLOG_VERSION/${VERSION}/g" _site/index.html
       - name: Upload site to Bunny Storage
         env:
-          BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
-          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
+          BUNNY_ACCESS_KEY: ${{ inputs.stage && secrets.BUNNY_STAGE_ACCESS_KEY || secrets.BUNNY_ACCESS_KEY }}
+          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ inputs.stage && secrets.BUNNY_STAGE_STORAGE_ZONE_REGION_ENDPOINT || secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
         working-directory: _site
         run: |
           set -euo pipefail
@@ -164,9 +180,9 @@ jobs:
           done
       - name: Find stale files in Bunny Storage
         env:
-          BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
-          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
-          DELETE_STALE: ${{ inputs.delete-stale }}
+          BUNNY_ACCESS_KEY: ${{ inputs.stage && secrets.BUNNY_STAGE_ACCESS_KEY || secrets.BUNNY_ACCESS_KEY }}
+          BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ inputs.stage && secrets.BUNNY_STAGE_STORAGE_ZONE_REGION_ENDPOINT || secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
+          DELETE_STALE: ${{ inputs.stage || inputs.delete-stale }}
         working-directory: _site
         run: |
           set -euo pipefail
