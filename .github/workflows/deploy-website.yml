@@ -16,11 +16,6 @@ on:
         description: "Vulnlog version rendered into the website and install script. Defaults to vulnlog-version from docs/antora.yml."
         type: string
         default: ''
-    secrets:
-      BUNNY_ACCESS_KEY:
-        required: true
-      BUNNY_STORAGE_ZONE_REGION_ENDPOINT:
-        required: true
   workflow_dispatch:
   # Safe here: Security Scanning runs only on schedule and dispatch, never on pull requests, so the
   # downloaded reports never come from untrusted code.
@@ -38,6 +33,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Holds `BUNNY_ACCESS_KEY` and `BUNNY_STORAGE_ZONE_REGION_ENDPOINT` and allows only `main` and version tags.
     environment:
       name: website
       url: https://vulnlog.dev

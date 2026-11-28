@@ -247,11 +247,9 @@ jobs:
       contents: read
       actions: read
     uses: ./.github/workflows/deploy-website.yml
+    # The Bunny secrets come from the `website` environment of the called job.
     with:
       version: ${{ needs.version.outputs.version }}
-    secrets:
-      BUNNY_ACCESS_KEY: ${{ secrets.BUNNY_ACCESS_KEY }}
-      BUNNY_STORAGE_ZONE_REGION_ENDPOINT: ${{ secrets.BUNNY_STORAGE_ZONE_REGION_ENDPOINT }}
 
   notify-homebrew:
     name: Trigger Homebrew formula bump
@@ -259,6 +257,8 @@ jobs:
     if: needs.version.outputs.latest == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Holds `HOMEBREW_DISPATCH_TOKEN` and allows only version tags.
+    environment: release
     steps:
       - name: Trigger homebrew formula bump
         env:
@@ -282,6 +282,8 @@ jobs:
       needs.notify-homebrew.result != 'failure'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Holds `GRADLE_PLUGIN_KEY` and `GRADLE_PLUGIN_SECRET` and allows only version tags.
+    environment: release
     env:
       VERSION: ${{ needs.version.outputs.version }}
     permissions:
