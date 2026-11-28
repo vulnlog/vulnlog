@@ -18,6 +18,9 @@ on:
         type: number
         default: 1000
 
+permissions:
+  contents: read
+
 jobs:
   build:
     if: ${{ inputs.artifact-name == '' }}
@@ -31,14 +34,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Fetch native binary
         uses: ./.github/actions/fetch-native-binary
         with:
           artifact-name: ${{ inputs.artifact-name || 'vulnlog-linux-amd64' }}
       - name: Install hyperfine
         run: |
-          wget -q https://github.com/sharkdp/hyperfine/releases/download/v1.19.0/hyperfine_1.19.0_amd64.deb
-          sudo dpkg -i hyperfine_1.19.0_amd64.deb
+          sudo apt-get update
+          sudo apt-get install -y hyperfine
       - name: Run perf test
         env:
           THRESHOLD_MS: ${{ inputs.threshold-ms }}

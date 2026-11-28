@@ -53,6 +53,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Check
@@ -88,6 +90,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Build JVM distribution and SBOMs
@@ -159,6 +163,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Fetch native binary
         uses: ./.github/actions/fetch-native-binary
       - name: Log in to GitHub Container Registry
@@ -273,6 +279,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       # Built before publishing, so the attested jar is the one publishPlugins uploads.

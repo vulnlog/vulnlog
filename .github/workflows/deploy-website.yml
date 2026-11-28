@@ -46,6 +46,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Build docs
         uses: ./.github/actions/build-docs

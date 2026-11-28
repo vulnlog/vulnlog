@@ -20,6 +20,9 @@ on:
         type: number
         default: 7
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ inputs.os }}
@@ -27,6 +30,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:

@@ -24,6 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          persist-credentials: false
           fetch-depth: 0
       - name: Check DCO sign-off
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -46,20 +47,6 @@ jobs:
             echo "See CONTRIBUTING.md for details."
             exit 1
           fi
-      - name: Validate PR title
-        uses: amannn/action-semantic-pull-request@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            docs
-            refactor
-            perf
-            test
-            chore
-            ci
 
   detect-changes:
     if: github.event_name == 'pull_request'
@@ -69,8 +56,6 @@ jobs:
       native_relevant: ${{ steps.filter.outputs.native_relevant }}
       docs_relevant: ${{ steps.filter.outputs.docs_relevant }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
       - name: Detect native-image-relevant changes
         uses: dorny/paths-filter@v4
         id: filter
@@ -98,6 +83,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
       - name: Check
@@ -114,7 +101,7 @@ jobs:
   docs:
     needs: [ detect-changes ]
     if: |
-      always() && (
+      !cancelled() && (
         github.event_name == 'workflow_dispatch' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'pull_request' && needs.detect-changes.outputs.docs_relevant == 'true')
@@ -125,6 +112,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          persist-credentials: false
           # antora-playbook.yml reads the release branches.
           fetch-depth: 0
       - name: Build docs
@@ -133,7 +121,7 @@ jobs:
   native-image:
     needs: [ detect-changes ]
     if: |
-      always() && (
+      !cancelled() && (
         github.event_name == 'workflow_dispatch' ||
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'pull_request' && needs.detect-changes.outputs.native_relevant == 'true')

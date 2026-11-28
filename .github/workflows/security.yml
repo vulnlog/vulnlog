@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up Vulnlog CLI
         uses: vulnlog/setup-vulnlog@v1
@@ -67,6 +69,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Set up JVM toolchain
         uses: ./.github/actions/setup-jvm
@@ -98,6 +102,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Download suppression files
         uses: actions/download-artifact@v8
@@ -142,6 +148,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Download suppression files
         uses: actions/download-artifact@v8
@@ -184,6 +192,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Download suppression files
         uses: actions/download-artifact@v8
